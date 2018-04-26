@@ -4,7 +4,8 @@ import {
   Converter,
   Renderer,
   ValueGetter,
-  ValidationResponse
+  ValidationResponse,
+  ConversionError
 } from "./form";
 
 export {
@@ -13,5 +14,6 @@ export {
   Converter,
   Renderer,
   ValueGetter,
+  ConversionError,
   ValidationResponse
 };

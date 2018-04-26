@@ -53,6 +53,12 @@ class Field<TRaw, TValue> {
   }
 
   process(raw: TRaw): ProcessResponse<TValue> {
+    for (const validator of this._rawValidators) {
+      const validationResponse = validator(raw);
+      if (typeof validationResponse === "string" && validationResponse) {
+        return new ProcessResponse<TValue>(null, validationResponse);
+      }
+    }
     const result = this._convert(raw);
     if (result === undefined) {
       return new ProcessResponse<TValue>(null, this._conversionError());
