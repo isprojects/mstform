@@ -30,7 +30,7 @@ getValue = function(value) {
 };
 
 test("string field", () => {
-  const field = new Field<string, string>({ convert, render, getValue });
+  const field = new Field<string, string>(convert, render, getValue);
   field.validators(valid);
 
   expect(field.process("foo").value).toEqual("foo");

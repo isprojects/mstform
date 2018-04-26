@@ -26,19 +26,17 @@ export interface Validator<TValue> {
   (value: TValue): ValidationResponse | Promise<ValidationResponse>;
 }
 
-export interface FieldConfig<TRaw, TValue> {
-  convert: Converter<TRaw, TValue>;
-  render: Renderer<TValue, TRaw>;
-  getValue: ValueGetter<TRaw>;
-}
-
 class Field<TRaw, TValue> {
   private _validators: Validator<TValue>[];
   private _convert: Converter<TRaw, TValue>;
   private _render: Renderer<TValue, TRaw>;
   private _getValue: ValueGetter<TRaw>;
 
-  constructor({ convert, render, getValue }: FieldConfig<TRaw, TValue>) {
+  constructor(
+    convert: Converter<TRaw, TValue>,
+    render: Renderer<TValue, TRaw>,
+    getValue: ValueGetter<TRaw>
+  ) {
     this._convert = convert;
     this._render = render;
     this._getValue = getValue;
