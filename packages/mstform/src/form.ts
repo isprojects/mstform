@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, action, computed } from "mobx";
 import { IStateTreeNode, onPatch, applyPatch } from "mobx-state-tree";
 
 export type ValidationResponse = string | null | undefined | false;
@@ -40,10 +40,10 @@ export type ResolveResponse = Form | Field<any, any> | Repeating<any, any>;
 class Field<TRaw, TValue> {
   private _rawValidators: Validator<TRaw>[];
   private _validators: Validator<TValue>[];
-  private _convert: Converter<TRaw, TValue>;
-  private _render: Renderer<TValue, TRaw>;
-  private _getValue: ValueGetter<TRaw>;
-  private _conversionError: ConversionError;
+  private convert: Converter<TRaw, TValue>;
+  private render: Renderer<TValue, TRaw>;
+  getValue: ValueGetter<TRaw>;
+  private conversionError: ConversionError;
 
   constructor(
     convert: Converter<TRaw, TValue>,
@@ -51,12 +51,12 @@ class Field<TRaw, TValue> {
     getValue: ValueGetter<TRaw>,
     conversionError: ConversionError
   ) {
-    this._convert = convert;
-    this._render = render;
-    this._getValue = getValue;
+    this.convert = convert;
+    this.render = render;
+    this.getValue = getValue;
     this._validators = [];
     this._rawValidators = [];
-    this._conversionError = conversionError;
+    this.conversionError = conversionError;
   }
 
   async process(raw: TRaw): Promise<ProcessResponse<TValue>> {
@@ -66,9 +66,9 @@ class Field<TRaw, TValue> {
         return new ProcessResponse<TValue>(null, validationResponse);
       }
     }
-    const result = this._convert(raw);
+    const result = this.convert(raw);
     if (result === undefined) {
-      return new ProcessResponse<TValue>(null, this._conversionError());
+      return new ProcessResponse<TValue>(null, this.conversionError());
     }
     for (const validator of this._validators) {
       const validationResponse = await validator(result);
@@ -96,10 +96,10 @@ class Field<TRaw, TValue> {
 }
 
 class Repeating<TRawValue, TValue> {
-  private _value: Field<TRawValue, TValue> | Form;
+  private value: Field<TRawValue, TValue> | Form;
 
   constructor(value: Field<TRawValue, TValue> | Form) {
-    this._value = value;
+    this.value = value;
   }
 
   resolveParts(parts: string[]): ResolveResponse {
@@ -108,7 +108,7 @@ class Repeating<TRawValue, TValue> {
       throw new Error("Not a Repeating");
     }
     if (rest.length === 0) {
-      return this._value;
+      return this.value;
     }
     throw new Error("Cannot resolve into Repeating");
   }
@@ -119,18 +119,18 @@ function isInt(s: string): boolean {
 }
 
 class Form {
-  private _fields: Map<string, Field<any, any> | Repeating<any, any>>;
+  private fields: Map<string, Field<any, any> | Repeating<any, any>>;
 
   constructor(fields: FieldMap) {
-    this._fields = new Map();
+    this.fields = new Map();
     Object.keys(fields).forEach(key => {
-      this._fields.set(key, fields[key]);
+      this.fields.set(key, fields[key]);
     });
   }
 
   resolveParts(parts: string[]): ResolveResponse {
     const [first, ...rest] = parts;
-    const found = this._fields.get(first);
+    const found = this.fields.get(first);
 
     if (found === undefined) {
       throw new Error("Undefined field");
@@ -147,9 +147,9 @@ class Form {
 }
 
 class FormState {
-  private _errors: Map<string, string>;
-  private _raw: Map<string, any>;
-  private _promises: Map<string, Promise<any>>;
+  private errors: Map<string, string>;
+  private raw: Map<string, any>;
+  private promises: Map<string, Promise<any>>;
 
   form: Form;
 
@@ -157,9 +157,9 @@ class FormState {
 
   constructor(form: Form, node: IStateTreeNode) {
     this.form = form;
-    this._errors = observable.map();
-    this._raw = observable.map();
-    this._promises = observable.map();
+    this.errors = observable.map();
+    this.raw = observable.map();
+    this.promises = observable.map();
     this.node = node;
     // XXX do something with disposer?
     onPatch(node, patch => {
@@ -171,24 +171,24 @@ class FormState {
 
   @action
   private removeInfo(path: string) {
-    for (const key in this._raw.keys()) {
+    for (const key in this.raw.keys()) {
       if (key.startsWith(path)) {
-        this._raw.delete(key);
+        this.raw.delete(key);
       }
     }
-    for (const key in this._errors.keys()) {
+    for (const key in this.errors.keys()) {
       if (key.startsWith(path)) {
-        this._errors.delete(key);
+        this.errors.delete(key);
       }
     }
   }
 
   @action
-  private async handleChange(path: string, raw: any) {
+  async handleChange(path: string, raw: any) {
     // XXX part of this could move into Field?
-    this._raw.set(path, raw);
-    this._errors.delete(path);
-    const definition = this.form.resolve(path);
+    this.raw.set(path, raw);
+    this.errors.delete(path);
+    const definition = this.resolve(path);
     if (!(definition instanceof Field)) {
       throw new Error("Cannot process non-field");
     }
@@ -196,21 +196,77 @@ class FormState {
     // XXX handling async in general
     const processResult = await definition.process(raw);
 
-    const currentRaw = this._raw.get(path);
+    const currentRaw = this.raw.get(path);
     // XXX expand comparison rules
     if (currentRaw !== raw) {
       return;
     }
     if (processResult.error != null) {
-      this._errors.set(path, processResult.error);
+      this.errors.set(path, processResult.error);
       return;
     }
 
     applyPatch(this.node, [
       { op: "replace", path, value: processResult.value }
     ]);
-    this._errors.delete(path);
+    this.errors.delete(path);
   }
+
+  getError(path: string): string | undefined {
+    return this.errors.get(path);
+  }
+
+  getRaw(path: string): any {
+    return this.raw.get(path);
+  }
+
+  resolve(path: string): ResolveResponse {
+    return this.form.resolve(path);
+  }
+}
+
+class FormAccessor {}
+
+class RepeatingAccessor {
+  // can node also be a plain value? depends on what's in it
+  insert(index: number, node: IStateTreeNode) {}
+  push(node: IStateTreeNode) {}
+  remove(node: IStateTreeNode) {}
+
+  @computed
+  get error(): string {
+    return "error";
+  }
+}
+
+class FieldAccessor<TRaw, TValue> {
+  private state: FormState;
+  private path: string;
+
+  constructor(state: FormState, path: string) {
+    this.state = state;
+    this.path = path;
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.state.getError(this.path);
+  }
+
+  @computed
+  get raw(): TRaw {
+    // XXX what happens if raw is undefined?
+    return this.state.getRaw(this.path);
+  }
+
+  handleChange = (...args: any[]) => {
+    const definition = this.state.resolve(this.path);
+    if (!(definition instanceof Field)) {
+      throw new Error("Cannot handle change on a non-field");
+    }
+    const raw = definition.getValue(...args);
+    return this.state.handleChange(this.path, raw);
+  };
 }
 
 export { Field, Repeating, Form };
