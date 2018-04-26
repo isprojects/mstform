@@ -1,0 +1,27 @@
+{
+    "version": "2.0.0",
+    "compilerOptions": {
+        "target": "es5",
+        "sourceMap": true,
+        "declaration": true,
+        "module": "es2015",
+        "removeComments": false,
+        "outDir": "lib/",
+        "noImplicitAny": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "strict": true,
+        "strictPropertyInitialization": false,
+        "strictNullChecks": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "importHelpers": true,
+        "lib": [
+            "es6"
+        ]
+    },
+    "files": [
+        "src/index.ts"
+    ]
+}
