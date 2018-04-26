@@ -1,3 +1,5 @@
+import { observable } from "mobx";
+
 export type ValidationResponse = string | null | undefined | false;
 
 export class ProcessResponse<TValue> {
@@ -30,6 +32,8 @@ export interface ConversionError {
   (): string;
 }
 
+export type FieldMap = { [key: string]: Field<any, any> };
+
 class Field<TRaw, TValue> {
   private _rawValidators: Validator<TRaw>[];
   private _validators: Validator<TValue>[];
@@ -52,9 +56,9 @@ class Field<TRaw, TValue> {
     this._conversionError = conversionError;
   }
 
-  process(raw: TRaw): ProcessResponse<TValue> {
+  async process(raw: TRaw): Promise<ProcessResponse<TValue>> {
     for (const validator of this._rawValidators) {
-      const validationResponse = validator(raw);
+      const validationResponse = await validator(raw);
       if (typeof validationResponse === "string" && validationResponse) {
         return new ProcessResponse<TValue>(null, validationResponse);
       }
@@ -64,7 +68,7 @@ class Field<TRaw, TValue> {
       return new ProcessResponse<TValue>(null, this._conversionError());
     }
     for (const validator of this._validators) {
-      const validationResponse = validator(result);
+      const validationResponse = await validator(result);
       if (typeof validationResponse === "string" && validationResponse) {
         return new ProcessResponse<TValue>(null, validationResponse);
       }
@@ -89,6 +93,16 @@ class Repeating<TRawValue, TValue> {
   }
 }
 
-class Form {}
+class Form {
+  private _fields: FieldMap;
+  constructor(fields: FieldMap) {
+    this._fields = fields;
+  }
+}
 
+class FormState {
+  @observable _errors = observable.map();
+  @observable _raw = observable.map();
+  @observable _promises = observable.map();
+}
 export { Field, Repeating, Form };
