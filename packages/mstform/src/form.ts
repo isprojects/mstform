@@ -11,7 +11,7 @@ export class ProcessResponse<TValue> {
 }
 
 export interface Converter<TRaw, TValue> {
-  (value: TRaw): TValue;
+  (value: TRaw): TValue | undefined;
 }
 
 export interface Renderer<TValue, TRaw> {
@@ -26,25 +26,37 @@ export interface Validator<TValue> {
   (value: TValue): ValidationResponse | Promise<ValidationResponse>;
 }
 
+export interface ConversionError {
+  (): string;
+}
+
 class Field<TRaw, TValue> {
+  private _rawValidators: Validator<TRaw>[];
   private _validators: Validator<TValue>[];
   private _convert: Converter<TRaw, TValue>;
   private _render: Renderer<TValue, TRaw>;
   private _getValue: ValueGetter<TRaw>;
+  private _conversionError: ConversionError;
 
   constructor(
     convert: Converter<TRaw, TValue>,
     render: Renderer<TValue, TRaw>,
-    getValue: ValueGetter<TRaw>
+    getValue: ValueGetter<TRaw>,
+    conversionError: ConversionError
   ) {
     this._convert = convert;
     this._render = render;
     this._getValue = getValue;
     this._validators = [];
+    this._rawValidators = [];
+    this._conversionError = conversionError;
   }
 
   process(raw: TRaw): ProcessResponse<TValue> {
     const result = this._convert(raw);
+    if (result === undefined) {
+      return new ProcessResponse<TValue>(null, this._conversionError());
+    }
     for (const validator of this._validators) {
       const validationResponse = validator(result);
       if (typeof validationResponse === "string" && validationResponse) {
@@ -56,6 +68,10 @@ class Field<TRaw, TValue> {
 
   validators(...validators: Validator<TValue>[]) {
     this._validators = validators;
+  }
+
+  rawValidators(...validators: Validator<TRaw>[]) {
+    this._rawValidators = validators;
   }
 }
 
