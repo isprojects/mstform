@@ -1,3 +1,4 @@
+import { types } from "mobx-state-tree";
 import {
   Field,
   Validator,
@@ -5,7 +6,9 @@ import {
   Renderer,
   ValueGetter,
   ConversionError,
-  ValidationResponse
+  ValidationResponse,
+  Form,
+  FormState
 } from "../src";
 
 let getValue: ValueGetter<string>;
@@ -211,4 +214,33 @@ test("number field with raw validators", async () => {
   r = await field.process("123");
   expect(r.value).toEqual(null);
   expect(r.error).toEqual("The number");
+});
+
+test("FormState simple", async () => {
+  let convert: Converter<string, string>;
+  convert = function(value: string): string {
+    return value;
+  };
+
+  let render: Renderer<string, string>;
+  render = function(value: string): string {
+    return value;
+  };
+
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+  const form = new Form({
+    foo: new Field<string, string>(convert, render, getValue, conversionError)
+  });
+  const fs = new FormState(form, o);
+
+  expect(fs.node).toBe(o);
+  const fooField = fs.access("/foo");
+  expect(fooField.path).toEqual("/foo");
+  expect(fooField.raw).toEqual("FOO");
+  //await fooField.inputProps.onChange(event("BAR"));
+  //expect(o.foo).toEqual("BAR");
 });

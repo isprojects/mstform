@@ -1,5 +1,10 @@
 import { observable, action, computed } from "mobx";
-import { IStateTreeNode, onPatch, applyPatch } from "mobx-state-tree";
+import {
+  IStateTreeNode,
+  onPatch,
+  applyPatch,
+  resolvePath
+} from "mobx-state-tree";
 
 export type ValidationResponse = string | null | undefined | false;
 
@@ -37,11 +42,11 @@ export type FieldMap = { [key: string]: Field<any, any> };
 
 export type ResolveResponse = Form | Field<any, any> | Repeating<any, any>;
 
-class Field<TRaw, TValue> {
+export class Field<TRaw, TValue> {
   private _rawValidators: Validator<TRaw>[];
   private _validators: Validator<TValue>[];
   private convert: Converter<TRaw, TValue>;
-  private render: Renderer<TValue, TRaw>;
+  render: Renderer<TValue, TRaw>;
   getValue: ValueGetter<TRaw>;
   private conversionError: ConversionError;
 
@@ -95,7 +100,7 @@ class Field<TRaw, TValue> {
   }
 }
 
-class Repeating<TRawValue, TValue> {
+export class Repeating<TRawValue, TValue> {
   private value: Field<TRawValue, TValue> | Form;
 
   constructor(value: Field<TRawValue, TValue> | Form) {
@@ -118,7 +123,7 @@ function isInt(s: string): boolean {
   return Number.isInteger(parseInt(s, 10));
 }
 
-class Form {
+export class Form {
   private fields: Map<string, Field<any, any> | Repeating<any, any>>;
 
   constructor(fields: FieldMap) {
@@ -146,7 +151,7 @@ class Form {
   }
 }
 
-class FormState {
+export class FormState {
   private errors: Map<string, string>;
   private raw: Map<string, any>;
   private promises: Map<string, Promise<any>>;
@@ -212,12 +217,28 @@ class FormState {
     this.errors.delete(path);
   }
 
+  access<TRaw, TValue>(path: string): FieldAccessor<TRaw, TValue> {
+    return new FieldAccessor<TRaw, TValue>(this, path);
+  }
+
   getError(path: string): string | undefined {
     return this.errors.get(path);
   }
 
-  getRaw(path: string): any {
-    return this.raw.get(path);
+  getValue<TValue>(path: string): TValue {
+    return resolvePath(this.node, path);
+  }
+
+  getRaw<TRaw>(path: string): TRaw {
+    const result = this.raw.get(path);
+    if (result !== undefined) {
+      return result;
+    }
+    const response = this.resolve(path);
+    if (!(response instanceof Field)) {
+      throw new Error("Cannot get raw for non-field");
+    }
+    return response.render(this.getValue(path));
   }
 
   resolve(path: string): ResolveResponse {
@@ -239,9 +260,9 @@ class RepeatingAccessor {
   }
 }
 
-class FieldAccessor<TRaw, TValue> {
+export class FieldAccessor<TRaw, TValue> {
   private state: FormState;
-  private path: string;
+  public path: string;
 
   constructor(state: FormState, path: string) {
     this.state = state;
@@ -268,5 +289,3 @@ class FieldAccessor<TRaw, TValue> {
     return this.state.handleChange(this.path, raw);
   };
 }
-
-export { Field, Repeating, Form };
