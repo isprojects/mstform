@@ -32,6 +32,7 @@
     "cpr": "^2.1.0",
     "cross-env": "^5.1.1",
     "documentation": "^5.2.2",
+    "fast-deep-equal": "^1.1.0",
     "jest": "^22.4.2",
     "mobx": "^4.0.2",
     "mobx-state-tree": "^2.0.4",
@@ -50,7 +51,8 @@
   },
   "peerDependencies": {
     "mobx": "^4.0.2",
-    "mobx-state-tree": "^2.0.4"
+    "mobx-state-tree": "^2.0.4",
+    "fast-deep-equal": "^1.1.0"
   },
   "keywords": [
     "mobx",

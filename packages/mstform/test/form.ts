@@ -8,7 +8,9 @@ import {
   ConversionError,
   ValidationResponse,
   Form,
-  FormState
+  FormState,
+  StringField,
+  ObjectField
 } from "../src";
 
 let getValue: ValueGetter<string>;
@@ -238,9 +240,53 @@ test("FormState simple", async () => {
   const fs = new FormState(form, o);
 
   expect(fs.node).toBe(o);
-  const fooField = fs.access("/foo");
+  const fooField = fs.access<string, string>("/foo");
   expect(fooField.path).toEqual("/foo");
   expect(fooField.raw).toEqual("FOO");
+  await fooField.handleChange("BAR");
+  expect(o.foo).toEqual("BAR");
   //await fooField.inputProps.onChange(event("BAR"));
   //expect(o.foo).toEqual("BAR");
+});
+
+function fakeEvent(value) {
+  return { target: { value } };
+}
+
+test("FormState StringField", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+  const form = new Form({
+    foo: new StringField()
+  });
+  const fs = new FormState(form, o);
+
+  expect(fs.node).toBe(o);
+  const fooField = fs.access<string, string>("/foo");
+  expect(fooField.path).toEqual("/foo");
+  expect(fooField.raw).toEqual("FOO");
+  await fooField.handleChange(fakeEvent("BAR"));
+  expect(o.foo).toEqual("BAR");
+});
+
+test("FormState ObjectField", async () => {
+  const M = types.model("M", {
+    foo: types.array(types.string)
+  });
+
+  const o = M.create({ foo: ["FOO"] });
+  const form = new Form({
+    foo: new ObjectField()
+  });
+  const fs = new FormState(form, o);
+
+  expect(fs.node).toBe(o);
+  const fooField = fs.access<string[], string[]>("/foo");
+  expect(fooField.path).toEqual("/foo");
+  expect(fooField.raw).toEqual(["FOO"]);
+  await fooField.handleChange(["BAR", "BAZ"]);
+  expect(o.foo.slice()).toEqual(["BAR", "BAZ"]);
 });

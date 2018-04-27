@@ -1,10 +1,11 @@
-import { observable, action, computed } from "mobx";
+import { observable, action, computed, isObservable } from "mobx";
 import {
   IStateTreeNode,
   onPatch,
   applyPatch,
   resolvePath
 } from "mobx-state-tree";
+import * as equal from "fast-deep-equal";
 
 export type ValidationResponse = string | null | undefined | false;
 
@@ -151,6 +152,13 @@ export class Form {
   }
 }
 
+function unwrap(o: any): any {
+  if (isObservable(o)) {
+    return o.toJS();
+  }
+  return o;
+}
+
 export class FormState {
   private errors: Map<string, string>;
   private raw: Map<string, any>;
@@ -202,10 +210,11 @@ export class FormState {
     const processResult = await definition.process(raw);
 
     const currentRaw = this.raw.get(path);
-    // XXX expand comparison rules
-    if (currentRaw !== raw) {
+
+    if (!equal(unwrap(currentRaw), unwrap(raw))) {
       return;
     }
+
     if (processResult.error != null) {
       this.errors.set(path, processResult.error);
       return;
@@ -276,7 +285,6 @@ export class FieldAccessor<TRaw, TValue> {
 
   @computed
   get raw(): TRaw {
-    // XXX what happens if raw is undefined?
     return this.state.getRaw(this.path);
   }
 
@@ -288,4 +296,29 @@ export class FieldAccessor<TRaw, TValue> {
     const raw = definition.getValue(...args);
     return this.state.handleChange(this.path, raw);
   };
+}
+
+function identity<T>(value: T): T {
+  return value;
+}
+
+export class StringField extends Field<string, string> {
+  constructor() {
+    const getValue: ValueGetter<any> = event => {
+      return event.target.value;
+    };
+    const conversionError: ConversionError = () => {
+      return "Conversion error";
+    };
+    super(identity, identity, getValue, conversionError);
+  }
+}
+
+export class ObjectField<TValue> extends Field<TValue, TValue> {
+  constructor() {
+    const conversionError: ConversionError = () => {
+      return "Conversion error";
+    };
+    super(identity, identity, identity, conversionError);
+  }
 }
