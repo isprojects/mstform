@@ -10,7 +10,9 @@ import {
   Form,
   FormState,
   StringField,
-  ObjectField
+  ObjectField,
+  Repeating,
+  RepeatingForm
 } from "../src";
 
 let getValue: ValueGetter<string>;
@@ -311,3 +313,27 @@ test("FormState fields", async () => {
   await fooField.handleChange(fakeEvent("BAR"));
   expect(o.foo).toEqual("BAR");
 });
+
+// test("FormState repeating", async () => {
+//   const N = types.model("N", {
+//     bar: types.string
+//   });
+//   const M = types.model("M", {
+//     foo: types.array(N)
+//   });
+
+//   const o = M.create({ foo: [{ bar: "BAR" }] });
+
+//   const form = new Form({
+//     foo: new RepeatingForm(
+//       new Form({
+//         bar: new StringField()
+//       })
+//     )
+//   });
+
+//   const fs = new FormState(form, o);
+//   // fs.access("foo") ought not to work
+//   const fooField = fs.repeatingFormAccess("foo");
+//   const barField = fooField.index(0).access("bar");
+// });

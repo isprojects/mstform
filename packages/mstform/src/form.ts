@@ -134,7 +134,7 @@ function isInt(s: string): boolean {
 }
 
 export type FormDefinitionType = {
-  [key: string]: Field<any, any>; //  | Repeating<any, any>;
+  [key: string]: Field<any, any>;
 };
 
 export class Form<TFormDefinition extends FormDefinitionType> {
