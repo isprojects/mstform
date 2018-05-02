@@ -5,7 +5,10 @@ import {
   applyPatch,
   resolvePath
 } from "mobx-state-tree";
-import * as equal from "fast-deep-equal";
+// have to use this here but loses type information
+const equal = require("fast-deep-equal");
+// can use this to pass the tests but rollup will bail out
+// import * as equal from "fast-deep-equal";
 
 export type ValidationResponse = string | null | undefined | false;
 
