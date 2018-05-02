@@ -2,7 +2,7 @@ import { types, IStateTreeNode } from "mobx-state-tree";
 
 const Workspace = types.model("Workspace", {
   foo: types.string,
-  bar: types.number;
+  bar: types.number
 });
 
 const w = Workspace.create({ foo: "FOO", bar: 3 });
@@ -36,9 +36,9 @@ class FormState<FormDefinition extends { [key: string]: Field<any> }> {
     return this.form.definition[path].convert(raw);
   }
 
-  access<
-    K extends keyof FormDefinition,
-  >(name: K): FieldAccessor<FormDefinition, FormDefinition[K], FormDefinition[K]['t']> {
+  access<K extends keyof FormDefinition>(
+    name: K
+  ): FieldAccessor<FormDefinition, FormDefinition[K], FormDefinition[K]["t"]> {
     return new FieldAccessor(this, this.form.definition[name], name);
   }
 }
@@ -50,7 +50,9 @@ class Field<Value> {
     return node[path];
   }
 
-  get t(): Value;
+  get t(): Value {
+    throw new Error("just an experiment");
+  }
 }
 
 class FieldAccessor<
@@ -86,13 +88,13 @@ const definition2 = {
   bar: new Field<number>(value => parseInt(value, 10))
 };
 
-interface Definition {
-  foo: string;
-}
+// interface Definition {
+//   foo: string;
+// }
 
-let definition: Definition = {
-  foo: "FOO"
-};
+// let definition: Definition = {
+//   foo: "FOO"
+// };
 
 const form = new Form(definition2);
 
