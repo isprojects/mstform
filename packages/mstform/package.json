@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc && cpr lib dist --delete-first --filter=\\\\.js && yarn rollup",
     "rollup": "rollup -c",
-    "test": "cross-env NODE_ENV=development jest --ci && cross-env NODE_ENV=production jest --ci && yarn run test-cyclic && yarn run speedtest",
+    "test": "cross-env NODE_ENV=development jest --ci && cross-env NODE_ENV=production jest --ci && yarn run test-cyclic",
     "speedtest": "node --expose-gc test/perf/report.js",
     "test-cyclic": "yarn run build && node -e \"require('.')\"",
     "watch": "jest --watch",
