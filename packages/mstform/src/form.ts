@@ -291,7 +291,7 @@ class RepeatingAccessor {
 }
 
 export class FieldAccessor<
-  TFormDefinition extends FormDefinition,
+  TFormDefinition extends FormDefinitionType,
   TField extends Field<TRaw, TValue>,
   TRaw,
   TValue
