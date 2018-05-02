@@ -240,6 +240,14 @@ export class FormState<TFormDefinition extends FormDefinitionType> {
     this.errors.delete(path);
   }
 
+  get fields(): FormAccessorType<TFormDefinition> {
+    const result: any = {};
+    Object.keys(this.form.definition).forEach(key => {
+      result[key] = this.access(key);
+    });
+    return result as FormAccessorType<TFormDefinition>;
+  }
+
   access<K extends keyof TFormDefinition>(
     name: K
   ): FieldAccessor<
@@ -276,7 +284,22 @@ export class FormState<TFormDefinition extends FormDefinitionType> {
   }
 }
 
-class FormAccessor {}
+export type FormAccessorType<TFormDefinition extends FormDefinitionType> = {
+  [K in keyof TFormDefinition]: FieldAccessor<
+    TFormDefinition,
+    TFormDefinition[K],
+    TFormDefinition[K]["rawType"],
+    TFormDefinition[K]["valueType"]
+  >
+};
+
+export class FormAccessor<TFormDefinition extends FormDefinitionType> {
+  private state: FormState<TFormDefinition>;
+
+  constructor(state: FormState<TFormDefinition>) {
+    this.state = state;
+  }
+}
 
 class RepeatingAccessor {
   // can node also be a plain value? depends on what's in it
@@ -297,7 +320,8 @@ export class FieldAccessor<
   TValue
 > {
   private state: FormState<TFormDefinition>;
-  public path: string;
+  field: Field<TRaw, TValue>;
+  path: string;
 
   constructor(
     state: FormState<TFormDefinition>,
@@ -305,6 +329,7 @@ export class FieldAccessor<
     path: string
   ) {
     this.state = state;
+    this.field = field;
     this.path = path;
   }
 

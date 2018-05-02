@@ -291,3 +291,23 @@ test("FormState ObjectField", async () => {
   await fooField.handleChange(["BAR", "BAZ"]);
   expect(o.foo.slice()).toEqual(["BAR", "BAZ"]);
 });
+
+test("FormState fields", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+  const form = new Form({
+    foo: new StringField()
+  });
+  const fs = new FormState(form, o);
+
+  expect(fs.node).toBe(o);
+  const fooField = fs.fields.foo;
+
+  expect(fooField.path).toEqual("foo");
+  expect(fooField.raw).toEqual("FOO");
+  await fooField.handleChange(fakeEvent("BAR"));
+  expect(o.foo).toEqual("BAR");
+});
