@@ -42,9 +42,7 @@ export interface ConversionError {
   (): string;
 }
 
-export type FieldMap = { [key: string]: Field<any, any> };
-
-export type ResolveResponse = Form | Field<any, any> | Repeating<any, any>;
+export type ResolveResponse = Form<any> | Field<any, any> | Repeating<any, any>;
 
 export class Field<TRaw, TValue> {
   private _rawValidators: Validator<TRaw>[];
@@ -66,6 +64,14 @@ export class Field<TRaw, TValue> {
     this._validators = [];
     this._rawValidators = [];
     this.conversionError = conversionError;
+  }
+
+  get rawType(): TRaw {
+    throw new Error("Shouldn't be called");
+  }
+
+  get valueType(): TValue {
+    throw new Error("Shouldn't be called");
   }
 
   async process(raw: TRaw): Promise<ProcessResponse<TValue>> {
@@ -105,9 +111,9 @@ export class Field<TRaw, TValue> {
 }
 
 export class Repeating<TRawValue, TValue> {
-  private value: Field<TRawValue, TValue> | Form;
+  private value: Field<TRawValue, TValue> | Form<any>;
 
-  constructor(value: Field<TRawValue, TValue> | Form) {
+  constructor(value: Field<TRawValue, TValue> | Form<any>) {
     this.value = value;
   }
 
@@ -127,19 +133,20 @@ function isInt(s: string): boolean {
   return Number.isInteger(parseInt(s, 10));
 }
 
-export class Form {
-  private fields: Map<string, Field<any, any> | Repeating<any, any>>;
+export type FormDefinitionType = {
+  [key: string]: Field<any, any>; //  | Repeating<any, any>;
+};
 
-  constructor(fields: FieldMap) {
-    this.fields = new Map();
-    Object.keys(fields).forEach(key => {
-      this.fields.set(key, fields[key]);
-    });
+export class Form<TFormDefinition extends FormDefinitionType> {
+  definition: TFormDefinition;
+
+  constructor(definition: TFormDefinition) {
+    this.definition = definition;
   }
 
   resolveParts(parts: string[]): ResolveResponse {
     const [first, ...rest] = parts;
-    const found = this.fields.get(first);
+    const found = this.definition[first];
 
     if (found === undefined) {
       throw new Error("Undefined field");
@@ -153,6 +160,10 @@ export class Form {
     }
     return this.resolveParts(path.split("/"));
   }
+
+  create(node: IStateTreeNode) {
+    return new FormState<TFormDefinition>(this, node);
+  }
 }
 
 function unwrap(o: any): any {
@@ -162,16 +173,16 @@ function unwrap(o: any): any {
   return o;
 }
 
-export class FormState {
+export class FormState<TFormDefinition extends FormDefinitionType> {
   private errors: Map<string, string>;
   private raw: Map<string, any>;
   private promises: Map<string, Promise<any>>;
 
-  form: Form;
+  form: Form<TFormDefinition>;
 
   @observable node: IStateTreeNode;
 
-  constructor(form: Form, node: IStateTreeNode) {
+  constructor(form: Form<TFormDefinition>, node: IStateTreeNode) {
     this.form = form;
     this.errors = observable.map();
     this.raw = observable.map();
@@ -229,8 +240,15 @@ export class FormState {
     this.errors.delete(path);
   }
 
-  access<TRaw, TValue>(path: string): FieldAccessor<TRaw, TValue> {
-    return new FieldAccessor<TRaw, TValue>(this, path);
+  access<K extends keyof TFormDefinition>(
+    name: K
+  ): FieldAccessor<
+    TFormDefinition,
+    TFormDefinition[K],
+    TFormDefinition[K]["rawType"],
+    TFormDefinition[K]["valueType"]
+  > {
+    return new FieldAccessor(this, this.form.definition[name], name);
   }
 
   getError(path: string): string | undefined {
@@ -272,11 +290,20 @@ class RepeatingAccessor {
   }
 }
 
-export class FieldAccessor<TRaw, TValue> {
-  private state: FormState;
+export class FieldAccessor<
+  TFormDefinition extends FormDefinition,
+  TField extends Field<TRaw, TValue>,
+  TRaw,
+  TValue
+> {
+  private state: FormState<TFormDefinition>;
   public path: string;
 
-  constructor(state: FormState, path: string) {
+  constructor(
+    state: FormState<TFormDefinition>,
+    field: Field<TRaw, TValue>,
+    path: string
+  ) {
     this.state = state;
     this.path = path;
   }

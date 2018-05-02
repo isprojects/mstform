@@ -234,14 +234,15 @@ test("FormState simple", async () => {
   });
 
   const o = M.create({ foo: "FOO" });
+
   const form = new Form({
     foo: new Field<string, string>(convert, render, getValue, conversionError)
   });
-  const fs = new FormState(form, o);
+  const fs = form.create(o);
 
   expect(fs.node).toBe(o);
-  const fooField = fs.access<string, string>("/foo");
-  expect(fooField.path).toEqual("/foo");
+  const fooField = fs.access("foo");
+  expect(fooField.path).toEqual("foo");
   expect(fooField.raw).toEqual("FOO");
   await fooField.handleChange("BAR");
   expect(o.foo).toEqual("BAR");
@@ -265,8 +266,8 @@ test("FormState StringField", async () => {
   const fs = new FormState(form, o);
 
   expect(fs.node).toBe(o);
-  const fooField = fs.access<string, string>("/foo");
-  expect(fooField.path).toEqual("/foo");
+  const fooField = fs.access("foo");
+  expect(fooField.path).toEqual("foo");
   expect(fooField.raw).toEqual("FOO");
   await fooField.handleChange(fakeEvent("BAR"));
   expect(o.foo).toEqual("BAR");
@@ -284,8 +285,8 @@ test("FormState ObjectField", async () => {
   const fs = new FormState(form, o);
 
   expect(fs.node).toBe(o);
-  const fooField = fs.access<string[], string[]>("/foo");
-  expect(fooField.path).toEqual("/foo");
+  const fooField = fs.access("foo");
+  expect(fooField.path).toEqual("foo");
   expect(fooField.raw).toEqual(["FOO"]);
   await fooField.handleChange(["BAR", "BAZ"]);
   expect(o.foo.slice()).toEqual(["BAR", "BAZ"]);
