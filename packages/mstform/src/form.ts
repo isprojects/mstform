@@ -22,10 +22,6 @@ export type FieldProps<T extends FormDefinition> = {
   [K in keyof T]: T[K] extends Field<any, any> ? K : never
 };
 
-export type Fields = {
-  [key: string]: Field<any, any>;
-};
-
 export type RepeatingFormProps<T extends FormDefinition> = {
   [K in keyof T]: T[K] extends RepeatingForm<any> ? K : never
 };
@@ -94,7 +90,6 @@ export class FormBehavior {
 
 export class Form<D extends FormDefinition> {
   behavior: FormBehavior;
-  fields: Fields;
 
   constructor(
     public modelType: IModelType<any, any>,
@@ -105,14 +100,6 @@ export class Form<D extends FormDefinition> {
       behavior = new FormBehavior();
     }
     this.behavior = behavior;
-    const fields: Fields = {};
-    Object.keys(definition).forEach(key => {
-      const field = definition[key];
-      if (field instanceof Field) {
-        fields[key] = field;
-      }
-    });
-    this.fields = fields;
   }
 
   create(node: IStateTreeNode): FormState<D> {

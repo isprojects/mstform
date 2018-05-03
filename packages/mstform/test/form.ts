@@ -400,3 +400,35 @@ test("simple validate", async () => {
   await field.setRaw("correct");
   expect(field.error).toBeUndefined();
 });
+
+// test("repeating form validate", async () => {
+//   const N = types.model("N", {
+//     bar: types.string
+//   });
+//   const M = types.model("M", {
+//     foo: types.array(N)
+//   });
+
+//   const form = new Form(M, {
+//     foo: new RepeatingForm({
+//       bar: new Field<string, string>({
+//         validators: [value => value !== "correct" && "Wrong"]
+//       })
+//     })
+//   });
+
+//   const o = M.create({ foo: [{ bar: "incorrect" }] });
+
+//   const state = form.create(o);
+
+//   const forms = state.repeatingForm("foo");
+//   const field = forms.index(0).field("bar");
+//   expect(field.raw).toEqual("incorrect");
+//   expect(field.error).toBeUndefined();
+//   const result = await state.validate();
+//   expect(result).toBeTruthy();
+//   expect(field.error).toEqual("Wrong");
+
+//   await field.setRaw("correct");
+//   expect(field.error).toBeUndefined();
+// });
