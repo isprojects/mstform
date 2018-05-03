@@ -134,3 +134,85 @@ test("repeating form with conversion", async () => {
   expect(field.value).toEqual(4);
   await field.handleChange("not a number");
 });
+
+test("repeating form push", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, string>()
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.create(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  forms.push({ bar: "QUX" });
+  expect(forms.length).toBe(2);
+
+  const oneForm = forms.index(1);
+  const field = oneForm.field("bar");
+
+  expect(field.raw).toEqual("QUX");
+});
+
+test("repeating form insert", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, string>()
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.create(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  forms.insert(0, { bar: "QUX" });
+  expect(forms.length).toBe(2);
+
+  const oneForm = forms.index(0);
+  const field = oneForm.field("bar");
+
+  expect(field.raw).toEqual("QUX");
+});
+
+test("repeating form remove", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, string>()
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.create(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  forms.remove(o.foo[0]);
+  expect(forms.length).toBe(0);
+});

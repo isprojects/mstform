@@ -349,6 +349,42 @@ export class RepeatingFormAccessor<
   index(index: number): RepeatingFormIndexedAccessor<D, R> {
     return new RepeatingFormIndexedAccessor(this.state, this, this.path, index);
   }
+
+  insert(index: number, node: any) {
+    const a = resolvePath(this.state.node, this.path) as any[];
+    const copy = a.slice();
+    copy.splice(index, 0, node);
+    applyPatch(this.state.node, [
+      { op: "replace", path: this.path, value: copy }
+    ]);
+  }
+
+  push(node: any) {
+    const a = resolvePath(this.state.node, this.path) as any[];
+    const copy = a.slice();
+    copy.push(node);
+    applyPatch(this.state.node, [
+      { op: "replace", path: this.path, value: copy }
+    ]);
+  }
+
+  remove(node: any) {
+    const a = resolvePath(this.state.node, this.path) as any[];
+    const copy = a.slice();
+    const index = copy.indexOf(node);
+    if (index === -1) {
+      throw new Error("Cannot find node to remove.");
+    }
+    copy.splice(index, 1);
+    applyPatch(this.state.node, [
+      { op: "replace", path: this.path, value: copy }
+    ]);
+  }
+
+  get length(): number {
+    const a = resolvePath(this.state.node, this.path) as any[];
+    return a.length;
+  }
 }
 
 export class RepeatingFormIndexedAccessor<
