@@ -55,6 +55,7 @@ export interface FieldOptionDefinition<R, V> {
   validators?: Validator<V>[];
   converter?: Converter<R, V>;
   getRaw?: RawGetter<R>;
+  conversionError?: string;
 }
 
 export class ProcessResponse<TValue> {
@@ -124,14 +125,17 @@ export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
   getRaw: RawGetter<R>;
+  conversionError: string;
 
   constructor(public options?: FieldOptionDefinition<R, V>) {
     if (!options) {
       this.rawValidators = [];
       this.validators = [];
+      this.conversionError = "Could not convert";
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
+      this.conversionError = options.conversionError || "Could not convert";
     }
 
     if (!options || options.getRaw == null) {
@@ -186,7 +190,7 @@ export class Field<R, V> {
     }
     const result = this.convert(behavior, mstType, raw);
     if (result === undefined) {
-      return new ProcessResponse<V>(null, "conversion error");
+      return new ProcessResponse<V>(null, this.conversionError);
     }
     for (const validator of this.validators) {
       const validationResponse = await validator(result);

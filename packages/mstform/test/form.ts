@@ -28,7 +28,7 @@ test("a simple form", async () => {
   expect(field.value).toEqual("correct");
 });
 
-test("mstType drives validation", async () => {
+test("mstType drives conversion", async () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -50,5 +50,30 @@ test("mstType drives validation", async () => {
   expect(field.error).toBeUndefined();
   await field.handleChange("not a number");
   expect(field.value).toEqual(4);
-  expect(field.error).toEqual("conversion error");
+  expect(field.error).toEqual("Could not convert");
+});
+
+test("mstType drives conversion with message", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field<string, number>({ conversionError: "Not an integer" })
+  });
+
+  const o = M.create({ foo: 3 });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3");
+  await field.handleChange("4");
+  expect(field.raw).toEqual("4");
+  expect(field.value).toEqual(4);
+  expect(field.error).toBeUndefined();
+  await field.handleChange("not a number");
+  expect(field.value).toEqual(4);
+  expect(field.error).toEqual("Not an integer");
 });
