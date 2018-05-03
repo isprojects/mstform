@@ -8,3 +8,7 @@ export function pathToSteps(path: string): string[] {
   }
   return path.split("/");
 }
+
+export function isInt(s: string): boolean {
+  return Number.isInteger(parseInt(s, 10));
+}

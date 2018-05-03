@@ -96,5 +96,12 @@ test("repeating form", async () => {
 
   const state = form.create(o);
 
-  const field = state.repeatingForm("foo");
+  const forms = state.repeatingForm("foo");
+  const oneForm = forms.index(0);
+  const field = oneForm.field("bar");
+
+  expect(field.raw).toEqual("BAR");
+  await field.handleChange("QUX");
+  expect(field.raw).toEqual("QUX");
+  expect(field.value).toEqual("QUX");
 });

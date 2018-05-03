@@ -1,3 +1,4 @@
+import { observable, action, computed, isObservable } from "mobx";
 import {
   resolvePath,
   IStateTreeNode,
@@ -7,10 +8,8 @@ import {
   IModelType,
   IType
 } from "mobx-state-tree";
-import { identity, pathToSteps } from "./utils";
+import { identity, pathToSteps, isInt } from "./utils";
 import { TypeFlags } from "./typeflags";
-
-import { observable, action, computed, isObservable } from "mobx";
 
 export type FormDefinition = {
   [key: string]:
@@ -231,7 +230,10 @@ export class FormState<D extends FormDefinition> {
     const steps = pathToSteps(path);
     let subType: IType<any, any> = this.form.modelType;
     for (const step of steps) {
-      subType = (subType as IModelType<any, any>).properties[step];
+      if (isInt(step)) {
+        continue;
+      }
+      subType = subType.getChildType(step);
     }
     return subType;
   }
@@ -374,6 +376,11 @@ export class RepeatingFormIndexedAccessor<
     if (!(field instanceof Field)) {
       throw new Error("Not accessing a Field instance");
     }
-    return new FieldAccessor(this.repeatingFormAccessor.state, field, "", name);
+    return new FieldAccessor(
+      this.repeatingFormAccessor.state,
+      field,
+      this.path,
+      name
+    );
   }
 }
