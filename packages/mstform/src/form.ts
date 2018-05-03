@@ -85,7 +85,10 @@ export class ProcessResponse<TValue> {
 }
 
 const numberConverter: Converter<string, number> = {
-  render(value: number): string {
+  render(value: number | null): string {
+    if (value === null) {
+      return "";
+    }
     return value.toString();
   },
   convert(raw: string): number | undefined {

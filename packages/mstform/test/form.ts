@@ -631,3 +631,27 @@ test("FormState can be saved", async () => {
 
   expect(field.error).toBeUndefined();
 });
+
+// test("auto required", async () => {
+//   const M = types.model("M", {
+//     foo: types.number
+//   });
+
+//   const form = new Form(M, {
+//     foo: new Field<string, string>()
+//   });
+
+//   const MPrime = types.model("M", {
+//     foo: types.maybe(types.number)
+//   });
+
+//   const o = MPrime.create({ foo: null });
+
+//   const state = form.create(o);
+
+//   const field = state.field("foo");
+
+//   expect(field.raw).toEqual("");
+//   await state.validate();
+//   expect(field.error).toEqual("Required");
+// });
