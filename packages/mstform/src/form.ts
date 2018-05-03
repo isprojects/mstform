@@ -8,7 +8,7 @@ import {
   IModelType,
   IType
 } from "mobx-state-tree";
-import { identity, pathToSteps, isInt } from "./utils";
+import { identity, pathToSteps, isInt, equal, unwrap } from "./utils";
 import { TypeFlags } from "./typeflags";
 
 export type FormDefinition = {
@@ -316,7 +316,13 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
       this.state.getMstType(this.path),
       raw
     );
-    // XXX compare with previous raw?
+
+    const currentRaw = this.state.raw.get(this.path);
+
+    // if the raw changed in the mean time, bail out
+    if (!equal(unwrap(currentRaw), unwrap(raw))) {
+      return;
+    }
 
     if (processResult.error != null) {
       this.state.errors.set(this.path, processResult.error);
