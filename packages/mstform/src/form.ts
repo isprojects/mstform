@@ -1,5 +1,15 @@
-import { identity } from "./utils";
-import { resolvePath, IStateTreeNode, applyPatch } from "mobx-state-tree";
+import {
+  resolvePath,
+  IStateTreeNode,
+  applyPatch,
+  types,
+  getType,
+  IModelType,
+  IType
+} from "mobx-state-tree";
+import { identity, pathToSteps } from "./utils";
+import { TypeFlags } from "./typeflags";
+
 import { observable, action, computed, isObservable } from "mobx";
 
 export type FormDefinition = {
@@ -57,8 +67,24 @@ export class ProcessResponse<TValue> {
   }
 }
 
+const numberConverter: Converter<string, number> = {
+  render(value: number): string {
+    return value.toString();
+  },
+  convert(raw: string): number | undefined {
+    const result = parseInt(raw, 10);
+    if (isNaN(result)) {
+      return undefined;
+    }
+    return result;
+  }
+};
+
 export class FormBehavior {
-  getConverter(mstType: any): Converter<any, any> | undefined {
+  getConverter(mstType: IType<any, any>): Converter<any, any> | undefined {
+    if (mstType.flags & TypeFlags.Number) {
+      return numberConverter;
+    }
     return { convert: identity, render: identity };
   }
   getRawGetter(mstType: any): RawGetter<any> {
@@ -71,7 +97,7 @@ export class Form<D extends FormDefinition> {
   fields: Fields;
 
   constructor(
-    public modelType: any,
+    public modelType: IModelType<any, any>,
     public definition: D,
     behavior?: FormBehavior
   ) {
@@ -123,7 +149,7 @@ export class Field<R, V> {
     throw new Error("fail");
   }
 
-  converter(behavior: FormBehavior, mstType: any): Converter<R, V> {
+  converter(behavior: FormBehavior, mstType: IType<any, any>): Converter<R, V> {
     if (this.options == null || this.options.converter == null) {
       const converter = behavior.getConverter(mstType);
       if (converter == null) {
@@ -134,18 +160,22 @@ export class Field<R, V> {
     return this.options.converter;
   }
 
-  convert(behavior: FormBehavior, mstType: any, raw: R): V | undefined {
+  convert(
+    behavior: FormBehavior,
+    mstType: IType<any, any>,
+    raw: R
+  ): V | undefined {
     const converter = this.converter(behavior, mstType);
     return converter.convert(raw);
   }
-  render(behavior: FormBehavior, mstType: any, value: V): R {
+  render(behavior: FormBehavior, mstType: IType<any, any>, value: V): R {
     const converter = this.converter(behavior, mstType);
     return converter.render(value);
   }
 
   async process(
     behavior: FormBehavior,
-    mstType: any,
+    mstType: IType<any, any>,
     raw: R
   ): Promise<ProcessResponse<V>> {
     for (const validator of this.rawValidators) {
@@ -193,8 +223,13 @@ export class FormState<D extends FormDefinition> {
     return this.errors.get(path);
   }
 
-  getMstType(path: string): any {
-    // getType(this.node)
+  getMstType(path: string): IType<any, any> {
+    const steps = pathToSteps(path);
+    let subType: IType<any, any> = this.form.modelType;
+    for (const step of steps) {
+      subType = (subType as IModelType<any, any>).properties[step];
+    }
+    return subType;
   }
 
   field<K extends keyof FieldProps<D>>(
