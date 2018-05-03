@@ -19,15 +19,15 @@ export type FormDefinition = {
 };
 
 export type FieldProps<T extends FormDefinition> = {
-  [K in keyof T]: T[K] extends Field<any, any> ? K : never
+  [K in keyof T]: T[K] extends Field<any, any> ? T[K] : never
 };
 
 export type RepeatingFormProps<T extends FormDefinition> = {
-  [K in keyof T]: T[K] extends RepeatingForm<any> ? K : never
+  [K in keyof T]: T[K] extends RepeatingForm<any> ? T[K] : never
 };
 
 export type RepeatingFieldProps<T extends FormDefinition> = {
-  [K in keyof T]: T[K] extends RepeatingField<any, any> ? K : never
+  [K in keyof T]: T[K] extends RepeatingField<any, any> ? T[K] : never
 };
 
 export type ValidationResponse = string | null | undefined | false;
@@ -208,18 +208,16 @@ export class FormState<D extends FormDefinition> {
   async validate(): Promise<boolean> {
     const promises: Promise<any>[] = [];
     Object.keys(this.form.definition).forEach(key => {
-      const field = this.form.definition[key];
-      if (field instanceof Field) {
-        const sub = this.field(key);
-        promises.push(sub.validate());
+      const entry = this.form.definition[key];
+      if (entry instanceof Field) {
+        promises.push(this.field(key).validate());
+      } else if (entry instanceof RepeatingForm) {
+        promises.push(this.repeatingForm(key).validate());
       }
     });
-    const values = await Promise.all(promises);
 
-    // If any value is not empty, that means that the form is invalid
-    // and so, we return false
-    const errors = values.filter(e => !!e);
-    return errors.length === 0;
+    const values = await Promise.all(promises);
+    return values.filter(value => !value).length === 0;
   }
 
   // async save() {
@@ -387,8 +385,33 @@ export class RepeatingFormAccessor<
     this.path = path + "/" + name;
   }
 
+  async validate(): Promise<boolean> {
+    const promises: Promise<any>[] = [];
+    const indexAccessors = this.entries();
+    for (const accessor of indexAccessors) {
+      Object.keys(this.repeatingForm.definition).forEach(key => {
+        const entry = this.repeatingForm.definition[key];
+        if (entry instanceof Field) {
+          promises.push(accessor.field(key).validate());
+        } else if (entry instanceof RepeatingForm) {
+          promises.push(accessor.repeatingForm(key).validate());
+        }
+      });
+    }
+    const values = await Promise.all(promises);
+    return values.filter(value => !value).length === 0;
+  }
+
   index(index: number): RepeatingFormIndexedAccessor<D, R> {
     return new RepeatingFormIndexedAccessor(this.state, this, this.path, index);
+  }
+
+  entries(): RepeatingFormIndexedAccessor<D, R>[] {
+    const result = [];
+    for (let index = 0; index < this.length; index++) {
+      result.push(this.index(index));
+    }
+    return result;
   }
 
   insert(index: number, node: any) {
