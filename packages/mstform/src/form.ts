@@ -45,6 +45,11 @@ export type Converter<R, V> = {
   render(value: V): R;
 };
 
+export type Accessor<D extends FormDefinition> =
+  | FieldAccessor<D, any, any>
+  | RepeatingFormAccessor<D, any>
+  | RepeatingFormIndexedAccessor<D, any>;
+
 export interface RawGetter<R> {
   (...args: any[]): R;
 }
@@ -344,12 +349,8 @@ export class FormAccessor<D extends FormDefinition, R extends FormDefinition> {
   ) {}
 
   @computed
-  get accessors(): (
-    | FieldAccessor<D, any, any>
-    | RepeatingFormAccessor<D, any>)[] {
-    const result: (
-      | FieldAccessor<D, any, any>
-      | RepeatingFormAccessor<D, any>)[] = [];
+  get accessors(): Accessor<D>[] {
+    const result: Accessor<D>[] = [];
 
     Object.keys(this.definition).forEach(key => {
       const entry = this.definition[key];
