@@ -245,14 +245,25 @@ export class FormState<D extends FormDefinition> {
   > {
     const field = this.form.definition[name];
     if (!(field instanceof Field)) {
-      throw new Error("Cannot access non-field");
+      throw new Error("Not accessing a Field instance");
     }
     return new FieldAccessor(this, field, "", name);
   }
 
-  repeatingField(name: string): any {}
+  repeatingForm<K extends keyof RepeatingFormProps<D>>(
+    name: string
+  ): RepeatingFormAccessor<
+    D,
+    D[K] extends RepeatingForm<any> ? D[K]["definition"] : never
+  > {
+    const repeatingForm = this.form.definition[name];
+    if (!(repeatingForm instanceof RepeatingForm)) {
+      throw new Error("Not accessing a RepeatingForm instance");
+    }
+    return new RepeatingFormAccessor(this, repeatingForm, "", name);
+  }
 
-  repeatingForm(name: string): any {}
+  repeatingField(name: string): any {}
 }
 
 export class FieldAccessor<D extends FormDefinition, R, V> {
@@ -313,4 +324,56 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
       { op: "replace", path: this.path, value: processResult.value }
     ]);
   };
+}
+
+export class RepeatingFormAccessor<
+  D extends FormDefinition,
+  R extends FormDefinition
+> {
+  name: string;
+  path: string;
+
+  constructor(
+    public state: FormState<D>,
+    public repeatingForm: RepeatingForm<R>,
+    path: string,
+    name: string
+  ) {
+    this.name = name;
+    this.path = path + "/" + name;
+  }
+
+  index(index: number): RepeatingFormIndexedAccessor<D, R> {
+    return new RepeatingFormIndexedAccessor(this.state, this, this.path, index);
+  }
+}
+
+export class RepeatingFormIndexedAccessor<
+  D extends FormDefinition,
+  R extends FormDefinition
+> {
+  path: string;
+
+  constructor(
+    public state: FormState<D>,
+    public repeatingFormAccessor: RepeatingFormAccessor<D, R>,
+    path: string,
+    public index: number
+  ) {
+    this.path = path + "/" + index;
+  }
+
+  field<K extends keyof FieldProps<R>>(
+    name: K
+  ): FieldAccessor<
+    D,
+    R[K] extends Field<any, any> ? R[K]["rawType"] : never,
+    R[K] extends Field<any, any> ? R[K]["valueType"] : never
+  > {
+    const field = this.repeatingFormAccessor.repeatingForm.definition[name];
+    if (!(field instanceof Field)) {
+      throw new Error("Not accessing a Field instance");
+    }
+    return new FieldAccessor(this.repeatingFormAccessor.state, field, "", name);
+  }
 }

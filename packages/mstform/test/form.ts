@@ -1,5 +1,5 @@
 import { types } from "mobx-state-tree";
-import { Form, Field } from "../src";
+import { Form, Field, RepeatingForm } from "../src";
 
 test("a simple form", async () => {
   const M = types.model("M", {
@@ -76,4 +76,25 @@ test("mstType drives conversion with message", async () => {
   await field.handleChange("not a number");
   expect(field.value).toEqual(4);
   expect(field.error).toEqual("Not an integer");
+});
+
+test("repeating form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, string>()
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.create(o);
+
+  const field = state.repeatingForm("foo");
 });
