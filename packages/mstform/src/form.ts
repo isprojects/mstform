@@ -285,6 +285,13 @@ export class FormState<D extends FormDefinition> {
     return subType;
   }
 
+  @computed
+  get isValidating(): boolean {
+    return (
+      Array.from(this.validating.values()).filter(value => value).length > 0
+    );
+  }
+
   field<K extends keyof FieldProps<D>>(
     name: K
   ): FieldAccessor<
@@ -352,6 +359,11 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     return this.state.getError(this.path);
   }
 
+  @computed
+  get isValidating(): boolean {
+    return this.state.validating.get(this.path) || false;
+  }
+
   async validate(): Promise<boolean> {
     await this.setRaw(this.raw);
     return this.error === undefined;
@@ -371,9 +383,9 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
       );
     } catch (e) {
       this.state.errors.set(this.path, "Something went wrong");
+      this.state.validating.set(this.path, false);
       return;
     }
-    this.state.validating.set(this.path, false);
 
     const currentRaw = this.state.raw.get(this.path);
 
@@ -381,6 +393,7 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     if (!equal(unwrap(currentRaw), unwrap(raw))) {
       return;
     }
+    this.state.validating.set(this.path, false);
 
     if (processResult.error != null) {
       this.state.errors.set(this.path, processResult.error);

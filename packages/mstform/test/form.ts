@@ -358,17 +358,23 @@ test("async validation modification", async () => {
   const promise = field.handleChange("correct");
   expect(field.raw).toEqual("correct");
   // value hasn't changed yet as promise hasn't resolved yet
+  expect(state.isValidating).toBeTruthy();
+  expect(field.isValidating).toBeTruthy();
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
   // now we change the raw while waiting
   const promise2 = field.handleChange("incorrect");
   done[0]();
   await promise;
+  expect(state.isValidating).toBeTruthy();
+  expect(field.isValidating).toBeTruthy();
   expect(field.raw).toEqual("incorrect");
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
   done[1]();
   await promise2;
+  expect(state.isValidating).toBeFalsy();
+  expect(field.isValidating).toBeFalsy();
   expect(field.raw).toEqual("incorrect");
   expect(field.value).toEqual("FOO");
   expect(field.error).toEqual("Wrong");
@@ -401,9 +407,11 @@ test("async validation rejects sets error status", async () => {
 
   expect(field.raw).toEqual("FOO");
   const promise = field.handleChange("correct");
+  expect(field.isValidating).toBeTruthy();
   done[0]();
   await promise;
   expect(field.error).toEqual("Something went wrong");
+  expect(field.isValidating).toBeFalsy();
 });
 
 test("simple validate", async () => {
