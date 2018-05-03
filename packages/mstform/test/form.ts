@@ -246,6 +246,38 @@ test("repeating form remove", async () => {
   expect(forms.length).toBe(0);
 });
 
+test("repeating form remove and insert clears errors", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, string>({
+        validators: [value => value !== "correct" && "wrong"]
+      })
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "correct" }] });
+
+  const state = form.create(o);
+
+  const forms = state.repeatingForm("foo");
+  const field0 = forms.index(0).field("bar");
+  await field0.setRaw("incorrect");
+  expect(field0.error).toEqual("wrong");
+
+  forms.remove(o.foo[0]);
+
+  forms.push({ bar: "correct" });
+  const field1 = forms.index(0).field("bar");
+  expect(field1.error).toBeUndefined();
+});
+
 test("async validation", async () => {
   const M = types.model("M", {
     foo: types.string
