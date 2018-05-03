@@ -66,6 +66,14 @@ export interface FieldOptionDefinition<R, V> {
   conversionError?: string;
 }
 
+export interface SaveFunc {
+  (node: IStateTreeNode): any;
+}
+
+export interface FormStateOptions {
+  save?: SaveFunc;
+}
+
 export class ProcessResponse<TValue> {
   value: TValue | null;
   error: string | null;
@@ -115,8 +123,8 @@ export class Form<D extends FormDefinition> {
     this.behavior = behavior;
   }
 
-  create(node: IStateTreeNode): FormState<D> {
-    return new FormState<D>(this, node);
+  create(node: IStateTreeNode, options?: FormStateOptions): FormState<D> {
+    return new FormState<D>(this, node, options);
   }
 }
 
@@ -214,8 +222,13 @@ export class FormState<D extends FormDefinition> {
   errors: Map<string, string>;
   validating: Map<string, boolean>;
   formAccessor: FormAccessor<D, D>;
+  saveFunc?: SaveFunc;
 
-  constructor(public form: Form<D>, public node: IStateTreeNode) {
+  constructor(
+    public form: Form<D>,
+    public node: IStateTreeNode,
+    options?: FormStateOptions
+  ) {
     this.raw = observable.map();
     this.errors = observable.map();
     this.validating = observable.map();
@@ -225,6 +238,11 @@ export class FormState<D extends FormDefinition> {
       }
     });
     this.formAccessor = new FormAccessor(this, this.form.definition, "");
+    if (options == null) {
+      this.saveFunc = undefined;
+    } else {
+      this.saveFunc = options.save;
+    }
   }
 
   @action
@@ -250,22 +268,22 @@ export class FormState<D extends FormDefinition> {
     return await this.formAccessor.validate();
   }
 
-  // async save(): Promise<boolean> {
-  //   if (this._save == null) {
-  //     throw Error("No save configured");
-  //   }
-  //   const isValid = await this.validate();
-  //   if (!isValid) {
-  //     return false;
-  //   }
-  //   const errors = await this._save(this.value);
-  //   if (errors != null) {
-  //     this.setErrors(errors);
-  //     return false;
-  //   }
-  //   this.clearErrors();
-  //   return true;
-  // }
+  async save(): Promise<boolean> {
+    if (this.saveFunc == null) {
+      throw Error("No save configured");
+    }
+    const isValid = await this.validate();
+    if (!isValid) {
+      return false;
+    }
+    const errors = await this.saveFunc(this.node);
+    if (errors != null) {
+      this.setErrors(errors);
+      return false;
+    }
+    this.clearErrors();
+    return true;
+  }
 
   @action
   setErrors(errors: any) {
@@ -559,6 +577,11 @@ export class RepeatingFormAccessor<
       result.push(...accessor.flatAccessors);
     });
     return result;
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.state.errors.get(this.path);
   }
 
   insert(index: number, node: any) {

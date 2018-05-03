@@ -563,3 +563,71 @@ test("setErrors repeating", async () => {
   const field = state.repeatingForm("foo").accessors[0].field("bar");
   expect(field.error).toEqual("WRONG");
 });
+
+test("setErrors directly on repeating", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, string>()
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "FOO" }] });
+
+  const state = form.create(o);
+  state.setErrors({ foo: "WRONG" });
+
+  const accessor = state.repeatingForm("foo");
+  expect(accessor.error).toEqual("WRONG");
+});
+
+test("FormState can be saved", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field({})
+  });
+
+  async function save(data) {
+    if (data.foo === "") {
+      return { foo: "Required" };
+    }
+    return null;
+  }
+
+  const state = form.create(o, { save });
+
+  const field = state.field("foo");
+
+  // do something not allowed
+  await field.setRaw("");
+
+  // we don't see any client-side validation errors
+  expect(o.foo).toEqual("");
+  expect(field.error).toBeUndefined();
+  // now communicate with the server by doing the save
+  const saveResult0 = await state.save();
+  expect(saveResult0).toBe(false);
+  expect(field.error).toEqual("Required");
+
+  // correct things
+  await field.setRaw("BAR");
+  expect(o.foo).toEqual("BAR");
+  // editing always wipes out the errors
+  expect(field.error).toBeUndefined();
+
+  const saveResult1 = await state.save();
+  expect(saveResult1).toBe(true);
+
+  expect(field.error).toBeUndefined();
+});
