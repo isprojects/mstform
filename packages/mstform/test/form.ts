@@ -246,20 +246,20 @@ test("repeating form remove", async () => {
   expect(forms.length).toBe(0);
 });
 
-function timeout(ms: number): Promise<any> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 test("async validation", async () => {
   const M = types.model("M", {
     foo: types.string
   });
 
+  const done = [];
+
   const form = new Form(M, {
     foo: new Field<string, string>({
       validators: [
         async value => {
-          await timeout(10);
+          await new Promise(resolve => {
+            done.push(resolve);
+          });
           return value !== "correct" && "Wrong";
         }
       ]
@@ -278,6 +278,7 @@ test("async validation", async () => {
   // value hasn't changed yet as promise hasn't resolved yet
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
+  done[0]();
   await promise;
   expect(field.value).toEqual("correct");
   expect(field.raw).toEqual("correct");
@@ -288,6 +289,7 @@ test("async validation", async () => {
   // value hasn't changed yet as promise hasn't resolved yet
   expect(field.value).toEqual("correct");
   expect(field.error).toBeUndefined();
+  done[1]();
   await promise2;
   expect(field.value).toEqual("correct");
   expect(field.raw).toEqual("wrong");
@@ -299,11 +301,15 @@ test("async validation modification", async () => {
     foo: types.string
   });
 
+  let done = [];
+
   const form = new Form(M, {
     foo: new Field<string, string>({
       validators: [
         async value => {
-          await timeout(10);
+          await new Promise(resolve => {
+            done.push(resolve);
+          });
           return value !== "correct" && "Wrong";
         }
       ]
@@ -324,12 +330,46 @@ test("async validation modification", async () => {
   expect(field.error).toBeUndefined();
   // now we change the raw while waiting
   const promise2 = field.handleChange("incorrect");
+  done[0]();
   await promise;
   expect(field.raw).toEqual("incorrect");
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
+  done[1]();
   await promise2;
   expect(field.raw).toEqual("incorrect");
   expect(field.value).toEqual("FOO");
   expect(field.error).toEqual("Wrong");
+});
+
+test("async validation rejects sets error status", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const done = [];
+  const form = new Form(M, {
+    foo: new Field<string, string>({
+      validators: [
+        async value => {
+          await new Promise(resolve => {
+            done.push(resolve);
+          });
+          throw new Error("Crazy error");
+        }
+      ]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  const promise = field.handleChange("correct");
+  done[0]();
+  await promise;
+  expect(field.error).toEqual("Something went wrong");
 });

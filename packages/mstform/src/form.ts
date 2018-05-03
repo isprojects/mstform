@@ -310,12 +310,17 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     const raw = this.field.getRaw(...args);
     this.state.raw.set(this.path, raw);
     this.state.errors.delete(this.path);
-
-    const processResult = await this.field.process(
-      this.state.form.behavior,
-      this.state.getMstType(this.path),
-      raw
-    );
+    let processResult;
+    try {
+      processResult = await this.field.process(
+        this.state.form.behavior,
+        this.state.getMstType(this.path),
+        raw
+      );
+    } catch (e) {
+      this.state.errors.set(this.path, "Something went wrong");
+      return;
+    }
 
     const currentRaw = this.state.raw.get(this.path);
 
