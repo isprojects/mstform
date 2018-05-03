@@ -9,7 +9,14 @@ import {
   IType,
   onPatch
 } from "mobx-state-tree";
-import { identity, pathToSteps, isInt, equal, unwrap } from "./utils";
+import {
+  identity,
+  pathToSteps,
+  isInt,
+  equal,
+  unwrap,
+  getByPath
+} from "./utils";
 import { TypeFlags } from "./typeflags";
 
 export type FormDefinition = {
@@ -201,6 +208,7 @@ export class FormState<D extends FormDefinition> {
   raw: Map<string, any>;
   errors: Map<string, string>;
   validating: Map<string, boolean>;
+  formAccessor: FormAccessor<D, D>;
 
   constructor(public form: Form<D>, public node: IStateTreeNode) {
     this.raw = observable.map();
@@ -211,6 +219,7 @@ export class FormState<D extends FormDefinition> {
         this.removeInfo(patch.path);
       }
     });
+    this.formAccessor = new FormAccessor(this, this.form.definition, "");
   }
 
   @action
@@ -233,21 +242,12 @@ export class FormState<D extends FormDefinition> {
   }
 
   async validate(): Promise<boolean> {
-    const promises: Promise<any>[] = [];
-    Object.keys(this.form.definition).forEach(key => {
-      const entry = this.form.definition[key];
-      if (entry instanceof Field) {
-        promises.push(this.field(key).validate());
-      } else if (entry instanceof RepeatingForm) {
-        promises.push(this.repeatingForm(key).validate());
-      }
-    });
-
+    const promises = this.accessors.map(accessor => accessor.validate());
     const values = await Promise.all(promises);
     return values.filter(value => !value).length === 0;
   }
 
-  // async save() {
+  // async save(): Promise<boolean> {
   //   if (this._save == null) {
   //     throw Error("No save configured");
   //   }
@@ -263,6 +263,21 @@ export class FormState<D extends FormDefinition> {
   //   this.clearErrors();
   //   return true;
   // }
+
+  @action
+  setErrors(errors: any) {
+    this.accessors.map(accessor => {
+      const error = getByPath(errors, accessor.path);
+      if (error != null) {
+        this.errors.set(accessor.path, error);
+      }
+    });
+  }
+
+  @action
+  clearErrors() {
+    this.errors.clear();
+  }
 
   getValue(path: string): any {
     return resolvePath(this.node, path);
@@ -292,6 +307,13 @@ export class FormState<D extends FormDefinition> {
     );
   }
 
+  @computed
+  get accessors(): (
+    | FieldAccessor<D, any, any>
+    | RepeatingFormAccessor<D, any>)[] {
+    return this.formAccessor.accessors;
+  }
+
   field<K extends keyof FieldProps<D>>(
     name: K
   ): FieldAccessor<
@@ -299,11 +321,7 @@ export class FormState<D extends FormDefinition> {
     D[K] extends Field<any, any> ? D[K]["rawType"] : never,
     D[K] extends Field<any, any> ? D[K]["valueType"] : never
   > {
-    const field = this.form.definition[name];
-    if (!(field instanceof Field)) {
-      throw new Error("Not accessing a Field instance");
-    }
-    return new FieldAccessor(this, field, "", name);
+    return this.formAccessor.field(name);
   }
 
   repeatingForm<K extends keyof RepeatingFormProps<D>>(
@@ -312,11 +330,68 @@ export class FormState<D extends FormDefinition> {
     D,
     D[K] extends RepeatingForm<any> ? D[K]["definition"] : never
   > {
-    const repeatingForm = this.form.definition[name];
+    return this.formAccessor.repeatingForm(name);
+  }
+
+  repeatingField(name: string): any {}
+}
+
+export class FormAccessor<D extends FormDefinition, R extends FormDefinition> {
+  constructor(
+    public state: FormState<D>,
+    public definition: R,
+    public path: string
+  ) {}
+
+  @computed
+  get accessors(): (
+    | FieldAccessor<D, any, any>
+    | RepeatingFormAccessor<D, any>)[] {
+    const result: (
+      | FieldAccessor<D, any, any>
+      | RepeatingFormAccessor<D, any>)[] = [];
+
+    Object.keys(this.definition).forEach(key => {
+      const entry = this.definition[key];
+      if (entry instanceof Field) {
+        result.push(this.field(key));
+      } else if (entry instanceof RepeatingForm) {
+        result.push(this.repeatingForm(key));
+      }
+    });
+    return result;
+  }
+
+  field<K extends keyof FieldProps<D>>(
+    name: K
+  ): FieldAccessor<
+    D,
+    R[K] extends Field<any, any> ? R[K]["rawType"] : never,
+    R[K] extends Field<any, any> ? R[K]["valueType"] : never
+  > {
+    const field = this.definition[name];
+    if (!(field instanceof Field)) {
+      throw new Error("Not accessing a Field instance");
+    }
+    return new FieldAccessor(this.state, field, this.path, name);
+  }
+
+  repeatingForm<K extends keyof RepeatingFormProps<D>>(
+    name: string
+  ): RepeatingFormAccessor<
+    D,
+    R[K] extends RepeatingForm<any> ? R[K]["definition"] : never
+  > {
+    const repeatingForm = this.definition[name];
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
     }
-    return new RepeatingFormAccessor(this, repeatingForm, "", name);
+    return new RepeatingFormAccessor(
+      this.state,
+      repeatingForm,
+      this.path,
+      name
+    );
   }
 
   repeatingField(name: string): any {}
@@ -430,8 +505,7 @@ export class RepeatingFormAccessor<
 
   async validate(): Promise<boolean> {
     const promises: Promise<any>[] = [];
-    const indexAccessors = this.entries();
-    for (const accessor of indexAccessors) {
+    for (const accessor of this.accessors) {
       Object.keys(this.repeatingForm.definition).forEach(key => {
         const entry = this.repeatingForm.definition[key];
         if (entry instanceof Field) {
@@ -449,7 +523,8 @@ export class RepeatingFormAccessor<
     return new RepeatingFormIndexedAccessor(this.state, this, this.path, index);
   }
 
-  entries(): RepeatingFormIndexedAccessor<D, R>[] {
+  @computed
+  get accessors(): RepeatingFormIndexedAccessor<D, R>[] {
     const result = [];
     for (let index = 0; index < this.length; index++) {
       result.push(this.index(index));
@@ -499,6 +574,7 @@ export class RepeatingFormIndexedAccessor<
   R extends FormDefinition
 > {
   path: string;
+  formAccessor: FormAccessor<D, R>;
 
   constructor(
     public state: FormState<D>,
@@ -507,6 +583,11 @@ export class RepeatingFormIndexedAccessor<
     public index: number
   ) {
     this.path = path + "/" + index;
+    this.formAccessor = new FormAccessor(
+      state,
+      repeatingFormAccessor.repeatingForm.definition,
+      path + "/" + index
+    );
   }
 
   field<K extends keyof FieldProps<R>>(
@@ -516,35 +597,15 @@ export class RepeatingFormIndexedAccessor<
     R[K] extends Field<any, any> ? R[K]["rawType"] : never,
     R[K] extends Field<any, any> ? R[K]["valueType"] : never
   > {
-    const field = this.repeatingFormAccessor.repeatingForm.definition[name];
-    if (!(field instanceof Field)) {
-      throw new Error("Not accessing a Field instance");
-    }
-    return new FieldAccessor(
-      this.repeatingFormAccessor.state,
-      field,
-      this.path,
-      name
-    );
+    return this.formAccessor.field(name);
   }
 
   repeatingForm<K extends keyof RepeatingFormProps<D>>(
     name: string
   ): RepeatingFormAccessor<
     D,
-    D[K] extends RepeatingForm<any> ? D[K]["definition"] : never
+    R[K] extends RepeatingForm<any> ? R[K]["definition"] : never
   > {
-    const repeatingForm = this.repeatingFormAccessor.repeatingForm.definition[
-      name
-    ];
-    if (!(repeatingForm instanceof RepeatingForm)) {
-      throw new Error("Not accessing a RepeatingForm instance");
-    }
-    return new RepeatingFormAccessor(
-      this.repeatingFormAccessor.state,
-      repeatingForm,
-      this.path,
-      name
-    );
+    return this.formAccessor.repeatingForm(name);
   }
 }

@@ -1,5 +1,8 @@
 import { types } from "mobx-state-tree";
+import { configure } from "mobx";
 import { Form, Field, RepeatingForm } from "../src";
+
+configure({ enforceActions: true });
 
 test("a simple form", async () => {
   const M = types.model("M", {
@@ -519,3 +522,44 @@ test("repeating form multiple entries validate", async () => {
   const result3 = await state.validate();
   expect(result3).toBeTruthy();
 });
+
+test("setErrors", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field<string, string>()
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.create(o);
+  state.setErrors({ foo: "WRONG" });
+
+  const field = state.field("foo");
+  expect(field.error).toEqual("WRONG");
+});
+
+// test("setErrors repeating", async () => {
+//   const N = types.model("N", {
+//     bar: types.string
+//   });
+//   const M = types.model("M", {
+//     foo: types.array(N)
+//   });
+
+//   const form = new Form(M, {
+//     foo: new RepeatingForm({
+//       bar: new Field<string, string>()
+//     })
+//   });
+
+//   const o = M.create({ foo: [{ bar: "FOO" }] });
+
+//   const state = form.create(o);
+//   state.setErrors({ foo: [{ bar: "WRONG" }] });
+
+//   const field = state.repeatingForm("foo").accessors[0].field("bar");
+//   expect(field.error).toEqual("WRONG");
+// });

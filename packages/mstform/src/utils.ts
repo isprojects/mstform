@@ -23,3 +23,19 @@ export function unwrap(o: any): any {
   }
   return o;
 }
+
+export function getByPath(obj: any, path: string): string | undefined {
+  return getBySteps(obj, pathToSteps(path));
+}
+
+function getBySteps(obj: any, steps: string[]): string | undefined {
+  const [first, ...rest] = steps;
+  if (rest.length === 0) {
+    return obj[first];
+  }
+  let sub = obj[first];
+  if (sub === undefined) {
+    return undefined;
+  }
+  return getBySteps(sub, rest);
+}
