@@ -218,6 +218,40 @@ export class FormState<D extends FormDefinition> {
     this.errors = observable.map();
   }
 
+  async validate(): Promise<boolean> {
+    const promises: Promise<any>[] = [];
+    Object.keys(this.form.definition).forEach(key => {
+      const field = this.form.definition[key];
+      if (field instanceof Field) {
+        const sub = this.field(key);
+        promises.push(sub.validate());
+      }
+    });
+    const values = await Promise.all(promises);
+
+    // If any value is not empty, that means that the form is invalid
+    // and so, we return false
+    const errors = values.filter(e => !!e);
+    return errors.length === 0;
+  }
+
+  // async save() {
+  //   if (this._save == null) {
+  //     throw Error("No save configured");
+  //   }
+  //   const isValid = await this.validate();
+  //   if (!isValid) {
+  //     return false;
+  //   }
+  //   const errors = await this._save(this.value);
+  //   if (errors != null) {
+  //     this.setErrors(errors);
+  //     return false;
+  //   }
+  //   this.clearErrors();
+  //   return true;
+  // }
+
   getValue(path: string): any {
     return resolvePath(this.node, path);
   }
@@ -306,8 +340,12 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     return this.state.getError(this.path);
   }
 
-  handleChange = async (...args: any[]) => {
-    const raw = this.field.getRaw(...args);
+  async validate(): Promise<boolean> {
+    await this.setRaw(this.raw);
+    return this.error === undefined;
+  }
+
+  async setRaw(raw: R) {
     this.state.raw.set(this.path, raw);
     this.state.errors.delete(this.path);
     let processResult;
@@ -337,6 +375,11 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     applyPatch(this.state.node, [
       { op: "replace", path: this.path, value: processResult.value }
     ]);
+  }
+
+  handleChange = async (...args: any[]) => {
+    const raw = this.field.getRaw(...args);
+    await this.setRaw(raw);
   };
 }
 

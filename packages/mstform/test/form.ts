@@ -373,3 +373,30 @@ test("async validation rejects sets error status", async () => {
   await promise;
   expect(field.error).toEqual("Something went wrong");
 });
+
+test("simple validate", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field<string, string>({
+      validators: [value => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "incorrect" });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+  expect(field.error).toBeUndefined();
+  expect(field.raw).toEqual("incorrect");
+  expect(field.value).toEqual("incorrect");
+  const result = await state.validate();
+  expect(result).toBeTruthy();
+  expect(field.error).toEqual("Wrong");
+
+  await field.setRaw("correct");
+  expect(field.error).toBeUndefined();
+});
