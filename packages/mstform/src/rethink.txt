@@ -19,6 +19,8 @@ Fundamentally we want this:
   field can look up a default converter/render combination
   field can override converter/render for custom purposes
 
+  repeatingForm can define validators. these get all values in the list.
+
   const fs = new FormState(form, o);
 
 we can access a field accessor:
