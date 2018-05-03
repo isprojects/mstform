@@ -101,13 +101,6 @@ export class Field<TRaw, TValue> {
   rawValidators(...validators: Validator<TRaw>[]) {
     this._rawValidators = validators;
   }
-
-  resolveParts(parts: string[]): ResolveResponse {
-    if (parts.length === 0) {
-      return this;
-    }
-    throw new Error("Cannot resolve into Field");
-  }
 }
 
 export class Repeating<TRawValue, TValue> {
@@ -115,17 +108,6 @@ export class Repeating<TRawValue, TValue> {
 
   constructor(value: Field<TRawValue, TValue> | Form<any>) {
     this.value = value;
-  }
-
-  resolveParts(parts: string[]): ResolveResponse {
-    const [first, ...rest] = parts;
-    if (!isInt(first)) {
-      throw new Error("Not a Repeating");
-    }
-    if (rest.length === 0) {
-      return this.value;
-    }
-    throw new Error("Cannot resolve into Repeating");
   }
 }
 
@@ -142,23 +124,6 @@ export class Form<TFormDefinition extends FormDefinitionType> {
 
   constructor(definition: TFormDefinition) {
     this.definition = definition;
-  }
-
-  resolveParts(parts: string[]): ResolveResponse {
-    const [first, ...rest] = parts;
-    const found = this.definition[first];
-
-    if (found === undefined) {
-      throw new Error("Undefined field");
-    }
-    return found.resolveParts(rest);
-  }
-
-  resolve(path: string): ResolveResponse {
-    if (path.startsWith("/")) {
-      path = path.slice(1);
-    }
-    return this.resolveParts(path.split("/"));
   }
 
   create(node: IStateTreeNode) {
@@ -210,36 +175,6 @@ export class FormState<TFormDefinition extends FormDefinitionType> {
     }
   }
 
-  @action
-  async handleChange(path: string, raw: any) {
-    // XXX part of this could move into Field?
-    this.raw.set(path, raw);
-    this.errors.delete(path);
-    const definition = this.resolve(path);
-    if (!(definition instanceof Field)) {
-      throw new Error("Cannot process non-field");
-    }
-    // XXX handling async errors
-    // XXX handling async in general
-    const processResult = await definition.process(raw);
-
-    const currentRaw = this.raw.get(path);
-
-    if (!equal(unwrap(currentRaw), unwrap(raw))) {
-      return;
-    }
-
-    if (processResult.error != null) {
-      this.errors.set(path, processResult.error);
-      return;
-    }
-
-    applyPatch(this.node, [
-      { op: "replace", path, value: processResult.value }
-    ]);
-    this.errors.delete(path);
-  }
-
   get fields(): FormAccessorType<TFormDefinition> {
     const result: any = {};
     Object.keys(this.form.definition).forEach(key => {
@@ -263,24 +198,27 @@ export class FormState<TFormDefinition extends FormDefinitionType> {
     return this.errors.get(path);
   }
 
+  @action
+  setError(path: string, error: string) {
+    this.errors.set(path, error);
+  }
+
+  @action
+  removeError(path: string) {
+    this.errors.delete(path);
+  }
+
   getValue<TValue>(path: string): TValue {
     return resolvePath(this.node, path);
   }
 
   getRaw<TRaw>(path: string): TRaw {
-    const result = this.raw.get(path);
-    if (result !== undefined) {
-      return result;
-    }
-    const response = this.resolve(path);
-    if (!(response instanceof Field)) {
-      throw new Error("Cannot get raw for non-field");
-    }
-    return response.render(this.getValue(path));
+    return this.raw.get(path);
   }
 
-  resolve(path: string): ResolveResponse {
-    return this.form.resolve(path);
+  @action
+  setRaw<TRaw>(path: string, raw: TRaw) {
+    this.raw.set(path, raw);
   }
 }
 
@@ -340,16 +278,35 @@ export class FieldAccessor<
 
   @computed
   get raw(): TRaw {
-    return this.state.getRaw(this.path);
+    const result = this.state.getRaw<TRaw>(this.path);
+    if (result !== undefined) {
+      return result;
+    }
+    return this.field.render(this.state.getValue(this.path));
   }
 
-  handleChange = (...args: any[]) => {
-    const definition = this.state.resolve(this.path);
-    if (!(definition instanceof Field)) {
-      throw new Error("Cannot handle change on a non-field");
+  handleChange = async (...args: any[]) => {
+    const raw = this.field.getValue(...args);
+    this.state.setRaw<TRaw>(this.path, raw);
+    this.state.removeError(this.path);
+    // XXX handling async errors
+    // XXX handling async in general
+    const processResult = await this.field.process(raw);
+
+    const currentRaw = this.state.getRaw(this.path);
+
+    if (!equal(unwrap(currentRaw), unwrap(raw))) {
+      return;
     }
-    const raw = definition.getValue(...args);
-    return this.state.handleChange(this.path, raw);
+
+    if (processResult.error != null) {
+      this.state.setError(this.path, processResult.error);
+      return;
+    }
+
+    applyPatch(this.state.node, [
+      { op: "replace", path: this.path, value: processResult.value }
+    ]);
   };
 }
 
