@@ -520,7 +520,12 @@ export class RepeatingFormAccessor<
   }
 
   index(index: number): RepeatingFormIndexedAccessor<D, R> {
-    return new RepeatingFormIndexedAccessor(this.state, this, this.path, index);
+    return new RepeatingFormIndexedAccessor(
+      this.state,
+      this.repeatingForm.definition,
+      this.path,
+      index
+    );
   }
 
   @computed
@@ -578,16 +583,12 @@ export class RepeatingFormIndexedAccessor<
 
   constructor(
     public state: FormState<D>,
-    public repeatingFormAccessor: RepeatingFormAccessor<D, R>,
+    public definition: R,
     path: string,
     public index: number
   ) {
     this.path = path + "/" + index;
-    this.formAccessor = new FormAccessor(
-      state,
-      repeatingFormAccessor.repeatingForm.definition,
-      path + "/" + index
-    );
+    this.formAccessor = new FormAccessor(state, definition, path + "/" + index);
   }
 
   field<K extends keyof FieldProps<R>>(
