@@ -105,3 +105,32 @@ test("repeating form", async () => {
   expect(field.raw).toEqual("QUX");
   expect(field.value).toEqual("QUX");
 });
+
+test("repeating form with conversion", async () => {
+  const N = types.model("N", {
+    bar: types.number
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, number>()
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: 3 }] });
+
+  const state = form.create(o);
+
+  const forms = state.repeatingForm("foo");
+  const oneForm = forms.index(0);
+  const field = oneForm.field("bar");
+
+  expect(field.raw).toEqual("3");
+  await field.handleChange("4");
+  expect(field.raw).toEqual("4");
+  expect(field.value).toEqual(4);
+  await field.handleChange("not a number");
+});

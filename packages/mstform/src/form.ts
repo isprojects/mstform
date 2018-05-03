@@ -231,6 +231,7 @@ export class FormState<D extends FormDefinition> {
     let subType: IType<any, any> = this.form.modelType;
     for (const step of steps) {
       if (isInt(step)) {
+        subType = subType.getChildType(step);
         continue;
       }
       subType = subType.getChildType(step);
