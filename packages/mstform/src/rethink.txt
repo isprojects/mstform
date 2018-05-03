@@ -1,0 +1,36 @@
+Fundamentally we want this:
+
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+  const form = new Form(M, {
+      foo: new Field({validators: [(value => value && "Verplicht")]})
+      repeating: new RepeatingForm({
+          bar: new Field({})
+      }, {validators})
+  });
+
+  { validators, rawValidators, conversion: {convert, render}, getRaw,  }
+  field needs to define the raw type (default: string)
+  field can define validators
+  field deduces the non-raw type from the type
+  field can look up a default converter/render combination
+  field can override converter/render for custom purposes
+
+  const fs = new FormState(form, o);
+
+we can access a field accessor:
+
+  fs.access('foo')
+
+this has the logic needed to fill in the props.
+
+We can also access a repeating field:
+
+  fs.repeatingField('foo').index(0)
+
+and a repeating form:
+
+  fs.repeatingForm('foo').index(0).access('bar')

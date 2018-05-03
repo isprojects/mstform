@@ -1,16 +1,51 @@
+import { identity } from "./utils";
+import { resolvePath, IStateTreeNode, applyPatch } from "mobx-state-tree";
 import { observable, action, computed, isObservable } from "mobx";
-import {
-  IStateTreeNode,
-  onPatch,
-  applyPatch,
-  resolvePath
-} from "mobx-state-tree";
-// have to use this here but loses type information
-const equal = require("fast-deep-equal");
-// can use this to pass the tests but rollup will bail out
-// import * as equal from "fast-deep-equal";
+
+export type FormDefinition = {
+  [key: string]:
+    | Field<any, any>
+    | RepeatingForm<any>
+    | RepeatingField<any, any>;
+};
+
+export type FieldProps<T extends FormDefinition> = {
+  [K in keyof T]: T[K] extends Field<any, any> ? K : never
+};
+
+export type Fields = {
+  [key: string]: Field<any, any>;
+};
+
+export type RepeatingFormProps<T extends FormDefinition> = {
+  [K in keyof T]: T[K] extends RepeatingForm<any> ? K : never
+};
+
+export type RepeatingFieldProps<T extends FormDefinition> = {
+  [K in keyof T]: T[K] extends RepeatingField<any, any> ? K : never
+};
 
 export type ValidationResponse = string | null | undefined | false;
+
+export type Converter<R, V> = {
+  convert(raw: R): V | undefined;
+  render(value: V): R;
+};
+
+export interface RawGetter<R> {
+  (...args: any[]): R;
+}
+
+export interface Validator<V> {
+  (value: V): ValidationResponse | Promise<ValidationResponse>;
+}
+
+export interface FieldOptionDefinition<R, V> {
+  rawValidators?: Validator<R>[];
+  validators?: Validator<V>[];
+  converter?: Converter<R, V>;
+  getRaw?: RawGetter<R>;
+}
 
 export class ProcessResponse<TValue> {
   value: TValue | null;
@@ -22,253 +57,195 @@ export class ProcessResponse<TValue> {
   }
 }
 
-export interface Converter<TRaw, TValue> {
-  (value: TRaw): TValue | undefined;
+export class FormBehavior {
+  getConverter(mstType: any): Converter<any, any> | undefined {
+    return { convert: identity, render: identity };
+  }
+  getRawGetter(mstType: any): RawGetter<any> {
+    return identity;
+  }
 }
 
-export interface Renderer<TValue, TRaw> {
-  (value: TValue): TRaw;
-}
-
-export interface ValueGetter<TRaw> {
-  (...args: any[]): TRaw;
-}
-
-export interface Validator<TValue> {
-  (value: TValue): ValidationResponse | Promise<ValidationResponse>;
-}
-
-export interface ConversionError {
-  (): string;
-}
-
-export type ResolveResponse = Form<any> | Field<any, any> | Repeating<any, any>;
-
-export class Field<TRaw, TValue> {
-  private _rawValidators: Validator<TRaw>[];
-  private _validators: Validator<TValue>[];
-  private convert: Converter<TRaw, TValue>;
-  render: Renderer<TValue, TRaw>;
-  getValue: ValueGetter<TRaw>;
-  private conversionError: ConversionError;
+export class Form<D extends FormDefinition> {
+  behavior: FormBehavior;
+  fields: Fields;
 
   constructor(
-    convert: Converter<TRaw, TValue>,
-    render: Renderer<TValue, TRaw>,
-    getValue: ValueGetter<TRaw>,
-    conversionError: ConversionError
+    public modelType: any,
+    public definition: D,
+    behavior?: FormBehavior
   ) {
-    this.convert = convert;
-    this.render = render;
-    this.getValue = getValue;
-    this._validators = [];
-    this._rawValidators = [];
-    this.conversionError = conversionError;
+    if (!behavior) {
+      behavior = new FormBehavior();
+    }
+    this.behavior = behavior;
+    const fields: Fields = {};
+    Object.keys(definition).forEach(key => {
+      const field = definition[key];
+      if (field instanceof Field) {
+        fields[key] = field;
+      }
+    });
+    this.fields = fields;
   }
 
-  get rawType(): TRaw {
-    throw new Error("Shouldn't be called");
+  create(node: IStateTreeNode): FormState<D> {
+    return new FormState<D>(this, node);
+  }
+}
+
+export class Field<R, V> {
+  rawValidators: Validator<R>[];
+  validators: Validator<V>[];
+  getRaw: RawGetter<R>;
+
+  constructor(public options?: FieldOptionDefinition<R, V>) {
+    if (!options) {
+      this.rawValidators = [];
+      this.validators = [];
+    } else {
+      this.rawValidators = options.rawValidators ? options.rawValidators : [];
+      this.validators = options.validators ? options.validators : [];
+    }
+
+    if (!options || options.getRaw == null) {
+      this.getRaw = (...args) => args[0] as R;
+    } else {
+      this.getRaw = options.getRaw;
+    }
   }
 
-  get valueType(): TValue {
-    throw new Error("Shouldn't be called");
+  get rawType(): R {
+    throw new Error("fail");
   }
 
-  async process(raw: TRaw): Promise<ProcessResponse<TValue>> {
-    for (const validator of this._rawValidators) {
+  get valueType(): V {
+    throw new Error("fail");
+  }
+
+  converter(behavior: FormBehavior, mstType: any): Converter<R, V> {
+    if (this.options == null || this.options.converter == null) {
+      const converter = behavior.getConverter(mstType);
+      if (converter == null) {
+        throw new Error("Cannot convert");
+      }
+      return converter;
+    }
+    return this.options.converter;
+  }
+
+  convert(behavior: FormBehavior, mstType: any, raw: R): V | undefined {
+    const converter = this.converter(behavior, mstType);
+    return converter.convert(raw);
+  }
+  render(behavior: FormBehavior, mstType: any, value: V): R {
+    const converter = this.converter(behavior, mstType);
+    return converter.render(value);
+  }
+
+  async process(
+    behavior: FormBehavior,
+    mstType: any,
+    raw: R
+  ): Promise<ProcessResponse<V>> {
+    for (const validator of this.rawValidators) {
       const validationResponse = await validator(raw);
       if (typeof validationResponse === "string" && validationResponse) {
-        return new ProcessResponse<TValue>(null, validationResponse);
+        return new ProcessResponse<V>(null, validationResponse);
       }
     }
-    const result = this.convert(raw);
+    const result = this.convert(behavior, mstType, raw);
     if (result === undefined) {
-      return new ProcessResponse<TValue>(null, this.conversionError());
+      return new ProcessResponse<V>(null, "conversion error");
     }
-    for (const validator of this._validators) {
+    for (const validator of this.validators) {
       const validationResponse = await validator(result);
       if (typeof validationResponse === "string" && validationResponse) {
-        return new ProcessResponse<TValue>(null, validationResponse);
+        return new ProcessResponse<V>(null, validationResponse);
       }
     }
-    return new ProcessResponse<TValue>(result, null);
-  }
-
-  validators(...validators: Validator<TValue>[]) {
-    this._validators = validators;
-  }
-
-  rawValidators(...validators: Validator<TRaw>[]) {
-    this._rawValidators = validators;
+    return new ProcessResponse<V>(result, null);
   }
 }
 
-export class Repeating<TRawValue, TValue> {
-  private value: Field<TRawValue, TValue> | Form<any>;
-
-  constructor(value: Field<TRawValue, TValue> | Form<any>) {
-    this.value = value;
-  }
+export class RepeatingForm<D extends FormDefinition> {
+  constructor(public definition: D) {}
 }
 
-function isInt(s: string): boolean {
-  return Number.isInteger(parseInt(s, 10));
+export class RepeatingField<R, V> {
+  constructor(public options?: FieldOptionDefinition<R, V>) {}
 }
 
-export type FormDefinitionType = {
-  [key: string]: Field<any, any>;
-};
+export class FormState<D extends FormDefinition> {
+  raw: Map<string, any>;
+  errors: Map<string, string>;
 
-export class Form<TFormDefinition extends FormDefinitionType> {
-  definition: TFormDefinition;
-
-  constructor(definition: TFormDefinition) {
-    this.definition = definition;
-  }
-
-  create(node: IStateTreeNode) {
-    return new FormState<TFormDefinition>(this, node);
-  }
-}
-
-function unwrap(o: any): any {
-  if (isObservable(o)) {
-    return o.toJS();
-  }
-  return o;
-}
-
-export class FormState<TFormDefinition extends FormDefinitionType> {
-  private errors: Map<string, string>;
-  private raw: Map<string, any>;
-  private promises: Map<string, Promise<any>>;
-
-  form: Form<TFormDefinition>;
-
-  @observable node: IStateTreeNode;
-
-  constructor(form: Form<TFormDefinition>, node: IStateTreeNode) {
-    this.form = form;
-    this.errors = observable.map();
+  constructor(public form: Form<D>, public node: IStateTreeNode) {
     this.raw = observable.map();
-    this.promises = observable.map();
-    this.node = node;
-    // XXX do something with disposer?
-    onPatch(node, patch => {
-      if (patch.op === "remove") {
-        this.removeInfo(patch.path);
-      }
-    });
+    this.errors = observable.map();
   }
 
-  @action
-  private removeInfo(path: string) {
-    for (const key in this.raw.keys()) {
-      if (key.startsWith(path)) {
-        this.raw.delete(key);
-      }
-    }
-    for (const key in this.errors.keys()) {
-      if (key.startsWith(path)) {
-        this.errors.delete(key);
-      }
-    }
-  }
-
-  get fields(): FormAccessorType<TFormDefinition> {
-    const result: any = {};
-    Object.keys(this.form.definition).forEach(key => {
-      result[key] = this.access(key);
-    });
-    return result as FormAccessorType<TFormDefinition>;
-  }
-
-  access<K extends keyof TFormDefinition>(
-    name: K
-  ): FieldAccessor<
-    TFormDefinition,
-    TFormDefinition[K],
-    TFormDefinition[K]["rawType"],
-    TFormDefinition[K]["valueType"]
-  > {
-    return new FieldAccessor(this, this.form.definition[name], name);
+  getValue(path: string): any {
+    return resolvePath(this.node, path);
   }
 
   getError(path: string): string | undefined {
     return this.errors.get(path);
   }
 
-  @action
-  setError(path: string, error: string) {
-    this.errors.set(path, error);
+  getMstType(path: string): any {
+    // getType(this.node)
   }
 
-  @action
-  removeError(path: string) {
-    this.errors.delete(path);
+  field<K extends keyof FieldProps<D>>(
+    name: K
+  ): FieldAccessor<
+    D,
+    D[K] extends Field<any, any> ? D[K]["rawType"] : never,
+    D[K] extends Field<any, any> ? D[K]["valueType"] : never
+  > {
+    const field = this.form.definition[name];
+    if (!(field instanceof Field)) {
+      throw new Error("Cannot access non-field");
+    }
+    return new FieldAccessor(this, field, "", name);
   }
 
-  getValue<TValue>(path: string): TValue {
-    return resolvePath(this.node, path);
-  }
+  repeatingField(name: string): any {}
 
-  getRaw<TRaw>(path: string): TRaw {
-    return this.raw.get(path);
-  }
-
-  @action
-  setRaw<TRaw>(path: string, raw: TRaw) {
-    this.raw.set(path, raw);
-  }
+  repeatingForm(name: string): any {}
 }
 
-export type FormAccessorType<TFormDefinition extends FormDefinitionType> = {
-  [K in keyof TFormDefinition]: FieldAccessor<
-    TFormDefinition,
-    TFormDefinition[K],
-    TFormDefinition[K]["rawType"],
-    TFormDefinition[K]["valueType"]
-  >
-};
-
-export class FormAccessor<TFormDefinition extends FormDefinitionType> {
-  private state: FormState<TFormDefinition>;
-
-  constructor(state: FormState<TFormDefinition>) {
-    this.state = state;
-  }
-}
-
-class RepeatingAccessor {
-  // can node also be a plain value? depends on what's in it
-  insert(index: number, node: IStateTreeNode) {}
-  push(node: IStateTreeNode) {}
-  remove(node: IStateTreeNode) {}
-
-  @computed
-  get error(): string {
-    return "error";
-  }
-}
-
-export class FieldAccessor<
-  TFormDefinition extends FormDefinitionType,
-  TField extends Field<TRaw, TValue>,
-  TRaw,
-  TValue
-> {
-  private state: FormState<TFormDefinition>;
-  field: Field<TRaw, TValue>;
+export class FieldAccessor<D extends FormDefinition, R, V> {
   path: string;
+  name: string;
 
   constructor(
-    state: FormState<TFormDefinition>,
-    field: Field<TRaw, TValue>,
-    path: string
+    public state: FormState<D>,
+    public field: Field<R, V>,
+    path: string,
+    name: string
   ) {
-    this.state = state;
-    this.field = field;
-    this.path = path;
+    this.name = name;
+    this.path = path + "/" + name;
+  }
+
+  @computed
+  get raw(): R {
+    const result = this.state.raw.get(this.path);
+    if (result !== undefined) {
+      return result as R;
+    }
+    return this.field.render(
+      this.state.form.behavior,
+      this.state.getMstType(this.path),
+      this.state.getValue(this.path)
+    );
+  }
+
+  @computed
+  get value(): V {
+    return this.state.getValue(this.path);
   }
 
   @computed
@@ -276,31 +253,20 @@ export class FieldAccessor<
     return this.state.getError(this.path);
   }
 
-  @computed
-  get raw(): TRaw {
-    const result = this.state.getRaw<TRaw>(this.path);
-    if (result !== undefined) {
-      return result;
-    }
-    return this.field.render(this.state.getValue(this.path));
-  }
-
   handleChange = async (...args: any[]) => {
-    const raw = this.field.getValue(...args);
-    this.state.setRaw<TRaw>(this.path, raw);
-    this.state.removeError(this.path);
-    // XXX handling async errors
-    // XXX handling async in general
-    const processResult = await this.field.process(raw);
+    const raw = this.field.getRaw(...args);
+    this.state.raw.set(this.path, raw);
+    this.state.errors.delete(this.path);
 
-    const currentRaw = this.state.getRaw(this.path);
-
-    if (!equal(unwrap(currentRaw), unwrap(raw))) {
-      return;
-    }
+    const processResult = await this.field.process(
+      this.state.form.behavior,
+      this.state.getMstType(this.path),
+      raw
+    );
+    // XXX compare with previous raw?
 
     if (processResult.error != null) {
-      this.state.setError(this.path, processResult.error);
+      this.state.errors.set(this.path, processResult.error);
       return;
     }
 
@@ -308,29 +274,4 @@ export class FieldAccessor<
       { op: "replace", path: this.path, value: processResult.value }
     ]);
   };
-}
-
-function identity<T>(value: T): T {
-  return value;
-}
-
-export class StringField extends Field<string, string> {
-  constructor() {
-    const getValue: ValueGetter<any> = event => {
-      return event.target.value;
-    };
-    const conversionError: ConversionError = () => {
-      return "Conversion error";
-    };
-    super(identity, identity, getValue, conversionError);
-  }
-}
-
-export class ObjectField<TValue> extends Field<TValue, TValue> {
-  constructor() {
-    const conversionError: ConversionError = () => {
-      return "Conversion error";
-    };
-    super(identity, identity, identity, conversionError);
-  }
 }
