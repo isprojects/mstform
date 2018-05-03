@@ -541,25 +541,25 @@ test("setErrors", async () => {
   expect(field.error).toEqual("WRONG");
 });
 
-// test("setErrors repeating", async () => {
-//   const N = types.model("N", {
-//     bar: types.string
-//   });
-//   const M = types.model("M", {
-//     foo: types.array(N)
-//   });
+test("setErrors repeating", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
 
-//   const form = new Form(M, {
-//     foo: new RepeatingForm({
-//       bar: new Field<string, string>()
-//     })
-//   });
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field<string, string>()
+    })
+  });
 
-//   const o = M.create({ foo: [{ bar: "FOO" }] });
+  const o = M.create({ foo: [{ bar: "FOO" }] });
 
-//   const state = form.create(o);
-//   state.setErrors({ foo: [{ bar: "WRONG" }] });
+  const state = form.create(o);
+  state.setErrors({ foo: [{ bar: "WRONG" }] });
 
-//   const field = state.repeatingForm("foo").accessors[0].field("bar");
-//   expect(field.error).toEqual("WRONG");
-// });
+  const field = state.repeatingForm("foo").accessors[0].field("bar");
+  expect(field.error).toEqual("WRONG");
+});

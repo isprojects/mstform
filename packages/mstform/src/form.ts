@@ -247,9 +247,7 @@ export class FormState<D extends FormDefinition> {
   }
 
   async validate(): Promise<boolean> {
-    const promises = this.accessors.map(accessor => accessor.validate());
-    const values = await Promise.all(promises);
-    return values.filter(value => !value).length === 0;
+    return await this.formAccessor.validate();
   }
 
   // async save(): Promise<boolean> {
@@ -271,7 +269,7 @@ export class FormState<D extends FormDefinition> {
 
   @action
   setErrors(errors: any) {
-    this.accessors.map(accessor => {
+    this.flatAccessors.map(accessor => {
       const error = getByPath(errors, accessor.path);
       if (error != null) {
         this.errors.set(accessor.path, error);
@@ -313,10 +311,13 @@ export class FormState<D extends FormDefinition> {
   }
 
   @computed
-  get accessors(): (
-    | FieldAccessor<D, any, any>
-    | RepeatingFormAccessor<D, any>)[] {
+  get accessors(): Accessor<D>[] {
     return this.formAccessor.accessors;
+  }
+
+  @computed
+  get flatAccessors(): Accessor<D>[] {
+    return this.formAccessor.flatAccessors;
   }
 
   field<K extends keyof FieldProps<D>>(
@@ -348,6 +349,12 @@ export class FormAccessor<D extends FormDefinition, R extends FormDefinition> {
     public path: string
   ) {}
 
+  async validate(): Promise<boolean> {
+    const promises = this.accessors.map(accessor => accessor.validate());
+    const values = await Promise.all(promises);
+    return values.filter(value => !value).length === 0;
+  }
+
   @computed
   get accessors(): Accessor<D>[] {
     const result: Accessor<D>[] = [];
@@ -358,6 +365,20 @@ export class FormAccessor<D extends FormDefinition, R extends FormDefinition> {
         result.push(this.field(key));
       } else if (entry instanceof RepeatingForm) {
         result.push(this.repeatingForm(key));
+      }
+    });
+    return result;
+  }
+
+  @computed
+  get flatAccessors(): Accessor<D>[] {
+    const result: Accessor<D>[] = [];
+    this.accessors.forEach(accessor => {
+      if (accessor instanceof FieldAccessor) {
+        result.push(accessor);
+      } else if (accessor instanceof RepeatingFormAccessor) {
+        result.push(...accessor.flatAccessors);
+        result.push(accessor);
       }
     });
     return result;
@@ -507,14 +528,7 @@ export class RepeatingFormAccessor<
   async validate(): Promise<boolean> {
     const promises: Promise<any>[] = [];
     for (const accessor of this.accessors) {
-      Object.keys(this.repeatingForm.definition).forEach(key => {
-        const entry = this.repeatingForm.definition[key];
-        if (entry instanceof Field) {
-          promises.push(accessor.field(key).validate());
-        } else if (entry instanceof RepeatingForm) {
-          promises.push(accessor.repeatingForm(key).validate());
-        }
-      });
+      promises.push(accessor.validate());
     }
     const values = await Promise.all(promises);
     return values.filter(value => !value).length === 0;
@@ -535,6 +549,15 @@ export class RepeatingFormAccessor<
     for (let index = 0; index < this.length; index++) {
       result.push(this.index(index));
     }
+    return result;
+  }
+
+  @computed
+  get flatAccessors(): Accessor<D>[] {
+    const result: Accessor<D>[] = [];
+    this.accessors.forEach(accessor => {
+      result.push(...accessor.flatAccessors);
+    });
     return result;
   }
 
@@ -592,6 +615,10 @@ export class RepeatingFormIndexedAccessor<
     this.formAccessor = new FormAccessor(state, definition, path + "/" + index);
   }
 
+  async validate(): Promise<boolean> {
+    return this.formAccessor.validate();
+  }
+
   field<K extends keyof FieldProps<R>>(
     name: K
   ): FieldAccessor<
@@ -609,5 +636,15 @@ export class RepeatingFormIndexedAccessor<
     R[K] extends RepeatingForm<any> ? R[K]["definition"] : never
   > {
     return this.formAccessor.repeatingForm(name);
+  }
+
+  @computed
+  get accessors(): Accessor<D>[] {
+    return this.formAccessor.accessors;
+  }
+
+  @computed
+  get flatAccessors(): Accessor<D>[] {
+    return this.formAccessor.flatAccessors;
   }
 }
