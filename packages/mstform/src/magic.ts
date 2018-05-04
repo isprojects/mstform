@@ -1,7 +1,7 @@
 import { IModelType, types } from "mobx-state-tree";
 
 const Model = types.model({
-  foo: types.number,
+  foo: types.maybe(types.number),
   bar: types.string
 });
 
@@ -13,30 +13,36 @@ interface Definition<V> {
   convert: Convert<V>;
 }
 
-type Fields<M> = { [K in keyof M]?: Definition<M[K]> };
+type Fields<M> = { [K in keyof M]?: Field<M[K]> };
 
 class MstForm<M> {
   constructor(public model: IModelType<any, M>, public fields: Fields<M>) {}
   access<K extends keyof M>(name: K): Accessor<M[K]> {
-    return new Accessor();
+    const field = this.fields[name];
+    if (field == null) {
+      throw new Error("Unknown field");
+    }
+    return new Accessor(field as Field<M[K]>);
   }
 }
 
 class Accessor<V> {
+  constructor(public field: Field<V>) {}
   Type(): V {
     throw new Error("just for typechecking");
   }
 }
 
 class Field<V> {
-  Type(): V {
-    throw new Error("just for typechecking");
-  }
+  constructor(public definition: Definition<V>) {}
 }
 
 const form = new MstForm(Model, {
-  foo: { convert: (raw: string) => parseInt(raw) }
+  foo: new Field({ convert: raw => parseInt(raw) })
 });
 
+const fields = form.fields;
+
 const a = form.access("foo");
+const f = a.field;
 const v = a.Type();
