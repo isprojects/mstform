@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "antd": "^3.4.5",
+    "fast-deep-equal": "^2.0.1",
     "mobx": "^4.2.0",
     "mobx-react": "^5.1.2",
     "mobx-state-tree": "^2.0.4",

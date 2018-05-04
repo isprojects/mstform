@@ -10,7 +10,8 @@ const M = types.model("M", {
 
 const form = new MstForm(M, {
   foo: new Field({
-    validators: [value => value !== "correct" && "Wrong"]
+    validators: [value => value !== "correct" && "Wrong"],
+    getRaw: ev => ev.target.value
   })
 });
 
@@ -33,11 +34,13 @@ class App extends Component {
   }
 
   render() {
+    const field = this.state.field("foo");
+
     return (
       <Card>
         <Form>
-          <Form.Item label="foo" {...formItemLayout}>
-            <Input />
+          <Form.Item label="Foo" {...field.validationProps} {...formItemLayout}>
+            <Input {...field.inputProps} />
           </Form.Item>
         </Form>
         <Button>press</Button>

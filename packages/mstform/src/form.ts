@@ -527,6 +527,27 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     const raw = this.field.getRaw(...args);
     await this.setRaw(raw);
   };
+
+  @computed
+  get inputProps() {
+    return {
+      value: this.raw,
+      onChange: this.handleChange
+    };
+  }
+
+  @computed
+  get validationProps() {
+    const error = this.error;
+    const isValidating = this.isValidating;
+    if (!error) {
+      return { validateStatus: isValidating ? "validating" : "" };
+    }
+    return {
+      validateStatus: isValidating ? "validating" : "error",
+      help: error
+    };
+  }
 }
 
 export class RepeatingFormAccessor<
