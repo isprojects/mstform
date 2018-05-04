@@ -541,7 +541,6 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
   get validationProps() {
     const error = this.error;
     const isValidating = this.isValidating;
-    console.log(error);
     if (!error) {
       return { validateStatus: isValidating ? "validating" : "" };
     }
