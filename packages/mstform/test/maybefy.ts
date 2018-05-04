@@ -1,6 +1,8 @@
 import { types, typecheck } from "mobx-state-tree";
 import { maybefy } from "../src";
 
+// XXX typecheck expects are commented out to prevent spamminess
+
 test("number field", () => {
   const M = types.model("M", {
     foo: types.number
