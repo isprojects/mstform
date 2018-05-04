@@ -1,0 +1,25 @@
+{
+  "name": "mstform-example",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "antd": "^3.4.5",
+    "mobx": "^4.2.0",
+    "mobx-react": "^5.1.2",
+    "mobx-state-tree": "^2.0.4",
+    "mstform": "^0.1.0",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "react-scripts": "1.1.4"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "react-app-rewire-mobx": "^1.0.8",
+    "react-app-rewired": "^1.5.2"
+  }
+}
