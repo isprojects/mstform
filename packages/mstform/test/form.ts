@@ -2,7 +2,7 @@ import { types } from "mobx-state-tree";
 import { configure } from "mobx";
 import { Form, Field, RepeatingForm } from "../src";
 
-configure({ enforceActions: true });
+configure({ enforceActions: "strict" });
 
 test("a simple form", async () => {
   const M = types.model("M", {

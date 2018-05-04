@@ -249,6 +249,27 @@ export class FormState<D extends FormDefinition> {
   }
 
   @action
+  setError(path: string, value: string) {
+    this.errors.set(path, value);
+  }
+
+  @action
+  deleteError(path: string) {
+    this.errors.delete(path);
+  }
+
+  @action
+  setValidating(path: string, value: boolean) {
+    this.validating.set(path, value);
+  }
+
+  @action
+  setRaw(path: string, value: any) {
+    this.raw.set(path, value);
+  }
+
+  @action
+  @action
   removeInfo(path: string) {
     this.raw.forEach((value, key) => {
       if (key.startsWith(path)) {
@@ -489,8 +510,8 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
 
   @action
   async setRaw(raw: R) {
-    this.state.raw.set(this.path, raw);
-    this.state.validating.set(this.path, true);
+    this.state.setRaw(this.path, raw);
+    this.state.setValidating(this.path, true);
     let processResult;
     try {
       processResult = await this.field.process(
@@ -499,8 +520,8 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
         raw
       );
     } catch (e) {
-      this.state.errors.set(this.path, "Something went wrong");
-      this.state.validating.set(this.path, false);
+      this.state.setError(this.path, "Something went wrong");
+      this.state.setValidating(this.path, false);
       return;
     }
 
@@ -510,13 +531,13 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     if (!equal(unwrap(currentRaw), unwrap(raw))) {
       return;
     }
-    this.state.validating.set(this.path, false);
+    this.state.setValidating(this.path, false);
 
     if (processResult.error != null) {
-      this.state.errors.set(this.path, processResult.error);
+      this.state.setError(this.path, processResult.error);
       return;
     } else {
-      this.state.errors.delete(this.path);
+      this.state.deleteError(this.path);
     }
 
     applyPatch(this.state.node, [
