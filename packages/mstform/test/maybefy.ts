@@ -2,7 +2,7 @@ import { types, typecheck } from "mobx-state-tree";
 import { maybefy } from "../src";
 
 // XXX typecheck expects are commented out to prevent spamminess
-
+// XXX is keyof magic possible to have more type information preserved?
 test("number field", () => {
   const M = types.model("M", {
     foo: types.number
