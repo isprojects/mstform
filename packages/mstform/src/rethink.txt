@@ -2,6 +2,18 @@ Todo:
 
 * is it possible to get rid of the D generic passed through everywhere?
 
+* maybefy port.
+
+* can we use the Type information from mobx-state-tree for fields?
+
+* customizable form behavior.
+
+* rawValidators/validators for converters? But how to configure errors.
+
+* getValue should be different default. Or at least be configured accurately.
+
+* required support.
+
 Fundamentally we want this:
 
   const M = types.model("M", {
