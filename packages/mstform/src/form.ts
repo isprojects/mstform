@@ -490,7 +490,6 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
   @action
   async setRaw(raw: R) {
     this.state.raw.set(this.path, raw);
-    this.state.errors.delete(this.path);
     this.state.validating.set(this.path, true);
     let processResult;
     try {
@@ -516,6 +515,8 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
     if (processResult.error != null) {
       this.state.errors.set(this.path, processResult.error);
       return;
+    } else {
+      this.state.errors.delete(this.path);
     }
 
     applyPatch(this.state.node, [
@@ -540,6 +541,7 @@ export class FieldAccessor<D extends FormDefinition, R, V> {
   get validationProps() {
     const error = this.error;
     const isValidating = this.isValidating;
+    console.log(error);
     if (!error) {
       return { validateStatus: isValidating ? "validating" : "" };
     }
