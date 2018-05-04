@@ -151,3 +151,26 @@ test("another kind of union", () => {
   Maybefied.create({ foo: 3 });
   Maybefied.create({ foo: "foo" });
 });
+
+test("reference", () => {
+  const Thing = types.model("Thing", {
+    id: types.identifier(),
+    foo: types.string
+  });
+
+  const M = types.model("M", {
+    r: types.reference(Thing)
+  });
+
+  const R = types.model({
+    m: M,
+    w: maybefy(M),
+    things: types.array(Thing)
+  });
+
+  const r = R.create({
+    things: [{ id: "a", foo: "A" }],
+    m: { r: "a" },
+    w: { r: null }
+  });
+});

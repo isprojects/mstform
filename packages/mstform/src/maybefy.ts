@@ -1,20 +1,20 @@
-import { types } from "mobx-state-tree";
+import { types, IType, IModelType } from "mobx-state-tree";
 import { TypeFlags } from "./typeflags";
 
-function maybefyField(type: any): any {
+function maybefyField(type: IType<any, any>): IType<any, any> {
   // string by itself not in a union
   if (type.flags & TypeFlags.String && !(type.flags & TypeFlags.Union)) {
     return type;
   }
 
   if (type.flags & TypeFlags.Array) {
-    return types.array(maybefyField(type.getChildType()));
+    return types.array(maybefyField(type.getChildType("dummy")));
   }
   if (type.flags & TypeFlags.Map) {
-    return types.map(maybefyField(type.getChildType()));
+    return types.map(maybefyField(type.getChildType("dummy")));
   }
   if (type.flags & TypeFlags.Object) {
-    return maybefy(type);
+    return maybefy(type as IModelType<any, any>);
   }
   if (type.flags & TypeFlags.Union) {
     if (type.flags & TypeFlags.Null) {
@@ -28,7 +28,7 @@ function maybefyField(type: any): any {
   return types.maybe(type);
 }
 
-export function maybefy(type: any): any {
+export function maybefy(type: IModelType<any, any>): IModelType<any, any> {
   const definition: any = {};
   Object.keys(type.properties).forEach(key => {
     definition[key] = maybefyField(type.properties[key]);
