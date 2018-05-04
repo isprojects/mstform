@@ -129,6 +129,42 @@ export class Form<D extends FormDefinition> {
   }
 }
 
+// class MagicField {
+//   constructor()
+// }
+// export type MagicFormDefinition = {
+//   [key: string]:
+//     | MagicField<any, any>
+//     | RepeatingForm<any>
+//     | RepeatingField<any, any>;
+// };
+
+// export class MagicForm<D extends MagicFormDefinition> {
+//   behavior: FormBehavior;
+//   constructor(
+//     public modelType: IModelType<any, any>,
+//     public definition: D,
+//     behavior?: FormBehavior
+//   ) {
+//     if (!behavior) {
+//       behavior = new FormBehavior();
+//     }
+//     this.behavior = behavior;
+//   }
+
+//   create(node: IStateTreeNode, options?: FormStateOptions): FormState<D> {
+//     return new FormState<D>(this, node, options);
+//   }
+// }
+
+export function field<R, T, K extends keyof T>(
+  m: IModelType<any, T>,
+  name: K,
+  options?: FieldOptionDefinition<R, T[K]>
+): Field<R, T[K]> {
+  return new Field(options);
+}
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];

@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, RepeatingForm } from "../src";
+import { Field, Form, RepeatingForm, field } from "../src";
 
 configure({ enforceActions: "strict" });
 
@@ -29,6 +29,35 @@ test("a simple form", async () => {
   await field.handleChange("correct");
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("correct");
+});
+
+test("a simple form with field", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: field(M, "foo", {
+      validators: [value => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+  const o2 = M.create({ foo: null });
+  const value = o2.foo;
+  expect(value).toEqual(null);
+  const state = form.create(o);
+
+  const f = state.field("foo");
+
+  expect(f.raw).toEqual("FOO");
+  await f.setRaw("BAR");
+  expect(f.raw).toEqual("BAR");
+  expect(f.error).toEqual("Wrong");
+  expect(f.value).toEqual("FOO");
+  await f.setRaw("correct");
+  expect(f.error).toBeUndefined();
+  expect(f.value).toEqual("correct");
 });
 
 test("a simple form with array field", async () => {
@@ -286,7 +315,7 @@ test("async validation", async () => {
     foo: types.string
   });
 
-  const done = [];
+  const done: any[] = [];
 
   const form = new Form(M, {
     foo: new Field<string, string>({
@@ -336,7 +365,7 @@ test("async validation modification", async () => {
     foo: types.string
   });
 
-  let done = [];
+  let done: any[] = [];
 
   const form = new Form(M, {
     foo: new Field<string, string>({
@@ -388,7 +417,7 @@ test("async validation rejects sets error status", async () => {
     foo: types.string
   });
 
-  const done = [];
+  const done: any[] = [];
   const form = new Form(M, {
     foo: new Field<string, string>({
       validators: [
@@ -598,7 +627,7 @@ test("FormState can be saved", async () => {
     foo: new Field({})
   });
 
-  async function save(data) {
+  async function save(data: any) {
     if (data.foo === "") {
       return { foo: "Required" };
     }
