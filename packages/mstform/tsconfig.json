@@ -19,5 +19,5 @@
         "importHelpers": true,
         "lib": ["es6"]
     },
-    "files": ["src/index.ts"]
+    "include": ["src/**/*", "test/**/*"]
 }
