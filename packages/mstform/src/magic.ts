@@ -38,7 +38,8 @@ class Field<V> {
 }
 
 const form = new MstForm(Model, {
-  foo: new Field({ convert: raw => parseInt(raw) })
+  foo: new Field({ convert: raw => parseInt(raw) }),
+  bar: new Field({ convert: raw => raw })
 });
 
 const fields = form.fields;
