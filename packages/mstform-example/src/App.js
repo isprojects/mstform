@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import "antd/dist/antd.css";
+import { observer } from "mobx-react";
 import { Button, Form, Input, Card } from "antd";
 import { types } from "mobx-state-tree";
 import { Form as MstForm, Field } from "mstform";
@@ -26,6 +27,7 @@ const formItemLayout = {
   }
 };
 
+@observer
 class App extends Component {
   constructor(props) {
     super(props);
