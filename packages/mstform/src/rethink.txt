@@ -1,3 +1,7 @@
+Todo:
+
+* is it possible to get rid of the D generic passed through everywhere?
+
 Fundamentally we want this:
 
   const M = types.model("M", {
