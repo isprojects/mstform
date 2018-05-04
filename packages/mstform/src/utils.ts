@@ -1,4 +1,4 @@
-import { isObservable } from "mobx";
+import { isObservable, toJS } from "mobx";
 // have to use this here but loses type information
 export const equal = require("fast-deep-equal");
 
@@ -19,7 +19,7 @@ export function isInt(s: string): boolean {
 
 export function unwrap(o: any): any {
   if (isObservable(o)) {
-    return o.toJS();
+    return toJS(o);
   }
   return o;
 }

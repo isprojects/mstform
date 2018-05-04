@@ -1,6 +1,6 @@
-import { types } from "mobx-state-tree";
 import { configure } from "mobx";
-import { Form, Field, RepeatingForm } from "../src";
+import { types } from "mobx-state-tree";
+import { Field, Form, RepeatingForm } from "../src";
 
 configure({ enforceActions: "strict" });
 

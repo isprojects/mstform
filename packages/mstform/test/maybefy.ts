@@ -1,4 +1,4 @@
-import { types, typecheck } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import { maybefy } from "../src";
 
 // XXX typecheck expects are commented out to prevent spamminess

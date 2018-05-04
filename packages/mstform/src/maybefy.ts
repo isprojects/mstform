@@ -1,4 +1,4 @@
-import { types, IType, IModelType } from "mobx-state-tree";
+import { IModelType, IType, types } from "mobx-state-tree";
 import { TypeFlags } from "./typeflags";
 
 function maybefyField(type: IType<any, any>): IType<any, any> {

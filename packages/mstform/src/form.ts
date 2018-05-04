@@ -1,23 +1,21 @@
-import { observable, action, computed, isObservable } from "mobx";
+import { action, computed, observable } from "mobx";
 import {
-  resolvePath,
-  IStateTreeNode,
-  applyPatch,
-  types,
-  getType,
   IModelType,
+  IStateTreeNode,
   IType,
-  onPatch
+  applyPatch,
+  onPatch,
+  resolvePath
 } from "mobx-state-tree";
-import {
-  identity,
-  pathToSteps,
-  isInt,
-  equal,
-  unwrap,
-  getByPath
-} from "./utils";
 import { TypeFlags } from "./typeflags";
+import {
+  equal,
+  getByPath,
+  identity,
+  isInt,
+  pathToSteps,
+  unwrap
+} from "./utils";
 
 export type FormDefinition = {
   [key: string]:
