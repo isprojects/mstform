@@ -1,5 +1,16 @@
 {
-	"devDependencies": {
-		"lerna": "^2.11.0"
-	}
+  "private": true,
+  "scripts": {
+    "clean": "lerna clean",
+    "build": "lerna run build",
+    "test": "cross-env CI=true lerna run test",
+    "precommit": "lint-staged",
+    "coverage": "lerna run coverage",
+    "bootstrap": "lerna bootstrap --hoist",
+    "release": "yarn build && lerna publish"
+  },
+  "devDependencies": {
+    "lerna": "^2.11.0"
+  },
+  "workspaces": ["packages/*"]
 }
