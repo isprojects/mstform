@@ -10,8 +10,7 @@
     "mobx-state-tree": "^2.0.4",
     "mstform": "^0.1.0",
     "react": "^16.3.2",
-    "react-dom": "^16.3.2",
-    "react-scripts": "1.1.4"
+    "react-dom": "^16.3.2"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -21,6 +20,7 @@
   },
   "devDependencies": {
     "react-app-rewire-mobx": "^1.0.8",
-    "react-app-rewired": "^1.5.2"
+    "react-app-rewired": "^1.5.2",
+    "react-scripts": "1.1.4"
   }
 }
