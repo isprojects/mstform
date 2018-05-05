@@ -1,4 +1,4 @@
-import { action, computed, observable } from "mobx";
+import { IObservableArray, action, computed, observable } from "mobx";
 import {
   IModelType,
   IStateTreeNode,
@@ -26,13 +26,15 @@ import {
   unwrap
 } from "./utils";
 
+export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
+
 export type Accessor =
   | FieldAccessor<any, any>
   | RepeatingFormAccessor<any>
   | RepeatingFormIndexedAccessor<any>;
 
 export type FormDefinition<M> = {
-  [K in keyof M]?: Field<any, M[K]> | RepeatingForm<any>
+  [K in keyof M]?: Field<any, M[K]> | RepeatingForm<ArrayEntryType<M[K]>>
 };
 
 const numberConverter: Converter<string, number> = {
@@ -317,7 +319,9 @@ export class FormState<M> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccessor<any> {
+  repeatingForm<K extends keyof M>(
+    name: K
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>> {
     return this.formAccessor.repeatingForm(name);
   }
 
@@ -374,7 +378,9 @@ export class FormAccessor<M> {
     return new FieldAccessor(this.state, field, this.path, name);
   }
 
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccessor<any> {
+  repeatingForm<K extends keyof M>(
+    name: K
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>> {
     const repeatingForm = this.definition[name];
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
@@ -615,7 +621,9 @@ export class RepeatingFormIndexedAccessor<M> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccessor<any> {
+  repeatingForm<K extends keyof M>(
+    name: K
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>> {
     return this.formAccessor.repeatingForm(name);
   }
 

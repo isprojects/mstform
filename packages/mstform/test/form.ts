@@ -148,7 +148,7 @@ test("repeating form", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field()
+      bar: new Field({ validators: [(value: string) => false] })
     })
   });
 
