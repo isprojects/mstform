@@ -18,10 +18,7 @@ import {
 } from "./utils";
 
 export type FormDefinition = {
-  [key: string]:
-    | Field<any, any>
-    | RepeatingForm<any>
-    | RepeatingField<any, any>;
+  [key: string]: Field<any, any> | RepeatingForm | RepeatingField<any, any>;
 };
 
 export type FieldProps<T extends FormDefinition> = {
@@ -29,7 +26,7 @@ export type FieldProps<T extends FormDefinition> = {
 };
 
 export type RepeatingFormProps<T extends FormDefinition> = {
-  [K in keyof T]: T[K] extends RepeatingForm<any> ? T[K] : never
+  [K in keyof T]: T[K] extends RepeatingForm ? T[K] : never
 };
 
 export type RepeatingFieldProps<T extends FormDefinition> = {
@@ -45,8 +42,8 @@ export type Converter<R, V> = {
 
 export type Accessor =
   | FieldAccessor<any, any>
-  | RepeatingFormAccessor<any>
-  | RepeatingFormIndexedAccessor<any>;
+  | RepeatingFormAccessor
+  | RepeatingFormIndexedAccessor;
 
 export interface RawGetter<R> {
   (...args: any[]): R;
@@ -56,7 +53,7 @@ export interface Validator<V> {
   (value: V): ValidationResponse | Promise<ValidationResponse>;
 }
 
-export interface FieldOptionDefinition<R, V> {
+export interface FieldOptions<R, V> {
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
   converter?: Converter<R, V>;
@@ -110,12 +107,12 @@ export class FormBehavior {
   }
 }
 
-export class Form<D extends FormDefinition> {
+export class Form {
   behavior: FormBehavior;
 
   constructor(
-    public modelType: IModelType<any, any>,
-    public definition: D,
+    public model: IModelType<any, any>,
+    public definition: any,
     behavior?: FormBehavior
   ) {
     if (!behavior) {
@@ -124,8 +121,8 @@ export class Form<D extends FormDefinition> {
     this.behavior = behavior;
   }
 
-  create(node: IStateTreeNode, options?: FormStateOptions): FormState<D> {
-    return new FormState<D>(this, node, options);
+  create(node: IStateTreeNode, options?: FormStateOptions): FormState {
+    return new FormState(this, node, options);
   }
 }
 
@@ -135,7 +132,7 @@ export class Field<R, V> {
   getRaw: RawGetter<R>;
   conversionError: string;
 
-  constructor(public options?: FieldOptionDefinition<R, V>) {
+  constructor(public options?: FieldOptions<R, V>) {
     if (!options) {
       this.rawValidators = [];
       this.validators = [];
@@ -210,23 +207,23 @@ export class Field<R, V> {
   }
 }
 
-export class RepeatingForm<D extends FormDefinition> {
-  constructor(public definition: D) {}
+export class RepeatingForm {
+  constructor(public definition: any) {}
 }
 
 export class RepeatingField<R, V> {
-  constructor(public options?: FieldOptionDefinition<R, V>) {}
+  constructor(public options?: FieldOptions<R, V>) {}
 }
 
-export class FormState<D extends FormDefinition> {
+export class FormState {
   raw: Map<string, any>;
   errors: Map<string, string>;
   validating: Map<string, boolean>;
-  formAccessor: FormAccessor<D>;
+  formAccessor: FormAccessor;
   saveFunc?: SaveFunc;
 
   constructor(
-    public form: Form<D>,
+    public form: Form,
     public node: IStateTreeNode,
     options?: FormStateOptions
   ) {
@@ -332,7 +329,7 @@ export class FormState<D extends FormDefinition> {
 
   getMstType(path: string): IType<any, any> {
     const steps = pathToSteps(path);
-    let subType: IType<any, any> = this.form.modelType;
+    let subType: IType<any, any> = this.form.model;
     for (const step of steps) {
       if (isInt(step)) {
         subType = subType.getChildType(step);
@@ -360,30 +357,21 @@ export class FormState<D extends FormDefinition> {
     return this.formAccessor.flatAccessors;
   }
 
-  field<K extends keyof FieldProps<D>>(
-    name: K
-  ): FieldAccessor<
-    D[K] extends Field<any, any> ? D[K]["rawType"] : never,
-    D[K] extends Field<any, any> ? D[K]["valueType"] : never
-  > {
+  field(name: string): FieldAccessor<any, any> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof RepeatingFormProps<D>>(
-    name: string
-  ): RepeatingFormAccessor<
-    D[K] extends RepeatingForm<any> ? D[K]["definition"] : never
-  > {
+  repeatingForm(name: string): RepeatingFormAccessor {
     return this.formAccessor.repeatingForm(name);
   }
 
   repeatingField(name: string): any {}
 }
 
-export class FormAccessor<R extends FormDefinition> {
+export class FormAccessor {
   constructor(
-    public state: FormState<any>,
-    public definition: R,
+    public state: FormState,
+    public definition: any,
     public path: string
   ) {}
 
@@ -422,12 +410,7 @@ export class FormAccessor<R extends FormDefinition> {
     return result;
   }
 
-  field<K extends keyof FieldProps<R>>(
-    name: K
-  ): FieldAccessor<
-    R[K] extends Field<any, any> ? R[K]["rawType"] : never,
-    R[K] extends Field<any, any> ? R[K]["valueType"] : never
-  > {
+  field(name: string): FieldAccessor<any, any> {
     const field = this.definition[name];
     if (!(field instanceof Field)) {
       throw new Error("Not accessing a Field instance");
@@ -435,11 +418,7 @@ export class FormAccessor<R extends FormDefinition> {
     return new FieldAccessor(this.state, field, this.path, name);
   }
 
-  repeatingForm<K extends keyof RepeatingFormProps<R>>(
-    name: string
-  ): RepeatingFormAccessor<
-    R[K] extends RepeatingForm<any> ? R[K]["definition"] : never
-  > {
+  repeatingForm(name: string): RepeatingFormAccessor {
     const repeatingForm = this.definition[name];
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
@@ -460,7 +439,7 @@ export class FieldAccessor<R, V> {
   name: string;
 
   constructor(
-    public state: FormState<any>,
+    public state: FormState,
     public field: Field<R, V>,
     path: string,
     name: string
@@ -566,13 +545,13 @@ export class FieldAccessor<R, V> {
   }
 }
 
-export class RepeatingFormAccessor<R extends FormDefinition> {
+export class RepeatingFormAccessor {
   name: string;
   path: string;
 
   constructor(
-    public state: FormState<any>,
-    public repeatingForm: RepeatingForm<R>,
+    public state: FormState,
+    public repeatingForm: RepeatingForm,
     path: string,
     name: string
   ) {
@@ -589,7 +568,7 @@ export class RepeatingFormAccessor<R extends FormDefinition> {
     return values.filter(value => !value).length === 0;
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<R> {
+  index(index: number): RepeatingFormIndexedAccessor {
     return new RepeatingFormIndexedAccessor(
       this.state,
       this.repeatingForm.definition,
@@ -599,7 +578,7 @@ export class RepeatingFormAccessor<R extends FormDefinition> {
   }
 
   @computed
-  get accessors(): RepeatingFormIndexedAccessor<R>[] {
+  get accessors(): RepeatingFormIndexedAccessor[] {
     const result = [];
     for (let index = 0; index < this.length; index++) {
       result.push(this.index(index));
@@ -658,13 +637,13 @@ export class RepeatingFormAccessor<R extends FormDefinition> {
   }
 }
 
-export class RepeatingFormIndexedAccessor<R extends FormDefinition> {
+export class RepeatingFormIndexedAccessor {
   path: string;
-  formAccessor: FormAccessor<R>;
+  formAccessor: FormAccessor;
 
   constructor(
-    public state: FormState<any>,
-    public definition: R,
+    public state: FormState,
+    public definition: any,
     path: string,
     public index: number
   ) {
@@ -676,20 +655,11 @@ export class RepeatingFormIndexedAccessor<R extends FormDefinition> {
     return this.formAccessor.validate();
   }
 
-  field<K extends keyof FieldProps<R>>(
-    name: K
-  ): FieldAccessor<
-    R[K] extends Field<any, any> ? R[K]["rawType"] : never,
-    R[K] extends Field<any, any> ? R[K]["valueType"] : never
-  > {
+  field(name: string): FieldAccessor<any, any> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof RepeatingFormProps<R>>(
-    name: string
-  ): RepeatingFormAccessor<
-    R[K] extends RepeatingForm<any> ? R[K]["definition"] : never
-  > {
+  repeatingForm(name: string): RepeatingFormAccessor {
     return this.formAccessor.repeatingForm(name);
   }
 
