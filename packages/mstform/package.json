@@ -81,7 +81,8 @@
       "/dist/",
       "/test/fixtures",
       "/test/perf",
-      "/\\./"
+      "/\\./",
+      "/lib"
     ],
     "watchPathIgnorePatterns": [
       "<rootDir>/node_modules/"
