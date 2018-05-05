@@ -9,6 +9,15 @@ import {
 } from "mobx-state-tree";
 import { TypeFlags } from "./typeflags";
 import {
+  Converter,
+  FieldOptions,
+  FormStateOptions,
+  ProcessResponse,
+  RawGetter,
+  SaveFunc,
+  Validator
+} from "./types";
+import {
   equal,
   getByPath,
   identity,
@@ -17,51 +26,10 @@ import {
   unwrap
 } from "./utils";
 
-export type ValidationResponse = string | null | undefined | false;
-
-export type Converter<R, V> = {
-  convert(raw: R): V | undefined;
-  render(value: V): R;
-};
-
 export type Accessor =
   | FieldAccessor<any, any>
   | RepeatingFormAccessor
   | RepeatingFormIndexedAccessor;
-
-export interface RawGetter<R> {
-  (...args: any[]): R;
-}
-
-export interface Validator<V> {
-  (value: V): ValidationResponse | Promise<ValidationResponse>;
-}
-
-export interface FieldOptions<R, V> {
-  rawValidators?: Validator<R>[];
-  validators?: Validator<V>[];
-  converter?: Converter<R, V>;
-  getRaw?: RawGetter<R>;
-  conversionError?: string;
-}
-
-export interface SaveFunc {
-  (node: IStateTreeNode): any;
-}
-
-export interface FormStateOptions {
-  save?: SaveFunc;
-}
-
-export class ProcessResponse<V> {
-  value: V | null;
-  error: string | null;
-
-  constructor(value: V | null, error: string | null) {
-    this.value = value;
-    this.error = error;
-  }
-}
 
 const numberConverter: Converter<string, number> = {
   render(value: number | null): string {
