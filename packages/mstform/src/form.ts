@@ -17,22 +17,6 @@ import {
   unwrap
 } from "./utils";
 
-export type FormDefinition = {
-  [key: string]: Field<any, any> | RepeatingForm | RepeatingField<any, any>;
-};
-
-export type FieldProps<T extends FormDefinition> = {
-  [K in keyof T]: T[K] extends Field<any, any> ? T[K] : never
-};
-
-export type RepeatingFormProps<T extends FormDefinition> = {
-  [K in keyof T]: T[K] extends RepeatingForm ? T[K] : never
-};
-
-export type RepeatingFieldProps<T extends FormDefinition> = {
-  [K in keyof T]: T[K] extends RepeatingField<any, any> ? T[K] : never
-};
-
 export type ValidationResponse = string | null | undefined | false;
 
 export type Converter<R, V> = {
@@ -69,11 +53,11 @@ export interface FormStateOptions {
   save?: SaveFunc;
 }
 
-export class ProcessResponse<TValue> {
-  value: TValue | null;
+export class ProcessResponse<V> {
+  value: V | null;
   error: string | null;
 
-  constructor(value: TValue | null, error: string | null) {
+  constructor(value: V | null, error: string | null) {
     this.value = value;
     this.error = error;
   }
