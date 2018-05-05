@@ -31,15 +31,43 @@ test("a simple form", async () => {
   expect(field.value).toEqual("correct");
 });
 
+test("a simple form implicit value type", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field({
+      validators: [(value: string) => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  await field.handleChange("BAR");
+  expect(field.raw).toEqual("BAR");
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toEqual("FOO");
+  await field.handleChange("correct");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+});
+
 test("a simple form with array field", async () => {
   const M = types.model("M", {
     foo: types.array(types.string)
   });
 
   const form = new Form(M, {
-    foo: new Field<string[], string[]>({
+    foo: new Field({
       validators: [
-        value => (value.length !== 1 || value[0] !== "correct") && "Wrong"
+        (value: any) =>
+          (value.length !== 1 || value[0] !== "correct") && "Wrong"
       ]
     })
   });
@@ -120,7 +148,7 @@ test("repeating form", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>()
+      bar: new Field()
     })
   });
 
@@ -595,7 +623,7 @@ test("FormState can be saved", async () => {
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field({})
+    foo: new Field<string, string>({})
   });
 
   async function save(data: any) {
