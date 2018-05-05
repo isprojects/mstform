@@ -1,6 +1,5 @@
 import { IObservableArray } from "mobx";
 import { IModelType, types } from "mobx-state-tree";
-import { RepeatingFormAccessor } from ".";
 
 const N = types.model("N", { bar: types.string });
 const M = types.model("M", { qux: types.number, foo: types.array(N) });
