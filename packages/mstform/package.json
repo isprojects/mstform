@@ -1,5 +1,6 @@
 {
   "name": "mstform",
+  "private": true,
   "version": "0.1.0",
   "description": "mobx-state-tree powered forms",
   "main": "dist/mstform.js",
