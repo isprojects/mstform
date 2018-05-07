@@ -14,6 +14,15 @@ Todo:
 
 * required support.
 
+* getValue for converters too?
+
+* the raw value and the target value can determine which converter we get.
+
+* can we turn off the explicit types in the tests?
+
+* what about the case of array type for value?
+
+
 Fundamentally we want this:
 
   const M = types.model("M", {
