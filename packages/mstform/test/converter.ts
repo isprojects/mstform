@@ -6,8 +6,7 @@ configure({ enforceActions: "strict" });
 test("simple converter", async () => {
   const converter = new Converter<string, string>({
     convert: raw => raw,
-    render: value => value,
-    getRaw: value => value
+    render: value => value
   });
 
   const result = await converter.convert("foo");
@@ -24,8 +23,7 @@ test("converter to integer", async () => {
   const converter = new Converter<string, number>({
     rawValidate: raw => /^\d+$/.test(raw),
     convert: raw => parseInt(raw, 10),
-    render: value => value.toString(),
-    getRaw: value => value
+    render: value => value.toString()
   });
 
   const result = await converter.convert("3");
@@ -40,8 +38,7 @@ test("converter with validate", async () => {
   const converter = new Converter<string, number>({
     convert: raw => parseInt(raw, 10),
     render: value => value.toString(),
-    validate: value => value <= 10,
-    getRaw: value => value
+    validate: value => value <= 10
   });
 
   const result = await converter.convert("3");
@@ -63,8 +60,7 @@ test("converter with async validate", async () => {
       });
       return true;
     },
-    render: value => value,
-    getRaw: value => value
+    render: value => value
   });
 
   const result = converter.convert("foo");
