@@ -62,13 +62,13 @@ const M = types.model("M", {
     foo: types.string
 });
 
-// we expose this field in our model
+// we create an instance of the model
+const o = M.create({ foo: "FOO" });
+
+// we expose this field in our form
 const form = new Form(M, {
     foo: new Field(converters.string)
 });
-
-// we now create an instance of the model
-const o = M.create({ foo: "FOO" });
 
 class MyForm extends Component {
     constructor(props) {
@@ -79,7 +79,6 @@ class MyForm extends Component {
 
     render() {
         const field = state.field("foo");
-
     }
 }
 ```
