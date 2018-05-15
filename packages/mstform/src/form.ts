@@ -46,6 +46,20 @@ export class ProcessValue<V> {
 
 export type ProcessResponse<V> = ProcessValue<V> | ValidationMessage;
 
+export interface IFormAccessor<M, D extends FormDefinition<M>> {
+  validate(): Promise<boolean>;
+
+  field<K extends keyof M>(name: K): FieldAccessor<RawType<D[K]>, M[K]>;
+
+  repeatingForm<K extends keyof M>(
+    name: K
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>>;
+
+  accessors: Accessor[];
+
+  flatAccessors: Accessor[];
+}
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
@@ -103,7 +117,8 @@ export class RepeatingField<R, V> {
   constructor(public options?: FieldOptions<R, V>) {}
 }
 
-export class FormState<M, D extends FormDefinition<M>> {
+export class FormState<M, D extends FormDefinition<M>>
+  implements IFormAccessor<M, D> {
   raw: Map<string, any>;
   errors: Map<string, string>;
   validating: Map<string, boolean>;
@@ -236,12 +251,12 @@ export class FormState<M, D extends FormDefinition<M>> {
   }
 
   @computed
-  get accessors(): Accessor[] {
+  get accessors() {
     return this.formAccessor.accessors;
   }
 
   @computed
-  get flatAccessors(): Accessor[] {
+  get flatAccessors() {
     return this.formAccessor.flatAccessors;
   }
 
@@ -258,7 +273,8 @@ export class FormState<M, D extends FormDefinition<M>> {
   repeatingField(name: string): any {}
 }
 
-export class FormAccessor<M, D extends FormDefinition<M>> {
+export class FormAccessor<M, D extends FormDefinition<M>>
+  implements IFormAccessor<M, D> {
   constructor(
     public state: FormState<M, D>,
     public definition: any,
@@ -523,7 +539,8 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   }
 }
 
-export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>> {
+export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
+  implements IFormAccessor<M, D> {
   path: string;
   formAccessor: FormAccessor<M, D>;
 
