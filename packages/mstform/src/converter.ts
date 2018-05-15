@@ -26,9 +26,7 @@ export class Converter<R, V> {
       }
     }
     const value = this.definition.convert(raw);
-    if (value === undefined) {
-      return conversionError;
-    }
+
     if (this.definition.validate) {
       const rawValidationSuccess = await this.definition.validate(value);
       if (!rawValidationSuccess) {
