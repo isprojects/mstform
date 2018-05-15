@@ -1,28 +1,29 @@
 export interface ConverterOptions<R, V> {
   convert(raw: R): V;
   render(value: V): R;
-  rawValidate?(value: R): boolean;
-  validate?(value: V): boolean;
+  rawValidate?(value: R): boolean | Promise<boolean>;
+  validate?(value: V): boolean | Promise<boolean>;
   getRaw(...args: any[]): R;
 }
 
-export class ProcessValue<V> {
+export class ConversionValue<V> {
   constructor(public value: V) {}
 }
 
 export type ConversionError = "ConversionError";
 
-export const conversionError: ConversionError = "ConversionError";
+export const CONVERSION_ERROR: ConversionError = "ConversionError";
 
-export type ProcessResponse<V> = ConversionError | ProcessValue<V>;
+export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
 export class Converter<R, V> {
   constructor(public definition: ConverterOptions<R, V>) {}
-  async process(raw: R): Promise<ProcessResponse<V>> {
+
+  async convert(raw: R): Promise<ConversionResponse<V>> {
     if (this.definition.rawValidate) {
       const rawValidationSuccess = await this.definition.rawValidate(raw);
       if (!rawValidationSuccess) {
-        return conversionError;
+        return CONVERSION_ERROR;
       }
     }
     const value = this.definition.convert(raw);
@@ -30,9 +31,17 @@ export class Converter<R, V> {
     if (this.definition.validate) {
       const rawValidationSuccess = await this.definition.validate(value);
       if (!rawValidationSuccess) {
-        return conversionError;
+        return CONVERSION_ERROR;
       }
     }
-    return new ProcessValue<V>(value);
+    return new ConversionValue<V>(value);
+  }
+
+  render(value: V): R {
+    return this.definition.render(value);
+  }
+
+  getRaw(...args: any[]): R {
+    return this.definition.getRaw(...args);
   }
 }

@@ -7,90 +7,50 @@ import {
   onPatch,
   resolvePath
 } from "mobx-state-tree";
-import { TypeFlags } from "./typeflags";
-import {
-  Converter,
-  FieldOptions,
-  FormStateOptions,
-  ProcessResponse,
-  RawGetter,
-  SaveFunc,
-  Validator
-} from "./types";
-import {
-  equal,
-  getByPath,
-  identity,
-  isInt,
-  pathToSteps,
-  unwrap
-} from "./utils";
+import { CONVERSION_ERROR, Converter } from "./converter";
+import { FieldOptions, FormStateOptions, SaveFunc, Validator } from "./types";
+import { equal, getByPath, isInt, pathToSteps, unwrap } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
 
 export type Accessor =
   | FieldAccessor<any, any>
-  | RepeatingFormAccessor<any>
-  | RepeatingFormIndexedAccessor<any>;
+  | RepeatingFormAccessor<any, any>
+  | RepeatingFormIndexedAccessor<any, any>;
 
 export type FormDefinition<M> = {
   [K in keyof M]?: Field<any, M[K]> | RepeatingForm<ArrayEntryType<M[K]>>
 };
 
-const numberConverter: Converter<string, number> = {
-  render(value: number | null): string {
-    if (value === null) {
-      return "";
-    }
-    return value.toString();
-  },
-  convert(raw: string): number | undefined {
-    const result = parseInt(raw, 10);
-    if (isNaN(result)) {
-      return undefined;
-    }
-    return result;
-  }
-};
+export type RawType<F> = F extends Field<infer R, any> ? R : never;
 
-export class FormBehavior {
-  getConverter(mstType: IType<any, any>): Converter<any, any> | undefined {
-    if (mstType.flags & TypeFlags.Number) {
-      return numberConverter;
-    }
-    return { convert: identity, render: identity };
-  }
-  getRawGetter(mstType: any): RawGetter<any> {
-    return identity;
-  }
-}
+export class Form<M, D extends FormDefinition<M>> {
+  constructor(public model: IModelType<any, M>, public definition: D) {}
 
-export class Form<M> {
-  behavior: FormBehavior;
-
-  constructor(
-    public model: IModelType<any, M>,
-    public definition: FormDefinition<M>,
-    behavior?: FormBehavior
-  ) {
-    if (!behavior) {
-      behavior = new FormBehavior();
-    }
-    this.behavior = behavior;
-  }
-
-  create(node: IStateTreeNode, options?: FormStateOptions): FormState<M> {
+  create(node: IStateTreeNode, options?: FormStateOptions): FormState<M, D> {
     return new FormState(this, node, options);
   }
 }
 
+export class ValidationMessage {
+  constructor(public message: string) {}
+}
+
+export class ProcessValue<V> {
+  constructor(public value: V) {}
+}
+
+export type ProcessResponse<V> = ProcessValue<V> | ValidationMessage;
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
-  getRaw: RawGetter<R>;
   conversionError: string;
 
-  constructor(public options?: FieldOptions<R, V>) {
+  constructor(
+    public converter: Converter<R, V>,
+    public options?: FieldOptions<R, V>
+  ) {
     if (!options) {
       this.rawValidators = [];
       this.validators = [];
@@ -100,68 +60,34 @@ export class Field<R, V> {
       this.validators = options.validators ? options.validators : [];
       this.conversionError = options.conversionError || "Could not convert";
     }
-
-    if (!options || options.getRaw == null) {
-      this.getRaw = (...args) => args[0] as R;
-    } else {
-      this.getRaw = options.getRaw;
-    }
   }
 
-  get rawType(): R {
-    throw new Error("fail");
+  get RawType(): R {
+    throw new Error("This is a function to enable type introspection");
   }
 
-  get valueType(): V {
-    throw new Error("fail");
+  get ValueType(): V {
+    throw new Error("This is a function to enable type introspection");
   }
 
-  converter(behavior: FormBehavior, mstType: IType<any, any>): Converter<R, V> {
-    if (this.options == null || this.options.converter == null) {
-      const converter = behavior.getConverter(mstType);
-      if (converter == null) {
-        throw new Error("Cannot convert");
-      }
-      return converter;
-    }
-    return this.options.converter;
-  }
-
-  convert(
-    behavior: FormBehavior,
-    mstType: IType<any, any>,
-    raw: R
-  ): V | undefined {
-    const converter = this.converter(behavior, mstType);
-    return converter.convert(raw);
-  }
-  render(behavior: FormBehavior, mstType: IType<any, any>, value: V): R {
-    const converter = this.converter(behavior, mstType);
-    return converter.render(value);
-  }
-
-  async process(
-    behavior: FormBehavior,
-    mstType: IType<any, any>,
-    raw: R
-  ): Promise<ProcessResponse<V>> {
+  async process(raw: R): Promise<ProcessResponse<V>> {
     for (const validator of this.rawValidators) {
       const validationResponse = await validator(raw);
       if (typeof validationResponse === "string" && validationResponse) {
-        return new ProcessResponse<V>(null, validationResponse);
+        return new ValidationMessage(validationResponse);
       }
     }
-    const result = this.convert(behavior, mstType, raw);
-    if (result === undefined) {
-      return new ProcessResponse<V>(null, this.conversionError);
+    const result = await this.converter.convert(raw);
+    if (result === CONVERSION_ERROR) {
+      return new ValidationMessage(this.conversionError);
     }
     for (const validator of this.validators) {
-      const validationResponse = await validator(result);
+      const validationResponse = await validator(result.value);
       if (typeof validationResponse === "string" && validationResponse) {
-        return new ProcessResponse<V>(null, validationResponse);
+        return new ValidationMessage(validationResponse);
       }
     }
-    return new ProcessResponse<V>(result, null);
+    return new ProcessValue(result.value);
   }
 }
 
@@ -173,15 +99,15 @@ export class RepeatingField<R, V> {
   constructor(public options?: FieldOptions<R, V>) {}
 }
 
-export class FormState<M> {
+export class FormState<M, D extends FormDefinition<M>> {
   raw: Map<string, any>;
   errors: Map<string, string>;
   validating: Map<string, boolean>;
-  formAccessor: FormAccessor<M>;
+  formAccessor: FormAccessor<M, D>;
   saveFunc?: SaveFunc;
 
   constructor(
-    public form: Form<M>,
+    public form: Form<M, D>,
     public node: IStateTreeNode,
     options?: FormStateOptions
   ) {
@@ -315,22 +241,22 @@ export class FormState<M> {
     return this.formAccessor.flatAccessors;
   }
 
-  field<K extends keyof M>(name: K): FieldAccessor<any, M[K]> {
+  field<K extends keyof M>(name: K): FieldAccessor<RawType<D[K]>, M[K]> {
     return this.formAccessor.field(name);
   }
 
   repeatingForm<K extends keyof M>(
     name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>> {
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, any> {
     return this.formAccessor.repeatingForm(name);
   }
 
   repeatingField(name: string): any {}
 }
 
-export class FormAccessor<M> {
+export class FormAccessor<M, D extends FormDefinition<M>> {
   constructor(
-    public state: FormState<M>,
+    public state: FormState<M, D>,
     public definition: any,
     public path: string
   ) {}
@@ -380,7 +306,7 @@ export class FormAccessor<M> {
 
   repeatingForm<K extends keyof M>(
     name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>> {
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, any> {
     const repeatingForm = this.definition[name];
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
@@ -401,7 +327,7 @@ export class FieldAccessor<R, V> {
   name: string;
 
   constructor(
-    public state: FormState<any>,
+    public state: FormState<any, any>,
     public field: Field<R, V>,
     path: string,
     name: string
@@ -416,11 +342,7 @@ export class FieldAccessor<R, V> {
     if (result !== undefined) {
       return result as R;
     }
-    return this.field.render(
-      this.state.form.behavior,
-      this.state.getMstType(this.path),
-      this.state.getValue(this.path)
-    );
+    return this.field.converter.render(this.state.getValue(this.path));
   }
 
   @computed
@@ -449,11 +371,7 @@ export class FieldAccessor<R, V> {
     this.state.setValidating(this.path, true);
     let processResult;
     try {
-      processResult = await this.field.process(
-        this.state.form.behavior,
-        this.state.getMstType(this.path),
-        raw
-      );
+      processResult = await this.field.process(raw);
     } catch (e) {
       this.state.setError(this.path, "Something went wrong");
       this.state.setValidating(this.path, false);
@@ -468,20 +386,22 @@ export class FieldAccessor<R, V> {
     }
     this.state.setValidating(this.path, false);
 
-    if (processResult.error != null) {
-      this.state.setError(this.path, processResult.error);
+    if (processResult instanceof ValidationMessage) {
+      this.state.setError(this.path, processResult.message);
       return;
     } else {
       this.state.deleteError(this.path);
     }
-
+    if (!(processResult instanceof ProcessValue)) {
+      throw new Error("Unknown process result");
+    }
     applyPatch(this.state.node, [
       { op: "replace", path: this.path, value: processResult.value }
     ]);
   }
 
   handleChange = async (...args: any[]) => {
-    const raw = this.field.getRaw(...args);
+    const raw = this.field.converter.getRaw(...args);
     await this.setRaw(raw);
   };
 
@@ -507,12 +427,12 @@ export class FieldAccessor<R, V> {
   }
 }
 
-export class RepeatingFormAccessor<M> {
+export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   name: string;
   path: string;
 
   constructor(
-    public state: FormState<any>,
+    public state: FormState<any, any>,
     public repeatingForm: RepeatingForm<M>,
     path: string,
     name: string
@@ -530,7 +450,7 @@ export class RepeatingFormAccessor<M> {
     return values.filter(value => !value).length === 0;
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<M> {
+  index(index: number): RepeatingFormIndexedAccessor<M, D> {
     return new RepeatingFormIndexedAccessor(
       this.state,
       this.repeatingForm.definition,
@@ -540,7 +460,7 @@ export class RepeatingFormAccessor<M> {
   }
 
   @computed
-  get accessors(): RepeatingFormIndexedAccessor<M>[] {
+  get accessors(): RepeatingFormIndexedAccessor<M, D>[] {
     const result = [];
     for (let index = 0; index < this.length; index++) {
       result.push(this.index(index));
@@ -599,12 +519,12 @@ export class RepeatingFormAccessor<M> {
   }
 }
 
-export class RepeatingFormIndexedAccessor<M> {
+export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>> {
   path: string;
-  formAccessor: FormAccessor<M>;
+  formAccessor: FormAccessor<M, D>;
 
   constructor(
-    public state: FormState<any>,
+    public state: FormState<any, any>,
     public definition: any,
     path: string,
     public index: number
@@ -623,7 +543,7 @@ export class RepeatingFormIndexedAccessor<M> {
 
   repeatingForm<K extends keyof M>(
     name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>> {
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, any> {
     return this.formAccessor.repeatingForm(name);
   }
 

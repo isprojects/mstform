@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { Converter, ProcessValue, conversionError } from "../src/converter";
+import { CONVERSION_ERROR, ConversionValue, Converter } from "../src/converter";
 
 configure({ enforceActions: "strict" });
 
@@ -10,14 +10,14 @@ test("simple converter", async () => {
     getRaw: value => value
   });
 
-  const result = await converter.process("foo");
-  expect(result).toBeInstanceOf(ProcessValue);
-  expect((result as ProcessValue<string>).value).toEqual("foo");
+  const result = await converter.convert("foo");
+  expect(result).toBeInstanceOf(ConversionValue);
+  expect((result as ConversionValue<string>).value).toEqual("foo");
 
   // the string "ConversionError" is a valid text to convert
-  const result2 = await converter.process("ConversionError");
-  expect(result2).toBeInstanceOf(ProcessValue);
-  expect((result2 as ProcessValue<string>).value).toEqual("ConversionError");
+  const result2 = await converter.convert("ConversionError");
+  expect(result2).toBeInstanceOf(ConversionValue);
+  expect((result2 as ConversionValue<string>).value).toEqual("ConversionError");
 });
 
 test("converter to integer", async () => {
@@ -28,12 +28,12 @@ test("converter to integer", async () => {
     getRaw: value => value
   });
 
-  const result = await converter.process("3");
-  expect(result).toBeInstanceOf(ProcessValue);
-  expect((result as ProcessValue<number>).value).toEqual(3);
+  const result = await converter.convert("3");
+  expect(result).toBeInstanceOf(ConversionValue);
+  expect((result as ConversionValue<number>).value).toEqual(3);
 
-  const result2 = await converter.process("not a number");
-  expect(result2).toEqual(conversionError);
+  const result2 = await converter.convert("not a number");
+  expect(result2).toEqual(CONVERSION_ERROR);
 });
 
 test("converter with validate", async () => {
@@ -44,10 +44,31 @@ test("converter with validate", async () => {
     getRaw: value => value
   });
 
-  const result = await converter.process("3");
-  expect(result).toBeInstanceOf(ProcessValue);
-  expect((result as ProcessValue<number>).value).toEqual(3);
+  const result = await converter.convert("3");
+  expect(result).toBeInstanceOf(ConversionValue);
+  expect((result as ConversionValue<number>).value).toEqual(3);
 
-  const result2 = await converter.process("100");
-  expect(result2).toEqual(conversionError);
+  const result2 = await converter.convert("100");
+  expect(result2).toEqual(CONVERSION_ERROR);
+});
+
+test("converter with async validate", async () => {
+  const done: any[] = [];
+
+  const converter = new Converter<string, string>({
+    convert: raw => raw,
+    validate: async value => {
+      await new Promise(resolve => {
+        done.push(resolve);
+      });
+      return true;
+    },
+    render: value => value,
+    getRaw: value => value
+  });
+
+  const result = converter.convert("foo");
+  done[0]();
+  const v = await result;
+  expect((v as ConversionValue<string>).value).toEqual("foo");
 });

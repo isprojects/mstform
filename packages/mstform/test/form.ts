@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, RepeatingForm } from "../src";
+import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
 configure({ enforceActions: "strict" });
 
@@ -10,35 +10,8 @@ test("a simple form", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field<string, string>({
+    foo: new Field(converters.string, {
       validators: [value => value !== "correct" && "Wrong"]
-    })
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.create(o);
-
-  const field = state.field("foo");
-
-  expect(field.raw).toEqual("FOO");
-  await field.handleChange("BAR");
-  expect(field.raw).toEqual("BAR");
-  expect(field.error).toEqual("Wrong");
-  expect(field.value).toEqual("FOO");
-  await field.handleChange("correct");
-  expect(field.error).toBeUndefined();
-  expect(field.value).toEqual("correct");
-});
-
-test("a simple form implicit value type", async () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const form = new Form(M, {
-    foo: new Field({
-      validators: [(value: string) => value !== "correct" && "Wrong"]
     })
   });
 
@@ -64,10 +37,9 @@ test("a simple form with array field", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field({
+    foo: new Field(converters.stringArray, {
       validators: [
-        (value: any) =>
-          (value.length !== 1 || value[0] !== "correct") && "Wrong"
+        value => (value.length !== 1 || value[0] !== "correct") && "Wrong"
       ]
     })
   });
@@ -88,13 +60,13 @@ test("a simple form with array field", async () => {
   expect(field.value).toEqual(["correct"]);
 });
 
-test("mstType drives conversion", async () => {
+test("number input", async () => {
   const M = types.model("M", {
     foo: types.number
   });
 
   const form = new Form(M, {
-    foo: new Field<string, number>()
+    foo: new Field(converters.number)
   });
 
   const o = M.create({ foo: 3 });
@@ -113,13 +85,13 @@ test("mstType drives conversion", async () => {
   expect(field.error).toEqual("Could not convert");
 });
 
-test("mstType drives conversion with message", async () => {
+test("conversion failure with message", async () => {
   const M = types.model("M", {
     foo: types.number
   });
 
   const form = new Form(M, {
-    foo: new Field<string, number>({ conversionError: "Not an integer" })
+    foo: new Field(converters.number, { conversionError: "Not a number" })
   });
 
   const o = M.create({ foo: 3 });
@@ -135,7 +107,7 @@ test("mstType drives conversion with message", async () => {
   expect(field.error).toBeUndefined();
   await field.handleChange("not a number");
   expect(field.value).toEqual(4);
-  expect(field.error).toEqual("Not an integer");
+  expect(field.error).toEqual("Not a number");
 });
 
 test("repeating form", async () => {
@@ -148,7 +120,7 @@ test("repeating form", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field({ validators: [(value: string) => false] })
+      bar: new Field(converters.string)
     })
   });
 
@@ -176,7 +148,7 @@ test("repeating form with conversion", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, number>()
+      bar: new Field(converters.number)
     })
   });
 
@@ -205,7 +177,7 @@ test("repeating form push", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>()
+      bar: new Field(converters.string)
     })
   });
 
@@ -234,7 +206,7 @@ test("repeating form insert", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>()
+      bar: new Field(converters.string)
     })
   });
 
@@ -263,7 +235,7 @@ test("repeating form remove", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>()
+      bar: new Field(converters.string)
     })
   });
 
@@ -287,7 +259,7 @@ test("repeating form remove and insert clears errors", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>({
+      bar: new Field(converters.string, {
         validators: [value => value !== "correct" && "wrong"]
       })
     })
@@ -309,20 +281,29 @@ test("repeating form remove and insert clears errors", async () => {
   expect(field1.error).toBeUndefined();
 });
 
-test("async validation", async () => {
+test("async validation in converter", async () => {
   const M = types.model("M", {
     foo: types.string
   });
 
   const done: any[] = [];
 
+  const converter = new Converter<string, string>({
+    convert: raw => raw,
+    validate: async value => {
+      await new Promise(resolve => {
+        done.push(resolve);
+      });
+      return true;
+    },
+    render: value => value,
+    getRaw: value => value
+  });
+
   const form = new Form(M, {
-    foo: new Field<string, string>({
+    foo: new Field(converter, {
       validators: [
-        async value => {
-          await new Promise(resolve => {
-            done.push(resolve);
-          });
+        value => {
           return value !== "correct" && "Wrong";
         }
       ]
@@ -359,6 +340,62 @@ test("async validation", async () => {
   expect(field.error).toEqual("Wrong");
 });
 
+test("async validation in validator", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const done: any[] = [];
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [
+        async value => {
+          await new Promise(resolve => {
+            done.push(resolve);
+          });
+          return value !== "correct" && "Wrong";
+        }
+      ]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  const promise = field.handleChange("correct");
+  expect(field.raw).toEqual("correct");
+  // value hasn't changed yet as promise hasn't resolved yet
+  expect(field.value).toEqual("FOO");
+  expect(field.error).toBeUndefined();
+  // we use nextTick to wait until the inner promise (in the converter)
+  // to be fully resolved
+  process.nextTick(() => {
+    done[0]();
+  });
+  await promise;
+  expect(field.value).toEqual("correct");
+  expect(field.raw).toEqual("correct");
+  expect(field.error).toBeUndefined();
+  // now put in a wrong value
+  const promise2 = field.handleChange("wrong");
+  expect(field.raw).toEqual("wrong");
+  // value hasn't changed yet as promise hasn't resolved yet
+  expect(field.value).toEqual("correct");
+  expect(field.error).toBeUndefined();
+  process.nextTick(() => {
+    done[1]();
+  });
+  await promise2;
+  expect(field.value).toEqual("correct");
+  expect(field.raw).toEqual("wrong");
+  expect(field.error).toEqual("Wrong");
+});
+
 test("async validation modification", async () => {
   const M = types.model("M", {
     foo: types.string
@@ -367,7 +404,7 @@ test("async validation modification", async () => {
   let done: any[] = [];
 
   const form = new Form(M, {
-    foo: new Field<string, string>({
+    foo: new Field(converters.string, {
       validators: [
         async value => {
           await new Promise(resolve => {
@@ -395,14 +432,18 @@ test("async validation modification", async () => {
   expect(field.error).toBeUndefined();
   // now we change the raw while waiting
   const promise2 = field.handleChange("incorrect");
-  done[0]();
+  process.nextTick(() => {
+    done[0]();
+  });
   await promise;
   expect(state.isValidating).toBeTruthy();
   expect(field.isValidating).toBeTruthy();
   expect(field.raw).toEqual("incorrect");
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
-  done[1]();
+  process.nextTick(() => {
+    done[1]();
+  });
   await promise2;
   expect(state.isValidating).toBeFalsy();
   expect(field.isValidating).toBeFalsy();
@@ -418,7 +459,7 @@ test("async validation rejects sets error status", async () => {
 
   const done: any[] = [];
   const form = new Form(M, {
-    foo: new Field<string, string>({
+    foo: new Field(converters.string, {
       validators: [
         async value => {
           await new Promise(resolve => {
@@ -439,7 +480,9 @@ test("async validation rejects sets error status", async () => {
   expect(field.raw).toEqual("FOO");
   const promise = field.handleChange("correct");
   expect(field.isValidating).toBeTruthy();
-  done[0]();
+  process.nextTick(() => {
+    done[0]();
+  });
   await promise;
   expect(field.error).toEqual("Something went wrong");
   expect(field.isValidating).toBeFalsy();
@@ -451,7 +494,7 @@ test("simple validate", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field<string, string>({
+    foo: new Field(converters.string, {
       validators: [value => value !== "correct" && "Wrong"]
     })
   });
@@ -484,7 +527,7 @@ test("repeating form validate", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>({
+      bar: new Field(converters.string, {
         validators: [value => value !== "correct" && "Wrong"]
       })
     })
@@ -518,7 +561,7 @@ test("repeating form multiple entries validate", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>({
+      bar: new Field(converters.string, {
         validators: [value => value !== "correct" && "Wrong"]
       })
     })
@@ -557,7 +600,7 @@ test("setErrors", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field<string, string>()
+    foo: new Field(converters.string)
   });
 
   const o = M.create({ foo: "FOO" });
@@ -579,7 +622,7 @@ test("setErrors repeating", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>()
+      bar: new Field(converters.string)
     })
   });
 
@@ -602,7 +645,7 @@ test("setErrors directly on repeating", async () => {
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field<string, string>()
+      bar: new Field(converters.string)
     })
   });
 
@@ -623,7 +666,7 @@ test("FormState can be saved", async () => {
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field<string, string>({})
+    foo: new Field(converters.string, {})
   });
 
   async function save(data: any) {
@@ -659,27 +702,3 @@ test("FormState can be saved", async () => {
 
   expect(field.error).toBeUndefined();
 });
-
-// test("auto required", async () => {
-//   const M = types.model("M", {
-//     foo: types.number
-//   });
-
-//   const form = new Form(M, {
-//     foo: new Field<string, string>()
-//   });
-
-//   const MPrime = types.model("M", {
-//     foo: types.maybe(types.number)
-//   });
-
-//   const o = MPrime.create({ foo: null });
-
-//   const state = form.create(o);
-
-//   const field = state.field("foo");
-
-//   expect(field.raw).toEqual("");
-//   await state.validate();
-//   expect(field.error).toEqual("Required");
-// });
