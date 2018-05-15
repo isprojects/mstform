@@ -65,6 +65,12 @@ const form = new Form(M, { foo: new Field({ converter: stringConvert }) });
 // });
 const value = form.accessor("foo");
 
-const form2 = new Form(N, { bar: new Field({ converter: numberConvert }) });
+const form2 = new Form(N, {
+  bar: new Field({
+    converter: numberConvert,
+    rawValidate: foo => foo,
+    validate: bar => "baz"
+  })
+});
 
 const value2 = form2.accessor("bar");
