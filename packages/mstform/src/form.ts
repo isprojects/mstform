@@ -46,14 +46,24 @@ export class ProcessValue<V> {
 
 export type ProcessResponse<V> = ProcessValue<V> | ValidationMessage;
 
+export type FieldAccess<
+  M,
+  D extends FormDefinition<M>,
+  K extends keyof M
+> = FieldAccessor<RawType<D[K]>, M[K]>;
+
+export type RepeatingFormAccess<
+  M,
+  D extends FormDefinition<M>,
+  K extends keyof M
+> = RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>>;
+
 export interface IFormAccessor<M, D extends FormDefinition<M>> {
   validate(): Promise<boolean>;
 
-  field<K extends keyof M>(name: K): FieldAccessor<RawType<D[K]>, M[K]>;
+  field<K extends keyof M>(name: K): FieldAccess<M, D, K>;
 
-  repeatingForm<K extends keyof M>(
-    name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>>;
+  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K>;
 
   accessors: Accessor[];
 
@@ -260,13 +270,11 @@ export class FormState<M, D extends FormDefinition<M>>
     return this.formAccessor.flatAccessors;
   }
 
-  field<K extends keyof M>(name: K): FieldAccessor<RawType<D[K]>, M[K]> {
+  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof M>(
-    name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>> {
+  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
     return this.formAccessor.repeatingForm(name);
   }
 
@@ -316,7 +324,7 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     return result;
   }
 
-  field<K extends keyof M>(name: K): FieldAccessor<any, M[K]> {
+  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
     const field = this.definition[name];
     if (!(field instanceof Field)) {
       throw new Error("Not accessing a Field instance");
@@ -324,9 +332,7 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     return new FieldAccessor(this.state, field, this.path, name);
   }
 
-  repeatingForm<K extends keyof M>(
-    name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>> {
+  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
     const repeatingForm = this.definition[name];
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
@@ -558,13 +564,11 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
     return this.formAccessor.validate();
   }
 
-  field<K extends keyof M>(name: K): FieldAccessor<RawType<D[K]>, M[K]> {
+  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof M>(
-    name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>> {
+  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
     return this.formAccessor.repeatingForm(name);
   }
 
