@@ -13,16 +13,20 @@ import { equal, getByPath, isInt, pathToSteps, unwrap } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
 
+export type RawType<F> = F extends Field<infer R, any> ? R : never;
+
+export type FormDefinitionType<T> = T extends RepeatingForm<any, infer D>
+  ? D
+  : never;
+
 export type Accessor =
   | FieldAccessor<any, any>
   | RepeatingFormAccessor<any, any>
   | RepeatingFormIndexedAccessor<any, any>;
 
 export type FormDefinition<M> = {
-  [K in keyof M]?: Field<any, M[K]> | RepeatingForm<ArrayEntryType<M[K]>>
+  [K in keyof M]?: Field<any, M[K]> | RepeatingForm<ArrayEntryType<M[K]>, any>
 };
-
-export type RawType<F> = F extends Field<infer R, any> ? R : never;
 
 export class Form<M, D extends FormDefinition<M>> {
   constructor(public model: IModelType<any, M>, public definition: D) {}
@@ -91,8 +95,8 @@ export class Field<R, V> {
   }
 }
 
-export class RepeatingForm<M> {
-  constructor(public definition: FormDefinition<M>) {}
+export class RepeatingForm<M, D extends FormDefinition<M>> {
+  constructor(public definition: D) {}
 }
 
 export class RepeatingField<R, V> {
@@ -247,7 +251,7 @@ export class FormState<M, D extends FormDefinition<M>> {
 
   repeatingForm<K extends keyof M>(
     name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, any> {
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>> {
     return this.formAccessor.repeatingForm(name);
   }
 
@@ -306,7 +310,7 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
 
   repeatingForm<K extends keyof M>(
     name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, any> {
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>> {
     const repeatingForm = this.definition[name];
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
@@ -433,7 +437,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
   constructor(
     public state: FormState<any, any>,
-    public repeatingForm: RepeatingForm<M>,
+    public repeatingForm: RepeatingForm<M, D>,
     path: string,
     name: string
   ) {
@@ -537,13 +541,13 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>> {
     return this.formAccessor.validate();
   }
 
-  field<K extends keyof M>(name: K): FieldAccessor<any, M[K]> {
+  field<K extends keyof M>(name: K): FieldAccessor<RawType<D[K]>, M[K]> {
     return this.formAccessor.field(name);
   }
 
   repeatingForm<K extends keyof M>(
     name: K
-  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, any> {
+  ): RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>> {
     return this.formAccessor.repeatingForm(name);
   }
 
