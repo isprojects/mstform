@@ -1,5 +1,4 @@
-import { IObservableArray } from "mobx";
-import { IModelType, IStateTreeNode } from "mobx-state-tree";
+import { IStateTreeNode } from "mobx-state-tree";
 
 export type ValidationResponse = string | null | undefined | false;
 
@@ -11,6 +10,8 @@ export interface FieldOptions<R, V> {
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
   conversionError?: string;
+  requiredError?: string;
+  required?: boolean;
 }
 
 export interface SaveFunc {

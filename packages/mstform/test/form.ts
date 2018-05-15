@@ -702,3 +702,81 @@ test("FormState can be saved", async () => {
 
   expect(field.error).toBeUndefined();
 });
+
+test("not required", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.number)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.number), {
+      required: false
+    })
+  });
+
+  const o = M.create({ foo: null });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.value).toBeNull();
+  await field.setRaw("3");
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toBeNull();
+});
+
+test("required", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: 3 });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(3);
+});
+
+test("not required with maybe", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.number)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.number), {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: null });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.value).toBeNull();
+  await field.setRaw("3");
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(3);
+});

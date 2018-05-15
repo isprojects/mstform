@@ -6,6 +6,12 @@ export interface ConverterOptions<R, V> {
   getRaw(...args: any[]): R;
 }
 
+export interface IConverter<R, V> {
+  convert(raw: R): Promise<ConversionResponse<V>>;
+  render(value: V): R;
+  getRaw(...args: any[]): R;
+}
+
 export class ConversionValue<V> {
   constructor(public value: V) {}
 }
@@ -16,7 +22,7 @@ export const CONVERSION_ERROR: ConversionError = "ConversionError";
 
 export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
-export class Converter<R, V> {
+export class Converter<R, V> implements IConverter<R, V> {
   constructor(public definition: ConverterOptions<R, V>) {}
 
   async convert(raw: R): Promise<ConversionResponse<V>> {
@@ -26,6 +32,7 @@ export class Converter<R, V> {
         return CONVERSION_ERROR;
       }
     }
+
     const value = this.definition.convert(raw);
 
     if (this.definition.validate) {

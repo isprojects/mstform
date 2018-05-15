@@ -7,7 +7,7 @@ import {
   onPatch,
   resolvePath
 } from "mobx-state-tree";
-import { CONVERSION_ERROR, Converter } from "./converter";
+import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FieldOptions, FormStateOptions, SaveFunc, Validator } from "./types";
 import { equal, getByPath, isInt, pathToSteps, unwrap } from "./utils";
 
@@ -74,19 +74,25 @@ export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
   conversionError: string;
+  requiredError: string;
+  required: boolean;
 
   constructor(
-    public converter: Converter<R, V>,
+    public converter: IConverter<R, V>,
     public options?: FieldOptions<R, V>
   ) {
     if (!options) {
       this.rawValidators = [];
       this.validators = [];
       this.conversionError = "Could not convert";
+      this.requiredError = "Required";
+      this.required = false;
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
       this.conversionError = options.conversionError || "Could not convert";
+      this.requiredError = options.requiredError || "Required";
+      this.required = options.required || false;
     }
   }
 
@@ -99,6 +105,10 @@ export class Field<R, V> {
   }
 
   async process(raw: R): Promise<ProcessResponse<V>> {
+    if (typeof raw === "string" && this.required && raw.trim() === "") {
+      return new ValidationMessage(this.requiredError);
+    }
+
     for (const validator of this.rawValidators) {
       const validationResponse = await validator(raw);
       if (typeof validationResponse === "string" && validationResponse) {
@@ -116,6 +126,10 @@ export class Field<R, V> {
       }
     }
     return new ProcessValue(result.value);
+  }
+
+  render(value: V): R {
+    return this.converter.render(value);
   }
 }
 
@@ -368,7 +382,7 @@ export class FieldAccessor<R, V> {
     if (result !== undefined) {
       return result as R;
     }
-    return this.field.converter.render(this.state.getValue(this.path));
+    return this.field.render(this.state.getValue(this.path));
   }
 
   @computed
