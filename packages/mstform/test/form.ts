@@ -837,3 +837,35 @@ test("getRaw fromEvent", async () => {
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("correct");
 });
+
+test("setting value on model will update form", async () => {
+  const M = types
+    .model("M", {
+      foo: types.string
+    })
+    .actions(self => ({
+      update(value: string) {
+        self.foo = value;
+      }
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  o.update("BAR");
+  expect(field.raw).toEqual("BAR");
+
+  // as soon as someone starts typing however, the raw is not updated
+  field.setRaw("QUX");
+  o.update("BACK");
+  expect(field.raw).toEqual("QUX");
+  // TODO: provide a way to clear raw so that updating works?
+});
