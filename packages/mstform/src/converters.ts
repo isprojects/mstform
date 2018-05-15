@@ -15,9 +15,6 @@ const string = new Converter<string, string>({
   },
   render(value) {
     return value;
-  },
-  getRaw(value: any) {
-    return value;
   }
 });
 
@@ -34,9 +31,6 @@ const number = new Converter<string, number>({
   },
   render(value) {
     return value.toString();
-  },
-  getRaw(value: any) {
-    return value;
   }
 });
 
@@ -49,9 +43,6 @@ const integer = new Converter<string, number>({
   },
   render(value) {
     return value.toString();
-  },
-  getRaw(value: any) {
-    return value;
   }
 });
 
@@ -74,9 +65,6 @@ class Decimal implements IConverter<string, string> {
         return raw;
       },
       render(value) {
-        return value;
-      },
-      getRaw(value: any) {
         return value;
       }
     });
@@ -115,10 +103,6 @@ class Maybe<V> implements IConverter<string, V | null> {
     }
     return this.converter.render(value);
   }
-
-  getRaw(value: any) {
-    return value;
-  }
 }
 
 export function maybe<R, V>(
@@ -133,9 +117,6 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
     return observable.array(raw);
   },
   render(value) {
-    return value;
-  },
-  getRaw(value: any) {
     return value;
   }
 });

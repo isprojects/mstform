@@ -8,7 +8,13 @@ import {
   resolvePath
 } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
-import { FieldOptions, FormStateOptions, SaveFunc, Validator } from "./types";
+import {
+  FieldOptions,
+  FormStateOptions,
+  RawGetter,
+  SaveFunc,
+  Validator
+} from "./types";
 import { equal, getByPath, isInt, pathToSteps, unwrap } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
@@ -70,12 +76,17 @@ export interface IFormAccessor<M, D extends FormDefinition<M>> {
   flatAccessors: Accessor[];
 }
 
+function identity(value: any): any {
+  return value;
+}
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
   conversionError: string;
   requiredError: string;
   required: boolean;
+  getRaw: RawGetter<R>;
 
   constructor(
     public converter: IConverter<R, V>,
@@ -87,12 +98,23 @@ export class Field<R, V> {
       this.conversionError = "Could not convert";
       this.requiredError = "Required";
       this.required = false;
+      this.getRaw = identity;
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
       this.conversionError = options.conversionError || "Could not convert";
       this.requiredError = options.requiredError || "Required";
       this.required = options.required || false;
+      if (options.fromEvent) {
+        if (options.getRaw) {
+          throw new Error(
+            "Cannot have fromEvent and getRaw defined at same time"
+          );
+        }
+        this.getRaw = ev => ev.target.value;
+      } else {
+        this.getRaw = options.getRaw || identity;
+      }
     }
   }
 
@@ -441,7 +463,7 @@ export class FieldAccessor<R, V> {
   }
 
   handleChange = async (...args: any[]) => {
-    const raw = this.field.converter.getRaw(...args);
+    const raw = this.field.getRaw(...args);
     await this.setRaw(raw);
   };
 

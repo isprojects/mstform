@@ -3,13 +3,11 @@ export interface ConverterOptions<R, V> {
   render(value: V): R;
   rawValidate?(value: R): boolean | Promise<boolean>;
   validate?(value: V): boolean | Promise<boolean>;
-  getRaw(...args: any[]): R;
 }
 
 export interface IConverter<R, V> {
   convert(raw: R): Promise<ConversionResponse<V>>;
   render(value: V): R;
-  getRaw(...args: any[]): R;
 }
 
 export class ConversionValue<V> {
@@ -46,9 +44,5 @@ export class Converter<R, V> implements IConverter<R, V> {
 
   render(value: V): R {
     return this.definition.render(value);
-  }
-
-  getRaw(...args: any[]): R {
-    return this.definition.getRaw(...args);
   }
 }

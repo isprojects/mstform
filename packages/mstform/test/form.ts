@@ -296,8 +296,7 @@ test("async validation in converter", async () => {
       });
       return true;
     },
-    render: value => value,
-    getRaw: value => value
+    render: value => value
   });
 
   const form = new Form(M, {
@@ -779,4 +778,62 @@ test("not required with maybe", async () => {
   await field.setRaw("");
   expect(field.error).toEqual("Required");
   expect(field.value).toEqual(3);
+});
+
+test("override getRaw", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [value => value !== "correct" && "Wrong"],
+      getRaw(event) {
+        return event.target.value;
+      }
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  await field.handleChange({ target: { value: "BAR" } });
+  expect(field.raw).toEqual("BAR");
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toEqual("FOO");
+  await field.handleChange({ target: { value: "correct" } });
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+});
+
+test("getRaw fromEvent", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [value => value !== "correct" && "Wrong"],
+      fromEvent: true
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.create(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  await field.handleChange({ target: { value: "BAR" } });
+  expect(field.raw).toEqual("BAR");
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toEqual("FOO");
+  await field.handleChange({ target: { value: "correct" } });
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
 });
