@@ -70,6 +70,13 @@ const form = new Form(M, {
     foo: new Field(converters.string)
 });
 
+class InlineError extends Component {
+    render() {
+        const {children, error} = this.props;
+        return <div>{children}{error}</div>
+    }
+}
+
 class MyForm extends Component {
     constructor(props) {
         super(props);
@@ -78,7 +85,13 @@ class MyForm extends Component {
     }
 
     render() {
+        // we get the foo field from the form
         const field = state.field("foo");
+        return (
+            <InlineError {...field.validationProps}>
+                <input type="text" {...field.inputProps}></input>
+            </InlineError>
+        );
     }
 }
 ```

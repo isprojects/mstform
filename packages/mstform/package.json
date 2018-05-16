@@ -8,7 +8,7 @@
   "module": "dist/mstform.module.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && cpr lib dist --delete-first --filter=\\\\.js && yarn rollup",
+    "build": "tsc && cpr lib/src dist --delete-first --filter=\\\\.js && yarn rollup",
     "rollup": "rollup -c",
     "test": "cross-env NODE_ENV=development jest --ci && cross-env NODE_ENV=production jest --ci && yarn run test-cyclic",
     "speedtest": "node --expose-gc test/perf/report.js",

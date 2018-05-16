@@ -17,7 +17,7 @@
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "importHelpers": true,
-        "lib": ["es6"]
+        "lib": ["es6", "dom"]
     },
     "include": ["src/**/*", "test/**/*"]
 }

@@ -11,7 +11,7 @@ function getEnvVariables(production) {
 
 export default [
   {
-    entry: "./lib/index.js",
+    entry: "./lib/src/index.js",
     dest: "./dist/mstform.js",
     format: "cjs",
     external: ["mobx", "mobx-state-tree"],
@@ -22,7 +22,7 @@ export default [
     plugins: [resolve(), filesize()]
   },
   {
-    entry: "./lib/index.js",
+    entry: "./lib/src/index.js",
     dest: "./dist/mstform.umd.js",
     format: "umd",
     moduleName: "mstForm",
@@ -34,7 +34,7 @@ export default [
     plugins: [resolve(), replace(getEnvVariables(true)), uglify(), filesize()]
   },
   {
-    entry: "./lib/index.js",
+    entry: "./lib/src/index.js",
     dest: "./dist/mstform.module.js",
     format: "es",
     external: ["mobx", "mobx-state-tree"],

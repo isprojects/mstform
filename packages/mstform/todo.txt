@@ -1,0 +1,2 @@
+* verify that we can't do readonly or fromEvent for non-string raw
+  values.
