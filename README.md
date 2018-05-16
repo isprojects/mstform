@@ -141,14 +141,16 @@ Then in `render` we retrieve the field accessor for the `foo` field.
 This has everything we need: `error` to show the current error, `raw`
 for the raw value, and `handleChange` for an onChange handler.
 
+I've enabled `ts-check` on top. If you're using vscode you will see
+it reflect the correct types -- it knows raw is a string, for instance. This
+can help to catch errors.
+
 ## RepeatingForm
 
 Often in a form you have a sub-form that repeats itself. The MST type
 could look like this:
 
 ```javascript
-import { types } from "mobx-state-tree";
-
 const Animal = types.model("Animal", {
   name: types.string,
   size: types.string
@@ -159,4 +161,40 @@ const Zoo = types.model("Zoo", {
 });
 ```
 
-Instead of `Field` you can use `RepeatingForm` to allow the ed
+Here we want a form that lets you add and remove animals. We can do it
+like this:
+
+```javascript
+import { RepeatingForm } from "mstform";
+
+const form = new Form(Zoo, {
+  animals: new RepeatingForm({
+    name: new Field(converters.string),
+    size: new Field(converters.string)
+  })
+});
+```
+
+We can now use it like this in our `render` method:
+
+```javascript
+const animalForms = state.repeatingForm("animals");
+
+const entries = o.animals.map((animal, index) => {
+  const animalForm = animalForms.index(index);
+  const name = animalForm.field("name");
+  const size = animalForm.field("size");
+  return (
+    <div>
+      <InlineError error={name.error}>
+        <input type="text" value={name.raw} onChange={name.handleChange} />
+      </InlineError>
+      <InlineError error={size.error}>
+        <input type="text" value={size.raw} onChange={size.handleChange} />
+      </InlineError>
+    </div>
+  );
+});
+
+return <div>{entries}</div>;
+```
