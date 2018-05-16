@@ -37,6 +37,10 @@ export type FormDefinition<M> = {
 export class Form<M, D extends FormDefinition<M>> {
   constructor(public model: IModelType<any, M>, public definition: D) {}
 
+  get FormStateType(): FormState<M, D> {
+    throw new Error("For introspection");
+  }
+
   create(node: IStateTreeNode, options?: FormStateOptions): FormState<M, D> {
     return new FormState(this, node, options);
   }
@@ -618,3 +622,4 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
     return this.formAccessor.flatAccessors;
   }
 }
+export const FOO = "FOO";

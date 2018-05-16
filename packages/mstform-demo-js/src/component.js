@@ -1,6 +1,7 @@
+// @ts-check
 import { observer } from "mobx-react";
 import { types } from "mobx-state-tree";
-import { Field, Form, converters } from "mstform";
+import { Field, Form, FormState, converters } from "mstform";
 import * as React from "react";
 import { Component } from "react";
 
@@ -8,6 +9,9 @@ import { Component } from "react";
 const M = types.model("M", {
   foo: types.string
 });
+
+// we create an instance of the model
+const o = M.create({ foo: "FOO" });
 
 // we expose this field in our form
 const form = new Form(M, {
@@ -17,15 +21,8 @@ const form = new Form(M, {
   })
 });
 
-// we create an instance of the model
-const o = M.create({ foo: "FOO" });
-
-interface InlineErrorProps {
-  error?: string;
-}
-
 @observer
-class InlineError extends Component<InlineErrorProps, {}> {
+class InlineError extends Component {
   render() {
     const { children, error } = this.props;
     return (
@@ -37,13 +34,9 @@ class InlineError extends Component<InlineErrorProps, {}> {
   }
 }
 
-interface MyFormProps {}
-
 @observer
-export class MyForm extends Component<MyFormProps, {}> {
-  state: typeof form.FormStateType;
-
-  constructor(props: MyFormProps) {
+export class MyForm extends Component {
+  constructor(props) {
     super(props);
     // we create a form state for this model
     this.state = form.create(o);
