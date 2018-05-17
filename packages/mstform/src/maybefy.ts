@@ -49,7 +49,7 @@ export function maybefy(type: IModelType<any, any>): IModelType<any, any> {
   // if (type.flags & TypeFlags.Union) {
   //   return maybefyUnion(type);
   // }
-  const definition = {};
+  const definition: any = {};
   Object.keys(type.properties).forEach(key => {
     definition[key] = maybefyField(type.properties[key]);
   });
