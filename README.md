@@ -3,10 +3,11 @@
 mstform is a form library written for
 [mobx-state-tree](https://github.com/mobxjs/mobx-state-tree) and
 [React](https://reactjs.org/). It manages form state for you and lets you
-define validation rules. It understands about repeating sub-forms as well. It
-works with any React [controlled
-components](https://reactjs.org/docs/forms.html) that define a `value` and a
-`onChange` prop.
+define validation rules. It understands about repeating sub-forms as well.
+
+It doesn't put any requirements on what your widgets look like. It works with
+any React [controlled components](https://reactjs.org/docs/forms.html) that
+define a `value` and a `onChange` prop.
 
 ## Features
 
@@ -39,10 +40,12 @@ HTML `<input>` to fancy UI component libraries), and style it the way you want.
 Web forms are also everywhere. That's why we'd like to automate as much
 as possible and write as little form-specific code as possible.
 
-But those two desires are in conflict with each other. A form library that
-automates a lot starts to be in the way when you want to customize it to fit
-a UI exactly. On the other hand a form library that doesn't do enough means
-you end up writing a lot of custom code.
+But those two desires are in conflict with each other. It's tempting for
+instance to start auto-generating forms, but this only works for simple use
+cases. This way a form library that automates too much can be in the way when
+you want to customize it to fit your application's requirements exactly. On the
+other hand if your form library that doesn't do enough means you end up writing
+a lot of custom code.
 
 mstform balances simple usage with flexibility. It doesn't provide any React
 widgets, or in fact any React components at all. It doesn't auto-generate forms
@@ -178,10 +181,13 @@ const form = new Form(Zoo, {
 We can now use it like this in our `render` method:
 
 ```javascript
+// this represents all the subforms
 const animalForms = state.repeatingForm("animals");
 
 const entries = o.animals.map((animal, index) => {
+  // get the sub-form we want
   const animalForm = animalForms.index(index);
+  // and get the fields as usual
   const name = animalForm.field("name");
   const size = animalForm.field("size");
   return (
