@@ -21,7 +21,6 @@ test("a simple form", async () => {
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o);
-
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
@@ -921,14 +920,27 @@ test("no validation after save either", async () => {
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      validators: [value => value !== "correct" && "Wrong"]
+      validators: [
+        value => value !== "correct" && value !== "clientcorrect" && "Wrong"
+      ]
     })
   });
 
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o, {
-    validation: { beforeSave: "no", afterSave: "no" }
+    save: async node => {
+      if (node.foo !== "correct") {
+        return {
+          foo: "Server wrong"
+        };
+      }
+      return null;
+    },
+    validation: {
+      beforeSave: "no",
+      afterSave: "no"
+    }
   });
 
   const field = state.field("foo");
@@ -946,7 +958,7 @@ test("no validation after save either", async () => {
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("correct");
 
-  const isSaved = await state.save();
+  let isSaved = await state.save();
   expect(state.saveStatus).toEqual("rightAfter");
   // only a single validation after save
   expect(field.error).toEqual("Wrong");
@@ -957,4 +969,10 @@ test("no validation after save either", async () => {
   expect(field.value).toEqual("correct");
   await field.setRaw("incorrect");
   expect(field.error).toBeUndefined();
+
+  // we save again, and this time get a server-side error
+  await field.setRaw("clientcorrect"); // no client-side problems
+  isSaved = await state.save();
+  expect(isSaved).toBeFalsy();
+  expect(field.error).toEqual("Server wrong");
 });

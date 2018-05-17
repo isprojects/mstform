@@ -204,3 +204,89 @@ const entries = o.animals.map((animal, index) => {
 
 return <div>{entries}</div>;
 ```
+
+## Saving and server errors
+
+When we create the form state, we can pass it some options. One is a function
+that actually saves the content in the form:
+
+```javascript
+this.state = form.state(o, {
+  save: async node => {
+    // we call the real save function that actually knows
+    // how to save the form. This can come in as a prop, for instance.
+    return await onSave(getSnapshot(node));
+  }
+});
+```
+
+Once you've hooked up your own save functionality, you should call
+`state.save()` when you do a form submit. This does the following:
+
+* Makes sure the form is completely valid before it's submitted to the server,
+  otherwise displays client-side validation errors.
+
+* Uses your `save` function do to the actual saving.
+
+* Processes any additional validation errors returned by the server.
+
+If you don't specify your own `save` you can still call `state.save()`, but
+it gives you a warning on the console that no actual saving could take place.
+This is handy during development when you haven't wired up your
+backend logic yet.
+
+The last point requires elaboration: when you save form content to some backend
+it may result in additional validation errors that are generated there.
+Sometimes it's easier to detect errors in the backend, and doing server-side
+validation is a good idea from a security perspective anyhow. mstform supports
+displaying those errors.
+
+The save function either returns `null` if the save succeeded and there are no
+server validation issues, or returns a special `errors` structure that matches
+the structure of the MST node. So, if you have an MST model like this:
+
+```javascript
+const M = types.model("M", {
+  name: types.string()
+});
+```
+
+The error structure needs to be:
+
+```
+{
+  name: "Could not be matched in the database"
+}
+```
+
+Every `Field` can have an error entry.
+
+## Controlling validation messages
+
+By default, mstform displays inline validation errors as soon as you
+make a mistake. This may not be desirable. You can turn it off by
+passing another option:
+
+```javascript
+this.state = form.state(o, {
+  validation: {
+    beforeSave: "no"
+  }
+});
+```
+
+Now inline validation only occurs after you save, not before.
+
+It's also possible to turn off inline validation altogether:
+
+```javascript
+this.state = form.state(o, {
+  validation: {
+    beforeSave: "no",
+    afterSave: "no"
+  }
+});
+```
+
+Only validation messages generated during the save process (either client-side
+or server side) are displayed now.

@@ -1,7 +1,6 @@
 import { IObservableArray, action, computed, observable } from "mobx";
 import {
   IModelType,
-  IStateTreeNode,
   IType,
   applyPatch,
   onPatch,
@@ -42,7 +41,7 @@ export class Form<M, D extends FormDefinition<M>> {
     throw new Error("For introspection");
   }
 
-  state(node: IStateTreeNode, options?: FormStateOptions): FormState<M, D> {
+  state(node: M, options?: FormStateOptions<M>): FormState<M, D> {
     return new FormState(this, node, options);
   }
 }
@@ -174,7 +173,7 @@ export class FormState<M, D extends FormDefinition<M>>
   errors: Map<string, string>;
   validating: Map<string, boolean>;
   formAccessor: FormAccessor<M, D>;
-  saveFunc?: SaveFunc;
+  saveFunc?: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
@@ -182,8 +181,8 @@ export class FormState<M, D extends FormDefinition<M>>
 
   constructor(
     public form: Form<M, D>,
-    public node: IStateTreeNode,
-    options?: FormStateOptions
+    public node: M,
+    options?: FormStateOptions<M>
   ) {
     this.raw = observable.map();
     this.errors = observable.map();

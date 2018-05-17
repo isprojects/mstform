@@ -1,5 +1,3 @@
-import { IStateTreeNode } from "mobx-state-tree";
-
 export type ValidationResponse = string | null | undefined | false;
 
 export interface Validator<V> {
@@ -20,8 +18,8 @@ export interface FieldOptions<R, V> {
   fromEvent?: boolean;
 }
 
-export interface SaveFunc {
-  (node: IStateTreeNode): any;
+export interface SaveFunc<M> {
+  (node: M): any;
 }
 
 // TODO: implement blur and pause validation
@@ -29,8 +27,8 @@ export interface SaveFunc {
 // pause would show validation after the user stops input for a while
 export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 
-export interface FormStateOptions {
-  save?: SaveFunc;
+export interface FormStateOptions<M> {
+  save?: SaveFunc<M>;
   validation?: {
     beforeSave?: ValidationOption;
     afterSave?: ValidationOption;
