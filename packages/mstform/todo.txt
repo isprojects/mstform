@@ -9,7 +9,8 @@
   create a no-read mode that:
 
   * doesn't ever read underlying value from the form. Instead it displays
-    an empty value defined by the converter.
+    an empty value defined by the converter. Any placeholder value
+    (such as 0) in the mst object is ignored.
 
   * only upon first write tries to save the value to the underlying field.
 
@@ -18,3 +19,7 @@
 
   A field that has never been written should be considered invalid
   for the purposes of form submission.
+
+  In case of repeating forms, we should be able to get repeating forms
+  that do not save yet. We can add as many as we like. Underneath it
+  adds a placeholder object.
