@@ -1,20 +1,7 @@
 import { IObservableArray, action, computed, observable } from "mobx";
-import {
-  IModelType,
-  IStateTreeNode,
-  IType,
-  applyPatch,
-  onPatch,
-  resolvePath
-} from "mobx-state-tree";
+import { IModelType, IStateTreeNode, IType, applyPatch, onPatch, resolvePath } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
-import {
-  FieldOptions,
-  FormStateOptions,
-  RawGetter,
-  SaveFunc,
-  Validator
-} from "./types";
+import { FieldOptions, FormStateOptions, RawGetter, SaveFunc, Validator } from "./types";
 import { equal, getByPath, isInt, pathToSteps, unwrap } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
@@ -41,7 +28,7 @@ export class Form<M, D extends FormDefinition<M>> {
     throw new Error("For introspection");
   }
 
-  create(node: IStateTreeNode, options?: FormStateOptions): FormState<M, D> {
+  state(node: IStateTreeNode, options?: FormStateOptions): FormState<M, D> {
     return new FormState(this, node, options);
   }
 }

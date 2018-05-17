@@ -17,7 +17,7 @@ test("a simple form", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -46,7 +46,7 @@ test("a simple form with array field", async () => {
 
   const o = M.create({ foo: ["FOO"] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -71,7 +71,7 @@ test("number input", async () => {
 
   const o = M.create({ foo: 3 });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -96,7 +96,7 @@ test("conversion failure with message", async () => {
 
   const o = M.create({ foo: 3 });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -126,7 +126,7 @@ test("repeating form", async () => {
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   const oneForm = forms.index(0);
@@ -154,7 +154,7 @@ test("repeating form with conversion", async () => {
 
   const o = M.create({ foo: [{ bar: 3 }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   const oneForm = forms.index(0);
@@ -183,7 +183,7 @@ test("repeating form push", async () => {
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   expect(forms.length).toBe(1);
@@ -212,7 +212,7 @@ test("repeating form insert", async () => {
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   expect(forms.length).toBe(1);
@@ -241,7 +241,7 @@ test("repeating form remove", async () => {
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   expect(forms.length).toBe(1);
@@ -267,7 +267,7 @@ test("repeating form remove and insert clears errors", async () => {
 
   const o = M.create({ foo: [{ bar: "correct" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   const field0 = forms.index(0).field("bar");
@@ -311,7 +311,7 @@ test("async validation in converter", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -361,7 +361,7 @@ test("async validation in validator", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -417,7 +417,7 @@ test("async validation modification", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -472,7 +472,7 @@ test("async validation rejects sets error status", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -500,7 +500,7 @@ test("simple validate", async () => {
 
   const o = M.create({ foo: "incorrect" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
   expect(field.error).toBeUndefined();
@@ -534,7 +534,7 @@ test("repeating form validate", async () => {
 
   const o = M.create({ foo: [{ bar: "incorrect" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   const field = forms.index(0).field("bar");
@@ -570,7 +570,7 @@ test("repeating form multiple entries validate", async () => {
     foo: [{ bar: "incorrect" }, { bar: "Also incorrect" }]
   });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const forms = state.repeatingForm("foo");
   const field = forms.index(0).field("bar");
@@ -604,7 +604,7 @@ test("setErrors", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
   state.setErrors({ foo: "WRONG" });
 
   const field = state.field("foo");
@@ -627,7 +627,7 @@ test("setErrors repeating", async () => {
 
   const o = M.create({ foo: [{ bar: "FOO" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
   state.setErrors({ foo: [{ bar: "WRONG" }] });
 
   const field = state.repeatingForm("foo").accessors[0].field("bar");
@@ -650,7 +650,7 @@ test("setErrors directly on repeating", async () => {
 
   const o = M.create({ foo: [{ bar: "FOO" }] });
 
-  const state = form.create(o);
+  const state = form.state(o);
   state.setErrors({ foo: "WRONG" });
 
   const accessor = state.repeatingForm("foo");
@@ -675,7 +675,7 @@ test("FormState can be saved", async () => {
     return null;
   }
 
-  const state = form.create(o, { save });
+  const state = form.state(o, { save });
 
   const field = state.field("foo");
 
@@ -715,7 +715,7 @@ test("not required", async () => {
 
   const o = M.create({ foo: null });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -742,7 +742,7 @@ test("required", async () => {
 
   const o = M.create({ foo: 3 });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -766,7 +766,7 @@ test("not required with maybe", async () => {
 
   const o = M.create({ foo: null });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -796,7 +796,7 @@ test("override getRaw", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -824,7 +824,7 @@ test("getRaw fromEvent", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
@@ -855,7 +855,7 @@ test("setting value on model will update form", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.create(o);
+  const state = form.state(o);
 
   const field = state.field("foo");
 
