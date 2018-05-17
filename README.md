@@ -205,6 +205,28 @@ const entries = o.animals.map((animal, index) => {
 return <div>{entries}</div>;
 ```
 
+## Supported converters
+
+The converters supported by mstform are:
+
+* `converters.string`: raw value is a string, value is a string.
+
+* `converters.number`: raw value is a string, value is a number.
+
+* `converters.integer`: raw value is a string, value is an integer.
+
+* `converters.decimal(maxDigits, decimalPlaces)`: raw value is a string,
+  value is a decimal with a maximum `maxDigits` before the period and
+  a maximum of `decimalPlaces` after the period.
+
+* `converters.stringArray`: raw value is an array of strings. value is
+  an observable array of strings.
+
+* `converters.maybe(converter)`: turns a converter (such as `number`) that  
+  requires raw value as string into a converter that accepts empty values and
+  returns a `null` when an empty value is provided. Normally an empty value is
+  rejected, except in case of `converters.string`.
+
 ## Saving and server errors
 
 When we create the form state, we can pass it some options. One is a function
