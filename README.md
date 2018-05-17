@@ -212,6 +212,9 @@ these are the same, but often they're now.
 
 ### Converters from raw string value
 
+The input raw value that comes is a string for all of these. The converted
+value may be a string or some other object:
+
 * `converters.string`: value is a string.
 
 * `converters.number`: value is a number.
