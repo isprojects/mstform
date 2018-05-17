@@ -228,7 +228,9 @@ value may be a string or some other object:
 ### Arrays
 
 `converters.stringArray`: raw value is an array of strings. value is
-an observable array of strings.
+an observable array of strings. Note that this is for using arrays
+as a value. When you want the user to be able to add items to the array,
+using `RepeatingForm` instead.
 
 ### Models
 
