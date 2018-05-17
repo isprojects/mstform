@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types } from "mobx-state-tree";
+import { getSnapshot, types } from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
 // "strict" leads to trouble during initialization. we may want to lift this
@@ -702,6 +702,56 @@ test("FormState can be saved", async () => {
   expect(saveResult1).toBe(true);
 
   expect(field.error).toBeUndefined();
+});
+
+test("save argument can be snapshotted", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {})
+  });
+
+  let snapshot;
+
+  async function save(node: typeof M.Type) {
+    snapshot = getSnapshot(node);
+    return null;
+  }
+
+  const state = form.state(o, { save });
+
+  await state.save();
+
+  expect(snapshot).toEqual({ foo: "FOO" });
+});
+
+test("inline save argument can be snapshotted", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {})
+  });
+
+  let snapshot;
+
+  const state = form.state(o, {
+    save: node => {
+      snapshot = getSnapshot(node);
+      return null;
+    }
+  });
+
+  await state.save();
+
+  expect(snapshot).toEqual({ foo: "FOO" });
 });
 
 test("not required", async () => {
