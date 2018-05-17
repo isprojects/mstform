@@ -94,7 +94,7 @@ export class MyForm extends Component {
   constructor(props) {
     super(props);
     // we create a form state for this model
-    this.state = form.create(o);
+    this.state = form.state(o);
   }
 
   render() {
