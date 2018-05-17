@@ -1,2 +1,20 @@
 * verify that we can't do readonly or fromEvent for non-string raw
   values.
+
+* a Group concept that aggregates validation values.
+
+* a form validation setting:
+
+  * beforeSave - immediate, blur, pause, none.
+
+  * a save will always trigger all validations.
+
+  * afterSave - immediate, blur, pause, none.
+
+  * validationPause
+
+  * server validations can trigger only after blur or pause, not immediately.
+
+  * Can override on an individual field
+
+

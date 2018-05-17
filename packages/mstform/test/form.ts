@@ -2,7 +2,10 @@ import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
-configure({ enforceActions: "strict" });
+// "strict" leads to trouble during initialization. we may want to lift this
+// restriction in ispnext in the future as we use MST now, which has its
+// own mechanism
+configure({ enforceActions: true });
 
 test("a simple form", async () => {
   const M = types.model("M", {
@@ -868,4 +871,90 @@ test("setting value on model will update form", async () => {
   o.update("BACK");
   expect(field.raw).toEqual("QUX");
   // TODO: provide a way to clear raw so that updating works?
+});
+
+test("no validation before save", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [value => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, { validation: { beforeSave: "no" } });
+
+  const field = state.field("foo");
+
+  // no validation messages before save
+  expect(field.raw).toEqual("FOO");
+  await field.setRaw("incorrect");
+  expect(field.raw).toEqual("incorrect");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("FOO");
+  await field.setRaw("correct");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+  await field.setRaw("incorrect");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+
+  const isSaved = await state.save();
+  // immediate validation after save
+  expect(field.error).toEqual("Wrong");
+  expect(isSaved).toBeFalsy();
+  await field.setRaw("correct");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+  await field.setRaw("incorrect");
+  expect(field.error).toEqual("Wrong");
+});
+
+test("no validation after save either", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [value => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, {
+    validation: { beforeSave: "no", afterSave: "no" }
+  });
+
+  const field = state.field("foo");
+
+  // no validation messages before save
+  expect(field.raw).toEqual("FOO");
+  await field.setRaw("incorrect");
+  expect(field.raw).toEqual("incorrect");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("FOO");
+  await field.setRaw("correct");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+  await field.setRaw("incorrect");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+
+  const isSaved = await state.save();
+  expect(state.saveStatus).toEqual("rightAfter");
+  // only a single validation after save
+  expect(field.error).toEqual("Wrong");
+  expect(isSaved).toBeFalsy();
+  // after this we don't see inline errors anymore
+  await field.setRaw("correct");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("correct");
+  await field.setRaw("incorrect");
+  expect(field.error).toBeUndefined();
 });

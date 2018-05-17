@@ -1,7 +1,21 @@
 import { IObservableArray, action, computed, observable } from "mobx";
-import { IModelType, IStateTreeNode, IType, applyPatch, onPatch, resolvePath } from "mobx-state-tree";
+import {
+  IModelType,
+  IStateTreeNode,
+  IType,
+  applyPatch,
+  onPatch,
+  resolvePath
+} from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
-import { FieldOptions, FormStateOptions, RawGetter, SaveFunc, Validator } from "./types";
+import {
+  FieldOptions,
+  FormStateOptions,
+  RawGetter,
+  SaveFunc,
+  ValidationOption,
+  Validator
+} from "./types";
 import { equal, getByPath, isInt, pathToSteps, unwrap } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
@@ -161,6 +175,10 @@ export class FormState<M, D extends FormDefinition<M>>
   validating: Map<string, boolean>;
   formAccessor: FormAccessor<M, D>;
   saveFunc?: SaveFunc;
+  validationBeforeSave: ValidationOption;
+  validationAfterSave: ValidationOption;
+  validationPauseDuration: number;
+  @observable saveStatus: "before" | "rightAfter" | "after" = "before";
 
   constructor(
     public form: Form<M, D>,
@@ -178,8 +196,15 @@ export class FormState<M, D extends FormDefinition<M>>
     this.formAccessor = new FormAccessor(this, this.form.definition, "");
     if (options == null) {
       this.saveFunc = undefined;
+      this.validationBeforeSave = "immediate";
+      this.validationAfterSave = "immediate";
+      this.validationPauseDuration = 0;
     } else {
       this.saveFunc = options.save;
+      const validation = options.validation || {};
+      this.validationBeforeSave = validation.beforeSave || "immediate";
+      this.validationAfterSave = validation.afterSave || "immediate";
+      this.validationPauseDuration = validation.pauseDuration || 0;
     }
   }
 
@@ -200,6 +225,9 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   setRaw(path: string, value: any) {
+    if (this.saveStatus === "rightAfter") {
+      this.saveStatus = "after";
+    }
     this.raw.set(path, value);
   }
 
@@ -227,15 +255,20 @@ export class FormState<M, D extends FormDefinition<M>>
     return await this.formAccessor.validate();
   }
 
+  @action
   async save(): Promise<boolean> {
-    if (this.saveFunc == null) {
-      throw Error("No save configured");
-    }
     const isValid = await this.validate();
+    this.saveStatus = "rightAfter";
     if (!isValid) {
       return false;
     }
-    const errors = await this.saveFunc(this.node);
+    let errors;
+    if (this.saveFunc != null) {
+      errors = await this.saveFunc(this.node);
+    } else {
+      console.warn("No mstform save function configured");
+      errors = null;
+    }
     if (errors != null) {
       this.setErrors(errors);
       return false;
@@ -404,8 +437,40 @@ export class FieldAccessor<R, V> {
   }
 
   @computed
-  get error(): string | undefined {
+  get errorValue(): string | undefined {
     return this.state.getError(this.path);
+  }
+
+  @computed
+  get canShowValidationMessages(): boolean {
+    // immediately after a save we always want messages
+    if (this.state.saveStatus === "rightAfter") {
+      return true;
+    }
+    const policy =
+      this.state.saveStatus === "before"
+        ? this.state.validationBeforeSave
+        : this.state.validationAfterSave;
+    if (policy === "immediate") {
+      return true;
+    }
+    if (policy === "no") {
+      return false;
+    }
+    // not implemented yet
+    if (policy === "blur" || policy === "pause") {
+      return false;
+    }
+    return true;
+  }
+
+  @computed
+  get error(): string | undefined {
+    if (this.canShowValidationMessages) {
+      return this.errorValue;
+    } else {
+      return undefined;
+    }
   }
 
   @computed
@@ -415,7 +480,7 @@ export class FieldAccessor<R, V> {
 
   async validate(): Promise<boolean> {
     await this.setRaw(this.raw);
-    return this.error === undefined;
+    return this.errorValue === undefined;
   }
 
   @action
@@ -468,7 +533,7 @@ export class FieldAccessor<R, V> {
 
   @computed
   get validationProps() {
-    const error = this.error;
+    const error = this.errorValue;
     const isValidating = this.isValidating;
     if (!error) {
       return { validateStatus: isValidating ? "validating" : "" };
@@ -609,4 +674,3 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
     return this.formAccessor.flatAccessors;
   }
 }
-

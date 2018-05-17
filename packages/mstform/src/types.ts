@@ -24,6 +24,16 @@ export interface SaveFunc {
   (node: IStateTreeNode): any;
 }
 
+// TODO: implement blur and pause validation
+// blur would validate immediately after blur
+// pause would show validation after the user stops input for a while
+export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
+
 export interface FormStateOptions {
   save?: SaveFunc;
+  validation?: {
+    beforeSave?: ValidationOption;
+    afterSave?: ValidationOption;
+    pauseDuration?: number;
+  };
 }
