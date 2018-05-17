@@ -1,4 +1,4 @@
-import { types } from "mobx-state-tree";
+import { typecheck, types } from "mobx-state-tree";
 import { maybefy } from "../src";
 
 // XXX typecheck expects are commented out to prevent spamminess
@@ -17,9 +17,9 @@ test("string field", () => {
     foo: types.string
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
   Maybefied.create({ foo: "bar" });
 });
 
@@ -31,9 +31,9 @@ test("subobject", () => {
     foo: N
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
 
   Maybefied.create({ foo: { bar: null } });
   Maybefied.create({ foo: { bar: 3 } });
@@ -44,9 +44,9 @@ test("array field with numbers", () => {
     foo: types.array(types.number)
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
 
   Maybefied.create({ foo: [null] });
   Maybefied.create({ foo: [456, 789] });
@@ -57,12 +57,12 @@ test("array field with strings", () => {
     foo: types.array(types.string)
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: [null] });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: [null] });
+  }).toThrow();
 
   Maybefied.create({ foo: ["FOO", "BAR"] });
 });
@@ -75,13 +75,13 @@ test("array field with objects", () => {
     foo: types.array(N)
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
 
-  // expect(() => {
-  //   typecheck(M, Maybefied.create({ foo: [null] }));
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: [null] });
+  }).toThrow();
 
   Maybefied.create({ foo: [{ bar: null }, { bar: null }] });
   Maybefied.create({ foo: [{ bar: 456 }, { bar: 789 }] });
@@ -92,9 +92,9 @@ test("map field with numbers", () => {
     foo: types.map(types.number)
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
 
   Maybefied.create({ foo: { x: null } });
   Maybefied.create({ foo: { x: 123 } });
@@ -105,12 +105,12 @@ test("map field with strings", () => {
     foo: types.map(types.string)
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: { x: null } });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: { x: null } });
+  }).toThrow();
 
   Maybefied.create({ foo: { x: "FOO" } });
 });
@@ -123,13 +123,13 @@ test("map field with objects", () => {
     foo: types.map(N)
   });
   const Maybefied = maybefy(M);
-  // expect(() => {
-  //   typecheck(Maybefied, { foo: null });
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: null });
+  }).toThrow();
 
-  // expect(() => {
-  //   typecheck(M, Maybefied.create({ foo: { x: null } }));
-  // }).toThrow();
+  expect(() => {
+    typecheck(Maybefied, { foo: { x: null } });
+  }).toThrow();
 
   Maybefied.create({ foo: { x: { bar: null }, y: { bar: null } } });
   Maybefied.create({ foo: { x: { bar: 456 }, y: { bar: 789 } } });
@@ -154,25 +154,36 @@ test("another kind of union", () => {
   Maybefied.create({ foo: "foo" });
 });
 
-test("reference", () => {
-  const Thing = types.model("Thing", {
-    id: types.identifier(),
-    foo: types.string
-  });
+// test("union model", () => {
+//   const A = types.model("A", {
+//     a: types.number
+//   });
+//   const B = types.model("B", {
+//     b: types.number
+//   });
 
-  const M = types.model("M", {
-    r: types.reference(Thing)
-  });
+//   const U = types.union(s => (s.a !== undefined ? A : B), A, B);
 
-  const R = types.model({
-    m: M,
-    w: maybefy(M),
-    things: types.array(Thing)
-  });
+//   const Maybefied = maybefy(U);
 
-  const r = R.create({
-    things: [{ id: "a", foo: "A" }],
-    m: { r: "a" },
-    w: { r: null }
-  });
-});
+//   Maybefied.create({ a: 3 });
+//   Maybefied.create({ b: 4 });
+
+//   Maybefied.create({ a: null });
+//   Maybefied.create({ b: null });
+// });
+
+// test("maybe submodel", () => {
+//   const A = types.model("A", {
+//     bar: types.number
+//   });
+//   const B = types.model("B", {
+//     foo: types.maybe(A)
+//   });
+
+//   const Maybefied = maybefy(B);
+
+//   Maybefied.create({ foo: { bar: 3 } });
+//   Maybefied.create({ foo: { bar: null } });
+//   Maybefied.create({ foo: null });
+// });
