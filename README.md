@@ -210,7 +210,7 @@ return <div>{entries}</div>;
 Converters specify the raw value and the converted value. Sometimes
 these are the same, but often they're now.
 
-Converters from raw string value:
+### Converters from raw string value
 
 * `converters.string`: value is a string.
 
@@ -222,32 +222,33 @@ Converters from raw string value:
   contains a decimal number with a maximum `maxDigits` before the period and a
   maximum of `decimalPlaces` after the period.
 
-Arrays:
+### Arrays
 
-* `converters.stringArray`: raw value is an array of strings. value is
-  an observable array of strings.
+`converters.stringArray`: raw value is an array of strings. value is
+an observable array of strings.
 
-Models:
+### Models
 
-* `converters.model(Model)`: does not do any conversion (model instance goes
-  in, model instance comes out), but allows you to specify that a MST model
-  comes in as a raw value and is the value. Typescript will be happy.
+`converters.model(Model)`: does not do any conversion (model instance goes
+in, model instance comes out), but allows you to specify that a MST model
+comes in as a raw value and is the value. Typescript will be happy.
 
-Utility:
+### Maybe
 
-* `converters.maybe(converter)`: This works on converters that convert
-  raw string values as well as converters that deal with MST nodes.
+`converters.maybe(converter)`: This works on converters that convert raw
+string values as well as converters that deal with MST nodes.
 
-  When you wrap it around any converter that takes a raw string value, the
-  empty value is accepted and converted into `null`. This allows you to model
-  empty values.
+When you wrap it around any converter that takes a raw string value, the empty
+value is accepted and converted into `null`. This allows you to model empty
+values.
 
-  It can also be wrapped around a `model` converter, in which case it now accepts
-  empty. This is handy when you have a `types.maybe(types.reference())` in
-  MST.
+It can also be wrapped around a `model` converter, in which case it now accepts
+empty. This is handy when you have a `types.maybe(types.reference())` in MST.
 
-* `converters.object`: this accept any object as raw value and returns it,  
-  including `null`. Prefer `converters.model` if you can.
+### Object
+
+`converters.object`: this accept any object as raw value and returns it,
+including `null`. Prefer `converters.model` if you can.
 
 ## Saving and server errors
 
