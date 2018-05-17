@@ -3,18 +3,18 @@
 
 * a Group concept that aggregates validation values.
 
-* a form validation setting:
+* implement show error after blur, show error after pause.
 
-  * beforeSave - immediate, blur, pause, none.
+* maybefy doesn't seem to be the way to go. Can we instead
+  create a no-read mode that:
 
-  * a save will always trigger all validations.
+  * doesn't ever read underlying value from the form. Instead it displays
+    an empty value defined by the converter.
 
-  * afterSave - immediate, blur, pause, none.
+  * only upon first write tries to save the value to the underlying field.
 
-  * validationPause
+  This needs to work for both whole forms (add form use case) as well
+  as repeating items on a form.
 
-  * server validations can trigger only after blur or pause, not immediately.
-
-  * Can override on an individual field
-
-
+  A field that has never been written should be considered invalid
+  for the purposes of form submission.
