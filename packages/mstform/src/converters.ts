@@ -1,15 +1,19 @@
 import { IObservableArray, observable } from "mobx";
+import { IModelType } from "mobx-state-tree";
 import {
   ConversionResponse,
   ConversionValue,
   Converter,
   IConverter
 } from "./converter";
+import { identity } from "./utils";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
-const string = new Converter<string, string>({
+export class StringConverter<V> extends Converter<string, V> {}
+
+const string = new StringConverter<string>({
   convert(raw) {
     return raw;
   },
@@ -18,7 +22,7 @@ const string = new Converter<string, string>({
   }
 });
 
-const number = new Converter<string, number>({
+const number = new StringConverter<number>({
   rawValidate(raw) {
     // deal with case when string starts with .
     if (raw.startsWith(".")) {
@@ -34,7 +38,7 @@ const number = new Converter<string, number>({
   }
 });
 
-const integer = new Converter<string, number>({
+const integer = new StringConverter<number>({
   rawValidate(raw) {
     return INTEGER_REGEX.test(raw);
   },
@@ -47,13 +51,13 @@ const integer = new Converter<string, number>({
 });
 
 class Decimal implements IConverter<string, string> {
-  public converter: Converter<string, string>;
+  public converter: StringConverter<string>;
 
   constructor(public maxWholeDigits: number, public decimalPlaces: number) {
     const regex = new RegExp(
       `^-?(0|[1-9]\\d{0,${maxWholeDigits - 1}})(\\.\\d{0,${decimalPlaces}})?$`
     );
-    this.converter = new Converter<string, string>({
+    this.converter = new StringConverter<string>({
       rawValidate(raw) {
         // deal with case when string starts with .
         if (raw.startsWith(".")) {
@@ -88,8 +92,32 @@ function decimal(
   return new Decimal(maxDigits, decimalPlaces);
 }
 
-class Maybe<V> implements IConverter<string, V | null> {
-  constructor(public converter: Converter<string, V>) {}
+// XXX create a way to create arrays with mobx state tree types
+const stringArray = new Converter<string[], IObservableArray<string>>({
+  convert(raw) {
+    return observable.array(raw);
+  },
+  render(value) {
+    return value;
+  }
+});
+
+// this works with string converters and also with models
+function maybe<R, V>(
+  converter: StringConverter<V>
+): IConverter<string, V | null>;
+function maybe<R>(converter: IConverter<R, R>): IConverter<R | null, R | null>;
+function maybe<R, V>(
+  converter: Converter<string, V> | IConverter<R, R>
+): IConverter<string, V | null> | IConverter<R | null, R | null> {
+  if (converter instanceof StringConverter) {
+    return new StringMaybe(converter);
+  }
+  return maybeModel(converter as IConverter<R, R>);
+}
+
+class StringMaybe<V> implements IConverter<string, V | null> {
+  constructor(public converter: StringConverter<V>) {}
   async convert(raw: string): Promise<ConversionResponse<V | null>> {
     if (raw.trim() === "") {
       return new ConversionValue(null);
@@ -105,21 +133,23 @@ class Maybe<V> implements IConverter<string, V | null> {
   }
 }
 
-export function maybe<R, V>(
-  converter: Converter<string, V>
-): IConverter<string, V | null> {
-  return new Maybe(converter);
+function model<M>(model: IModelType<any, M>): IConverter<M, M> {
+  return new Converter({
+    convert: identity,
+    render: identity
+  });
 }
 
-// XXX create a way to create arrays with mobx state tree types
-const stringArray = new Converter<string[], IObservableArray<string>>({
-  convert(raw) {
-    return observable.array(raw);
-  },
-  render(value) {
-    return value;
-  }
-});
+function maybeModel<M>(
+  converter: IConverter<M, M>
+): IConverter<M | null, M | null> {
+  return new Converter({
+    convert: identity,
+    render: identity
+  });
+}
+
+const object = new Converter<any, any>({ convert: identity, render: identity });
 
 export const converters = {
   string,
@@ -127,5 +157,7 @@ export const converters = {
   integer,
   decimal,
   stringArray,
-  maybe
+  maybe,
+  model,
+  object
 };

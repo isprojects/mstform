@@ -207,25 +207,47 @@ return <div>{entries}</div>;
 
 ## Supported converters
 
-The converters supported by mstform are:
+Converters specify the raw value and the converted value. Sometimes
+these are the same, but often they're now.
 
-* `converters.string`: raw value is a string, value is a string.
+Converters from raw string value:
 
-* `converters.number`: raw value is a string, value is a number.
+* `converters.string`: value is a string.
 
-* `converters.integer`: raw value is a string, value is an integer.
+* `converters.number`: value is a number.
 
-* `converters.decimal(maxDigits, decimalPlaces)`: raw value is a string,
-  value is a decimal with a maximum `maxDigits` before the period and
-  a maximum of `decimalPlaces` after the period.
+* `converters.integer`: value is an integer.
+
+* `converters.decimal(maxDigits, decimalPlaces)`: value is a string that
+  contains a decimal number with a maximum `maxDigits` before the period and a
+  maximum of `decimalPlaces` after the period.
+
+Arrays:
 
 * `converters.stringArray`: raw value is an array of strings. value is
   an observable array of strings.
 
-* `converters.maybe(converter)`: turns a converter (such as `number`) that  
-  requires raw value as string into a converter that accepts empty values and
-  returns a `null` when an empty value is provided. Normally an empty value is
-  rejected, except in case of `converters.string`.
+Models:
+
+* `converters.model(Model)`: does not do any conversion (model instance goes
+  in, model instance comes out), but allows you to specify that a MST model
+  comes in as a raw value and is the value. Typescript will be happy.
+
+Utility:
+
+* `converters.maybe(converter)`: This works on converters that convert
+  raw string values as well as converters that deal with MST nodes.
+
+  When you wrap it around any converter that takes a raw string value, the
+  empty value is accepted and converted into `null`. This allows you to model
+  empty values.
+
+  It can also be wrapped around a `model` converter, in which case it now accepts
+  empty. This is handy when you have a `types.maybe(types.reference())` in
+  MST.
+
+* `converters.object`: this accept any object as raw value and returns it,  
+  including `null`. Prefer `converters.model` if you can.
 
 ## Saving and server errors
 

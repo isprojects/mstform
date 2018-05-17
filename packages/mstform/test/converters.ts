@@ -1,3 +1,4 @@
+import { types } from "mobx-state-tree";
 import {
   CONVERSION_ERROR,
   ConversionValue,
@@ -68,4 +69,55 @@ test("decimal converter", async () => {
 test("maybe number converter", async () => {
   await check(converters.maybe(converters.number), "3", 3);
   await check(converters.maybe(converters.number), "", null);
+});
+
+test("maybe string converter", async () => {
+  await check(converters.maybe(converters.string), "foo", "foo");
+  await check(converters.maybe(converters.string), "", null);
+});
+
+test("model converter", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+  const o = M.create({
+    foo: "FOO"
+  });
+  const converter = converters.model(M);
+  const r = await converter.convert({ foo: "value" });
+  expect(r).toEqual({ value: { foo: "value" } });
+  const r2 = await converter.convert(o);
+  expect(r2).toEqual({ value: o });
+});
+
+test("maybe model converter", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+  const o = M.create({
+    foo: "FOO"
+  });
+  const converter = converters.maybe(converters.model(M));
+  const r = await converter.convert({ foo: "value" });
+  expect(r).toEqual({ value: { foo: "value" } });
+  const r2 = await converter.convert(o);
+  expect(r2).toEqual({ value: o });
+  const r3 = await converter.convert(null);
+  expect(r3).toEqual({ value: null });
+});
+
+test("object converter", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+  const o = M.create({
+    foo: "FOO"
+  });
+  const converter = converters.object;
+  const r = await converter.convert({ foo: "value" });
+  expect(r).toEqual({ value: { foo: "value" } });
+  const r2 = await converter.convert(o);
+  expect(r2).toEqual({ value: o });
+  const r3 = await converter.convert(null);
+  expect(r3).toEqual({ value: null });
 });

@@ -1026,3 +1026,81 @@ test("no validation after save either", async () => {
   expect(isSaved).toBeFalsy();
   expect(field.error).toEqual("Server wrong");
 });
+
+test("model converter", async () => {
+  const R = types.model("R", {
+    id: types.identifier(),
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.reference(R)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.model(R), {
+      validators: [value => value.bar !== "correct" && "Wrong"]
+    })
+  });
+
+  const r1 = R.create({ id: "1", bar: "correct" });
+  const r2 = R.create({ id: "2", bar: "incorrect" });
+
+  const o = M.create({ foo: r1 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual(r1);
+  await field.setRaw(r2);
+  expect(field.raw).toEqual(r2);
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toEqual(r1);
+  await field.setRaw(r1);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual(r1);
+});
+
+test("model converter maybe", async () => {
+  const R = types.model("R", {
+    id: types.identifier(),
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.maybe(types.reference(R))
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.model(R)), {
+      validators: [
+        value => {
+          if (value == null) {
+            return false;
+          }
+          return value.bar !== "correct" && "Wrong";
+        }
+      ]
+    })
+  });
+
+  const r1 = R.create({ id: "1", bar: "correct" });
+  const r2 = R.create({ id: "2", bar: "incorrect" });
+
+  const o = M.create({ foo: r1 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual(r1);
+  await field.setRaw(r2);
+  expect(field.raw).toEqual(r2);
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toEqual(r1);
+  await field.setRaw(r1);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual(r1);
+  await field.setRaw(null);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toBeNull();
+});
