@@ -1,7 +1,10 @@
-* verify that we can't do readonly or fromEvent for non-string raw
+* verify we cannot do fromEvent for non-string raw
   values.
 
-* a Group concept that aggregates validation values.
+* required should start working with non-string raw values, if they're maybe.
+
+* a Group concept that aggregates validation values. Should deliver true or
+  false.
 
 * implement show error after blur, show error after pause.
 
@@ -33,3 +36,10 @@
   underlying value. For edit forms, we want any user-added repeating
   form entries to be in add mode. In add forms, we can assume that
   all repeating form entries that are already present are in add mode.
+
+* a context/env system. We want custom context and the env from MST.
+
+* converters should have access to the context. This way we can declare
+  systemwide policy for converters.
+
+
