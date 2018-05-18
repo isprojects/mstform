@@ -1,14 +1,13 @@
 {
   "name": "mstform-demo-js",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "JS demo of mstform",
   "main": "index.js",
   "author": "ISProjects",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start":
-      "webpack-dev-server --config ./webpack.config.js --mode development"
+    "start": "webpack-dev-server --config ./webpack.config.js --mode development"
   },
   "dependencies": {
     "mobx": "^4.2.1",
