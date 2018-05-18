@@ -8,23 +8,22 @@
     "module": "dist/mstform.module.js",
     "typings": "dist/index.d.ts",
     "scripts": {
-        "build":
-            "tsc && cpr lib/src dist --delete-first --filter=\\\\.js && yarn rollup",
+        "build": "tsc && cpr lib/src dist --delete-first --filter=\\\\.js && yarn rollup",
         "rollup": "rollup -c",
-        "test":
-            "cross-env NODE_ENV=development jest --ci && cross-env NODE_ENV=production jest --ci && yarn run test-cyclic",
+        "test": "cross-env NODE_ENV=development jest --ci && cross-env NODE_ENV=production jest --ci && yarn run test-cyclic",
         "speedtest": "node --expose-gc test/perf/report.js",
         "test-cyclic": "yarn run build && node -e \"require('.')\"",
         "watch": "jest --watch",
         "_prepublish": "yarn run build && npm run build-docs",
         "coverage": "jest --coverage",
-        "build-docs":
-            "tsc && documentation build lib/index.js --sort-order alpha -f md -o ../../API.md.tmp && concat -o ../../API.md ../../docs/API_header.md ../../API.md.tmp && rm ../../API.md.tmp",
+        "build-docs": "tsc && documentation build lib/index.js --sort-order alpha -f md -o ../../API.md.tmp && concat -o ../../API.md ../../docs/API_header.md ../../API.md.tmp && rm ../../API.md.tmp",
         "lint": "tslint -c tslint.json 'src/**/*.ts'"
     },
     "author": "ISProjects",
     "license": "MIT",
-    "files": ["dist/"],
+    "files": [
+        "dist/"
+    ],
     "devDependencies": {
         "@types/jest": "^22.2.0",
         "@types/node": "^8.0.19",
@@ -70,7 +69,13 @@
             "^.+\\.jsx?$": "babel-jest"
         },
         "testRegex": "test/.*\\.(t|j)sx?$",
-        "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js",
+            "jsx",
+            "json"
+        ],
         "testPathIgnorePatterns": [
             "/node_modules/",
             "/src/",
@@ -80,6 +85,8 @@
             "/\\./",
             "/lib"
         ],
-        "watchPathIgnorePatterns": ["<rootDir>/node_modules/"]
+        "watchPathIgnorePatterns": [
+            "<rootDir>/node_modules/"
+        ]
     }
 }
