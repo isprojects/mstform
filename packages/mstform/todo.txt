@@ -42,4 +42,17 @@
 * converters should have access to the context. This way we can declare
   systemwide policy for converters.
 
+* we want to selectively enable and disable, as well as make them
+  visible and invisible, based on external information. Potentially
+  we also want display-only.
 
+  disabled state can be passed into input field.
+
+  invisible is trickier: form.item doesn't support it. we could make our own
+  item that accepts a hidden. Or we could create another component that takes
+  care of hidden (and display-only)
+
+  Essentially there is meta information in the form that can affect
+  the field properties we generate. We want to be able to inject a way
+  to generate these extra properties. The context can be the source of
+  information about what to generate.
