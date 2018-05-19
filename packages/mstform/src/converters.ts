@@ -1,6 +1,7 @@
 import { IObservableArray, observable } from "mobx";
 import { IModelType } from "mobx-state-tree";
 import {
+  CONVERSION_ERROR,
   ConversionResponse,
   ConversionValue,
   Converter,
@@ -14,6 +15,7 @@ const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 export class StringConverter<V> extends Converter<string, V> {}
 
 const string = new StringConverter<string>({
+  emptyRaw: "",
   convert(raw) {
     return raw;
   },
@@ -23,6 +25,7 @@ const string = new StringConverter<string>({
 });
 
 const number = new StringConverter<number>({
+  emptyRaw: "",
   rawValidate(raw) {
     // deal with case when string starts with .
     if (raw.startsWith(".")) {
@@ -39,6 +42,7 @@ const number = new StringConverter<number>({
 });
 
 const integer = new StringConverter<number>({
+  emptyRaw: "",
   rawValidate(raw) {
     return INTEGER_REGEX.test(raw);
   },
@@ -53,11 +57,15 @@ const integer = new StringConverter<number>({
 class Decimal implements IConverter<string, string> {
   public converter: StringConverter<string>;
 
+  emptyRaw: string;
+
   constructor(public maxWholeDigits: number, public decimalPlaces: number) {
+    this.emptyRaw = "";
     const regex = new RegExp(
       `^-?(0|[1-9]\\d{0,${maxWholeDigits - 1}})(\\.\\d{0,${decimalPlaces}})?$`
     );
     this.converter = new StringConverter<string>({
+      emptyRaw: "",
       rawValidate(raw) {
         // deal with case when string starts with .
         if (raw.startsWith(".")) {
@@ -94,6 +102,7 @@ function decimal(
 
 // XXX create a way to create arrays with mobx state tree types
 const stringArray = new Converter<string[], IObservableArray<string>>({
+  emptyRaw: [],
   convert(raw) {
     return observable.array(raw);
   },
@@ -117,7 +126,12 @@ function maybe<R, V>(
 }
 
 class StringMaybe<V> implements IConverter<string, V | null> {
-  constructor(public converter: StringConverter<V>) {}
+  emptyRaw: string;
+
+  constructor(public converter: StringConverter<V>) {
+    this.emptyRaw = "";
+  }
+
   async convert(raw: string): Promise<ConversionResponse<V | null>> {
     if (raw.trim() === "") {
       return new ConversionValue(null);
@@ -133,23 +147,44 @@ class StringMaybe<V> implements IConverter<string, V | null> {
   }
 }
 
-function model<M>(model: IModelType<any, M>): IConverter<M, M> {
-  return new Converter({
-    convert: identity,
-    render: identity
-  });
+class Model<M> implements IConverter<M | null, M> {
+  emptyRaw: M | null;
+
+  constructor(model: IModelType<any, M>) {
+    this.emptyRaw = null;
+  }
+
+  async convert(raw: M | null): Promise<ConversionResponse<M>> {
+    if (raw === null) {
+      return CONVERSION_ERROR;
+    }
+    return new ConversionValue(raw);
+  }
+
+  render(value: M): M {
+    return value;
+  }
+}
+
+function model<M>(model: IModelType<any, M>): IConverter<M | null, M> {
+  return new Model(model);
 }
 
 function maybeModel<M>(
   converter: IConverter<M, M>
 ): IConverter<M | null, M | null> {
   return new Converter({
+    emptyRaw: null,
     convert: identity,
     render: identity
   });
 }
 
-const object = new Converter<any, any>({ convert: identity, render: identity });
+const object = new Converter<any, any>({
+  emptyRaw: null,
+  convert: identity,
+  render: identity
+});
 
 export const converters = {
   string,

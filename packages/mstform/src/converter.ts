@@ -3,9 +3,11 @@ export interface ConverterOptions<R, V> {
   render(value: V): R;
   rawValidate?(value: R): boolean | Promise<boolean>;
   validate?(value: V): boolean | Promise<boolean>;
+  emptyRaw: R;
 }
 
 export interface IConverter<R, V> {
+  emptyRaw: R;
   convert(raw: R): Promise<ConversionResponse<V>>;
   render(value: V): R;
 }
@@ -21,7 +23,11 @@ export const CONVERSION_ERROR: ConversionError = "ConversionError";
 export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
 export class Converter<R, V> implements IConverter<R, V> {
-  constructor(public definition: ConverterOptions<R, V>) {}
+  emptyRaw: R;
+
+  constructor(public definition: ConverterOptions<R, V>) {
+    this.emptyRaw = this.definition.emptyRaw;
+  }
 
   async convert(raw: R): Promise<ConversionResponse<V>> {
     if (this.definition.rawValidate) {

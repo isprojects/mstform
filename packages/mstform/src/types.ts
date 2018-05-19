@@ -29,6 +29,7 @@ export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 
 export interface FormStateOptions<M> {
   save?: SaveFunc<M>;
+  addMode?: boolean;
   validation?: {
     beforeSave?: ValidationOption;
     afterSave?: ValidationOption;

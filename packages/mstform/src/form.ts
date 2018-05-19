@@ -131,7 +131,7 @@ export class Field<R, V> {
   }
 
   async process(raw: R): Promise<ProcessResponse<V>> {
-    if (typeof raw === "string" && this.required && raw.trim() === "") {
+    if (raw === this.converter.emptyRaw && this.required) {
       return new ValidationMessage(this.requiredError);
     }
 
@@ -178,6 +178,7 @@ export class FormState<M, D extends FormDefinition<M>>
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
   @observable saveStatus: "before" | "rightAfter" | "after" = "before";
+  addMode: boolean;
 
   constructor(
     public form: Form<M, D>,
@@ -187,6 +188,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.raw = observable.map();
     this.errors = observable.map();
     this.validating = observable.map();
+
     onPatch(node, patch => {
       if (patch.op === "remove") {
         this.removeInfo(patch.path);
@@ -198,8 +200,10 @@ export class FormState<M, D extends FormDefinition<M>>
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
+      this.addMode = false;
     } else {
       this.saveFunc = options.save;
+      this.addMode = options.addMode || false;
       const validation = options.validation || {};
       this.validationBeforeSave = validation.beforeSave || "immediate";
       this.validationAfterSave = validation.afterSave || "immediate";
@@ -291,7 +295,16 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors.clear();
   }
 
+  isInAddMode(path: string): boolean {
+    return this.addMode && this.raw.get(path) === undefined;
+  }
+
   getValue(path: string): any {
+    if (this.isInAddMode(path)) {
+      throw new Error(
+        "Cannot access field in add mode until it has been set once"
+      );
+    }
     return resolvePath(this.node, path);
   }
 
@@ -426,6 +439,9 @@ export class FieldAccessor<R, V> {
     const result = this.state.raw.get(this.path);
     if (result !== undefined) {
       return result as R;
+    }
+    if (this.state.isInAddMode(this.path)) {
+      return this.field.converter.emptyRaw;
     }
     return this.field.render(this.state.getValue(this.path));
   }

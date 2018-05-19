@@ -291,6 +291,7 @@ test("async validation in converter", async () => {
   const done: any[] = [];
 
   const converter = new Converter<string, string>({
+    emptyRaw: "",
     convert: raw => raw,
     validate: async value => {
       await new Promise(resolve => {
@@ -1103,4 +1104,130 @@ test("model converter maybe", async () => {
   await field.setRaw(null);
   expect(field.error).toBeUndefined();
   expect(field.value).toBeNull();
+});
+
+test("add mode for flat form, string", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(() => field.value).toThrow();
+  expect(field.raw).toEqual("");
+  await field.setRaw("FOO");
+  expect(field.value).toEqual("FOO");
+  expect(field.raw).toEqual("FOO");
+});
+
+test("add mode for flat form, maybe string", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.string))
+  });
+
+  const o = M.create({ foo: null });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(() => field.value).toThrow();
+  expect(field.raw).toEqual("");
+  await field.setRaw("FOO");
+  expect(field.value).toEqual("FOO");
+  expect(field.raw).toEqual("FOO");
+  await field.setRaw("");
+  expect(field.value).toEqual(null);
+});
+
+test("add mode for flat form, number", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(() => field.value).toThrow();
+  expect(field.raw).toEqual("");
+  await field.setRaw("3");
+  expect(field.value).toEqual(3);
+  expect(field.raw).toEqual("3");
+});
+
+test("add mode for flat form, maybe number", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.number)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.number))
+  });
+
+  const o = M.create({ foo: null });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(() => field.value).toThrow();
+  expect(field.raw).toEqual("");
+  await field.setRaw("3");
+  expect(field.value).toEqual(3);
+  expect(field.raw).toEqual("3");
+  await field.setRaw("");
+  expect(field.value).toEqual(null);
+});
+
+test.only("model converter in add mode", async () => {
+  const R = types.model("R", {
+    id: types.identifier(),
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.reference(R)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.model(R), {
+      required: true,
+      validators: [value => value.bar !== "correct" && "Wrong"]
+    })
+  });
+
+  const r1 = R.create({ id: "1", bar: "correct" });
+  const r2 = R.create({ id: "2", bar: "incorrect" });
+
+  const o = M.create({ foo: r1 });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual(null);
+  await field.setRaw(r2);
+  expect(field.raw).toEqual(r2);
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toBe(r1);
+  await field.setRaw(r1);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual(r1);
+
+  await field.setRaw(null);
+  expect(field.error).toEqual("Required");
 });
