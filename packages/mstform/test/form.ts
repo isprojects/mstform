@@ -315,6 +315,40 @@ test("repeating form tougher remove clear raw", async () => {
   expect(field0again.raw).toEqual("B*");
 });
 
+test("repeating form insert should retain raw too", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string, {
+        validators: [value => "always wrong"]
+      })
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "A" }, { bar: "B" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  const field0 = forms.index(0).field("bar");
+  await field0.setRaw("A*");
+  const field1 = forms.index(1).field("bar");
+  await field1.setRaw("B*");
+
+  forms.insert(0, N.create({ bar: "C" }));
+
+  const field0again = forms.index(0).field("bar");
+  expect(field0again.raw).toEqual("C");
+  expect(forms.index(1).field("bar").raw).toEqual("A*");
+  expect(forms.index(2).field("bar").raw).toEqual("B*");
+});
+
 test("async validation in converter", async () => {
   const M = types.model("M", {
     foo: types.string
