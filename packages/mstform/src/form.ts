@@ -143,6 +143,11 @@ export class Field<R, V> {
     }
     const result = await this.converter.convert(raw);
     if (result === CONVERSION_ERROR) {
+      // if we get a conversion error for the empty raw, the field
+      // is implied to be required
+      if (raw === this.converter.emptyRaw) {
+        return new ValidationMessage(this.requiredError);
+      }
       return new ValidationMessage(this.conversionError);
     }
     for (const validator of this.validators) {

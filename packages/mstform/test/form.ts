@@ -806,6 +806,28 @@ test("required", async () => {
   expect(field.value).toEqual(3);
 });
 
+test("required for number is implied", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number, {})
+  });
+
+  const o = M.create({ foo: 3 });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(3);
+});
+
 test("required with string", async () => {
   const M = types.model("M", {
     foo: types.string
@@ -1081,6 +1103,10 @@ test("model converter", async () => {
   await field.setRaw(r1);
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual(r1);
+
+  // required is implied
+  await field.setRaw(null);
+  expect(field.error).toEqual("Required");
 });
 
 test("model converter maybe", async () => {
@@ -1148,7 +1174,7 @@ test("add mode for flat form, string", async () => {
   expect(field.raw).toEqual("FOO");
 });
 
-test.only("add mode for flat form, string and required", async () => {
+test("add mode for flat form, string and required", async () => {
   const M = types.model("M", {
     foo: types.string
   });
