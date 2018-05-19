@@ -806,7 +806,28 @@ test("required", async () => {
   expect(field.value).toEqual(3);
 });
 
-test("not required with maybe", async () => {
+test("required with string", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+});
+
+test("required with maybe", async () => {
   const M = types.model("M", {
     foo: types.maybe(types.number)
   });
@@ -1122,6 +1143,29 @@ test("add mode for flat form, string", async () => {
 
   expect(() => field.value).toThrow();
   expect(field.raw).toEqual("");
+  await field.setRaw("FOO");
+  expect(field.value).toEqual("FOO");
+  expect(field.raw).toEqual("FOO");
+});
+
+test.only("add mode for flat form, string and required", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, { required: true })
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(() => field.value).toThrow();
+  expect(field.raw).toEqual("");
+  await expect(field.setRaw(""));
+  expect(field.error).toEqual("Required");
   await field.setRaw("FOO");
   expect(field.value).toEqual("FOO");
   expect(field.raw).toEqual("FOO");
