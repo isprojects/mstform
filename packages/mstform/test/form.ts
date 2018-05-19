@@ -1194,7 +1194,7 @@ test("add mode for flat form, maybe number", async () => {
   expect(field.value).toEqual(null);
 });
 
-test.only("model converter in add mode", async () => {
+test("model converter in add mode", async () => {
   const R = types.model("R", {
     id: types.identifier(),
     bar: types.string
