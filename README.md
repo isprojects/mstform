@@ -20,7 +20,7 @@ define a `value` and a `onChange` prop.
 * Provides a range of standard converters so you don't have to write them
   yourself.
 * It knows the types of both raw and validated values. If you use vscode your
-  editor will tell you if you do something wrong. This will work even in
+  editor tells you if you do something wrong. This works even in
   plain Javascript if you enable `ts-check`.
 
 ## Philosophy
@@ -144,7 +144,7 @@ Then in `render` we retrieve the field accessor for the `foo` field.
 This has everything we need: `error` to show the current error, `raw`
 for the raw value, and `handleChange` for an onChange handler.
 
-I've enabled `ts-check` on top. If you're using vscode you will see
+I've enabled `ts-check` on top. If you're using vscode you can see
 it reflect the correct types -- it knows raw is a string, for instance. This
 can help to catch errors.
 
@@ -254,6 +254,50 @@ empty. This is handy when you have a `types.maybe(types.reference())` in MST.
 
 `converters.object`: this accept any object as raw value and returns it,
 including `null`. Prefer `converters.model` if you can.
+
+## Add Mode
+
+There are two ways to deal with an underlying MST node:
+
+* edit form: edit an existing MST node.
+
+* add form: edit a newly created MST node.
+
+Consider this MST type:
+
+```javascript
+const Foo = types.model("Foo", {
+  nr: types.number
+});
+```
+
+It has a required number as content. How do we create an add form for it?
+
+First need to create an instance which uses an arbitrary value for `nr`,
+in this case `0`:
+
+```javascript
+const node = Foo.create({ nr: 0 });
+```
+
+If we create a normal edit form for this node, we see the raw value
+`"0"` in the input widget the form. But in an add form we don't actually know
+the value yet and we want to display an empty input widget (raw value `""`).
+We can accomplish this by setting the form in add mode when we create it:
+
+```javascript
+const state = form.state(node, { addMode: true });
+```
+
+This way the form is shown correctly, with the empty values. The converter
+defines the appropriate empty value for a field.
+
+### Add mode for repeating forms
+
+Each time you add a new repeating sub-form, that sub-form should be in add
+mode, even in edit forms. mstform automatically takes care of this if you use
+the `.push` and `.insert` methods on the repeating form accessor. Existing
+records are shown in edit mode, unless the whole form is in add mode.
 
 ## Saving and server errors
 

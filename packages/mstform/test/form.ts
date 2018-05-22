@@ -1434,6 +1434,40 @@ test("add mode for repeating push", async () => {
   expect(field1.addMode).toBeFalsy();
 });
 
+test("add mode for repeating push, whole form add mode", async () => {
+  const N = types.model("N", {
+    bar: types.number
+  });
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.number)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: 0 }] });
+
+  const state = form.state(o, { addMode: true });
+  const repeating = state.repeatingForm("foo");
+  repeating.push({ bar: 1 });
+  const field0 = repeating.index(0).field("bar");
+  expect(field0.addMode).toBeTruthy();
+  expect(field0.raw).toEqual("");
+
+  const field1 = repeating.index(1).field("bar");
+  expect(field1.addMode).toBeTruthy();
+  expect(field1.raw).toEqual("");
+  expect(() => field1.value).toThrow();
+  await field1.setRaw("3");
+  expect(field1.value).toEqual(3);
+  expect(field1.raw).toEqual("3");
+  expect(field1.addMode).toBeFalsy();
+});
+
 test("add mode for repeating insert", async () => {
   const N = types.model("N", {
     bar: types.number
@@ -1466,4 +1500,25 @@ test("add mode for repeating insert", async () => {
   expect(field0.value).toEqual(3);
   expect(field0.raw).toEqual("3");
   expect(field0.addMode).toBeFalsy();
+});
+
+test("add mode validate", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o, { addMode: true });
+
+  const v = await state.validate();
+  expect(v).toBeFalsy();
+
+  const field = state.field("foo");
+  expect(field.raw).toBe("");
+  expect(field.error).toBe("Required");
 });
