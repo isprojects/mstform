@@ -305,12 +305,11 @@ test("repeating form tougher remove clear raw", async () => {
 
   const forms = state.repeatingForm("foo");
   const field0 = forms.index(0).field("bar");
+
   await field0.setRaw("A*");
   const field1 = forms.index(1).field("bar");
   await field1.setRaw("B*");
-
   forms.remove(o.foo[0]);
-
   const field0again = forms.index(0).field("bar");
   expect(field0again.raw).toEqual("B*");
 });

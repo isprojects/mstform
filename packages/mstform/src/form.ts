@@ -15,7 +15,14 @@ import {
   ValidationOption,
   Validator
 } from "./types";
-import { equal, getByPath, isInt, pathToSteps, unwrap } from "./utils";
+import {
+  equal,
+  getByPath,
+  isInt,
+  pathToSteps,
+  removePath,
+  unwrap
+} from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
 
@@ -169,9 +176,9 @@ export class RepeatingField<R, V> {
 
 export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
-  raw: Map<string, any>;
-  errors: Map<string, string>;
-  validating: Map<string, boolean>;
+  @observable raw: Map<string, any>;
+  @observable errors: Map<string, string>;
+  @observable validating: Map<string, boolean>;
   formAccessor: FormAccessor<M, D>;
   saveFunc?: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
@@ -231,23 +238,10 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   @action
-  @action
   removeInfo(path: string) {
-    this.raw.forEach((value, key) => {
-      if (key.startsWith(path)) {
-        this.raw.delete(key);
-      }
-    });
-    this.errors.forEach((value, key) => {
-      if (key.startsWith(path)) {
-        this.errors.delete(key);
-      }
-    });
-    this.validating.forEach((value, key) => {
-      if (key.startsWith(path)) {
-        this.validating.delete(key);
-      }
-    });
+    this.raw = removePath(this.raw, path);
+    this.errors = removePath(this.errors, path);
+    this.validating = removePath(this.validating, path);
   }
 
   async validate(): Promise<boolean> {
@@ -619,14 +613,12 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
   remove(node: any) {
     const a = resolvePath(this.state.node, this.path) as any[];
-    const copy = a.slice();
-    const index = copy.indexOf(node);
+    const index = a.indexOf(node);
     if (index === -1) {
       throw new Error("Cannot find node to remove.");
     }
-    copy.splice(index, 1);
     applyPatch(this.state.node, [
-      { op: "replace", path: this.path, value: copy }
+      { op: "remove", path: this.path + "/" + index }
     ]);
   }
 
