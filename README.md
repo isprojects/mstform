@@ -384,3 +384,20 @@ this.state = form.state(o, {
 
 Only validation messages generated during the save process (either client-side
 or server side) are displayed now.
+
+## Disabled and hidden fields
+
+mstform has two hooks that let you calculate `hidden` and `disabled`
+state based on the field accessor. Here is a small example that makes the
+`foo` field disabled. This uses the JSON Path functionality of MSTForm
+to determine whether a field is disabled, but any operation can be
+implemented here. You could for instance retrieve information about which
+fields are disabled dynamically from the backend before you display the form.
+
+```javascript
+const state = form.state(o, {
+  isDisabled: accessor => accessor.path === "/foo"
+});
+```
+
+To implement hidden behavior, pass in `isHidden`.
