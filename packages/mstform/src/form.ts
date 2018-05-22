@@ -185,13 +185,13 @@ export class FormState<M, D extends FormDefinition<M>>
   @observable raw: Map<string, any>;
   @observable errors: Map<string, string>;
   @observable validating: Map<string, boolean>;
+  @observable addModePaths: Map<string, boolean>;
   formAccessor: FormAccessor<M, D>;
   saveFunc?: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
   @observable saveStatus: "before" | "rightAfter" | "after" = "before";
-  addMode: boolean;
 
   constructor(
     public form: Form<M, D>,
@@ -201,13 +201,14 @@ export class FormState<M, D extends FormDefinition<M>>
     this.raw = observable.map();
     this.errors = observable.map();
     this.validating = observable.map();
+    this.addModePaths = observable.map();
 
     onPatch(node, patch => {
       if (patch.op === "remove") {
-        this.removeInfo(patch.path);
+        this.removePath(patch.path);
       }
       if (patch.op === "add") {
-        this.addInfo(patch.path);
+        this.addPath(patch.path);
       }
     });
     this.formAccessor = new FormAccessor(this, this.form.definition, "");
@@ -216,10 +217,10 @@ export class FormState<M, D extends FormDefinition<M>>
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
-      this.addMode = false;
+      this.addModePaths.set("/", false);
     } else {
       this.saveFunc = options.save;
-      this.addMode = options.addMode || false;
+      this.addModePaths.set("/", options.addMode || false);
       const validation = options.validation || {};
       this.validationBeforeSave = validation.beforeSave || "immediate";
       this.validationAfterSave = validation.afterSave || "immediate";
@@ -251,17 +252,19 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   @action
-  removeInfo(path: string) {
+  removePath(path: string) {
     this.raw = removePath(this.raw, path);
     this.errors = removePath(this.errors, path);
     this.validating = removePath(this.validating, path);
+    this.addModePaths = removePath(this.addModePaths, path);
   }
 
   @action
-  addInfo(path: string) {
+  addPath(path: string) {
     this.raw = addPath(this.raw, path);
     this.errors = addPath(this.errors, path);
     this.validating = addPath(this.validating, path);
+    this.addModePaths = addPath(this.addModePaths, path);
   }
 
   async validate(): Promise<boolean> {
@@ -305,16 +308,25 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors.clear();
   }
 
-  isInAddMode(path: string): boolean {
-    return this.addMode && this.raw.get(path) === undefined;
+  isKnownAddModePath(path: string): boolean {
+    let found;
+    this.addModePaths.forEach((value, key) => {
+      if (path.startsWith(key)) {
+        found = value;
+        return;
+      }
+    });
+    if (found === undefined) {
+      return false;
+    }
+    return found;
+  }
+
+  addMode(path: string): boolean {
+    return this.isKnownAddModePath(path) && this.raw.get(path) === undefined;
   }
 
   getValue(path: string): any {
-    if (this.isInAddMode(path)) {
-      throw new Error(
-        "Cannot access field in add mode until it has been set once"
-      );
-    }
     return resolvePath(this.node, path);
   }
 
@@ -445,12 +457,17 @@ export class FieldAccessor<R, V> {
   }
 
   @computed
+  get addMode(): boolean {
+    return this.state.addMode(this.path);
+  }
+
+  @computed
   get raw(): R {
     const result = this.state.raw.get(this.path);
     if (result !== undefined) {
       return result as R;
     }
-    if (this.state.isInAddMode(this.path)) {
+    if (this.addMode) {
       return this.field.converter.emptyRaw;
     }
     return this.field.render(this.state.getValue(this.path));
@@ -458,6 +475,11 @@ export class FieldAccessor<R, V> {
 
   @computed
   get value(): V {
+    if (this.addMode) {
+      throw new Error(
+        "Cannot access field in add mode until it has been set once"
+      );
+    }
     return this.state.getValue(this.path);
   }
 
@@ -626,16 +648,18 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   }
 
   insert(index: number, node: any) {
-    applyPatch(this.state.node, [
-      { op: "add", path: this.path + "/" + index, value: node }
-    ]);
+    const path = this.path + "/" + index;
+    applyPatch(this.state.node, [{ op: "add", path, value: node }]);
+    // XXX ideally move this logic into onPatch handler
+    this.state.addModePaths.set(path, true);
   }
 
   push(node: any) {
     const a = resolvePath(this.state.node, this.path) as any[];
-    applyPatch(this.state.node, [
-      { op: "add", path: this.path + "/" + a.length, value: node }
-    ]);
+    const path = this.path + "/" + a.length;
+    applyPatch(this.state.node, [{ op: "add", path, value: node }]);
+    // XXX ideally move this logic into onPatch handler
+    this.state.addModePaths.set(path, true);
   }
 
   remove(node: any) {

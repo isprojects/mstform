@@ -195,7 +195,10 @@ test("repeating form push", async () => {
   const oneForm = forms.index(1);
   const field = oneForm.field("bar");
 
-  expect(field.raw).toEqual("QUX");
+  // in add mode
+  expect(field.raw).toEqual("");
+
+  expect(forms.index(0).field("bar").raw).toEqual("BAR");
 });
 
 test("repeating form insert", async () => {
@@ -224,7 +227,14 @@ test("repeating form insert", async () => {
   const oneForm = forms.index(0);
   const field = oneForm.field("bar");
 
-  expect(field.raw).toEqual("QUX");
+  // this thing is in add mode
+  expect(field.addMode).toBeTruthy();
+  expect(field.raw).toEqual("");
+
+  await field.setRaw("FLURB");
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("FLURB");
+  expect(field.value).toEqual("FLURB");
 });
 
 test("repeating form remove", async () => {
@@ -343,9 +353,17 @@ test("repeating form insert should retain raw too", async () => {
   forms.insert(0, N.create({ bar: "C" }));
 
   const field0again = forms.index(0).field("bar");
-  expect(field0again.raw).toEqual("C");
-  expect(forms.index(1).field("bar").raw).toEqual("A*");
-  expect(forms.index(2).field("bar").raw).toEqual("B*");
+  expect(field0again.raw).toEqual("");
+  expect(field0again.addMode).toBeTruthy();
+
+  const field1again = forms.index(1).field("bar");
+  const field2again = forms.index(2).field("bar");
+
+  expect(field1again.addMode).toBeFalsy();
+  expect(field1again.raw).toEqual("A*");
+
+  expect(field2again.addMode).toBeFalsy();
+  expect(field2again.raw).toEqual("B*");
 });
 
 test("async validation in converter", async () => {
@@ -1232,9 +1250,11 @@ test("add mode for flat form, string", async () => {
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
 
+  expect(field.addMode).toBeTruthy();
   expect(() => field.value).toThrow();
   expect(field.raw).toEqual("");
   await field.setRaw("FOO");
+  expect(field.addMode).toBeFalsy();
   expect(field.value).toEqual("FOO");
   expect(field.raw).toEqual("FOO");
 });
@@ -1253,11 +1273,13 @@ test("add mode for flat form, string and required", async () => {
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
 
+  expect(field.addMode).toBeTruthy();
   expect(() => field.value).toThrow();
   expect(field.raw).toEqual("");
   await expect(field.setRaw(""));
   expect(field.error).toEqual("Required");
   await field.setRaw("FOO");
+  expect(field.addMode).toBeFalsy();
   expect(field.value).toEqual("FOO");
   expect(field.raw).toEqual("FOO");
 });
@@ -1277,12 +1299,15 @@ test("add mode for flat form, maybe string", async () => {
   const field = state.field("foo");
 
   expect(() => field.value).toThrow();
+  expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
   await field.setRaw("FOO");
   expect(field.value).toEqual("FOO");
   expect(field.raw).toEqual("FOO");
+  expect(field.addMode).toBeFalsy();
   await field.setRaw("");
   expect(field.value).toEqual(null);
+  expect(field.addMode).toBeFalsy();
 });
 
 test("add mode for flat form, number", async () => {
@@ -1300,10 +1325,12 @@ test("add mode for flat form, number", async () => {
   const field = state.field("foo");
 
   expect(() => field.value).toThrow();
+  expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
   await field.setRaw("3");
   expect(field.value).toEqual(3);
   expect(field.raw).toEqual("3");
+  expect(field.addMode).toBeFalsy();
 });
 
 test("add mode for flat form, maybe number", async () => {
@@ -1320,13 +1347,16 @@ test("add mode for flat form, maybe number", async () => {
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
 
+  expect(field.addMode).toBeTruthy();
   expect(() => field.value).toThrow();
   expect(field.raw).toEqual("");
+  await field.setRaw("");
+  expect(field.value).toEqual(null);
+  expect(field.addMode).toBeFalsy();
   await field.setRaw("3");
   expect(field.value).toEqual(3);
   expect(field.raw).toEqual("3");
-  await field.setRaw("");
-  expect(field.value).toEqual(null);
+  expect(field.addMode).toBeFalsy();
 });
 
 test("model converter in add mode", async () => {
@@ -1354,15 +1384,86 @@ test("model converter in add mode", async () => {
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
 
+  expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual(null);
   await field.setRaw(r2);
   expect(field.raw).toEqual(r2);
   expect(field.error).toEqual("Wrong");
   expect(field.value).toBe(r1);
+  expect(field.addMode).toBeFalsy();
   await field.setRaw(r1);
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual(r1);
+  expect(field.addMode).toBeFalsy();
 
   await field.setRaw(null);
   expect(field.error).toEqual("Required");
+});
+
+test("add mode for repeating push", async () => {
+  const N = types.model("N", {
+    bar: types.number
+  });
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.number)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: 0 }] });
+
+  const state = form.state(o);
+  const repeating = state.repeatingForm("foo");
+  repeating.push({ bar: 1 });
+  const field0 = repeating.index(0).field("bar");
+  expect(field0.addMode).toBeFalsy();
+  expect(field0.raw).toEqual("0");
+
+  const field1 = repeating.index(1).field("bar");
+  expect(field1.addMode).toBeTruthy();
+  expect(field1.raw).toEqual("");
+  expect(() => field1.value).toThrow();
+  await field1.setRaw("3");
+  expect(field1.value).toEqual(3);
+  expect(field1.raw).toEqual("3");
+  expect(field1.addMode).toBeFalsy();
+});
+
+test("add mode for repeating insert", async () => {
+  const N = types.model("N", {
+    bar: types.number
+  });
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.number)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: 0 }] });
+
+  const state = form.state(o);
+  const repeating = state.repeatingForm("foo");
+  repeating.insert(0, { bar: 1 });
+  const field0 = repeating.index(0).field("bar");
+  expect(field0.addMode).toBeTruthy();
+  expect(field0.raw).toEqual("");
+  expect(() => field0.value).toThrow();
+
+  const field1 = repeating.index(1).field("bar");
+  expect(field1.addMode).toBeFalsy();
+
+  await field0.setRaw("3");
+  expect(field0.value).toEqual(3);
+  expect(field0.raw).toEqual("3");
+  expect(field0.addMode).toBeFalsy();
 });
