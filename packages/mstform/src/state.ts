@@ -21,6 +21,7 @@ export interface FormStateOptions<M> {
     pauseDuration?: number;
   };
   isDisabled?: AccessorAllows;
+  isHidden?: AccessorAllows;
 }
 
 export class FormState<M, D extends FormDefinition<M>>
@@ -30,11 +31,13 @@ export class FormState<M, D extends FormDefinition<M>>
   @observable validating: Map<string, boolean>;
   @observable addModePaths: Map<string, boolean>;
   formAccessor: FormAccessor<M, D>;
-  saveFunc?: SaveFunc<M>;
+  saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
   @observable saveStatus: "before" | "rightAfter" | "after" = "before";
+  isDisabledFunc: AccessorAllows;
+  isHiddenFunc: AccessorAllows;
 
   constructor(
     public form: Form<M, D>,
@@ -49,20 +52,25 @@ export class FormState<M, D extends FormDefinition<M>>
     onPatch(node, patch => {
       if (patch.op === "remove") {
         this.removePath(patch.path);
-      }
-      if (patch.op === "add") {
+      } else if (patch.op === "add") {
         this.addPath(patch.path);
       }
     });
     this.formAccessor = new FormAccessor(this, this.form.definition, "");
     if (options == null) {
-      this.saveFunc = undefined;
+      this.saveFunc = defaultSaveFunc;
+      this.isDisabledFunc = () => false;
+      this.isHiddenFunc = () => false;
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
       this.addModePaths.set("/", false);
     } else {
-      this.saveFunc = options.save;
+      this.saveFunc = options.save ? options.save : defaultSaveFunc;
+      this.isDisabledFunc = options.isDisabled
+        ? options.isDisabled
+        : () => false;
+      this.isHiddenFunc = options.isHidden ? options.isHidden : () => false;
       this.addModePaths.set("/", options.addMode || false);
       const validation = options.validation || {};
       this.validationBeforeSave = validation.beforeSave || "immediate";
@@ -122,12 +130,8 @@ export class FormState<M, D extends FormDefinition<M>>
       return false;
     }
     let errors;
-    if (this.saveFunc != null) {
-      errors = await this.saveFunc(this.node);
-    } else {
-      console.warn("No mstform save function configured");
-      errors = null;
-    }
+
+    errors = await this.saveFunc(this.node);
     if (errors != null) {
       this.setErrors(errors);
       return false;
@@ -216,4 +220,9 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   repeatingField(name: string): any {}
+}
+
+async function defaultSaveFunc() {
+  console.warn("No mstform save function configured");
+  return null;
 }

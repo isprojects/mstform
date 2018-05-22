@@ -1522,3 +1522,26 @@ test("add mode validate", async () => {
   expect(field.raw).toBe("");
   expect(field.error).toBe("Required");
 });
+
+test("a form with a disabled field", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path.startsWith("/foo")
+  });
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  expect(fooField.disabled).toBeTruthy();
+  expect(barField.disabled).toBeFalsy();
+});

@@ -196,6 +196,16 @@ export class FieldAccessor<R, V> {
     return this.state.validating.get(this.path) || false;
   }
 
+  @computed
+  get disabled(): boolean {
+    return this.state.isDisabledFunc(this);
+  }
+
+  @computed
+  get hidden(): boolean {
+    return this.state.isHiddenFunc(this);
+  }
+
   async validate(): Promise<boolean> {
     await this.setRaw(this.raw);
     return this.errorValue === undefined;
@@ -244,6 +254,7 @@ export class FieldAccessor<R, V> {
   @computed
   get inputProps() {
     return {
+      disabled: this.disabled,
       value: this.raw,
       onChange: this.handleChange
     };
