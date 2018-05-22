@@ -2,6 +2,7 @@ import { action, computed, observable } from "mobx";
 import { IType, onPatch, resolvePath } from "mobx-state-tree";
 import {
   Accessor,
+  ExtraValidation,
   FieldAccess,
   FieldAccessorAllows,
   FormAccessor,
@@ -24,6 +25,7 @@ export interface FormStateOptions<M> {
   isDisabled?: FieldAccessorAllows;
   isHidden?: FieldAccessorAllows;
   isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
+  extraValidation?: ExtraValidation;
 }
 
 export class FormState<M, D extends FormDefinition<M>>
@@ -41,6 +43,7 @@ export class FormState<M, D extends FormDefinition<M>>
   isDisabledFunc: FieldAccessorAllows;
   isHiddenFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
+  extraValidationFunc: ExtraValidation;
 
   constructor(
     public form: Form<M, D>,
@@ -65,6 +68,7 @@ export class FormState<M, D extends FormDefinition<M>>
       this.isDisabledFunc = () => false;
       this.isHiddenFunc = () => false;
       this.isRepeatingFormDisabledFunc = () => false;
+      this.extraValidationFunc = () => false;
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
@@ -77,6 +81,9 @@ export class FormState<M, D extends FormDefinition<M>>
       this.isHiddenFunc = options.isHidden ? options.isHidden : () => false;
       this.isRepeatingFormDisabledFunc = options.isRepeatingFormDisabled
         ? options.isRepeatingFormDisabled
+        : () => false;
+      this.extraValidationFunc = options.extraValidation
+        ? options.extraValidation
         : () => false;
       this.addModePaths.set("/", options.addMode || false);
       const validation = options.validation || {};

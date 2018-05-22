@@ -403,3 +403,22 @@ const state = form.state(o, {
 To implement hidden behavior, pass in `isHidden`. You can also
 determine whether a repeating form is disabled from add and remove using `isRepeatingFormDisabled`. It's up to you to use this information to
 render the add and remove buttons with the disabled status, however.
+
+## Extra validation
+
+Sometimes the information needed to validate the form cannot be known at form
+definition time, but only when the form is being rendered. mstform has a hook
+that lets you define additional validation behavior on the form level.
+
+```javascript
+const state = form.state(o, {
+  extraValidation: (accessor, value) => {
+    if (accessor.path === "/foo") {
+      return value === "Wrong" ? "Wrong!" : false;
+    }
+  }
+});
+```
+
+Note that you have to use the second `value` argument to get the value,
+as `accessor.value` still has the old value.

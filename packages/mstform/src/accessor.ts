@@ -11,10 +11,15 @@ import {
   ValidationMessage
 } from "./form";
 import { FormState } from "./state";
+import { ValidationResponse } from "./types";
 import { equal, unwrap } from "./utils";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any>): boolean;
+}
+
+export interface ExtraValidation {
+  (fieldAccessor: FieldAccessor<any, any>, value: any): ValidationResponse;
 }
 
 export interface RepeatingFormAccessorAllows {
@@ -128,6 +133,7 @@ export class FieldAccessor<R, V> {
     name: string
   ) {
     this.name = name;
+    process;
     this.path = path + "/" + name;
   }
 
@@ -221,6 +227,8 @@ export class FieldAccessor<R, V> {
     this.state.setValidating(this.path, true);
     let processResult;
     try {
+      // XXX is await correct here? we should await the result
+      // later
       processResult = await this.field.process(raw);
     } catch (e) {
       this.state.setError(this.path, "Something went wrong");
@@ -244,6 +252,14 @@ export class FieldAccessor<R, V> {
     }
     if (!(processResult instanceof ProcessValue)) {
       throw new Error("Unknown process result");
+    }
+    const extraResult = this.state.extraValidationFunc(
+      this,
+      processResult.value
+    );
+    // XXX possible flicker?
+    if (typeof extraResult === "string" && extraResult) {
+      this.state.setError(this.path, extraResult);
     }
     applyPatch(this.state.node, [
       { op: "replace", path: this.path, value: processResult.value }

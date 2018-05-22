@@ -1568,3 +1568,33 @@ test("a form with a repeating disabled field", async () => {
   expect(repeating.disabled).toBeTruthy();
   expect(repeating.index(0).field("bar").disabled).toBeFalsy();
 });
+
+test.only("extra validation", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const state = form.state(o, {
+    extraValidation: (accessor, value) => {
+      if (accessor.path === "/foo") {
+        return value === "Wrong" ? "Wrong!" : false;
+      }
+      return false;
+    }
+  });
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  await fooField.setRaw("Wrong");
+  expect(fooField.error).toEqual("Wrong!");
+  await barField.setRaw("Wrong");
+  expect(barField.error).toBeUndefined();
+});
