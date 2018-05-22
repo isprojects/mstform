@@ -16,6 +16,7 @@ import {
   Validator
 } from "./types";
 import {
+  addPath,
   equal,
   getByPath,
   isInt,
@@ -198,6 +199,9 @@ export class FormState<M, D extends FormDefinition<M>>
       if (patch.op === "remove") {
         this.removeInfo(patch.path);
       }
+      if (patch.op === "add") {
+        this.addInfo(patch.path);
+      }
     });
     this.formAccessor = new FormAccessor(this, this.form.definition, "");
     if (options == null) {
@@ -242,6 +246,13 @@ export class FormState<M, D extends FormDefinition<M>>
     this.raw = removePath(this.raw, path);
     this.errors = removePath(this.errors, path);
     this.validating = removePath(this.validating, path);
+  }
+
+  @action
+  addInfo(path: string) {
+    this.raw = addPath(this.raw, path);
+    this.errors = addPath(this.errors, path);
+    this.validating = addPath(this.validating, path);
   }
 
   async validate(): Promise<boolean> {
@@ -594,20 +605,15 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   }
 
   insert(index: number, node: any) {
-    const a = resolvePath(this.state.node, this.path) as any[];
-    const copy = a.slice();
-    copy.splice(index, 0, node);
     applyPatch(this.state.node, [
-      { op: "replace", path: this.path, value: copy }
+      { op: "add", path: this.path + "/" + index, value: node }
     ]);
   }
 
   push(node: any) {
     const a = resolvePath(this.state.node, this.path) as any[];
-    const copy = a.slice();
-    copy.push(node);
     applyPatch(this.state.node, [
-      { op: "replace", path: this.path, value: copy }
+      { op: "add", path: this.path + "/" + a.length, value: node }
     ]);
   }
 
