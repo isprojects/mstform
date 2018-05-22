@@ -2,11 +2,12 @@ import { action, computed, observable } from "mobx";
 import { IType, onPatch, resolvePath } from "mobx-state-tree";
 import {
   Accessor,
-  AccessorAllows,
   FieldAccess,
+  FieldAccessorAllows,
   FormAccessor,
   IFormAccessor,
-  RepeatingFormAccess
+  RepeatingFormAccess,
+  RepeatingFormAccessorAllows
 } from "./accessor";
 import { Form, FormDefinition } from "./form";
 import { SaveFunc, ValidationOption } from "./types";
@@ -20,8 +21,9 @@ export interface FormStateOptions<M> {
     afterSave?: ValidationOption;
     pauseDuration?: number;
   };
-  isDisabled?: AccessorAllows;
-  isHidden?: AccessorAllows;
+  isDisabled?: FieldAccessorAllows;
+  isHidden?: FieldAccessorAllows;
+  isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
 }
 
 export class FormState<M, D extends FormDefinition<M>>
@@ -36,8 +38,9 @@ export class FormState<M, D extends FormDefinition<M>>
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
   @observable saveStatus: "before" | "rightAfter" | "after" = "before";
-  isDisabledFunc: AccessorAllows;
-  isHiddenFunc: AccessorAllows;
+  isDisabledFunc: FieldAccessorAllows;
+  isHiddenFunc: FieldAccessorAllows;
+  isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
 
   constructor(
     public form: Form<M, D>,
@@ -61,6 +64,7 @@ export class FormState<M, D extends FormDefinition<M>>
       this.saveFunc = defaultSaveFunc;
       this.isDisabledFunc = () => false;
       this.isHiddenFunc = () => false;
+      this.isRepeatingFormDisabledFunc = () => false;
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
@@ -71,6 +75,9 @@ export class FormState<M, D extends FormDefinition<M>>
         ? options.isDisabled
         : () => false;
       this.isHiddenFunc = options.isHidden ? options.isHidden : () => false;
+      this.isRepeatingFormDisabledFunc = options.isRepeatingFormDisabled
+        ? options.isRepeatingFormDisabled
+        : () => false;
       this.addModePaths.set("/", options.addMode || false);
       const validation = options.validation || {};
       this.validationBeforeSave = validation.beforeSave || "immediate";

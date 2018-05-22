@@ -1545,3 +1545,26 @@ test("a form with a disabled field", async () => {
   expect(fooField.disabled).toBeTruthy();
   expect(barField.disabled).toBeFalsy();
 });
+
+test("a form with a repeating disabled field", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({ bar: new Field(converters.string) })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o, {
+    isRepeatingFormDisabled: accessor => accessor.path === "/foo"
+  });
+  const repeating = state.repeatingForm("foo");
+
+  expect(repeating.disabled).toBeTruthy();
+  expect(repeating.index(0).field("bar").disabled).toBeFalsy();
+});

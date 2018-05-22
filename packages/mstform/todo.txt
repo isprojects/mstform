@@ -20,33 +20,3 @@
   invisible is trickier: form.item doesn't support it. we could make our own
   item that accepts a hidden. Or we could create another component that takes
   care of hidden (and display-only)
-
-  Essentially there is meta information in the form that can affect
-  the field properties we generate. We want to be able to inject a way
-  to generate these extra properties. The context can be the source of
-  information about what to generate.
-
-  Form(..., { views: {validationProps:, inputProps:}})
-
-  each time we get the form state we can pass in meta-information:
-
-  state(o, {disabled: {}, hidden: {}})
-
-  disabled: can be applied to individual fields, or for whole repeating forms.
-  if it's applied to whole repeating forms, all fields in it are disabled plus
-  the repeating form itself has a disabled flag (which can be read by the UI).
-
-  can we apply disabled to a row in a repeating form?
-
-
-
-* we need to:
-
-  * disable add/remove and edit.
-
-  * disable add/remove for repeating forms, but not disable edit.
-
-  * disable edit for a field in all entries in repeating form.
-
-  * (possibly: disable entire repeating form if everything in it is
-    disabled. This comes down to disable add/remove and edit though).

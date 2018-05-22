@@ -13,8 +13,12 @@ import {
 import { FormState } from "./state";
 import { equal, unwrap } from "./utils";
 
-export interface AccessorAllows {
+export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any>): boolean;
+}
+
+export interface RepeatingFormAccessorAllows {
+  (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
 }
 
 export type Accessor =
@@ -304,6 +308,11 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
       this.path,
       index
     );
+  }
+
+  @computed
+  get disabled(): boolean {
+    return this.state.isRepeatingFormDisabledFunc(this);
   }
 
   @computed

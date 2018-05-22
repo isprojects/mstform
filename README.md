@@ -400,4 +400,6 @@ const state = form.state(o, {
 });
 ```
 
-To implement hidden behavior, pass in `isHidden`.
+To implement hidden behavior, pass in `isHidden`. You can also
+determine whether a repeating form is disabled from add and remove using `isRepeatingFormDisabled`. It's up to you to use this information to
+render the add and remove buttons with the disabled status, however.
