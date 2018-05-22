@@ -2,16 +2,26 @@ import { action, computed, observable } from "mobx";
 import { IType, onPatch, resolvePath } from "mobx-state-tree";
 import {
   Accessor,
+  AccessorAllows,
   FieldAccess,
-  Form,
   FormAccessor,
-  FormDefinition,
-  FormStateOptions,
   IFormAccessor,
   RepeatingFormAccess
-} from "./form";
+} from "./accessor";
+import { Form, FormDefinition } from "./form";
 import { SaveFunc, ValidationOption } from "./types";
 import { addPath, getByPath, isInt, pathToSteps, removePath } from "./utils";
+
+export interface FormStateOptions<M> {
+  save?: SaveFunc<M>;
+  addMode?: boolean;
+  validation?: {
+    beforeSave?: ValidationOption;
+    afterSave?: ValidationOption;
+    pauseDuration?: number;
+  };
+  isDisabled?: AccessorAllows;
+}
 
 export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
