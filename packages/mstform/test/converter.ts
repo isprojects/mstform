@@ -5,6 +5,7 @@ configure({ enforceActions: "strict" });
 
 test("simple converter", async () => {
   const converter = new Converter<string, string>({
+    emptyRaw: "",
     convert: raw => raw,
     render: value => value
   });
@@ -21,6 +22,7 @@ test("simple converter", async () => {
 
 test("converter to integer", async () => {
   const converter = new Converter<string, number>({
+    emptyRaw: "",
     rawValidate: raw => /^\d+$/.test(raw),
     convert: raw => parseInt(raw, 10),
     render: value => value.toString()
@@ -36,6 +38,7 @@ test("converter to integer", async () => {
 
 test("converter with validate", async () => {
   const converter = new Converter<string, number>({
+    emptyRaw: "",
     convert: raw => parseInt(raw, 10),
     render: value => value.toString(),
     validate: value => value <= 10
@@ -53,6 +56,7 @@ test("converter with async validate", async () => {
   const done: any[] = [];
 
   const converter = new Converter<string, string>({
+    emptyRaw: "",
     convert: raw => raw,
     validate: async value => {
       await new Promise(resolve => {
