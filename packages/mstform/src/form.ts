@@ -9,7 +9,6 @@ import {
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import {
   FieldOptions,
-  FormStateOptions,
   RawGetter,
   SaveFunc,
   ValidationOption,
@@ -32,6 +31,21 @@ export type RawType<F> = F extends Field<infer R, any> ? R : never;
 export type FormDefinitionType<T> = T extends RepeatingForm<any, infer D>
   ? D
   : never;
+
+export interface FormStateOptions<M> {
+  save?: SaveFunc<M>;
+  addMode?: boolean;
+  validation?: {
+    beforeSave?: ValidationOption;
+    afterSave?: ValidationOption;
+    pauseDuration?: number;
+  };
+  isDisabled?: AccessorAllows;
+}
+
+export interface AccessorAllows {
+  (fieldAccessor: FieldAccessor<any, any>): boolean;
+}
 
 export type Accessor =
   | FieldAccessor<any, any>

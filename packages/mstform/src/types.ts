@@ -26,13 +26,3 @@ export interface SaveFunc<M> {
 // blur would validate immediately after blur
 // pause would show validation after the user stops input for a while
 export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
-
-export interface FormStateOptions<M> {
-  save?: SaveFunc<M>;
-  addMode?: boolean;
-  validation?: {
-    beforeSave?: ValidationOption;
-    afterSave?: ValidationOption;
-    pauseDuration?: number;
-  };
-}
