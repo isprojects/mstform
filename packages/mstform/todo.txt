@@ -20,3 +20,8 @@
   invisible is trickier: form.item doesn't support it. we could make our own
   item that accepts a hidden. Or we could create another component that takes
   care of hidden (and display-only)
+
+* externalValidation and whole-form validation:
+
+  can we define whole form validation as a special case of
+  external validation or the other way around?
