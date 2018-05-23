@@ -66,6 +66,11 @@ test("decimal converter", async () => {
   await fails(converters.decimal(4, 2), "12.444");
 });
 
+test("boolean converter", async () => {
+  await check(converters.boolean, false, false);
+  await check(converters.boolean, true, true);
+});
+
 test("maybe number converter", async () => {
   await check(converters.maybe(converters.number), "3", 3);
   await check(converters.maybe(converters.number), "", null);

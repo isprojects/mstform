@@ -1,4 +1,4 @@
-import { action, computed } from "mobx";
+import { action, computed, toJS } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
   ArrayEntryType,
@@ -146,7 +146,9 @@ export class FieldAccessor<R, V> {
   get raw(): R {
     const result = this.state.raw.get(this.path);
     if (result !== undefined) {
-      return result as R;
+      // convert the value to JavaScript otherwise things like
+      // arrays coming out of an observable map are observable
+      return toJS(result) as R;
     }
     if (this.addMode) {
       return this.field.converter.emptyRaw;

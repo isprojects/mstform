@@ -53,8 +53,10 @@ test("a simple form with array field", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual(["FOO"]);
+  expect(Array.isArray(field.raw)).toBeTruthy();
   await field.handleChange(["BAR", "QUX"]);
   expect(field.raw).toEqual(["BAR", "QUX"]);
+  expect(Array.isArray(field.raw)).toBeTruthy();
   expect(field.error).toEqual("Wrong");
   expect(field.value).toEqual(["FOO"]);
   await field.handleChange(["correct"]);
@@ -1569,7 +1571,7 @@ test("a form with a repeating disabled field", async () => {
   expect(repeating.index(0).field("bar").disabled).toBeFalsy();
 });
 
-test.only("extra validation", async () => {
+test("extra validation", async () => {
   const M = types.model("M", {
     foo: types.string,
     bar: types.string
@@ -1597,4 +1599,28 @@ test.only("extra validation", async () => {
   expect(fooField.error).toEqual("Wrong!");
   await barField.setRaw("Wrong");
   expect(barField.error).toBeUndefined();
+});
+
+test("boolean converter", async () => {
+  const N = types.model("N", {
+    bar: types.boolean
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.boolean)
+    })
+  });
+
+  const o = M.create({ foo: [] });
+
+  const state = form.state(o);
+  const forms = state.repeatingForm("foo");
+  forms.push({ bar: false });
+  expect(forms.length).toBe(1);
+  const field = forms.index(0).field("bar");
+  expect(field.raw).toEqual(false);
 });

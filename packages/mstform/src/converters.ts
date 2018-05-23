@@ -54,6 +54,16 @@ const integer = new StringConverter<number>({
   }
 });
 
+const boolean = new Converter<boolean, boolean>({
+  emptyRaw: false,
+  convert(raw) {
+    return raw;
+  },
+  render(value) {
+    return value;
+  }
+});
+
 class Decimal implements IConverter<string, string> {
   public converter: StringConverter<string>;
 
@@ -107,7 +117,7 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
     return observable.array(raw);
   },
   render(value) {
-    return value;
+    return value.slice();
   }
 });
 
@@ -191,6 +201,7 @@ export const converters = {
   number,
   integer,
   decimal,
+  boolean,
   stringArray,
   maybe,
   model,

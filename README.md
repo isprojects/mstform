@@ -225,6 +225,11 @@ value may be a string or some other object:
   contains a decimal number with a maximum `maxDigits` before the period and a
   maximum of `decimalPlaces` after the period.
 
+### Boolean
+
+`converters.boolean`: raw value is a boolean, value is also a boolean. The
+default raw value in add forms is `false`.
+
 ### Arrays
 
 `converters.stringArray`: raw value is an array of strings. value is
@@ -253,7 +258,10 @@ empty. This is handy when you have a `types.maybe(types.reference())` in MST.
 ### Object
 
 `converters.object`: this accept any object as raw value and returns it,
-including `null`. Prefer `converters.model` if you can.
+including `null`. Prefer `converters.model` if you can. Warning: the default
+raw value is `null` and this with basic data types (string, boolean, number
+and such) it won't work properly as they don't accept "null". Use
+more specific converters instead.
 
 ## Add Mode
 
