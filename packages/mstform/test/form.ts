@@ -1194,6 +1194,33 @@ test("model converter", async () => {
   expect(field.error).toEqual("Required");
 });
 
+test("model converter with validate does not throw", async () => {
+  const R = types.model("R", {
+    id: types.identifier(),
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.reference(R)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.model(R))
+  });
+
+  const r1 = R.create({ id: "1", bar: "One" });
+  const r2 = R.create({ id: "2", bar: "Two" });
+
+  const o = M.create({ foo: r1 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  await field.setRaw(r2);
+  expect(field.value).toBe(r2);
+  await state.validate();
+});
+
 test("model converter maybe", async () => {
   const R = types.model("R", {
     id: types.identifier(),

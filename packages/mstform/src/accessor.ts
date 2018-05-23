@@ -1,4 +1,4 @@
-import { action, computed, toJS } from "mobx";
+import { action, computed, isObservable, toJS } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
   ArrayEntryType,
@@ -146,8 +146,13 @@ export class FieldAccessor<R, V> {
   get raw(): R {
     const result = this.state.raw.get(this.path);
     if (result !== undefined) {
-      // convert the value to JavaScript otherwise things like
-      // arrays coming out of an observable map are observable
+      // this is an object reference. don't convert to JS
+      if (isObservable(result) && !(result instanceof Array)) {
+        return result as R;
+      }
+      // anything else, including arrays, convert to JS
+      // XXX what if we have an array of object references? cross that
+      // bridge when we support it
       return toJS(result) as R;
     }
     if (this.addMode) {
