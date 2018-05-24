@@ -316,8 +316,8 @@ that actually saves the content in the form:
 this.state = form.state(o, {
   save: async node => {
     // we call the real save function that actually knows
-    // how to save the form. This can come in as a prop, for instance.
-    return await onSave(getSnapshot(node));
+    // how to save the form.
+    return node.save();
   }
 });
 ```
@@ -331,6 +331,9 @@ Once you've hooked up your own save functionality, you should call
 * Uses your `save` function do to the actual saving.
 
 * Processes any additional validation errors returned by the server.
+
+* Returns `true` if saving succeeded, and `false` if not due to validation
+  errors.
 
 If you don't specify your own `save` you can still call `state.save()`, but
 it gives you a warning on the console that no actual saving could take place.
