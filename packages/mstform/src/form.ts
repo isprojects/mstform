@@ -3,6 +3,7 @@ import { IModelType } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { FieldOptions, RawGetter, Validator } from "./types";
+import { identity } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
 
@@ -37,10 +38,6 @@ export class ProcessValue<V> {
 }
 
 export type ProcessResponse<V> = ProcessValue<V> | ValidationMessage;
-
-function identity(value: any): any {
-  return value;
-}
 
 export class Field<R, V> {
   rawValidators: Validator<R>[];
