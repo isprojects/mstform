@@ -756,7 +756,11 @@ test("remaining errors", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.state(o);
+  const state = form.state(o, {
+    save: async node => {
+      return null;
+    }
+  });
   expect(state.error("other")).toBeUndefined();
   state.setErrors({ foo: "WRONG", other: "OTHER!" });
 
@@ -765,6 +769,9 @@ test("remaining errors", async () => {
 
   expect(state.error("other")).toEqual("OTHER!");
   expect(state.error("foo")).toBeUndefined();
+
+  await state.save();
+  expect(state.error("other")).toBeUndefined();
 });
 
 test("FormState can be saved", async () => {

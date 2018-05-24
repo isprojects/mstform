@@ -180,6 +180,7 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   clearErrors() {
+    this.remainingErrors = {};
     this.errors.clear();
   }
 
