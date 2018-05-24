@@ -745,6 +745,27 @@ test("setErrors directly on repeating", async () => {
   expect(accessor.error).toEqual("WRONG");
 });
 
+test("remaining errors", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+  state.setErrors({ foo: "WRONG", other: "OTHER!" });
+
+  const field = state.field("foo");
+  expect(field.error).toEqual("WRONG");
+
+  expect(state.error("other")).toEqual("OTHER!");
+  expect(state.error("foo")).toBeUndefined();
+});
+
 test("FormState can be saved", async () => {
   const M = types.model("M", {
     foo: types.string

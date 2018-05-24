@@ -48,6 +48,22 @@ function getBySteps(obj: any, steps: string[]): string | undefined {
   return getBySteps(sub, rest);
 }
 
+export function deleteByPath(obj: any, path: string) {
+  return deleteBySteps(obj, pathToSteps(path));
+}
+
+function deleteBySteps(obj: any, steps: string[]) {
+  const [first, ...rest] = steps;
+  if (rest.length === 0) {
+    delete obj[first];
+  }
+  let sub = obj[first];
+  if (sub === undefined) {
+    return;
+  }
+  deleteBySteps(sub, rest);
+}
+
 export function removePath(
   map: Map<string, any>,
   path: string
@@ -122,4 +138,10 @@ export function addPath(map: Map<string, any>, path: string): Map<string, any> {
   });
   // we return the result with a gap for the newly added item
   return result;
+}
+
+export function deepCopy(o: any): any {
+  // it's a crazy technique but it works for plain JSON, and
+  // we use it for errors which is plain JSON
+  return JSON.parse(JSON.stringify(o));
 }

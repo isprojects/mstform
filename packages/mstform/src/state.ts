@@ -12,7 +12,15 @@ import {
 } from "./accessor";
 import { Form, FormDefinition } from "./form";
 import { SaveFunc, ValidationOption } from "./types";
-import { addPath, getByPath, isInt, pathToSteps, removePath } from "./utils";
+import {
+  addPath,
+  deepCopy,
+  deleteByPath,
+  getByPath,
+  isInt,
+  pathToSteps,
+  removePath
+} from "./utils";
 
 export interface FormStateOptions<M> {
   save?: SaveFunc<M>;
@@ -32,6 +40,7 @@ export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   @observable raw: Map<string, any>;
   @observable errors: Map<string, string>;
+  @observable remainingErrors: any;
   @observable validating: Map<string, boolean>;
   @observable addModePaths: Map<string, boolean>;
   formAccessor: FormAccessor<M, D>;
@@ -156,12 +165,16 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   setErrors(errors: any) {
+    const remainingErrors = deepCopy(errors);
     this.flatAccessors.map(accessor => {
       const error = getByPath(errors, accessor.path);
       if (error != null) {
         this.errors.set(accessor.path, error);
+        // delete from remaining structure
+        deleteByPath(remainingErrors, accessor.path);
       }
     });
+    this.remainingErrors = remainingErrors;
   }
 
   @action
@@ -234,6 +247,10 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   repeatingField(name: string): any {}
+
+  error(name: string): string | undefined {
+    return this.remainingErrors[name];
+  }
 }
 
 async function defaultSaveFunc() {
