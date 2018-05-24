@@ -757,6 +757,7 @@ test("remaining errors", async () => {
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o);
+  expect(state.error("other")).toBeUndefined();
   state.setErrors({ foo: "WRONG", other: "OTHER!" });
 
   const field = state.field("foo");

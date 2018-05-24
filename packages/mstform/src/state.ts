@@ -63,6 +63,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors = observable.map();
     this.validating = observable.map();
     this.addModePaths = observable.map();
+    this.remainingErrors = {};
 
     onPatch(node, patch => {
       if (patch.op === "remove") {
