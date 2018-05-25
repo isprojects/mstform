@@ -40,7 +40,7 @@ export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   @observable raw: Map<string, any>;
   @observable errors: Map<string, string>;
-  @observable remainingErrors: any;
+  @observable additionalErrorTree: any;
   @observable validating: Map<string, boolean>;
   @observable addModePaths: Map<string, boolean>;
   formAccessor: FormAccessor<M, D>;
@@ -63,7 +63,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors = observable.map();
     this.validating = observable.map();
     this.addModePaths = observable.map();
-    this.remainingErrors = {};
+    this.additionalErrorTree = {};
 
     onPatch(node, patch => {
       if (patch.op === "remove") {
@@ -166,21 +166,21 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   setErrors(errors: any) {
-    const remainingErrors = deepCopy(errors);
+    const additionalErrors = deepCopy(errors);
     this.flatAccessors.map(accessor => {
       const error = getByPath(errors, accessor.path);
       if (error != null) {
         this.errors.set(accessor.path, error);
         // delete from remaining structure
-        deleteByPath(remainingErrors, accessor.path);
+        deleteByPath(additionalErrors, accessor.path);
       }
     });
-    this.remainingErrors = remainingErrors;
+    this.additionalErrorTree = additionalErrors;
   }
 
   @action
   clearErrors() {
-    this.remainingErrors = {};
+    this.additionalErrorTree = {};
     this.errors.clear();
   }
 
@@ -250,8 +250,26 @@ export class FormState<M, D extends FormDefinition<M>>
 
   repeatingField(name: string): any {}
 
-  error(name: string): string | undefined {
-    return this.remainingErrors[name];
+  additionalError(name: string): string | undefined {
+    const result = this.additionalErrorTree[name];
+    if (typeof result !== "string") {
+      return undefined;
+    }
+    return result;
+  }
+
+  @computed
+  get additionalErrors(): string[] {
+    const result: string[] = [];
+    Object.keys(this.additionalErrorTree).forEach(key => {
+      const value = this.additionalErrorTree[key];
+      if (typeof value !== "string") {
+        return;
+      }
+      result.push(value);
+    });
+    result.sort();
+    return result;
   }
 }
 

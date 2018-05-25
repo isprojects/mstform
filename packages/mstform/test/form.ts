@@ -745,7 +745,7 @@ test("setErrors directly on repeating", async () => {
   expect(accessor.error).toEqual("WRONG");
 });
 
-test("remaining errors", async () => {
+test("additional error by name", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -761,18 +761,57 @@ test("remaining errors", async () => {
       return null;
     }
   });
-  expect(state.error("other")).toBeUndefined();
+
+  expect(state.additionalError("other")).toBeUndefined();
   state.setErrors({ foo: "WRONG", other: "OTHER!" });
 
   const field = state.field("foo");
   expect(field.error).toEqual("WRONG");
 
-  expect(state.error("other")).toEqual("OTHER!");
-  expect(state.error("foo")).toBeUndefined();
+  expect(state.additionalError("other")).toEqual("OTHER!");
+  expect(state.additionalError("foo")).toBeUndefined();
 
   await state.save();
-  expect(state.error("other")).toBeUndefined();
+  expect(state.additionalError("other")).toBeUndefined();
 });
+
+test("additional errors array", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, {
+    save: async node => {
+      return null;
+    }
+  });
+
+  expect(state.additionalErrors).toEqual([]);
+  expect(state.additionalError("other")).toBeUndefined();
+  state.setErrors({
+    foo: "WRONG",
+    other: "OTHER!",
+    another: "ANOTHER",
+    deep: { more: "MORE" }
+  });
+
+  const field = state.field("foo");
+  expect(field.error).toEqual("WRONG");
+
+  expect(state.additionalError("deep")).toBeUndefined();
+  expect(state.additionalErrors).toEqual(["ANOTHER", "OTHER!"]);
+
+  await state.save();
+  expect(state.additionalErrors).toEqual([]);
+});
+
+// XXX deal with situation where errors are in lists; unpack lists
 
 test("FormState can be saved", async () => {
   const M = types.model("M", {
