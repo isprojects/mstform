@@ -811,8 +811,6 @@ test("additional errors array", async () => {
   expect(state.additionalErrors).toEqual([]);
 });
 
-// XXX deal with situation where errors are in lists; unpack lists
-
 test("FormState can be saved", async () => {
   const M = types.model("M", {
     foo: types.string
