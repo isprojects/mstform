@@ -36,6 +36,8 @@ export interface FormStateOptions<M> {
   extraValidation?: ExtraValidation;
 }
 
+export type SaveStatusOptions = "before" | "rightAfter" | "after";
+
 export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   @observable raw: Map<string, any>;
@@ -48,7 +50,7 @@ export class FormState<M, D extends FormDefinition<M>>
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
-  @observable saveStatus: "before" | "rightAfter" | "after" = "before";
+  @observable saveStatus: SaveStatusOptions = "before";
   isDisabledFunc: FieldAccessorAllows;
   isHiddenFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
@@ -119,9 +121,14 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   @action
+  setSaveStatus(status: SaveStatusOptions) {
+    this.saveStatus = status;
+  }
+
+  @action
   setRaw(path: string, value: any) {
     if (this.saveStatus === "rightAfter") {
-      this.saveStatus = "after";
+      this.setSaveStatus("after");
     }
     this.raw.set(path, value);
   }
@@ -149,7 +156,7 @@ export class FormState<M, D extends FormDefinition<M>>
   @action
   async save(): Promise<boolean> {
     const isValid = await this.validate();
-    this.saveStatus = "rightAfter";
+    this.setSaveStatus("rightAfter");
     if (!isValid) {
       return false;
     }
