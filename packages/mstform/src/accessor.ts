@@ -289,7 +289,7 @@ export class FieldAccessor<R, V> {
 
   @computed
   get validationProps() {
-    const error = this.errorValue;
+    const error = this.error;
     const isValidating = this.isValidating;
     if (!error) {
       return { validateStatus: isValidating ? "validating" : "" };
