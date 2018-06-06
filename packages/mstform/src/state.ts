@@ -1,9 +1,10 @@
-import { action, computed, observable } from "mobx";
+import { action, computed, observable, reaction } from "mobx";
 import { IType, onPatch, resolvePath } from "mobx-state-tree";
 import {
   Accessor,
   ExtraValidation,
   FieldAccess,
+  FieldAccessor,
   FieldAccessorAllows,
   FormAccessor,
   IFormAccessor,
@@ -45,6 +46,8 @@ export class FormState<M, D extends FormDefinition<M>>
   @observable additionalErrorTree: any;
   @observable validating: Map<string, boolean>;
   @observable addModePaths: Map<string, boolean>;
+  //@observable derivedDisposers: Map<string, IReactionDisposer>;
+
   formAccessor: FormAccessor<M, D>;
   saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
@@ -65,6 +68,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors = observable.map();
     this.validating = observable.map();
     this.addModePaths = observable.map();
+    //this.derivedDisposers = observable.map();
     this.additionalErrorTree = {};
 
     onPatch(node, patch => {
@@ -103,6 +107,27 @@ export class FormState<M, D extends FormDefinition<M>>
       this.validationAfterSave = validation.afterSave || "immediate";
       this.validationPauseDuration = validation.pauseDuration || 0;
     }
+
+    this.createDerivedReactions();
+  }
+
+  createDerivedReactions() {
+    this.flatAccessors.forEach(accessor => {
+      if (!(accessor instanceof FieldAccessor)) {
+        return;
+      }
+      const derivedFunc = accessor.field.derivedFunc;
+      if (derivedFunc == null) {
+        return;
+      }
+      reaction(
+        () => derivedFunc(this.node),
+        derivedValue => {
+          accessor.setRaw(accessor.field.render(derivedValue));
+        },
+        { fireImmediately: true }
+      );
+    });
   }
 
   @action
@@ -139,6 +164,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors = removePath(this.errors, path);
     this.validating = removePath(this.validating, path);
     this.addModePaths = removePath(this.addModePaths, path);
+    // XXX dispose all reactions
   }
 
   @action

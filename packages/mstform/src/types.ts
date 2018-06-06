@@ -1,9 +1,14 @@
+import { IModelType } from "mobx-state-tree";
+
 export type ValidationResponse = string | null | undefined | false;
 
 export interface Validator<V> {
   (value: V): ValidationResponse | Promise<ValidationResponse>;
 }
 
+export interface Derived<V> {
+  (node: any): V;
+}
 export interface RawGetter<R> {
   (...args: any[]): R;
 }
@@ -16,6 +21,7 @@ export interface FieldOptions<R, V> {
   requiredError?: string;
   required?: boolean;
   fromEvent?: boolean;
+  derived?: Derived<V>;
 }
 
 export interface SaveFunc<M> {

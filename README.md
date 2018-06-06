@@ -11,15 +11,15 @@ define a `value` and a `onChange` prop.
 
 ## Features
 
-* It knows about raw input (the value you type) and the converted input (the
+- It knows about raw input (the value you type) and the converted input (the
   value you want). You may type a string but want a number, for instance.
-* It manages both raw input as well as the converted values for you.
-* Integrates deeply with a mobx-state-tree model. You give it a model
+- It manages both raw input as well as the converted values for you.
+- Integrates deeply with a mobx-state-tree model. You give it a model
   instance and it renders its contents. When you are ready to submit the
   form, you have a mobx-state-tree model again.
-* Provides a range of standard converters so you don't have to write them
+- Provides a range of standard converters so you don't have to write them
   yourself.
-* It knows the types of both raw and validated values. If you use vscode your
+- It knows the types of both raw and validated values. If you use vscode your
   editor tells you if you do something wrong. This works even in
   plain Javascript if you enable `ts-check`.
 
@@ -215,13 +215,13 @@ these are the same, but often they're now.
 The input raw value that comes is a string for all of these. The converted
 value may be a string or some other object:
 
-* `converters.string`: value is a string.
+- `converters.string`: value is a string.
 
-* `converters.number`: value is a number.
+- `converters.number`: value is a number.
 
-* `converters.integer`: value is an integer.
+- `converters.integer`: value is an integer.
 
-* `converters.decimal(maxDigits, decimalPlaces)`: value is a string that
+- `converters.decimal(maxDigits, decimalPlaces)`: value is a string that
   contains a decimal number with a maximum `maxDigits` before the period and a
   maximum of `decimalPlaces` after the period.
 
@@ -267,9 +267,9 @@ more specific converters instead.
 
 There are two ways to deal with an underlying MST node:
 
-* edit form: edit an existing MST node.
+- edit form: edit an existing MST node.
 
-* add form: edit a newly created MST node.
+- add form: edit a newly created MST node.
 
 Consider this MST type:
 
@@ -325,14 +325,14 @@ this.state = form.state(o, {
 Once you've hooked up your own save functionality, you should call
 `state.save()` when you do a form submit. This does the following:
 
-* Makes sure the form is completely valid before it's submitted to the server,
+- Makes sure the form is completely valid before it's submitted to the server,
   otherwise displays client-side validation errors.
 
-* Uses your `save` function do to the actual saving.
+- Uses your `save` function do to the actual saving.
 
-* Processes any additional validation errors returned by the server.
+- Processes any additional validation errors returned by the server.
 
-* Returns `true` if saving succeeded, and `false` if not due to validation
+- Returns `true` if saving succeeded, and `false` if not due to validation
   errors.
 
 If you don't specify your own `save` you can still call `state.save()`, but
@@ -433,3 +433,44 @@ const state = form.state(o, {
 
 Note that you have to use the second `value` argument to get the value,
 as `accessor.value` still has the old value.
+
+## Derived values
+
+For some fields the value depends on another one. This can be
+another field, but typically it's the result of some calculation done
+in a MST view. This value is maintained but can be overridden by the
+user. But if the input to the calculation changes, the value is
+updated again.
+
+You express such derived values with mstform:
+
+```javascript
+const M = types
+  .model("M", {
+    calculated: types.number,
+    a: types.number,
+    b: types.number
+  })
+  .views(self => ({
+    sum() {
+      return self.a + self.b;
+    }
+  }));
+
+const form = new Form(M, {
+  calculated: new Field(converters.number, {
+    derived: node => node.sum()
+  }),
+  a: new Field(converters.number),
+  b: new Field(converters.number)
+});
+```
+
+`calculated` starts out with the value based on the sum of `a` and `b`.
+The user can modify it, and the value changes. When the user instead
+modifies `a` or `b`, the derived value changes again to the result
+of the `derived` function.
+
+When you access a repeating form, the node passed into the derived function is
+the sub-node that the repeating form represents, so the derived value is
+determined within that context.

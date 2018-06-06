@@ -158,7 +158,7 @@ export class FieldAccessor<R, V> {
     if (this.addMode) {
       return this.field.converter.emptyRaw;
     }
-    return this.field.render(this.state.getValue(this.path));
+    return this.field.render(this.value);
   }
 
   @computed
