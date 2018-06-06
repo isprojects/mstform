@@ -31,6 +31,8 @@ test("a simple form", async () => {
   await field.handleChange("correct");
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("correct");
+
+  expect(field.node).toBe(state.node);
 });
 
 test("a simple form with array field", async () => {
@@ -134,12 +136,16 @@ test("repeating form", async () => {
 
   const forms = state.repeatingForm("foo");
   const oneForm = forms.index(0);
+
   const field = oneForm.field("bar");
 
   expect(field.raw).toEqual("BAR");
   await field.handleChange("QUX");
   expect(field.raw).toEqual("QUX");
   expect(field.value).toEqual("QUX");
+
+  expect(forms.nodes).toBe(o.foo);
+  expect(field.node).toBe(o.foo[0]);
 });
 
 test("repeating form with conversion", async () => {

@@ -1,4 +1,4 @@
-import { action, computed, isObservable, toJS } from "mobx";
+import { action, computed, isObservable, toJS, reaction } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
   ArrayEntryType,
@@ -15,11 +15,11 @@ import { ValidationResponse } from "./types";
 import { equal, unwrap } from "./utils";
 
 export interface FieldAccessorAllows {
-  (fieldAccessor: FieldAccessor<any, any>): boolean;
+  (fieldAccessor: FieldAccessor<any, any, any>): boolean;
 }
 
 export interface ExtraValidation {
-  (fieldAccessor: FieldAccessor<any, any>, value: any): ValidationResponse;
+  (fieldAccessor: FieldAccessor<any, any, any>, value: any): ValidationResponse;
 }
 
 export interface RepeatingFormAccessorAllows {
@@ -27,7 +27,7 @@ export interface RepeatingFormAccessorAllows {
 }
 
 export type Accessor =
-  | FieldAccessor<any, any>
+  | FieldAccessor<any, any, any>
   | RepeatingFormAccessor<any, any>
   | RepeatingFormIndexedAccessor<any, any>;
 
@@ -35,7 +35,7 @@ export type FieldAccess<
   M,
   D extends FormDefinition<M>,
   K extends keyof M
-> = FieldAccessor<RawType<D[K]>, M[K]>;
+> = FieldAccessor<M, RawType<D[K]>, M[K]>;
 
 export type RepeatingFormAccess<
   M,
@@ -60,6 +60,7 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   constructor(
     public state: FormState<M, D>,
     public definition: any,
+    public node: M,
     public path: string
   ) {}
 
@@ -103,7 +104,7 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     if (!(field instanceof Field)) {
       throw new Error("Not accessing a Field instance");
     }
-    return new FieldAccessor(this.state, field, this.path, name);
+    return new FieldAccessor(this.state, field, this.node, this.path, name);
   }
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
@@ -111,9 +112,14 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
     }
+
+    // we know that the node is an array of M[] at this point
+    const nodes = (this.node[name] as any) as M[];
+
     return new RepeatingFormAccessor(
       this.state,
       repeatingForm,
+      nodes,
       this.path,
       name
     );
@@ -122,19 +128,41 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   repeatingField(name: string): any {}
 }
 
-export class FieldAccessor<R, V> {
+export class FieldAccessor<M, R, V> {
   path: string;
   name: string;
 
   constructor(
     public state: FormState<any, any>,
     public field: Field<R, V>,
+    public node: M,
     path: string,
     name: string
   ) {
     this.name = name;
     process;
     this.path = path + "/" + name;
+
+    this.createDerivedReaction();
+  }
+
+  createDerivedReaction() {
+    const derivedFunc = this.field.derivedFunc;
+    if (derivedFunc == null) {
+      return;
+    }
+
+    if (this.state.derivedDisposers.get(this.path)) {
+      return;
+    }
+    const disposer = reaction(
+      () => derivedFunc(this.node),
+      derivedValue => {
+        this.setRaw(this.field.render(derivedValue));
+      },
+      { fireImmediately: true }
+    );
+    this.state.setDerivedDisposer(this.path, disposer);
   }
 
   @computed
@@ -308,6 +336,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   constructor(
     public state: FormState<any, any>,
     public repeatingForm: RepeatingForm<M, D>,
+    public nodes: M[],
     path: string,
     name: string
   ) {
@@ -328,6 +357,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     return new RepeatingFormIndexedAccessor(
       this.state,
       this.repeatingForm.definition,
+      this.nodes[index],
       this.path,
       index
     );
@@ -401,11 +431,17 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
   constructor(
     public state: FormState<any, any>,
     public definition: any,
+    public node: M,
     path: string,
     public index: number
   ) {
     this.path = path + "/" + index;
-    this.formAccessor = new FormAccessor(state, definition, path + "/" + index);
+    this.formAccessor = new FormAccessor(
+      state,
+      definition,
+      node,
+      path + "/" + index
+    );
   }
 
   async validate(): Promise<boolean> {

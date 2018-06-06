@@ -70,62 +70,62 @@ test("calculated", async () => {
   expect(calculated.value).toEqual(5);
 });
 
-// test("calculated repeating", async () => {
-//   const N = types
-//     .model("N", {
-//       calculated: types.number,
-//       a: types.number,
-//       b: types.number
-//     })
-//     .views(self => ({
-//       sum() {
-//         return self.a + self.b;
-//       }
-//     }));
-//   const M = types.model("M", {
-//     foo: types.array(N)
-//   });
+test("calculated repeating", async () => {
+  const N = types
+    .model("N", {
+      calculated: types.number,
+      a: types.number,
+      b: types.number
+    })
+    .views(self => ({
+      sum() {
+        return self.a + self.b;
+      }
+    }));
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
 
-//   const form = new Form(M, {
-//     foo: new RepeatingForm({
-//       calculated: new Field(converters.number, {
-//         derived: node => node.sum()
-//       }),
-//       a: new Field(converters.number),
-//       b: new Field(converters.number)
-//     })
-//   });
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      calculated: new Field(converters.number, {
+        derived: node => node.sum()
+      }),
+      a: new Field(converters.number),
+      b: new Field(converters.number)
+    })
+  });
 
-//   const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }]});
+  const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }] });
 
-//   const state = form.state(o);
-//   const sub = state.repeatingForm('foo').index(0);
-//   const calculated = sub.field("calculated");
-//   const a = sub.field("a");
-//   const b = sub.field("b");
-//   function resolveAfter(t: number) {
-//     return new Promise(resolve => {
-//       setTimeout(() => {
-//         resolve();
-//       }, t);
-//     });
-//   }
-//   await resolveReactions();
-//   // we show a derived value
-//   expect(calculated.raw).toEqual("3");
-//   // underlying value is also modified
-//   expect(calculated.value).toEqual(3);
+  const state = form.state(o);
+  const sub = state.repeatingForm("foo").index(0);
+  const calculated = sub.field("calculated");
+  const a = sub.field("a");
+  const b = sub.field("b");
+  function resolveAfter(t: number) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, t);
+    });
+  }
+  await resolveReactions();
+  // we show a derived value
+  expect(calculated.raw).toEqual("3");
+  // underlying value is also modified
+  expect(calculated.value).toEqual(3);
 
-//   // we set it to 4 explicitly
-//   await calculated.setRaw("4");
-//   expect(calculated.raw).toEqual("4");
-//   // this immediately affects the underlying value
-//   expect(calculated.value).toEqual(4);
+  // we set it to 4 explicitly
+  await calculated.setRaw("4");
+  expect(calculated.raw).toEqual("4");
+  // this immediately affects the underlying value
+  expect(calculated.value).toEqual(4);
 
-//   // we now change a, which should modify the derived value
-//   await a.setRaw("3");
-//   await resolveReactions();
-//   expect(calculated.raw).toEqual("5");
-//   // and also the underlying value, immediately
-//   expect(calculated.value).toEqual(5);
-// });
+  // we now change a, which should modify the derived value
+  await a.setRaw("3");
+  await resolveReactions();
+  expect(calculated.raw).toEqual("5");
+  // and also the underlying value, immediately
+  expect(calculated.value).toEqual(5);
+});
