@@ -66,7 +66,8 @@ function deleteBySteps(obj: any, steps: string[]) {
 
 export function removePath(
   map: Map<string, any>,
-  path: string
+  path: string,
+  disposeFunc?: any
 ): Map<string, any> {
   const parts = pathToSteps(path);
   const last = parts[parts.length - 1];
@@ -83,6 +84,7 @@ export function removePath(
     const pathParts = pathToSteps(withoutBase);
 
     const number = parseInt(pathParts[0], 10);
+
     if (isNaN(number)) {
       result.set(key, value);
       return;
@@ -91,7 +93,9 @@ export function removePath(
       result.set(key, value);
       return;
     } else if (number === removedIndex) {
-      // we don't want it in the new map
+      if (disposeFunc != null) {
+        disposeFunc(value);
+      }
       return;
     }
     const restParts = pathParts.slice(1);

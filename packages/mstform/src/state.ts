@@ -3,7 +3,8 @@ import {
   computed,
   observable,
   reaction,
-  IReactionDisposer
+  IReactionDisposer,
+  toJS
 } from "mobx";
 import { IType, onPatch, resolvePath } from "mobx-state-tree";
 import {
@@ -145,6 +146,7 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   setDerivedDisposer(path: string, disposer: IReactionDisposer) {
+    console.log(path);
     this.derivedDisposers.set(path, disposer);
   }
 
@@ -154,7 +156,14 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors = removePath(this.errors, path);
     this.validating = removePath(this.validating, path);
     this.addModePaths = removePath(this.addModePaths, path);
-    // XXX dispose all reactions
+    this.derivedDisposers = removePath(
+      this.derivedDisposers,
+      path,
+      (value: IReactionDisposer) => {
+        console.log("dispose");
+        value();
+      }
+    );
   }
 
   @action
@@ -163,6 +172,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors = addPath(this.errors, path);
     this.validating = addPath(this.validating, path);
     this.addModePaths = addPath(this.addModePaths, path);
+    this.derivedDisposers = addPath(this.derivedDisposers, path);
   }
 
   async validate(): Promise<boolean> {

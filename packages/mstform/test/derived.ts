@@ -129,3 +129,79 @@ test("calculated repeating", async () => {
   // and also the underlying value, immediately
   expect(calculated.value).toEqual(5);
 });
+
+test.only("calculated repeating push and remove", async () => {
+  const N = types
+    .model("N", {
+      calculated: types.number,
+      a: types.number,
+      b: types.number
+    })
+    .views(self => ({
+      sum() {
+        return self.a + self.b;
+      }
+    }));
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      calculated: new Field(converters.number, {
+        derived: node => node.sum()
+      }),
+      a: new Field(converters.number),
+      b: new Field(converters.number)
+    })
+  });
+
+  const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }] });
+
+  const state = form.state(o);
+  const forms = state.repeatingForm("foo");
+  forms.push({ calculated: 0, a: 5, b: 3 });
+
+  // we get a form here so we can see that its reaction is disposed
+  // later
+  const laterRemoved = forms.index(0);
+  const calculatedA = laterRemoved.field("calculated");
+
+  const sub = forms.index(1);
+  const calculated = sub.field("calculated");
+  const a = sub.field("a");
+  const b = sub.field("b");
+  function resolveAfter(t: number) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, t);
+    });
+  }
+  await resolveReactions();
+  // we show a derived value
+  expect(calculated.raw).toEqual("8");
+  // underlying value is also modified
+  expect(calculated.value).toEqual(8);
+
+  // we set it to 4 explicitly
+  await calculated.setRaw("4");
+  expect(calculated.raw).toEqual("4");
+  // this immediately affects the underlying value
+  expect(calculated.value).toEqual(4);
+
+  // we now change a, which should modify the derived value
+  await a.setRaw("3");
+  await resolveReactions();
+  expect(calculated.raw).toEqual("6");
+  // and also the underlying value, immediately
+  expect(calculated.value).toEqual(6);
+
+  forms.remove(o.foo[0]);
+  const sub2 = forms.index(0);
+  const calculated2 = sub2.field("calculated");
+  expect(calculated2.raw).toEqual("6");
+  // and also the underlying value, immediately
+  expect(calculated2.value).toEqual(6);
+});
