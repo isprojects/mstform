@@ -122,7 +122,3 @@ export class Field<R, V> {
 export class RepeatingForm<M, D extends FormDefinition<M>> {
   constructor(public definition: D) {}
 }
-
-export class RepeatingField<R, V> {
-  constructor(public options?: FieldOptions<R, V>) {}
-}
