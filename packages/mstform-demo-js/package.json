@@ -10,7 +10,7 @@
     "start": "webpack-dev-server --config ./webpack.config.js --mode development"
   },
   "dependencies": {
-    "mobx": "^4.2.1",
+    "mobx": "^4.2.0",
     "mobx-react": "^5.1.2",
     "mobx-state-tree": "^2.0.5",
     "react": "^16.3.2",
