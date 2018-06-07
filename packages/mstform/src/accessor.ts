@@ -295,9 +295,19 @@ export class FieldAccessor<M, R, V> {
     if (typeof extraResult === "string" && extraResult) {
       this.state.setError(this.path, extraResult);
     }
+
+    // if there are no changes, don't do anything
+    if (equal(unwrap(this.value), unwrap(processResult.value))) {
+      return;
+    }
+
     applyPatch(this.state.node, [
       { op: "replace", path: this.path, value: processResult.value }
     ]);
+    const changeFunc = this.field.changeFunc;
+    if (changeFunc != null) {
+      changeFunc(this.node, processResult.value);
+    }
   }
 
   handleChange = async (...args: any[]) => {

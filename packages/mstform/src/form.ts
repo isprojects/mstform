@@ -2,7 +2,7 @@ import { IObservableArray } from "mobx";
 import { IModelType } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FormState, FormStateOptions } from "./state";
-import { FieldOptions, RawGetter, Validator, Derived } from "./types";
+import { FieldOptions, RawGetter, Validator, Derived, Change } from "./types";
 import { identity } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
@@ -47,6 +47,7 @@ export class Field<R, V> {
   required: boolean;
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
+  changeFunc?: Change<V>;
 
   constructor(
     public converter: IConverter<R, V>,
@@ -76,6 +77,7 @@ export class Field<R, V> {
         this.getRaw = options.getRaw || identity;
       }
       this.derivedFunc = options.derived;
+      this.changeFunc = options.change;
     }
   }
 
