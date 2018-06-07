@@ -1,6 +1,6 @@
 // @ts-check
 import { observer } from "mobx-react";
-import { types, resolvePath } from "mobx-state-tree";
+import { types, getSnapshot } from "mobx-state-tree";
 import { Field, Form, converters } from "mstform";
 import * as React from "react";
 import { Component } from "react";
@@ -58,8 +58,19 @@ export class MyForm extends Component {
   constructor(props) {
     super(props);
     // we create a form state for this model
-    this.state = form.state(o);
+    this.state = form.state(o, {
+      save: node => {
+        console.log(getSnapshot(node));
+        return null;
+      }
+    });
   }
+
+  handleSave = () => {
+    this.state.save().then(r => {
+      console.log("saved success", r);
+    });
+  };
 
   render() {
     // we get the foo field from the form
@@ -71,7 +82,7 @@ export class MyForm extends Component {
 
     return (
       <div>
-        <span>Simple text field with validator</span>
+        <span>Simple text field with validator (set it to "correct")</span>
         <InlineError error={foo.error}>
           <input type="text" value={foo.raw} onChange={foo.handleChange} />
         </InlineError>
@@ -91,6 +102,7 @@ export class MyForm extends Component {
             onChange={derived.handleChange}
           />
         </InlineError>
+        <button onClick={this.handleSave}>Save</button>
       </div>
     );
   }
