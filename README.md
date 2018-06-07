@@ -477,3 +477,37 @@ determined within that context.
 
 Note that derived calculations only take place if you actually access the field
 to use it in a form; it doesn't work for fields that are never used.
+
+## Change hook
+
+When you change one field it's sometimes useful to do some side effect as a
+result, for instance to change the value of another field. You can do so
+with `change` hook:
+
+```javascript
+const M = types
+  .model("M", {
+    a: types.number,
+    b: types.number
+  })
+  .actions(self => ({
+    setB(value: number) {
+      self.b = value;
+    }
+  }));
+
+const form = new Form(M, {
+  a: new Field(converters.number, {
+    change: (node, value) => {
+      node.setB(value);
+    }
+  }),
+  b: new Field(converters.number)
+});
+```
+
+We have defined an action that lets us modify `b`, which is represented
+by the field `b`. We implement a change hook to call that action whenever
+`a` is changed. This only happens if `a` passes validation -- changes
+to `a` that result in an error message don't result in an execution
+of the `change` hook.
