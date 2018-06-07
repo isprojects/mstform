@@ -130,7 +130,7 @@ test("calculated repeating", async () => {
   expect(calculated.value).toEqual(5);
 });
 
-test.only("calculated repeating push and remove", async () => {
+test("calculated repeating push and remove", async () => {
   const N = types
     .model("N", {
       calculated: types.number,
