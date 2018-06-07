@@ -159,8 +159,7 @@ export class FieldAccessor<M, R, V> {
       () => derivedFunc(this.node),
       derivedValue => {
         this.setRaw(this.field.render(derivedValue));
-      },
-      { fireImmediately: true }
+      }
     );
     this.state.setDerivedDisposer(this.path, disposer);
   }

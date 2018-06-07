@@ -43,18 +43,11 @@ test("calculated", async () => {
   const calculated = state.field("calculated");
   const a = state.field("a");
   const b = state.field("b");
-  function resolveAfter(t: number) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, t);
-    });
-  }
+
   await resolveReactions();
-  // we show a derived value
-  expect(calculated.raw).toEqual("3");
-  // underlying value is also modified
-  expect(calculated.value).toEqual(3);
+  // we show the set value, as no modification was made
+  expect(calculated.raw).toEqual("0");
+  expect(calculated.value).toEqual(0);
 
   // we set it to 4 explicitly
   await calculated.setRaw("4");
@@ -103,18 +96,11 @@ test("calculated repeating", async () => {
   const calculated = sub.field("calculated");
   const a = sub.field("a");
   const b = sub.field("b");
-  function resolveAfter(t: number) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, t);
-    });
-  }
+
   await resolveReactions();
-  // we show a derived value
-  expect(calculated.raw).toEqual("3");
-  // underlying value is also modified
-  expect(calculated.value).toEqual(3);
+  // we show the original value as no change was made
+  expect(calculated.raw).toEqual("0");
+  expect(calculated.value).toEqual(0);
 
   // we set it to 4 explicitly
   await calculated.setRaw("4");
@@ -172,18 +158,10 @@ test("calculated repeating push and remove", async () => {
   const calculated = sub.field("calculated");
   const a = sub.field("a");
   const b = sub.field("b");
-  function resolveAfter(t: number) {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, t);
-    });
-  }
+
   await resolveReactions();
-  // we show a derived value
-  expect(calculated.raw).toEqual("8");
-  // underlying value is also modified
-  expect(calculated.value).toEqual(8);
+  // we show nothing as we're in add mode
+  expect(calculated.raw).toEqual("");
 
   // we set it to 4 explicitly
   await calculated.setRaw("4");
