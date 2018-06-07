@@ -1,7 +1,7 @@
 // @ts-check
 import { observer } from "mobx-react";
 import { types } from "mobx-state-tree";
-import { Field, Form, FormState, converters } from "mstform";
+import { Field, Form, converters } from "mstform";
 import * as React from "react";
 import { Component } from "react";
 
