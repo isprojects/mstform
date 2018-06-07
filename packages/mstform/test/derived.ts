@@ -1,4 +1,4 @@
-import { configure } from "mobx";
+import { configure, IReactionDisposer } from "mobx";
 import { getSnapshot, types } from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
@@ -163,10 +163,10 @@ test.only("calculated repeating push and remove", async () => {
   const forms = state.repeatingForm("foo");
   forms.push({ calculated: 0, a: 5, b: 3 });
 
-  // we get a form here so we can see that its reaction is disposed
+  // we get a form and field here so we can see that its reaction is disposed
   // later
   const laterRemoved = forms.index(0);
-  const calculatedA = laterRemoved.field("calculated");
+  laterRemoved.field("calculated");
 
   const sub = forms.index(1);
   const calculated = sub.field("calculated");
@@ -198,10 +198,28 @@ test.only("calculated repeating push and remove", async () => {
   // and also the underlying value, immediately
   expect(calculated.value).toEqual(6);
 
+  const disposer = state.derivedDisposers.get("/foo/0/calculated");
+  expect(disposer).not.toBeUndefined();
+  // to please TS
+  if (disposer == null) {
+    throw new Error("Disposer cannot be undefined");
+  }
+  let touched = false;
+  const wrappedDisposer = () => {
+    touched = true;
+    disposer();
+  };
+  // a bit of a hack to track whether the disposer is called
+  state.derivedDisposers.set(
+    "/foo/0/calculated",
+    wrappedDisposer as IReactionDisposer
+  );
+
   forms.remove(o.foo[0]);
   const sub2 = forms.index(0);
   const calculated2 = sub2.field("calculated");
   expect(calculated2.raw).toEqual("6");
   // and also the underlying value, immediately
   expect(calculated2.value).toEqual(6);
+  expect(touched).toBeTruthy();
 });

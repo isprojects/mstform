@@ -146,7 +146,6 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   setDerivedDisposer(path: string, disposer: IReactionDisposer) {
-    console.log(path);
     this.derivedDisposers.set(path, disposer);
   }
 
@@ -160,7 +159,6 @@ export class FormState<M, D extends FormDefinition<M>>
       this.derivedDisposers,
       path,
       (value: IReactionDisposer) => {
-        console.log("dispose");
         value();
       }
     );

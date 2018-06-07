@@ -474,3 +474,6 @@ of the `derived` function.
 When you access a repeating form, the node passed into the derived function is
 the sub-node that the repeating form represents, so the derived value is
 determined within that context.
+
+Note that derived calculations only take place if you actually access the field
+to use it in a form; it doesn't work for fields that are never used.
