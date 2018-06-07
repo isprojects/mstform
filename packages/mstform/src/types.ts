@@ -9,6 +9,11 @@ export interface Validator<V> {
 export interface Derived<V> {
   (node: any): V;
 }
+
+export interface Change<V> {
+  (node: any, value: V): void;
+}
+
 export interface RawGetter<R> {
   (...args: any[]): R;
 }
@@ -22,6 +27,7 @@ export interface FieldOptions<R, V> {
   required?: boolean;
   fromEvent?: boolean;
   derived?: Derived<V>;
+  change?: Change<V>;
 }
 
 export interface SaveFunc<M> {

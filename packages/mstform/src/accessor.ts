@@ -298,6 +298,10 @@ export class FieldAccessor<M, R, V> {
     applyPatch(this.state.node, [
       { op: "replace", path: this.path, value: processResult.value }
     ]);
+    const changeFunc = this.field.changeFunc;
+    if (changeFunc != null) {
+      changeFunc(this.node, processResult.value);
+    }
   }
 
   handleChange = async (...args: any[]) => {
