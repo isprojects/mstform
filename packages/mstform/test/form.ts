@@ -24,11 +24,11 @@ test("a simple form", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
-  await field.handleChange("BAR");
+  await field.setRaw("BAR");
   expect(field.raw).toEqual("BAR");
   expect(field.error).toEqual("Wrong");
   expect(field.value).toEqual("FOO");
-  await field.handleChange("correct");
+  await field.setRaw("correct");
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("correct");
 
@@ -520,7 +520,6 @@ test("async validation modification", async () => {
   expect(field.raw).toEqual("correct");
   // value hasn't changed yet as promise hasn't resolved yet
   expect(state.isValidating).toBeTruthy();
-  expect(field.isValidating).toBeTruthy();
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
   // now we change the raw while waiting
@@ -530,7 +529,6 @@ test("async validation modification", async () => {
   });
   await promise;
   expect(state.isValidating).toBeTruthy();
-  expect(field.isValidating).toBeTruthy();
   expect(field.raw).toEqual("incorrect");
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
@@ -539,7 +537,6 @@ test("async validation modification", async () => {
   });
   await promise2;
   expect(state.isValidating).toBeFalsy();
-  expect(field.isValidating).toBeFalsy();
   expect(field.raw).toEqual("incorrect");
   expect(field.value).toEqual("FOO");
   expect(field.error).toEqual("Wrong");
@@ -1116,11 +1113,10 @@ test("setting value on model will update form", async () => {
   o.update("BAR");
   expect(field.raw).toEqual("BAR");
 
-  // as soon as someone starts typing however, the raw is not updated
+  // the raw is also immediately updated
   field.setRaw("QUX");
   o.update("BACK");
-  expect(field.raw).toEqual("QUX");
-  // TODO: provide a way to clear raw so that updating works?
+  expect(field.raw).toEqual("BACK");
 });
 
 test("no validation before save", async () => {
@@ -1722,4 +1718,79 @@ test("boolean converter", async () => {
   expect(forms.length).toBe(1);
   const field = forms.index(0).field("bar");
   expect(field.raw).toEqual(false);
+});
+
+test("converter and raw update", async () => {
+  // we update the raw when the value is set
+  // a converter may not be exactly preserving all input,
+  // for instance the number converter turns the string 0.20
+  // into 0.2. this would mean that when you type 0.20 it
+  // could immediately update the raw to 0.2, which isn't desired
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("0");
+  await field.setRaw("0.20");
+  // the value is retained, even though render would result in 0.2
+  expect(field.raw).toEqual("0.20");
+  expect(field.value).toEqual(0.2);
+});
+
+// a way to wait for all promises
+function resolved() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 0);
+  });
+}
+
+test("raw update and errors", async () => {
+  // could immediately update the raw to 0.2, which isn't desired
+  const M = types
+    .model("M", {
+      foo: types.number
+    })
+    .actions(self => ({
+      update(value: number) {
+        self.foo = value;
+      }
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.number, {
+      validators: [value => (value > 10 ? "Wrong" : false)]
+    })
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("0");
+  await field.setRaw("20");
+  expect(field.error).toEqual("Wrong");
+
+  o.update(5);
+  await resolved();
+
+  expect(field.raw).toEqual("5");
+  expect(field.error).toBeUndefined();
+
+  o.update(21);
+  await resolved();
+
+  expect(field.raw).toEqual("21");
+  expect(field.error).toEqual("Wrong");
 });

@@ -6,7 +6,7 @@ import {
   IReactionDisposer,
   toJS
 } from "mobx";
-import { IType, onPatch, resolvePath } from "mobx-state-tree";
+import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import {
   Accessor,
   ExtraValidation,
@@ -65,6 +65,7 @@ export class FormState<M, D extends FormDefinition<M>>
   isHiddenFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
   extraValidationFunc: ExtraValidation;
+  private noRawUpdate: boolean;
 
   constructor(
     public form: Form<M, D>,
@@ -77,12 +78,15 @@ export class FormState<M, D extends FormDefinition<M>>
     this.addModePaths = observable.map();
     this.derivedDisposers = observable.map();
     this.additionalErrorTree = {};
+    this.noRawUpdate = false;
 
     onPatch(node, patch => {
       if (patch.op === "remove") {
         this.removePath(patch.path);
       } else if (patch.op === "add") {
         this.addPath(patch.path);
+      } else if (patch.op === "replace") {
+        this.setRawFromValue(patch.path, patch.value);
       }
     });
     this.formAccessor = new FormAccessor(this, this.form.definition, node, "");
@@ -142,6 +146,30 @@ export class FormState<M, D extends FormDefinition<M>>
       this.setSaveStatus("after");
     }
     this.raw.set(path, value);
+  }
+
+  @action
+  setRawFromValue(path: string, value: any) {
+    if (this.noRawUpdate) {
+      return;
+    }
+    const fieldAccessor = this.accessByPath(path);
+    if (!(fieldAccessor instanceof FieldAccessor)) {
+      // if this is any other accessor, we cannot re-render raw as
+      // there is no raw
+      return;
+    }
+    // we don't use setRaw on the field but directly re-rerender
+    this.setRaw(path, fieldAccessor.field.render(value));
+    // trigger validation
+    fieldAccessor.validate();
+  }
+
+  @action
+  setValueWithoutRawUpdate(path: string, value: any) {
+    this.noRawUpdate = true;
+    applyPatch(this.node, [{ op: "replace", path, value }]);
+    this.noRawUpdate = false;
   }
 
   @action
@@ -269,6 +297,19 @@ export class FormState<M, D extends FormDefinition<M>>
   @computed
   get flatAccessors(): Accessor[] {
     return this.formAccessor.flatAccessors;
+  }
+
+  accessByPath(path: string): Accessor {
+    const steps = pathToSteps(path);
+    return this.accessBySteps(steps);
+  }
+
+  accessBySteps(steps: string[]): Accessor {
+    return this.formAccessor.accessBySteps(steps);
+  }
+
+  access<K extends keyof M>(name: K): Accessor {
+    return this.formAccessor.access(name);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
