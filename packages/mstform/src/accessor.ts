@@ -296,6 +296,7 @@ export class FieldAccessor<M, R, V> {
     if (!equal(unwrap(currentRaw), unwrap(raw))) {
       return;
     }
+    // validation only is complete if the currentRaw has been validated
     this.state.setValidating(this.path, false);
 
     if (processResult instanceof ValidationMessage) {

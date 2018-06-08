@@ -161,6 +161,8 @@ export class FormState<M, D extends FormDefinition<M>>
     }
     // we don't use setRaw on the field but directly re-rerender
     this.setRaw(path, fieldAccessor.field.render(value));
+    // trigger validation
+    fieldAccessor.validate();
   }
 
   @action
