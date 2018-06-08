@@ -321,9 +321,8 @@ export class FieldAccessor<M, R, V> {
       return;
     }
 
-    applyPatch(this.state.node, [
-      { op: "replace", path: this.path, value: processResult.value }
-    ]);
+    this.state.setValueWithoutRawUpdate(this.path, processResult.value);
+
     const changeFunc = this.field.changeFunc;
     if (changeFunc != null) {
       changeFunc(this.node, processResult.value);

@@ -6,7 +6,7 @@ import {
   IReactionDisposer,
   toJS
 } from "mobx";
-import { IType, onPatch, resolvePath } from "mobx-state-tree";
+import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import {
   Accessor,
   ExtraValidation,
@@ -65,6 +65,7 @@ export class FormState<M, D extends FormDefinition<M>>
   isHiddenFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
   extraValidationFunc: ExtraValidation;
+  private noRawUpdate: boolean;
 
   constructor(
     public form: Form<M, D>,
@@ -77,6 +78,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.addModePaths = observable.map();
     this.derivedDisposers = observable.map();
     this.additionalErrorTree = {};
+    this.noRawUpdate = false;
 
     onPatch(node, patch => {
       if (patch.op === "remove") {
@@ -148,6 +150,9 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   setRawFromValue(path: string, value: any) {
+    if (this.noRawUpdate) {
+      return;
+    }
     const fieldAccessor = this.accessByPath(path);
     if (!(fieldAccessor instanceof FieldAccessor)) {
       // if this is any other accessor, we cannot re-render raw as
@@ -156,6 +161,13 @@ export class FormState<M, D extends FormDefinition<M>>
     }
     // we don't use setRaw on the field but directly re-rerender
     this.setRaw(path, fieldAccessor.field.render(value));
+  }
+
+  @action
+  setValueWithoutRawUpdate(path: string, value: any) {
+    this.noRawUpdate = true;
+    applyPatch(this.node, [{ op: "replace", path, value }]);
+    this.noRawUpdate = false;
   }
 
   @action

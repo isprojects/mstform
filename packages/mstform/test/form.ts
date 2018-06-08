@@ -1722,3 +1722,28 @@ test("boolean converter", async () => {
   const field = forms.index(0).field("bar");
   expect(field.raw).toEqual(false);
 });
+
+test("converter and raw update", async () => {
+  // we update the raw when the value is set
+  // a converter may not be exactly preserving all input,
+  // for instance the number converter turns the string 0.20
+  // into 0.2. this would mean that when you type 0.20 it
+  // could immediately update the raw to 0.2, which isn't desired
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("0");
+  await field.setRaw("0.20");
+  expect(field.raw).toEqual("0.20");
+  expect(field.value).toEqual(0.2);
+});
