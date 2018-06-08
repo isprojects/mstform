@@ -50,6 +50,8 @@ export interface IFormAccessor<M, D extends FormDefinition<M>> {
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K>;
 
+  access(name: string): Accessor;
+
   accessors: Accessor[];
 
   flatAccessors: Accessor[];
@@ -97,6 +99,24 @@ export class FormAccessor<M, D extends FormDefinition<M>>
       }
     });
     return result;
+  }
+
+  access(name: string): Accessor {
+    try {
+      return this.field(name as keyof M);
+    } catch {
+      // XXX catching any error isn't the prettiest way to do this..
+      return this.repeatingForm(name as keyof M);
+    }
+  }
+
+  accessBySteps(steps: string[]): Accessor {
+    const [first, ...rest] = steps;
+    const accessor = this.access(first);
+    if (rest.length === 0) {
+      return accessor;
+    }
+    return accessor.accessBySteps(rest);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
@@ -336,6 +356,10 @@ export class FieldAccessor<M, R, V> {
       help: error
     };
   }
+
+  accessBySteps(steps: string[]): Accessor {
+    throw new Error("Cannot step through field accessor");
+  }
 }
 
 export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
@@ -393,6 +417,16 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
       result.push(...accessor.flatAccessors);
     });
     return result;
+  }
+
+  accessBySteps(steps: string[]): Accessor {
+    const [first, ...rest] = steps;
+    const number = parseInt(first, 10);
+    if (isNaN(number)) {
+      throw new Error("Expected index of repeating form");
+    }
+    const accessor = this.index(number);
+    return accessor.accessBySteps(rest);
   }
 
   @computed
@@ -455,6 +489,19 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
 
   async validate(): Promise<boolean> {
     return this.formAccessor.validate();
+  }
+
+  access(name: string): Accessor {
+    return this.formAccessor.access(name);
+  }
+
+  accessBySteps(steps: string[]): Accessor {
+    const [first, ...rest] = steps;
+    const accessor = this.access(first);
+    if (rest.length === 0) {
+      return accessor;
+    }
+    return accessor.accessBySteps(steps);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {

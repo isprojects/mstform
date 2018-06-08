@@ -24,11 +24,11 @@ test("a simple form", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
-  await field.handleChange("BAR");
+  await field.setRaw("BAR");
   expect(field.raw).toEqual("BAR");
   expect(field.error).toEqual("Wrong");
   expect(field.value).toEqual("FOO");
-  await field.handleChange("correct");
+  await field.setRaw("correct");
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("correct");
 
@@ -1116,11 +1116,10 @@ test("setting value on model will update form", async () => {
   o.update("BAR");
   expect(field.raw).toEqual("BAR");
 
-  // as soon as someone starts typing however, the raw is not updated
+  // the raw is also immediately updated
   field.setRaw("QUX");
   o.update("BACK");
-  expect(field.raw).toEqual("QUX");
-  // TODO: provide a way to clear raw so that updating works?
+  expect(field.raw).toEqual("BACK");
 });
 
 test("no validation before save", async () => {

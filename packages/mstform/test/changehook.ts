@@ -2,6 +2,11 @@ import { configure, IReactionDisposer } from "mobx";
 import { getSnapshot, types } from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
+// "strict" leads to trouble during initialization. we may want to lift this
+// restriction in ispnext in the future as we use MST now, which has its
+// own mechanism
+configure({ enforceActions: true });
+
 test("changehook", async () => {
   const M = types
     .model("M", {
@@ -64,4 +69,44 @@ test("changehook", async () => {
   expect(touched.length).toEqual(prevLength);
   expect(b.raw).toEqual("23");
   expect(b.value).toEqual(23);
+});
+
+test("change hook with raw value", async () => {
+  const M = types
+    .model("M", {
+      c: types.number,
+      b: types.number
+    })
+    .actions(self => ({
+      setB(value: number) {
+        self.b = value;
+      }
+    }));
+
+  const touched: boolean[] = [];
+
+  const form = new Form(M, {
+    c: new Field(converters.number, {
+      change: (node, value) => {
+        touched.push(true);
+        node.setB(value);
+      }
+    }),
+    b: new Field(converters.number)
+  });
+
+  const o = M.create({ c: 1, b: 2 });
+
+  const state = form.state(o);
+  const c = state.field("c");
+  const b = state.field("b");
+
+  // first we modify the raw value of b
+  await b.setRaw("17");
+
+  // we set then set c to 4 explicitly
+  await c.setRaw("4");
+  // the raw should also be changed
+  expect(b.raw).toEqual("4");
+  expect(b.value).toEqual(4);
 });

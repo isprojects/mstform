@@ -83,6 +83,8 @@ export class FormState<M, D extends FormDefinition<M>>
         this.removePath(patch.path);
       } else if (patch.op === "add") {
         this.addPath(patch.path);
+      } else if (patch.op === "replace") {
+        this.setRawFromValue(patch.path, patch.value);
       }
     });
     this.formAccessor = new FormAccessor(this, this.form.definition, node, "");
@@ -142,6 +144,17 @@ export class FormState<M, D extends FormDefinition<M>>
       this.setSaveStatus("after");
     }
     this.raw.set(path, value);
+  }
+
+  @action
+  setRawFromValue(path: string, value: any) {
+    const fieldAccessor = this.accessByPath(path);
+    if (!(fieldAccessor instanceof FieldAccessor)) {
+      // if this is any other accessor, we cannot re-render raw as
+      // there is no raw
+      return;
+    }
+    this.setRaw(path, fieldAccessor.field.render(value));
   }
 
   @action
@@ -269,6 +282,19 @@ export class FormState<M, D extends FormDefinition<M>>
   @computed
   get flatAccessors(): Accessor[] {
     return this.formAccessor.flatAccessors;
+  }
+
+  accessByPath(path: string): Accessor {
+    const steps = pathToSteps(path);
+    return this.accessBySteps(steps);
+  }
+
+  accessBySteps(steps: string[]): Accessor {
+    return this.formAccessor.accessBySteps(steps);
+  }
+
+  access<K extends keyof M>(name: K): Accessor {
+    return this.formAccessor.access(name);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
