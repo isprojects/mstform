@@ -86,7 +86,7 @@ export class FormState<M, D extends FormDefinition<M>>
       } else if (patch.op === "add") {
         this.addPath(patch.path);
       } else if (patch.op === "replace") {
-        this.setRawFromValue(patch.path, patch.value);
+        this.setRawFromValue(patch.path);
       }
     });
     this.formAccessor = new FormAccessor(this, this.form.definition, node, "");
@@ -149,7 +149,7 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   @action
-  setRawFromValue(path: string, value: any) {
+  setRawFromValue(path: string) {
     if (this.noRawUpdate) {
       return;
     }
@@ -162,6 +162,7 @@ export class FormState<M, D extends FormDefinition<M>>
       // as there is no raw
       return;
     }
+    const value = fieldAccessor.value;
     // we don't use setRaw on the field but directly re-rerender
     this.setRaw(path, fieldAccessor.field.render(value));
     // trigger validation

@@ -1794,3 +1794,42 @@ test("raw update and errors", async () => {
   expect(field.raw).toEqual("21");
   expect(field.error).toEqual("Wrong");
 });
+
+test("raw update and references", async () => {
+  const N = types.model("N", { id: types.identifier(), bar: types.number });
+
+  const M = types
+    .model("M", {
+      foo: types.maybe(types.reference(N))
+    })
+    .actions(self => ({
+      update(value: typeof N.Type) {
+        self.foo = value;
+      }
+    }));
+
+  const Root = types.model({
+    rs: types.array(N),
+    m: M
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.object)
+  });
+
+  const r = Root.create({
+    rs: [{ id: "a", bar: 1 }, { id: "b", bar: 2 }],
+    m: { foo: null }
+  });
+  r.m.update(r.rs[0]);
+
+  const state = form.state(r.m);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual(r.rs[0]);
+  r.m.update(r.rs[1]);
+
+  await resolved();
+
+  expect(field.raw).toEqual(r.rs[1]);
+});
