@@ -50,7 +50,7 @@ export interface IFormAccessor<M, D extends FormDefinition<M>> {
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K>;
 
-  access(name: string): Accessor;
+  access(name: string): Accessor | undefined;
 
   accessors: Accessor[];
 
@@ -101,19 +101,26 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     return result;
   }
 
-  access(name: string): Accessor {
+  access(name: string): Accessor | undefined {
+    // XXX catching errors isn't ideal
     try {
       return this.field(name as keyof M);
     } catch {
-      // XXX catching any error isn't the prettiest way to do this..
-      return this.repeatingForm(name as keyof M);
+      try {
+        return this.repeatingForm(name as keyof M);
+      } catch {
+        return undefined;
+      }
     }
   }
 
-  accessBySteps(steps: string[]): Accessor {
+  accessBySteps(steps: string[]): Accessor | undefined {
     const [first, ...rest] = steps;
     const accessor = this.access(first);
     if (rest.length === 0) {
+      return accessor;
+    }
+    if (accessor === undefined) {
       return accessor;
     }
     return accessor.accessBySteps(rest);
@@ -419,7 +426,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     return result;
   }
 
-  accessBySteps(steps: string[]): Accessor {
+  accessBySteps(steps: string[]): Accessor | undefined {
     const [first, ...rest] = steps;
     const number = parseInt(first, 10);
     if (isNaN(number)) {
@@ -491,15 +498,18 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
     return this.formAccessor.validate();
   }
 
-  access(name: string): Accessor {
+  access(name: string): Accessor | undefined {
     return this.formAccessor.access(name);
   }
 
-  accessBySteps(steps: string[]): Accessor {
+  accessBySteps(steps: string[]): Accessor | undefined {
     const [first, ...rest] = steps;
     const accessor = this.access(first);
     if (rest.length === 0) {
       return accessor;
+    }
+    if (accessor === undefined) {
+      return undefined;
     }
     return accessor.accessBySteps(steps);
   }

@@ -154,9 +154,12 @@ export class FormState<M, D extends FormDefinition<M>>
       return;
     }
     const fieldAccessor = this.accessByPath(path);
-    if (!(fieldAccessor instanceof FieldAccessor)) {
-      // if this is any other accessor, we cannot re-render raw as
-      // there is no raw
+    if (
+      fieldAccessor === undefined ||
+      !(fieldAccessor instanceof FieldAccessor)
+    ) {
+      // if this is any other accessor or undefined, we cannot re-render
+      // as there is no raw
       return;
     }
     // we don't use setRaw on the field but directly re-rerender
@@ -299,16 +302,16 @@ export class FormState<M, D extends FormDefinition<M>>
     return this.formAccessor.flatAccessors;
   }
 
-  accessByPath(path: string): Accessor {
+  accessByPath(path: string): Accessor | undefined {
     const steps = pathToSteps(path);
     return this.accessBySteps(steps);
   }
 
-  accessBySteps(steps: string[]): Accessor {
+  accessBySteps(steps: string[]): Accessor | undefined {
     return this.formAccessor.accessBySteps(steps);
   }
 
-  access<K extends keyof M>(name: K): Accessor {
+  access<K extends keyof M>(name: K): Accessor | undefined {
     return this.formAccessor.access(name);
   }
 
