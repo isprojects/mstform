@@ -154,6 +154,7 @@ export class FormState<M, D extends FormDefinition<M>>
       // there is no raw
       return;
     }
+    // we don't use setRaw on the field but directly re-rerender
     this.setRaw(path, fieldAccessor.field.render(value));
   }
 
