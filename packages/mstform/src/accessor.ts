@@ -131,7 +131,13 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     if (!(field instanceof Field)) {
       throw new Error("Not accessing a Field instance");
     }
-    return new FieldAccessor(this.state, field, this.node, this.path, name);
+    return new FieldAccessor(
+      this.state,
+      field,
+      this.node,
+      this.path,
+      name as string
+    );
   }
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
@@ -148,7 +154,7 @@ export class FormAccessor<M, D extends FormDefinition<M>>
       repeatingForm,
       nodes,
       this.path,
-      name
+      name as string
     );
   }
 

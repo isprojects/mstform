@@ -312,7 +312,7 @@ export class FormState<M, D extends FormDefinition<M>>
     return this.formAccessor.accessBySteps(steps);
   }
 
-  access<K extends keyof M>(name: K): Accessor | undefined {
+  access(name: string): Accessor | undefined {
     return this.formAccessor.access(name);
   }
 
