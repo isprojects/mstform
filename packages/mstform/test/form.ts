@@ -1862,11 +1862,19 @@ test("raw update and add form", async () => {
   o.update(0);
   await resolved();
 
+  expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
+
+  // updating the value to a different value will have effect on raw
+  o.update(1);
+  await resolved();
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("1");
 
   // we can change raw directly
   await field.setRaw("20");
   expect(field.raw).toEqual("20");
+  expect(field.addMode).toBeFalsy();
 
   // even while in add mode, an update to the raw should be an update`
   o.update(21);

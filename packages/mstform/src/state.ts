@@ -162,8 +162,11 @@ export class FormState<M, D extends FormDefinition<M>>
       // as there is no raw
       return;
     }
-    const value = fieldAccessor.value;
+    // get underlying value; we can't get it from
+    // fieldAccessor as it might be in addMode
+    const value = this.getValue(path);
     // we don't use setRaw on the field but directly re-rerender
+    // this causes any addMode for this field to be disabled
     this.setRaw(path, fieldAccessor.field.render(value));
     // trigger validation
     fieldAccessor.validate();
