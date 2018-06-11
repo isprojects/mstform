@@ -197,6 +197,7 @@ export class FormState<M, D extends FormDefinition<M>>
         value();
       }
     );
+    this.addModePaths.set(path, true);
   }
 
   @action
@@ -206,6 +207,7 @@ export class FormState<M, D extends FormDefinition<M>>
     this.validating = addPath(this.validating, path);
     this.addModePaths = addPath(this.addModePaths, path);
     this.derivedDisposers = addPath(this.derivedDisposers, path);
+    this.addModePaths.set(path, true);
   }
 
   async validate(): Promise<boolean> {
