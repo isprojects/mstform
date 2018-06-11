@@ -1833,3 +1833,44 @@ test("raw update and references", async () => {
 
   expect(field.raw).toEqual(r.rs[1]);
 });
+
+test("raw update and add form", async () => {
+  // could immediately update the raw to 0.2, which isn't desired
+  const M = types
+    .model("M", {
+      foo: types.number
+    })
+    .actions(self => ({
+      update(value: number) {
+        self.foo = value;
+      }
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+
+  // updating a value to the same value shouldn't have an effect
+  // on raw
+  o.update(0);
+  await resolved();
+
+  expect(field.raw).toEqual("");
+
+  // we can change raw directly
+  await field.setRaw("20");
+  expect(field.raw).toEqual("20");
+
+  // even while in add mode, an update to the raw should be an update`
+  o.update(21);
+  await resolved();
+
+  expect(field.raw).toEqual("21");
+});
