@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { getSnapshot, types } from "mobx-state-tree";
+import { getSnapshot, types, applySnapshot, onPatch } from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
 // "strict" leads to trouble during initialization. we may want to lift this
@@ -1881,4 +1881,87 @@ test("raw update and add form", async () => {
   await resolved();
 
   expect(field.raw).toEqual("21");
+});
+
+test("raw update and limited amount of patches", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "first" });
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  const patches: any = [];
+  onPatch(o, patch => {
+    patches.push(patch);
+  });
+
+  applySnapshot(o, { foo: "second" });
+  await resolved();
+
+  expect(patches).toEqual([
+    {
+      op: "replace",
+      path: "/foo",
+      value: "second"
+    }
+  ]);
+
+  applySnapshot(o, { foo: "second" });
+
+  // no patch detected as no value changed
+  expect(patches).toEqual([
+    {
+      op: "replace",
+      path: "/foo",
+      value: "second"
+    }
+  ]);
+});
+
+test("raw update and multiple accessors", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "first" });
+  const state = form.state(o);
+  const field = state.field("foo");
+  const field2 = state.field("foo");
+
+  const patches: any = [];
+  onPatch(o, patch => {
+    patches.push(patch);
+  });
+
+  applySnapshot(o, { foo: "second" });
+  await resolved();
+
+  expect(patches).toEqual([
+    {
+      op: "replace",
+      path: "/foo",
+      value: "second"
+    }
+  ]);
+
+  applySnapshot(o, { foo: "second" });
+
+  // no patch detected as no value changed
+  expect(patches).toEqual([
+    {
+      op: "replace",
+      path: "/foo",
+      value: "second"
+    }
+  ]);
 });
