@@ -2,7 +2,7 @@ import { IObservableArray } from "mobx";
 import { IModelType } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FormState, FormStateOptions } from "./state";
-import { FieldOptions, RawGetter, Validator, Derived, Change } from "./types";
+import { Normalizer, normalizers } from "./normalizer";
 import { identity } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
@@ -16,6 +16,37 @@ export type FormDefinitionType<T> = T extends RepeatingForm<any, infer D>
 export type FormDefinition<M> = {
   [K in keyof M]?: Field<any, M[K]> | RepeatingForm<ArrayEntryType<M[K]>, any>
 };
+
+export type ValidationResponse = string | null | undefined | false;
+
+export interface Validator<V> {
+  (value: V): ValidationResponse | Promise<ValidationResponse>;
+}
+
+export interface Derived<V> {
+  (node: any): V;
+}
+
+export interface Change<V> {
+  (node: any, value: V): void;
+}
+
+export interface RawGetter<R> {
+  (...args: any[]): R;
+}
+
+export interface FieldOptions<R, V> {
+  getRaw?(...args: any[]): R;
+  rawValidators?: Validator<R>[];
+  validators?: Validator<V>[];
+  conversionError?: string;
+  requiredError?: string;
+  required?: boolean;
+  fromEvent?: boolean;
+  derived?: Derived<V>;
+  change?: Change<V>;
+  normalizer?: Normalizer;
+}
 
 export class Form<M, D extends FormDefinition<M>> {
   constructor(public model: IModelType<any, M>, public definition: D) {}
@@ -48,6 +79,7 @@ export class Field<R, V> {
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
   changeFunc?: Change<V>;
+  normalizer: Normalizer;
 
   constructor(
     public converter: IConverter<R, V>,
@@ -60,6 +92,7 @@ export class Field<R, V> {
       this.requiredError = "Required";
       this.required = false;
       this.getRaw = identity;
+      this.normalizer = normalizers.object;
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
@@ -78,6 +111,7 @@ export class Field<R, V> {
       }
       this.derivedFunc = options.derived;
       this.changeFunc = options.change;
+      this.normalizer = options.normalizer || normalizers.object;
     }
   }
 

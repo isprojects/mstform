@@ -286,9 +286,9 @@ There are three normalizers built-in:
 - `normalizers.object` - `value` represents some object and `onChange` gets a
   new object as an argument.
 
-By default, `objectNormalizer` is used. If you use the `string` converter or a
-derivative however, by default the `valueNormalizer` is used, and if you use
-the `boolean` converter by default the `checkedNormalizer` is used.
+By default, `normalizers.object` is used. If you use the `string` converter or a
+derivative however, by default `normalizers.value` is used, and if you use
+the `boolean` converter by default the `normalizers.checked` is used.
 
 They can always be overridden in the field configuration. For example:
 
@@ -313,8 +313,10 @@ const form = new Form(M, {
 ```
 
 For backward compatibility with earlier versions of mstform, we also support
-`fromEvent` in the field options. `fromEvent` indicates we want to pull the raw
-value to validate and convert from the `event.target.value`.
+`fromEvent` and `getRaw` in the field options. `fromEvent` is a flag that
+indicates we want to pull the raw value to validate and convert from the
+`event.target.value`. `getRaw` is a function that given the arguments to
+`onChange` turns them into the updated raw value.
 
 ## Add Mode
 
