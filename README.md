@@ -5,26 +5,23 @@ mstform is a form library written for
 [React](https://reactjs.org/). It manages form state for you and lets you
 define validation rules. It understands about repeating sub-forms as well.
 
-It doesn't put any requirements on what your widgets look like. It works with
-any React [controlled components](https://reactjs.org/docs/forms.html) that
-define a `value` and a `onChange` prop.
+It doesn't put any requirements on your widgets. It works with any React
+[controlled component](https://reactjs.org/docs/forms.html).
 
 ## Features
 
 - It knows about raw input (the value you type) and the converted input (the
   value you want). You may type a string but want a number, for instance.
-- It normalizes input components so it can generate just right right props for
-  it.
-- It manages both raw input as well as the converted values for you.
+- It normalizes input components so it can generate the right props for it --
+  whether it be a input type string, type checked or a custom component that
+  works in terms of objects - mstform has you covered.
 - Integrates deeply with a mobx-state-tree model. You give it a model instance
   and it renders its contents. When you are ready to submit the form, you have
   a mobx-state-tree model again. You can modify the mobx-state-tree instance in
   code as well and the form is automatically updated.
-- Provides a range of standard converters so you don't have to write them
-  yourself.
-- It knows the types of both raw and validated values. If you use vscode your
-  editor tells you if you do something wrong. This works even in
-  plain Javascript if you enable `ts-check`.
+- It knows about types. If you use vscode for instance, your editor tells you
+  if you do something wrong. This works even in plain Javascript if you enable
+  `ts-check`.
 
 ## Philosophy
 
