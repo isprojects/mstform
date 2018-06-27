@@ -13,10 +13,13 @@ define a `value` and a `onChange` prop.
 
 - It knows about raw input (the value you type) and the converted input (the
   value you want). You may type a string but want a number, for instance.
+- It normalizes input components so it can generate just right right props for
+  it.
 - It manages both raw input as well as the converted values for you.
-- Integrates deeply with a mobx-state-tree model. You give it a model
-  instance and it renders its contents. When you are ready to submit the
-  form, you have a mobx-state-tree model again.
+- Integrates deeply with a mobx-state-tree model. You give it a model instance
+  and it renders its contents. When you are ready to submit the form, you have
+  a mobx-state-tree model again. You can modify the mobx-state-tree instance in
+  code as well and the form is automatically updated.
 - Provides a range of standard converters so you don't have to write them
   yourself.
 - It knows the types of both raw and validated values. If you use vscode your
