@@ -65,3 +65,29 @@ test("checked normalizer", async () => {
   await field.inputProps.onChange({ target: { checked: false } });
   expect(field.raw).toEqual(false);
 });
+
+test("custom normalizer", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.object, {
+      normalizer: accessor => {
+        return {
+          weird: accessor.raw,
+          onChange: accessor.handleChange
+        };
+      }
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.inputProps.weird).toEqual("FOO");
+  await field.inputProps.onChange("BAR");
+  expect(field.raw).toEqual("BAR");
+});
