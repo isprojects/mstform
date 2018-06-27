@@ -56,12 +56,12 @@ test("a simple form with array field", async () => {
 
   expect(field.raw).toEqual(["FOO"]);
   expect(Array.isArray(field.raw)).toBeTruthy();
-  await field.handleChange(["BAR", "QUX"]);
+  await field.setRaw(["BAR", "QUX"]);
   expect(field.raw).toEqual(["BAR", "QUX"]);
   expect(Array.isArray(field.raw)).toBeTruthy();
   expect(field.error).toEqual("Wrong");
   expect(field.value).toEqual(["FOO"]);
-  await field.handleChange(["correct"]);
+  await field.setRaw(["correct"]);
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual(["correct"]);
 });
@@ -82,11 +82,11 @@ test("number input", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("3");
-  await field.handleChange("4");
+  await field.setRaw("4");
   expect(field.raw).toEqual("4");
   expect(field.value).toEqual(4);
   expect(field.error).toBeUndefined();
-  await field.handleChange("not a number");
+  await field.setRaw("not a number");
   expect(field.value).toEqual(4);
   expect(field.error).toEqual("Could not convert");
 });
@@ -107,11 +107,11 @@ test("conversion failure with message", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("3");
-  await field.handleChange("4");
+  await field.setRaw("4");
   expect(field.raw).toEqual("4");
   expect(field.value).toEqual(4);
   expect(field.error).toBeUndefined();
-  await field.handleChange("not a number");
+  await field.setRaw("not a number");
   expect(field.value).toEqual(4);
   expect(field.error).toEqual("Not a number");
 });
@@ -140,7 +140,7 @@ test("repeating form", async () => {
   const field = oneForm.field("bar");
 
   expect(field.raw).toEqual("BAR");
-  await field.handleChange("QUX");
+  await field.setRaw("QUX");
   expect(field.raw).toEqual("QUX");
   expect(field.value).toEqual("QUX");
 
@@ -171,10 +171,10 @@ test("repeating form with conversion", async () => {
   const field = oneForm.field("bar");
 
   expect(field.raw).toEqual("3");
-  await field.handleChange("4");
+  await field.setRaw("4");
   expect(field.raw).toEqual("4");
   expect(field.value).toEqual(4);
-  await field.handleChange("not a number");
+  await field.setRaw("not a number");
 });
 
 test("repeating form push", async () => {
@@ -410,7 +410,7 @@ test("async validation in converter", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
-  const promise = field.handleChange("correct");
+  const promise = field.setRaw("correct");
   expect(field.raw).toEqual("correct");
   // value hasn't changed yet as promise hasn't resolved yet
   expect(field.value).toEqual("FOO");
@@ -421,7 +421,7 @@ test("async validation in converter", async () => {
   expect(field.raw).toEqual("correct");
   expect(field.error).toBeUndefined();
   // now put in a wrong value
-  const promise2 = field.handleChange("wrong");
+  const promise2 = field.setRaw("wrong");
   expect(field.raw).toEqual("wrong");
   // value hasn't changed yet as promise hasn't resolved yet
   expect(field.value).toEqual("correct");
@@ -460,7 +460,7 @@ test("async validation in validator", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
-  const promise = field.handleChange("correct");
+  const promise = field.setRaw("correct");
   expect(field.raw).toEqual("correct");
   // value hasn't changed yet as promise hasn't resolved yet
   expect(field.value).toEqual("FOO");
@@ -475,7 +475,7 @@ test("async validation in validator", async () => {
   expect(field.raw).toEqual("correct");
   expect(field.error).toBeUndefined();
   // now put in a wrong value
-  const promise2 = field.handleChange("wrong");
+  const promise2 = field.setRaw("wrong");
   expect(field.raw).toEqual("wrong");
   // value hasn't changed yet as promise hasn't resolved yet
   expect(field.value).toEqual("correct");
@@ -516,14 +516,14 @@ test("async validation modification", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
-  const promise = field.handleChange("correct");
+  const promise = field.setRaw("correct");
   expect(field.raw).toEqual("correct");
   // value hasn't changed yet as promise hasn't resolved yet
   expect(state.isValidating).toBeTruthy();
   expect(field.value).toEqual("FOO");
   expect(field.error).toBeUndefined();
   // now we change the raw while waiting
-  const promise2 = field.handleChange("incorrect");
+  const promise2 = field.setRaw("incorrect");
   process.nextTick(() => {
     done[0]();
   });
@@ -568,7 +568,7 @@ test("async validation rejects sets error status", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
-  const promise = field.handleChange("correct");
+  const promise = field.setRaw("correct");
   expect(field.isValidating).toBeTruthy();
   process.nextTick(() => {
     done[0]();
@@ -1028,64 +1028,6 @@ test("required with maybe", async () => {
   await field.setRaw("");
   expect(field.error).toEqual("Required");
   expect(field.value).toEqual(3);
-});
-
-test("override getRaw", async () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const form = new Form(M, {
-    foo: new Field(converters.string, {
-      validators: [value => value !== "correct" && "Wrong"],
-      getRaw(event) {
-        return event.target.value;
-      }
-    })
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.state(o);
-
-  const field = state.field("foo");
-
-  expect(field.raw).toEqual("FOO");
-  await field.handleChange({ target: { value: "BAR" } });
-  expect(field.raw).toEqual("BAR");
-  expect(field.error).toEqual("Wrong");
-  expect(field.value).toEqual("FOO");
-  await field.handleChange({ target: { value: "correct" } });
-  expect(field.error).toBeUndefined();
-  expect(field.value).toEqual("correct");
-});
-
-test("getRaw fromEvent", async () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const form = new Form(M, {
-    foo: new Field(converters.string, {
-      validators: [value => value !== "correct" && "Wrong"],
-      fromEvent: true
-    })
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.state(o);
-
-  const field = state.field("foo");
-
-  expect(field.raw).toEqual("FOO");
-  await field.handleChange({ target: { value: "BAR" } });
-  expect(field.raw).toEqual("BAR");
-  expect(field.error).toEqual("Wrong");
-  expect(field.value).toEqual("FOO");
-  await field.handleChange({ target: { value: "correct" } });
-  expect(field.error).toBeUndefined();
-  expect(field.value).toEqual("correct");
 });
 
 test("setting value on model will update form", async () => {

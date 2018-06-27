@@ -2,7 +2,7 @@ import { IObservableArray } from "mobx";
 import { IModelType } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FormState, FormStateOptions } from "./state";
-import { Normalizer, normalizers } from "./normalizer";
+import { Normalizer } from "./normalizer";
 import { identity } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
@@ -92,7 +92,7 @@ export class Field<R, V> {
       this.requiredError = "Required";
       this.required = false;
       this.getRaw = identity;
-      this.normalizer = this.converter.defaultNormalizer;
+      this.normalizer = this.createDefaultNormalizer();
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
@@ -111,8 +111,20 @@ export class Field<R, V> {
       }
       this.derivedFunc = options.derived;
       this.changeFunc = options.change;
-      this.normalizer = options.normalizer || this.converter.defaultNormalizer;
+      this.normalizer = options.normalizer || this.createDefaultNormalizer();
     }
+  }
+
+  createDefaultNormalizer(): Normalizer {
+    if (this.getRaw !== identity) {
+      return accessor => {
+        return {
+          value: accessor.raw,
+          onChange: (...args: any[]) => accessor.setRaw(this.getRaw(...args))
+        };
+      };
+    }
+    return this.converter.defaultNormalizer;
   }
 
   get RawType(): R {

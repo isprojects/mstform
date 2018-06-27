@@ -7,21 +7,21 @@ export interface Normalizer {
 const value: Normalizer = accessor => {
   return {
     value: accessor.raw,
-    onChange: (ev: any) => accessor.handleChange(ev.target.value)
+    onChange: (ev: any) => accessor.setRaw(ev.target.value)
   };
 };
 
 const checked: Normalizer = accessor => {
   return {
     checked: accessor.raw,
-    onChange: (ev: any) => accessor.handleChange(ev.target.checked)
+    onChange: (ev: any) => accessor.setRaw(ev.target.checked)
   };
 };
 
 const object: Normalizer = accessor => {
   return {
     value: accessor.raw,
-    onChange: accessor.handleChange
+    onChange: (value: any) => accessor.setRaw(value)
   };
 };
 

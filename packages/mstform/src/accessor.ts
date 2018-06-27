@@ -343,6 +343,7 @@ export class FieldAccessor<M, R, V> {
     }
   }
 
+  // backward compatibility -- use setRaw instead
   handleChange = async (...args: any[]) => {
     const raw = this.field.getRaw(...args);
     await this.setRaw(raw);

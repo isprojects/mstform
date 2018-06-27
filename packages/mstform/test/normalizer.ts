@@ -73,7 +73,7 @@ test("custom normalizer", async () => {
       normalizer: accessor => {
         return {
           weird: accessor.raw,
-          onChange: accessor.handleChange
+          onChange: (raw: any) => accessor.setRaw(raw)
         };
       }
     })
@@ -186,5 +186,76 @@ test("default object normalizer for maybe converter", async () => {
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
   await field.inputProps.onChange("BAR");
+  expect(field.raw).toEqual("BAR");
+});
+
+// fromEvent backwards compatibility
+test("getRaw fromEvent", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      fromEvent: true
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.inputProps.value).toEqual("FOO");
+  await field.inputProps.onChange({ target: { value: "BAR" } });
+  expect(field.raw).toEqual("BAR");
+});
+
+// handleChange backwards compatibility
+test("getRaw fromEvent", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      fromEvent: true
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.inputProps.value).toEqual("FOO");
+  await field.handleChange({ target: { value: "BAR" } });
+  expect(field.raw).toEqual("BAR");
+});
+
+// getRaw backwards compatibility
+test("override getRaw", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      getRaw(event) {
+        return event.target.weird;
+      }
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.inputProps.value).toEqual("FOO");
+  await field.inputProps.onChange({ target: { weird: "BAR" } });
   expect(field.raw).toEqual("BAR");
 });
