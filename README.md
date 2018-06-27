@@ -71,8 +71,7 @@ const M = types.model("M", {
 // we expose this field in our form
 const form = new Form(M, {
   foo: new Field(converters.string, {
-    validators: [value => (value !== "correct" ? "Wrong" : false)],
-    fromEvent: true
+    validators: [value => (value !== "correct" ? "Wrong" : false)]
   })
 });
 
@@ -124,12 +123,6 @@ The second argument are options for the field. You can provide additional
 validator functions in a list. A validation function should return a string
 in case of a validation error, or return `false`, `null` or `undefined`
 if there is no error.
-
-`fromEvent` indicates we want to pull the raw value to validate and convert
-from the `event` object that's emitted by the `onChange` of the input. This is
-the case for basic `<input>` elements. Many higher-level input elements don't
-send an event but instead pass the value directly as the first argument to the
-`onChange` handler. The default behavior of mstform is to assume this.
 
 We define a special `InlineError` component that can display error text. Your
 UI component library have a nicer component that helps to display errors --
@@ -262,6 +255,63 @@ including `null`. Prefer `converters.model` if you can. Warning: the default
 raw value is `null` and this with basic data types (string, boolean, number
 and such) it won't work properly as they don't accept "null". Use
 more specific converters instead.
+
+## Normalization
+
+Input components receive subtly different props:
+
+- `input` type `string` has a `value` and an `onChange` with an event. It gets
+  the updated value from `event.target.value`.
+
+- `input` type `checkbox` has a `checked` and an `onChange` that receives
+  `event.target.checked`.
+
+- Many other widgets are higher level. A date picker widget for instance
+  could have a JS `Date` as `value` and `onChange` directly returns a new
+  `Date` instance.
+
+MSTForm offers a way to configure a normalizer for a field so that `inputProps`
+always delivers the right information.
+
+There are three normalizers built-in:
+
+- `normalizers.value` - `value` and `onChange` processes `event.target.value`.
+
+- `normalizers.checked` - `checked` and `onChange` processes
+  `event.target.checked`.
+
+- `normalizers.object` - `value` represents some object and `onChange` gets a
+  new object as an argument.
+
+By default, `objectNormalizer` is used. If you use the `string` converter or a
+derivative however, by default the `valueNormalizer` is used, and if you use
+the `boolean` converter by default the `checkedNormalizer` is used.
+
+They can always be overridden in the field configuration. For example:
+
+```javascript
+import { observer } from "mobx-react";
+import { types } from "mobx-state-tree";
+import { Field, Form, FormState, converters, normalizers } from "mstform";
+import * as React from "react";
+import { Component } from "react";
+
+// we have a MST model with a string field foo
+const M = types.model("M", {
+  foo: types.string
+});
+
+// we expose this field in our form
+const form = new Form(M, {
+  foo: new Field(converters.string, {
+    normalizer: normalizers.object
+  })
+});
+```
+
+For backward compatibility with earlier versions of mstform, we also support
+`fromEvent` in the field options. `fromEvent` indicates we want to pull the raw
+value to validate and convert from the `event.target.value`.
 
 ## Add Mode
 
@@ -531,5 +581,3 @@ The hook receives the event and the focused field accessor. You can use the
 accessor to get the field name (`accessor.name`), value (`accessor.value`),
 etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus` handler, so if you use that with the field it is there automatically.
-For fields where you cannot use `inputProps` directly you need to bind
-``inputProps.onFocus` manually.
