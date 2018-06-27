@@ -348,13 +348,24 @@ export class FieldAccessor<M, R, V> {
     await this.setRaw(raw);
   };
 
+  handleFocus = (event: any) => {
+    if (this.state.focusFunc == null) {
+      return;
+    }
+    this.state.focusFunc(event, this);
+  };
+
   @computed
   get inputProps() {
-    return {
+    const result: any = {
       disabled: this.disabled,
       value: this.raw,
       onChange: this.handleChange
     };
+    if (this.state.focusFunc != null) {
+      result.onFocus = this.handleFocus;
+    }
+    return result;
   }
 
   @computed
