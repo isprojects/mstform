@@ -92,7 +92,7 @@ export class Field<R, V> {
       this.requiredError = "Required";
       this.required = false;
       this.getRaw = identity;
-      this.normalizer = normalizers.object;
+      this.normalizer = this.converter.defaultNormalizer;
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
@@ -111,7 +111,7 @@ export class Field<R, V> {
       }
       this.derivedFunc = options.derived;
       this.changeFunc = options.change;
-      this.normalizer = options.normalizer || normalizers.object;
+      this.normalizer = options.normalizer || this.converter.defaultNormalizer;
     }
   }
 
