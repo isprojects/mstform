@@ -8,6 +8,11 @@
 - Implement a new `focus` hook to automatically fire whenever a user focuses on
   a field.
 
+- Make `inputProps` do the right thing. You can define a `controlled` function
+  that takes the accessor and returns the controlled input props. We supply a
+  few ourselves too, and make sensible defaults for various converters. This
+  makes `fromEvent` and `getRaw` deprecated.
+
 # 0.10.2
 
 - Bugfix. Make raw update work with references.
