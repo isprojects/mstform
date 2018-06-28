@@ -588,13 +588,17 @@ determine whether a repeating form is disabled from add and remove using
 `isRepeatingFormDisabled`. It's up to you to use this information to render the
 add and remove buttons with the disabled status, however.
 
-`isDisabled` makes the `disabled` prop `true` in `accessor.inputProps`.
+`isDisabled` makes the `disabled` prop `true` in `accessor.inputProps`. There
+is no such behavior for `hidden`; use `accessor.hidden` in your form rendering
+code to determine whether a field wants to be hidden.
 
 ## Extra validation
 
-Sometimes the information needed to validate the form cannot be known at form
-definition time, but only when the form is being rendered. mstform has a hook
-that lets you define additional validation behavior on the form level.
+Sometimes the information needed to validate the form cannot be known in
+advance at form definition time. Instead, the form can be displayed multiple
+times in the application, each time with different validation requirements.
+mstform has a hook that lets you define additional validation behavior on the
+form level.
 
 ```javascript
 const state = form.state(o, {
@@ -606,16 +610,16 @@ const state = form.state(o, {
 });
 ```
 
-Note that you have to use the second `value` argument to get the value,
-as `accessor.value` still has the old value.
+Note that you have to use the second `value` argument to get the value to use
+to validate, as `accessor.value` still has the old value.
 
 ## Derived values
 
-For some fields the value depends on another one. This can be
-another field, but typically it's the result of some calculation done
-in a MST view. This value is maintained but can be overridden by the
-user. But if the input to the calculation changes, the value is
-updated again.
+The value of some fields depends on the value of other fields; you can express
+this relationship in a MST view. In some forms you want to automatically
+calculate such a derived value but still allow the user to override it
+explicitly. Then if the input to the calculation changes, the value is updated
+again.
 
 You express such derived values with mstform:
 
@@ -641,23 +645,22 @@ const form = new Form(M, {
 });
 ```
 
-`calculated` starts out with the value based on the sum of `a` and `b`.
-The user can modify it, and the value changes. When the user instead
-modifies `a` or `b`, the derived value changes again to the result
-of the `derived` function.
+`calculated` starts out with the value based on the sum of `a` and `b`. The
+user can modify `calculated` directly. When the user modifies `a` or `b`, the
+derived value changes again to the result of the `derived` function.
 
 When you access a repeating form, the node passed into the derived function is
 the sub-node that the repeating form represents, so the derived value is
 determined within that context.
 
-Note that derived calculations only take place if you actually access the field
+Note that derived calculations occur if you actually access the field
 to use it in a form; it doesn't work for fields that are never used.
 
 ## Change hook
 
-When you change one field it's sometimes useful to do some side effect as a
-result, for instance to change the value of another field. You can do so
-with `change` hook:
+When you change one field it's sometimes useful to have some side effect, for
+instance to change the value of another field. You can do so with the `change`
+hook:
 
 ```javascript
 const M = types
