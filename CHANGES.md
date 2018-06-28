@@ -1,3 +1,29 @@
+# 0.11
+
+- Fix a bug with add mode.
+
+- The onPatch handler can handle all logic safely, so that
+  updating arrays directly in the underlying instance also works.
+
+- Implement a new `focus` hook to automatically fire whenever a user focuses on
+  a field.
+
+# 0.10.2
+
+- Bugfix. Make raw update work with references.
+
+# 0.10.1
+
+- Bugfix. Safeguard against rendering non-existing fields.
+
+# 0.10
+
+- Update the raw value when you change the underlying object.
+
+# 0.9
+
+- Implement change hooks
+
 # 0.8.1
 
 - Change behavior of derived fields: they are not immediately calculated when
