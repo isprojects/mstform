@@ -5,6 +5,9 @@
 - The onPatch handler can handle all logic safely, so that
   updating arrays directly in the underlying instance also works.
 
+- Implement a new `focus` hook to automatically fire whenever a user focuses on
+  a field.
+
 # 0.10.2
 
 - Bugfix. Make raw update work with references.
