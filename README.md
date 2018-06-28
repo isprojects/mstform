@@ -413,10 +413,11 @@ you use the `.push` and `.insert` methods on the repeating form accessor, or if
 you manipulate the underlying model directly. Existing records are shown in
 edit mode, unless the whole form is in add mode.
 
-## Saving and server errors
+## Saving
 
 When we create the form state, we can pass it some options. One is a function
-that actually saves the content in the form:
+that explains how to save the MST instance, for instance by sending JSON
+to a backend:
 
 ```javascript
 this.state = form.state(o, {
@@ -428,13 +429,49 @@ this.state = form.state(o, {
 });
 ```
 
-Once you've hooked up your own save functionality, you should call
-`state.save()` when you do a form submit. This does the following:
+The save function should return `null` if the save succeeded and there are no
+server validation errors. It can also returns a special `errors` object in case
+saving failed -- we discuss this in a bit.
+
+Then when you implement a form submit button, you should call `state.save()`:
+
+```javascript
+@observer
+export class MyForm extends Component {
+  constructor(props) {
+    super(props);
+    // we create a form state for this model
+    this.state = form.state(o) { save: async node => { return node.save() }};
+  }
+
+  handleSave = async () => {
+    const success = await this.state.save();
+    if (success) {
+      // success notification
+    } else {
+      // failure notification
+    }
+  }
+
+  render() {
+    // we get the foo field from the form
+    const field = this.state.field("foo");
+    return (
+      <div>
+         ... render the form itself
+         <button onClick={this.handleSave}>Save</button>
+      </div>
+    );
+  }
+}
+```
+
+`state.save()` does the following:
 
 - Makes sure the form is completely valid before it's submitted to the server,
   otherwise displays client-side validation errors.
 
-- Uses your `save` function do to the actual saving.
+- Uses your supplied `save` function do to the actual saving.
 
 - Processes any additional validation errors returned by the server.
 
@@ -446,15 +483,34 @@ it gives you a warning on the console that no actual saving could take place.
 This is handy during development when you haven't wired up your
 backend logic yet.
 
-The last point requires elaboration: when you save form content to some backend
-it may result in additional validation errors that are generated there.
-Sometimes it's easier to detect errors in the backend, and doing server-side
-validation is a good idea from a security perspective anyhow. mstform supports
-displaying those errors.
+### Save errors
 
-The save function either returns `null` if the save succeeded and there are no
-server validation issues, or returns a special `errors` structure that matches
-the structure of the MST node. So, if you have an MST model like this:
+When you save form content to some backend it may result in additional
+validation errors that are generated there. It is easier to detect
+some errors on the backend. It's a good idea to do server-side validation
+in any case, and it can be useful to reuse those errors in the frontend.
+
+As we said above, if your `save` function doesn't return `null` it should
+return a custom object that contains server validation errors.
+
+This can contain a description of the error, for instance:
+
+```javascript
+{
+  myError: "We cannot accept this data";
+}
+```
+
+You can access these errors (so you can render them to the end user):
+
+```javascript
+state.additionalError("myError");
+```
+
+Or you can get a list of all of them with `state.additionalErrors()`.
+
+You can also specify errors for particular fields, by naming the error key the
+same as the name of the field. So, if you have an MST model like this:
 
 ```javascript
 const M = types.model("M", {
@@ -462,15 +518,24 @@ const M = types.model("M", {
 });
 ```
 
-The error structure needs to be:
+And you want to display a specific backend-generated error for `name`, the
+error structure returned by `save()` needs to be:
 
-```
+```javascript
 {
-  name: "Could not be matched in the database"
+  name: "Could not be matched in the database";
 }
 ```
 
-Every `Field` can have an error entry.
+Every `Field` can have an error entry. This also works for repeating forms; if
+you have a repeating structure `entries` and there is an error in `name` of the
+second entry, the error structure should look like this:
+
+```javascript
+{
+  entries: [{}, { name: "We couldn't handle this" }];
+}
+```
 
 ## Controlling validation messages
 
@@ -486,7 +551,7 @@ this.state = form.state(o, {
 });
 ```
 
-Now inline validation only occurs after you save, not before.
+Now inline validation only occurs after you save the first time, not before.
 
 It's also possible to turn off inline validation altogether:
 
@@ -499,8 +564,9 @@ this.state = form.state(o, {
 });
 ```
 
-Only validation messages generated during the save process (either client-side
-or server side) are displayed now.
+In this case the user only sees updated validation errors once they press the
+button that triggers `state.save()` and no errors are generated when the user
+is filling in the form.
 
 ## Disabled and hidden fields
 
@@ -517,9 +583,12 @@ const state = form.state(o, {
 });
 ```
 
-To implement hidden behavior, pass in `isHidden`. You can also
-determine whether a repeating form is disabled from add and remove using `isRepeatingFormDisabled`. It's up to you to use this information to
-render the add and remove buttons with the disabled status, however.
+To implement hidden behavior, pass in an `isHidden` function. You can also
+determine whether a repeating form is disabled from add and remove using
+`isRepeatingFormDisabled`. It's up to you to use this information to render the
+add and remove buttons with the disabled status, however.
+
+`isDisabled` makes the `disabled` prop `true` in `accessor.inputProps`.
 
 ## Extra validation
 
