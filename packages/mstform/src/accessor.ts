@@ -11,7 +11,7 @@ import {
   ValidationMessage
 } from "./form";
 import { FormState } from "./state";
-import { ValidationResponse } from "./types";
+import { ValidationResponse } from "./form";
 import { equal, unwrap } from "./utils";
 
 export interface FieldAccessorAllows {
@@ -343,6 +343,7 @@ export class FieldAccessor<M, R, V> {
     }
   }
 
+  // backward compatibility -- use setRaw instead
   handleChange = async (...args: any[]) => {
     const raw = this.field.getRaw(...args);
     await this.setRaw(raw);
@@ -357,11 +358,8 @@ export class FieldAccessor<M, R, V> {
 
   @computed
   get inputProps() {
-    const result: any = {
-      disabled: this.disabled,
-      value: this.raw,
-      onChange: this.handleChange
-    };
+    const result: any = this.field.controlled(this);
+    result.disabled = this.disabled;
     if (this.state.focusFunc != null) {
       result.onFocus = this.handleFocus;
     }

@@ -5,53 +5,59 @@ mstform is a form library written for
 [React](https://reactjs.org/). It manages form state for you and lets you
 define validation rules. It understands about repeating sub-forms as well.
 
-It doesn't put any requirements on what your widgets look like. It works with
-any React [controlled components](https://reactjs.org/docs/forms.html) that
-define a `value` and a `onChange` prop.
+It doesn't put any requirements on your widgets. It works with any React
+[controlled component](https://reactjs.org/docs/forms.html).
 
 ## Features
 
 - It knows about raw input (the value you type) and the converted input (the
   value you want). You may type a string but want a number, for instance.
-- It manages both raw input as well as the converted values for you.
-- Integrates deeply with a mobx-state-tree model. You give it a model
-  instance and it renders its contents. When you are ready to submit the
-  form, you have a mobx-state-tree model again.
-- Provides a range of standard converters so you don't have to write them
-  yourself.
-- It knows the types of both raw and validated values. If you use vscode your
-  editor tells you if you do something wrong. This works even in
-  plain Javascript if you enable `ts-check`.
+  mstform converts this automatically.
+- It can drive any React controlled component. It normalizes input components
+  so it can generate the right props for it -- whether it be a input type
+  string, type checked or a custom component that works in terms of objects -
+  mstform has you covered.
+- Integrates deeply with a mobx-state-tree (MST) model. You give it a model
+  instance and it renders its contents. When you are ready to submit the form,
+  you have a mobx-state-tree model again. You can modify the mobx-state-tree
+  instance in code as well and the form is automatically updated.
+- Thanks to MST it's easy to convert form contents to JSON and back again.
+- It knows about types. If you use vscode for instance, your editor tells you
+  if you do something wrong. This works even in plain Javascript if you enable
+  `ts-check`.
 
 ## Philosophy
 
-I've been writing form libraries since 1999. Back then forms were rendered and
-handled entirely on the server. In 2011, before React, I built my first
-client-side form library. I've used quite a few different React-based form
-libraries and rolled also quite a bit of form handling code of my own.
-
-I've learned that form libraries are tricky.
+Form libraries are tricky.
 
 Web forms are an integral part of most web applications. This means that you
 need a lot of flexibility: you want to be able to mix form content with
 non-form content, use whichever React components you like for input (from plain
 HTML `<input>` to fancy UI component libraries), and style it the way you want.
 
-Web forms are also everywhere. That's why we'd like to automate as much
-as possible and write as little form-specific code as possible.
+Web forms are also everywhere. That's why we'd like to automate as much as
+possible and write as little form-specific code as possible.
 
-But those two desires are in conflict with each other. It's tempting for
-instance to start auto-generating forms, but this only works for simple use
-cases. This way a form library that automates too much can be in the way when
-you want to customize it to fit your application's requirements exactly. On the
-other hand if your form library that doesn't do enough means you end up writing
-a lot of custom code.
+But those two desires are in conflict with each other. It's tempting to start
+auto-generating forms. It makes writing forms really easy. Unfortunately many
+forms need special behavior, and it's difficult to capture this in an
+auto-generating form library.
+
+This way a form library that automates too much can be in the way when you want
+to customize it to fit your application's requirements exactly. On the other
+hand if your form library that doesn't do enough means you end up writing a lot
+of custom code.
 
 mstform balances simple usage with flexibility. It doesn't provide any React
 widgets, or in fact any React components at all. It doesn't auto-generate forms
 either. You write your own React components that render the form, and mstform
-automates the management of values and errors. It aims to make the form
-code that you do write look as straightforward as possible.
+automates the management of values and errors. It aims to make the form code
+that you do write look as straightforward as possible.
+
+mstform is also built on a very powerful state management library:
+mobx-state-tree (MST). Both the library and the application programmer can use
+its features to make form construction more easy. As one example, MST makes it
+trivial to serialize form contents to JSON and restore it again.
 
 ## A Simple Example
 
@@ -71,8 +77,7 @@ const M = types.model("M", {
 // we expose this field in our form
 const form = new Form(M, {
   foo: new Field(converters.string, {
-    validators: [value => (value !== "correct" ? "Wrong" : false)],
-    fromEvent: true
+    validators: [value => (value !== "correct" ? "Wrong" : false)]
   })
 });
 
@@ -105,7 +110,7 @@ export class MyForm extends Component {
     const field = this.state.field("foo");
     return (
       <InlineError error={field.error}>
-        <input type="text" value={field.raw} onChange={field.handleChange} />
+        <input type="text" {...field.inputProps} />
       </InlineError>
     );
   }
@@ -114,35 +119,48 @@ export class MyForm extends Component {
 
 ## What's going on in the example?
 
-A form needs to define fields for entries you want to expose in the form. You
-need to provide the first argument, a converter. The converter specifies how to
-turn a raw value as input by a user into a value you want to store in our MST
-model instance. This can do validation itself -- `converters.number` for
-instance makes sure that only numbers are accepted, not other text.
+First we define a MST model `M`, which defines a string property `foo`. Next we
+define a form for that model. We pass the model definition as the first
+argument to the `Form` constructor.
 
-The second argument are options for the field. You can provide additional
-validator functions in a list. A validation function should return a string
-in case of a validation error, or return `false`, `null` or `undefined`
-if there is no error.
+A form needs to define fields for entries you want to expose in the form. Each
+`Field` needs a converter. The converter specifies how to turn a raw value as
+input by a user into a value you want to store in our MST model instance. Here
+we use `converters.string`, a simple string, which is also stored as a string.
+That's not a very fancy converter. A more complex converter would be
+`converters.number`, which converts the input string into a number, and does
+some validation to make sure that only numbers can be entered into the form.
 
-`fromEvent` indicates we want to pull the raw value to validate and convert
-from the `event` object that's emitted by the `onChange` of the input. This is
-the case for basic `<input>` elements. Many higher-level input elements don't
-send an event but instead pass the value directly as the first argument to the
-`onChange` handler. The default behavior of mstform is to assume this.
+The field definition also takes a number of options. The option we specify here
+is a validation function. You can provide additional validator functions in a
+list. If the validation function returns a string, that is the text of the
+validation error and the validation has failed -- the entered value is not
+stored in the underlying model instance. If the validation is successful, the
+function should return `false`, `null` or `undefined`; not returning any value
+is a successful validation.
 
-We define a special `InlineError` component that can display error text. Your
-UI component library have a nicer component that helps to display errors --
-antd for instance has `Form.Item`.
+We define a simple `InlineError` component that can display error text. Your UI
+component library probably has a nicer component that helps to display errors
+-- Ant Design for instance has `Form.Item`.
 
-We then define `MyForm` to display the form. We create the form state
-and store it on `this` in the constructor. Here we get `o` from
-the global scope, but typically the object to edit in the form comes in
-as a prop, and we can access it here.
+We then define a `MyForm` component that actually displays the form. To display
+a form we need to initialize its _form state_. We create the form state with
+`form.state` and store it on `this` in the constructor.
 
-Then in `render` we retrieve the field accessor for the `foo` field.
-This has everything we need: `error` to show the current error, `raw`
-for the raw value, and `handleChange` for an onChange handler.
+The form state maintains form-related state, such as errors to display. It also
+can take state specific configuration (for instance how to save the form), but
+in this case we don't supply any.
+
+The form state needs a MST instance; this is the MST instance that you modify
+with the form. When the user changes the form and it passes validation, the MST
+instance is directly updated.
+
+Here the MST instance is `o` from the global scope. but typically the object to
+edit in the form comes in as a prop, and we can access it here.
+
+Then in `render` we retrieve the field accessor for the `foo` field. This has
+everything we need: `error` to show the current error, and `inputProps` for the
+input component.
 
 I've enabled `ts-check` on top. If you're using vscode you can see
 it reflect the correct types -- it knows raw is a string, for instance. This
@@ -150,7 +168,7 @@ can help to catch errors.
 
 ## RepeatingForm
 
-Often in a form you have a sub-form that repeats itself. The MST type
+Many forms have a sub-form that repeats itself. The MST model
 could look like this:
 
 ```javascript
@@ -164,8 +182,7 @@ const Zoo = types.model("Zoo", {
 });
 ```
 
-Here we want a form that lets you add and remove animals. We can do it
-like this:
+Here we want a form that lets you add and remove animals:
 
 ```javascript
 import { RepeatingForm } from "mstform";
@@ -178,7 +195,7 @@ const form = new Form(Zoo, {
 });
 ```
 
-We can now use it like this in our `render` method:
+We can now use it in our `render` method:
 
 ```javascript
 // this represents all the subforms
@@ -193,10 +210,10 @@ const entries = o.animals.map((animal, index) => {
   return (
     <div>
       <InlineError error={name.error}>
-        <input type="text" value={name.raw} onChange={name.handleChange} />
+        <input type="text" {...name.inputProps} />
       </InlineError>
       <InlineError error={size.error}>
-        <input type="text" value={size.raw} onChange={size.handleChange} />
+        <input type="text" {...name.inputProps} />
       </InlineError>
     </div>
   );
@@ -207,13 +224,17 @@ return <div>{entries}</div>;
 
 ## Supported converters
 
-Converters specify the raw value and the converted value. Sometimes
-these are the same, but often they're now.
+A converter specifies how to convert a raw value as it is entered in the form
+to the converted value as it's stored in the MST instance, and back again. A
+converter also specifies the empty form of the raw value (such as an empty
+string), which is used by add forms. It also specifies which controlled props
+to generate by default for React. Conversion may fail, in which case the
+converter generates a validation error.
 
 ### Converters from raw string value
 
-The input raw value that comes is a string for all of these. The converted
-value may be a string or some other object:
+The input raw value is a string. The converted value may be a string or some
+other object:
 
 - `converters.string`: value is a string.
 
@@ -221,9 +242,9 @@ value may be a string or some other object:
 
 - `converters.integer`: value is an integer.
 
-- `converters.decimal(maxDigits, decimalPlaces)`: value is a string that
-  contains a decimal number with a maximum `maxDigits` before the period and a
-  maximum of `decimalPlaces` after the period.
+- `converters.decimal(maxDigits, decimalPlaces)`: value is a string (not a
+  number) that contains a decimal number with a maximum `maxDigits` before the
+  period and a maximum of `decimalPlaces` after the period.
 
 ### Boolean
 
@@ -232,16 +253,19 @@ default raw value in add forms is `false`.
 
 ### Arrays
 
-`converters.stringArray`: raw value is an array of strings. value is
-an observable array of strings. Note that this is for using arrays
-as a value. When you want the user to be able to add items to the array,
-using `RepeatingForm` instead.
+`converters.stringArray`: raw value is an array of strings. value is an
+observable array of strings. Note that this is for using arrays that are
+treated a value -- a list of which checkboxes are selected, for instance. When
+you want the user to be able to add items to the array, using `RepeatingForm`
+instead.
 
 ### Models
 
-`converters.model(Model)`: does not do any conversion (model instance goes
-in, model instance comes out), but allows you to specify that a MST model
-comes in as a raw value and is the value. Typescript will be happy.
+`converters.model(Model)`: does not do any conversion (model instance goes in,
+model instance comes out), but allows you to specify that a MST model comes in
+as a raw value and is the value. Typescript will be happy. This can be used to
+support an input component such as a drop-down selection that generate a
+reference to an object. This fits MST's `types.reference`.
 
 ### Maybe
 
@@ -249,8 +273,8 @@ comes in as a raw value and is the value. Typescript will be happy.
 string values as well as converters that deal with MST nodes.
 
 When you wrap it around any converter that takes a raw string value, the empty
-value is accepted and converted into `null`. This allows you to model empty
-values.
+value (such as the empty string) is accepted and converted into `null`. This
+allows you to model empty values.
 
 It can also be wrapped around a `model` converter, in which case it now accepts
 empty. This is handy when you have a `types.maybe(types.reference())` in MST.
@@ -259,58 +283,141 @@ empty. This is handy when you have a `types.maybe(types.reference())` in MST.
 
 `converters.object`: this accept any object as raw value and returns it,
 including `null`. Prefer `converters.model` if you can. Warning: the default
-raw value is `null` and this with basic data types (string, boolean, number
-and such) it won't work properly as they don't accept "null". Use
-more specific converters instead.
+raw value is `null` and using this with basic data types (string, boolean,
+number and such) won't make the typechecker happy as they don't accept "null".
+Use more specific converters instead.
+
+## Controlled props
+
+A [controlled component](https://reactjs.org/docs/forms.html) is a React
+component that displays a value and defines an `onChange` handler that is
+called when the value is changed by the user. The component itself does not
+manage its value; this is done externally. mstform is a library that helps
+you control these components for you.
+
+Controlled components receive subtly different props:
+
+- `input` type `string` has a `value` prop and an `onChange` with an event. It
+  gets the updated value from `event.target.value`.
+
+- `input` type `checkbox` has a `checked` prop and an `onChange` that receives
+  `event.target.checked` with the updated value.
+
+- There are also higher level widgets where `value` and `onChange` are
+  symmetrical. A date picker widget for instance could have a JS `Date` as
+  `value` and `onChange` directly returns a new `Date` instance.
+
+mstform offers a `controlled` hook. It takes a function that given the field
+accessor returns the right props for control. This can be used to ensure that
+`accessor.inputProps` contains the right information for your particular
+controlled component.
+
+There are three `controlled` implementations built in:
+
+- `controlled.value` - `value` and `onChange` processes
+  `event.target.value`.
+
+- `controlled.checked` - `checked` and `onChange` processes
+  `event.target.checked`.
+
+- `controlled.object` - `value` represents some object and `onChange` gets a
+  new object as an argument. Symmetrical `value` and `onChange`.
+
+By default the converter determines which is used. If you use the `string`
+converter or a derivative, `controlled.value` is used, and if you use the
+`boolean` converter by default the `controlled.checked` is used. For
+anything else the default is `controlled.object`.
+
+You can always override `controlled` in the field configuration. For
+example:
+
+```javascript
+import { observer } from "mobx-react";
+import { types } from "mobx-state-tree";
+import { Field, Form, FormState, converters, controlled } from "mstform";
+import * as React from "react";
+import { Component } from "react";
+
+// we have a MST model with a string field foo
+const M = types.model("M", {
+  foo: types.string
+});
+
+// we expose this field in our form
+const form = new Form(M, {
+  foo: new Field(converters.string, {
+    controlled: controlled.string
+  })
+});
+```
+
+For backward compatibility with earlier versions of mstform, mstform also
+supports `fromEvent` and `getRaw` in the field options. `fromEvent` is a flag
+that indicates we want to pull the raw value to validate and convert from the
+`event.target.value`. `getRaw` is a function that given the arguments to
+`onChange` turns them into the updated raw value.
 
 ## Add Mode
 
-There are two ways to deal with an underlying MST node:
+So far we've described how to use mstform with edit forms -- we display what's
+in a MST instance and allow the user to edit it. There's another use case where
+you want to create a new MST instance however: an add form.
 
-- edit form: edit an existing MST node.
-
-- add form: edit a newly created MST node.
-
-Consider this MST type:
+Consider this MST model:
 
 ```javascript
-const Foo = types.model("Foo", {
+const M = types.model("Foo", {
   nr: types.number
 });
 ```
 
-It has a required number as content. How do we create an add form for it?
+How do we create an add form for it? The add form needs an MST instance so that
+it can store the user-entered values. But this model _requires_ you to create
+an instance with a value for `nr`.
 
-First need to create an instance which uses an arbitrary value for `nr`,
-in this case `0`:
+Let's do that and use an arbitrary number for `nr`. We could have picked
+any number but `0` is probably the most clear, so we use that:
 
 ```javascript
-const node = Foo.create({ nr: 0 });
+const node = M.create({ nr: 0 });
 ```
 
-If we create a normal edit form for this node, we see the raw value
-`"0"` in the input widget the form. But in an add form we don't actually know
-the value yet and we want to display an empty input widget (raw value `""`).
-We can accomplish this by setting the form in add mode when we create it:
+Let's look at the form definition:
+
+```javascript
+const form = new Form(M, {
+  nr: new Field(converters.number)
+});
+```
+
+If we create a normal edit form for this node, we would see the raw value `"0"`
+in the input widget the form. That's not what we want to do in an add form; we
+want to display an empty input widget (raw value `""`, the empty string). We
+can accomplish this by setting the form in add mode when we create it:
 
 ```javascript
 const state = form.state(node, { addMode: true });
 ```
 
-This way the form is shown correctly, with the empty values. The converter
-defines the appropriate empty value for a field.
+This way the form is shown correctly, with the empty values. How does it know
+what empty values to display in an add form? The converter actually specifies
+this -- `converters.number` for instance knows that the empty value is the
+empty string.
 
 ### Add mode for repeating forms
 
-Each time you add a new repeating sub-form, that sub-form should be in add
-mode, even in edit forms. mstform automatically takes care of this if you use
-the `.push` and `.insert` methods on the repeating form accessor. Existing
-records are shown in edit mode, unless the whole form is in add mode.
+Consider a repeating sub-form. Adding a new entry to a sub-form is much like
+having an add form. Each time you add a new entry, the new sub-form should be
+in add mode, even in edit forms. mstform automatically takes care of this if
+you use the `.push` and `.insert` methods on the repeating form accessor, or if
+you manipulate the underlying model directly. Existing records are shown in
+edit mode, unless the whole form is in add mode.
 
-## Saving and server errors
+## Saving
 
 When we create the form state, we can pass it some options. One is a function
-that actually saves the content in the form:
+that explains how to save the MST instance, for instance by sending JSON
+to a backend:
 
 ```javascript
 this.state = form.state(o, {
@@ -322,13 +429,49 @@ this.state = form.state(o, {
 });
 ```
 
-Once you've hooked up your own save functionality, you should call
-`state.save()` when you do a form submit. This does the following:
+The save function should return `null` if the save succeeded and there are no
+server validation errors. It can also returns a special `errors` object in case
+saving failed -- we discuss this in a bit.
+
+Then when you implement a form submit button, you should call `state.save()`:
+
+```javascript
+@observer
+export class MyForm extends Component {
+  constructor(props) {
+    super(props);
+    // we create a form state for this model
+    this.state = form.state(o) { save: async node => { return node.save() }};
+  }
+
+  handleSave = async () => {
+    const success = await this.state.save();
+    if (success) {
+      // success notification
+    } else {
+      // failure notification
+    }
+  }
+
+  render() {
+    // we get the foo field from the form
+    const field = this.state.field("foo");
+    return (
+      <div>
+         ... render the form itself
+         <button onClick={this.handleSave}>Save</button>
+      </div>
+    );
+  }
+}
+```
+
+`state.save()` does the following:
 
 - Makes sure the form is completely valid before it's submitted to the server,
   otherwise displays client-side validation errors.
 
-- Uses your `save` function do to the actual saving.
+- Uses your supplied `save` function do to the actual saving.
 
 - Processes any additional validation errors returned by the server.
 
@@ -340,15 +483,34 @@ it gives you a warning on the console that no actual saving could take place.
 This is handy during development when you haven't wired up your
 backend logic yet.
 
-The last point requires elaboration: when you save form content to some backend
-it may result in additional validation errors that are generated there.
-Sometimes it's easier to detect errors in the backend, and doing server-side
-validation is a good idea from a security perspective anyhow. mstform supports
-displaying those errors.
+### Save errors
 
-The save function either returns `null` if the save succeeded and there are no
-server validation issues, or returns a special `errors` structure that matches
-the structure of the MST node. So, if you have an MST model like this:
+When you save form content to some backend it may result in additional
+validation errors that are generated there. It is easier to detect
+some errors on the backend. It's a good idea to do server-side validation
+in any case, and it can be useful to reuse those errors in the frontend.
+
+As we said above, if your `save` function doesn't return `null` it should
+return a custom object that contains server validation errors.
+
+This can contain a description of the error, for instance:
+
+```javascript
+{
+  myError: "We cannot accept this data";
+}
+```
+
+You can access these errors (so you can render them to the end user):
+
+```javascript
+state.additionalError("myError");
+```
+
+Or you can get a list of all of them with `state.additionalErrors()`.
+
+You can also specify errors for particular fields, by naming the error key the
+same as the name of the field. So, if you have an MST model like this:
 
 ```javascript
 const M = types.model("M", {
@@ -356,15 +518,24 @@ const M = types.model("M", {
 });
 ```
 
-The error structure needs to be:
+And you want to display a specific backend-generated error for `name`, the
+error structure returned by `save()` needs to be:
 
-```
+```javascript
 {
-  name: "Could not be matched in the database"
+  name: "Could not be matched in the database";
 }
 ```
 
-Every `Field` can have an error entry.
+Every `Field` can have an error entry. This also works for repeating forms; if
+you have a repeating structure `entries` and there is an error in `name` of the
+second entry, the error structure should look like this:
+
+```javascript
+{
+  entries: [{}, { name: "We couldn't handle this" }];
+}
+```
 
 ## Controlling validation messages
 
@@ -380,7 +551,7 @@ this.state = form.state(o, {
 });
 ```
 
-Now inline validation only occurs after you save, not before.
+Now inline validation only occurs after you save the first time, not before.
 
 It's also possible to turn off inline validation altogether:
 
@@ -393,14 +564,15 @@ this.state = form.state(o, {
 });
 ```
 
-Only validation messages generated during the save process (either client-side
-or server side) are displayed now.
+In this case the user only sees updated validation errors once they press the
+button that triggers `state.save()` and no errors are generated when the user
+is filling in the form.
 
 ## Disabled and hidden fields
 
 mstform has two hooks that let you calculate `hidden` and `disabled`
 state based on the field accessor. Here is a small example that makes the
-`foo` field disabled. This uses the JSON Path functionality of MSTForm
+`foo` field disabled. This uses the JSON Path functionality of mstform
 to determine whether a field is disabled, but any operation can be
 implemented here. You could for instance retrieve information about which
 fields are disabled dynamically from the backend before you display the form.
@@ -411,15 +583,22 @@ const state = form.state(o, {
 });
 ```
 
-To implement hidden behavior, pass in `isHidden`. You can also
-determine whether a repeating form is disabled from add and remove using `isRepeatingFormDisabled`. It's up to you to use this information to
-render the add and remove buttons with the disabled status, however.
+To implement hidden behavior, pass in an `isHidden` function. You can also
+determine whether a repeating form is disabled from add and remove using
+`isRepeatingFormDisabled`. It's up to you to use this information to render the
+add and remove buttons with the disabled status, however.
+
+`isDisabled` makes the `disabled` prop `true` in `accessor.inputProps`. There
+is no such behavior for `hidden`; use `accessor.hidden` in your form rendering
+code to determine whether a field wants to be hidden.
 
 ## Extra validation
 
-Sometimes the information needed to validate the form cannot be known at form
-definition time, but only when the form is being rendered. mstform has a hook
-that lets you define additional validation behavior on the form level.
+Sometimes the information needed to validate the form cannot be known in
+advance at form definition time. Instead, the form can be displayed multiple
+times in the application, each time with different validation requirements.
+mstform has a hook that lets you define additional validation behavior on the
+form level.
 
 ```javascript
 const state = form.state(o, {
@@ -431,16 +610,16 @@ const state = form.state(o, {
 });
 ```
 
-Note that you have to use the second `value` argument to get the value,
-as `accessor.value` still has the old value.
+Note that you have to use the second `value` argument to get the value to use
+to validate, as `accessor.value` still has the old value.
 
 ## Derived values
 
-For some fields the value depends on another one. This can be
-another field, but typically it's the result of some calculation done
-in a MST view. This value is maintained but can be overridden by the
-user. But if the input to the calculation changes, the value is
-updated again.
+The value of some fields depends on the value of other fields; you can express
+this relationship in a MST view. In some forms you want to automatically
+calculate such a derived value but still allow the user to override it
+explicitly. Then if the input to the calculation changes, the value is updated
+again.
 
 You express such derived values with mstform:
 
@@ -466,23 +645,22 @@ const form = new Form(M, {
 });
 ```
 
-`calculated` starts out with the value based on the sum of `a` and `b`.
-The user can modify it, and the value changes. When the user instead
-modifies `a` or `b`, the derived value changes again to the result
-of the `derived` function.
+`calculated` starts out with the value based on the sum of `a` and `b`. The
+user can modify `calculated` directly. When the user modifies `a` or `b`, the
+derived value changes again to the result of the `derived` function.
 
 When you access a repeating form, the node passed into the derived function is
 the sub-node that the repeating form represents, so the derived value is
 determined within that context.
 
-Note that derived calculations only take place if you actually access the field
+Note that derived calculations occur if you actually access the field
 to use it in a form; it doesn't work for fields that are never used.
 
 ## Change hook
 
-When you change one field it's sometimes useful to do some side effect as a
-result, for instance to change the value of another field. You can do so
-with `change` hook:
+When you change one field it's sometimes useful to have some side effect, for
+instance to change the value of another field. You can do so with the `change`
+hook:
 
 ```javascript
 const M = types
@@ -531,5 +709,3 @@ The hook receives the event and the focused field accessor. You can use the
 accessor to get the field name (`accessor.name`), value (`accessor.value`),
 etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus` handler, so if you use that with the field it is there automatically.
-For fields where you cannot use `inputProps` directly you need to bind
-``inputProps.onFocus` manually.

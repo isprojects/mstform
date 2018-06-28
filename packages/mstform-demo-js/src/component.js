@@ -20,22 +20,16 @@ const M = types
   }));
 
 // we create an instance of the model
-const o = M.create({ foo: "FOO", a: 1, b: 2, derived: 4 });
+const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4 });
 
 // we expose this field in our form
 const form = new Form(M, {
   foo: new Field(converters.string, {
-    validators: [value => (value !== "correct" ? "Wrong" : false)],
-    fromEvent: true
+    validators: [value => (value !== "correct" ? "Wrong" : false)]
   }),
-  a: new Field(converters.number, {
-    fromEvent: true
-  }),
-  b: new Field(converters.number, {
-    fromEvent: true
-  }),
+  a: new Field(converters.number),
+  b: new Field(converters.number),
   derived: new Field(converters.number, {
-    fromEvent: true,
     derived: node => node.calculated
   })
 });
@@ -84,23 +78,19 @@ export class MyForm extends Component {
       <div>
         <span>Simple text field with validator (set it to "correct")</span>
         <InlineError error={foo.error}>
-          <input type="text" value={foo.raw} onChange={foo.handleChange} />
+          <input type="text" {...foo.inputProps} />
         </InlineError>
         <span>a input number for derived</span>
         <InlineError error={a.error}>
-          <input type="text" value={a.raw} onChange={a.handleChange} />
+          <input type="text" {...a.inputProps} />
         </InlineError>
         <span>b input number for derived</span>
         <InlineError error={b.error}>
-          <input type="text" value={b.raw} onChange={b.handleChange} />
+          <input type="text" {...b.inputProps} />
         </InlineError>
         <span>derived from a + b with override</span>
         <InlineError error={derived.error}>
-          <input
-            type="text"
-            value={derived.raw}
-            onChange={derived.handleChange}
-          />
+          <input type="text" {...derived.inputProps} />
         </InlineError>
         <button onClick={this.handleSave}>Save</button>
       </div>

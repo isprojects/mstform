@@ -12,8 +12,7 @@ const M = types.model("M", {
 // we expose this field in our form
 const form = new Form(M, {
   foo: new Field(converters.string, {
-    validators: [value => (value !== "correct" ? "Wrong" : false)],
-    fromEvent: true
+    validators: [value => (value !== "correct" ? "Wrong" : false)]
   })
 });
 
@@ -54,7 +53,7 @@ export class MyForm extends Component<MyFormProps, {}> {
     const field = this.state.field("foo");
     return (
       <InlineError error={field.error}>
-        <input type="text" value={field.raw} onChange={field.handleChange} />
+        <input type="text" {...field.inputProps} />
       </InlineError>
     );
   }

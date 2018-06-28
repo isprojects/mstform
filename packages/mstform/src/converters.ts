@@ -7,12 +7,15 @@ import {
   Converter,
   IConverter
 } from "./converter";
+import { Controlled, controlled } from "./controlled";
 import { identity } from "./utils";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
-export class StringConverter<V> extends Converter<string, V> {}
+export class StringConverter<V> extends Converter<string, V> {
+  defaultControlled = controlled.value;
+}
 
 const string = new StringConverter<string>({
   emptyRaw: "",
@@ -61,13 +64,15 @@ const boolean = new Converter<boolean, boolean>({
   },
   render(value) {
     return value;
-  }
+  },
+  defaultControlled: controlled.checked
 });
 
 class Decimal implements IConverter<string, string> {
   public converter: StringConverter<string>;
 
   emptyRaw: string;
+  defaultControlled = controlled.value;
 
   constructor(public maxWholeDigits: number, public decimalPlaces: number) {
     this.emptyRaw = "";
@@ -137,6 +142,7 @@ function maybe<R, V>(
 
 class StringMaybe<V> implements IConverter<string, V | null> {
   emptyRaw: string;
+  defaultControlled = controlled.value;
 
   constructor(public converter: StringConverter<V>) {
     this.emptyRaw = "";
@@ -159,9 +165,11 @@ class StringMaybe<V> implements IConverter<string, V | null> {
 
 class Model<M> implements IConverter<M | null, M> {
   emptyRaw: M | null;
+  defaultControlled: Controlled;
 
   constructor(model: IModelType<any, M>) {
     this.emptyRaw = null;
+    this.defaultControlled = controlled.object;
   }
 
   async convert(raw: M | null): Promise<ConversionResponse<M>> {
@@ -186,7 +194,8 @@ function maybeModel<M>(
   return new Converter({
     emptyRaw: null,
     convert: identity,
-    render: identity
+    render: identity,
+    defaultControlled: controlled.object
   });
 }
 
