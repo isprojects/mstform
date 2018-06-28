@@ -1965,3 +1965,47 @@ test("raw update and multiple accessors", async () => {
     }
   ]);
 });
+
+test("focus hook", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const focused: any[] = [];
+
+  const state = form.state(o, {
+    focus: (ev, accessor) => {
+      focused.push({
+        raw: accessor.raw,
+        value: accessor.value,
+        name: accessor.name
+      });
+    }
+  });
+
+  const fooField = state.field("foo");
+  expect(fooField.inputProps.onFocus).toBeDefined();
+
+  fooField.handleFocus(null);
+
+  const barField = state.field("bar");
+  barField.handleFocus(null);
+
+  expect(focused).toEqual([
+    { name: "foo", raw: "FOO", value: "FOO" },
+    { name: "bar", raw: "BAR", value: "BAR" }
+  ]);
+
+  // no focus hook
+  const state2 = form.state(o);
+  const fooField2 = state2.field("foo");
+  expect(fooField2.inputProps.onFocus).toBeUndefined();
+});

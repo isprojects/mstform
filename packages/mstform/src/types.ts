@@ -29,12 +29,3 @@ export interface FieldOptions<R, V> {
   derived?: Derived<V>;
   change?: Change<V>;
 }
-
-export interface SaveFunc<M> {
-  (node: M): any;
-}
-
-// TODO: implement blur and pause validation
-// blur would validate immediately after blur
-// pause would show validation after the user stops input for a while
-export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
