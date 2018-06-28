@@ -1,6 +1,6 @@
 {
   "name": "mstform-demo",
-  "version": "0.8.1",
+  "version": "0.11.0",
   "description": "demo of mstform, typescript version",
   "main": "index.js",
   "author": "ISProjects",
