@@ -7,14 +7,14 @@ import {
   Converter,
   IConverter
 } from "./converter";
-import { Normalizer, normalizers } from "./normalizer";
+import { Controlled, controlled } from "./controlled";
 import { identity } from "./utils";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
 export class StringConverter<V> extends Converter<string, V> {
-  defaultNormalizer = normalizers.value;
+  defaultControlled = controlled.value;
 }
 
 const string = new StringConverter<string>({
@@ -65,14 +65,14 @@ const boolean = new Converter<boolean, boolean>({
   render(value) {
     return value;
   },
-  defaultNormalizer: normalizers.checked
+  defaultControlled: controlled.checked
 });
 
 class Decimal implements IConverter<string, string> {
   public converter: StringConverter<string>;
 
   emptyRaw: string;
-  defaultNormalizer = normalizers.value;
+  defaultControlled = controlled.value;
 
   constructor(public maxWholeDigits: number, public decimalPlaces: number) {
     this.emptyRaw = "";
@@ -142,7 +142,7 @@ function maybe<R, V>(
 
 class StringMaybe<V> implements IConverter<string, V | null> {
   emptyRaw: string;
-  defaultNormalizer = normalizers.value;
+  defaultControlled = controlled.value;
 
   constructor(public converter: StringConverter<V>) {
     this.emptyRaw = "";
@@ -165,11 +165,11 @@ class StringMaybe<V> implements IConverter<string, V | null> {
 
 class Model<M> implements IConverter<M | null, M> {
   emptyRaw: M | null;
-  defaultNormalizer: Normalizer;
+  defaultControlled: Controlled;
 
   constructor(model: IModelType<any, M>) {
     this.emptyRaw = null;
-    this.defaultNormalizer = normalizers.object;
+    this.defaultControlled = controlled.object;
   }
 
   async convert(raw: M | null): Promise<ConversionResponse<M>> {
@@ -195,7 +195,7 @@ function maybeModel<M>(
     emptyRaw: null,
     convert: identity,
     render: identity,
-    defaultNormalizer: normalizers.object
+    defaultControlled: controlled.object
   });
 }
 

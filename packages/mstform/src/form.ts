@@ -2,7 +2,7 @@ import { IObservableArray } from "mobx";
 import { IModelType } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FormState, FormStateOptions } from "./state";
-import { Normalizer } from "./normalizer";
+import { Controlled } from "./controlled";
 import { identity } from "./utils";
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
@@ -45,7 +45,7 @@ export interface FieldOptions<R, V> {
   fromEvent?: boolean;
   derived?: Derived<V>;
   change?: Change<V>;
-  normalizer?: Normalizer;
+  controlled?: Controlled;
 }
 
 export class Form<M, D extends FormDefinition<M>> {
@@ -79,7 +79,7 @@ export class Field<R, V> {
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
   changeFunc?: Change<V>;
-  normalizer: Normalizer;
+  controlled: Controlled;
 
   constructor(
     public converter: IConverter<R, V>,
@@ -92,7 +92,7 @@ export class Field<R, V> {
       this.requiredError = "Required";
       this.required = false;
       this.getRaw = identity;
-      this.normalizer = this.createDefaultNormalizer();
+      this.controlled = this.createDefaultControlled();
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
@@ -111,11 +111,11 @@ export class Field<R, V> {
       }
       this.derivedFunc = options.derived;
       this.changeFunc = options.change;
-      this.normalizer = options.normalizer || this.createDefaultNormalizer();
+      this.controlled = options.controlled || this.createDefaultControlled();
     }
   }
 
-  createDefaultNormalizer(): Normalizer {
+  createDefaultControlled(): Controlled {
     if (this.getRaw !== identity) {
       return accessor => {
         return {
@@ -124,7 +124,7 @@ export class Field<R, V> {
         };
       };
     }
-    return this.converter.defaultNormalizer;
+    return this.converter.defaultControlled;
   }
 
   get RawType(): R {

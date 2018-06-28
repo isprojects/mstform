@@ -1,4 +1,4 @@
-import { Normalizer, normalizers } from "./normalizer";
+import { Controlled, controlled } from "./controlled";
 
 export interface ConverterOptions<R, V> {
   convert(raw: R): V;
@@ -6,14 +6,14 @@ export interface ConverterOptions<R, V> {
   rawValidate?(value: R): boolean | Promise<boolean>;
   validate?(value: V): boolean | Promise<boolean>;
   emptyRaw: R;
-  defaultNormalizer?: Normalizer;
+  defaultControlled?: Controlled;
 }
 
 export interface IConverter<R, V> {
   emptyRaw: R;
   convert(raw: R): Promise<ConversionResponse<V>>;
   render(value: V): R;
-  defaultNormalizer: Normalizer;
+  defaultControlled: Controlled;
 }
 
 export class ConversionValue<V> {
@@ -28,13 +28,13 @@ export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
 export class Converter<R, V> implements IConverter<R, V> {
   emptyRaw: R;
-  defaultNormalizer: Normalizer;
+  defaultControlled: Controlled;
 
   constructor(public definition: ConverterOptions<R, V>) {
     this.emptyRaw = definition.emptyRaw;
-    this.defaultNormalizer = definition.defaultNormalizer
-      ? definition.defaultNormalizer
-      : normalizers.object;
+    this.defaultControlled = definition.defaultControlled
+      ? definition.defaultControlled
+      : controlled.object;
   }
 
   async convert(raw: R): Promise<ConversionResponse<V>> {

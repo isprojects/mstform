@@ -1,15 +1,15 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { converters, normalizers, Form, Field } from "../src";
+import { converters, controlled, Form, Field } from "../src";
 configure({ enforceActions: true });
 
-test("object normalizer", async () => {
+test("object controlled", async () => {
   const M = types.model("M", {
     foo: types.string
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object, { normalizer: normalizers.object })
+    foo: new Field(converters.object, { controlled: controlled.object })
   });
 
   const o = M.create({ foo: "FOO" });
@@ -23,13 +23,13 @@ test("object normalizer", async () => {
   expect(field.raw).toEqual("BAR");
 });
 
-test("value normalizer", async () => {
+test("value controlled", async () => {
   const M = types.model("M", {
     foo: types.string
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object, { normalizer: normalizers.value })
+    foo: new Field(converters.object, { controlled: controlled.value })
   });
 
   const o = M.create({ foo: "FOO" });
@@ -43,13 +43,13 @@ test("value normalizer", async () => {
   expect(field.raw).toEqual("BAR");
 });
 
-test("checked normalizer", async () => {
+test("checked controlled", async () => {
   const M = types.model("M", {
     foo: types.boolean
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object, { normalizer: normalizers.checked })
+    foo: new Field(converters.object, { controlled: controlled.checked })
   });
 
   const o = M.create({ foo: true });
@@ -63,14 +63,14 @@ test("checked normalizer", async () => {
   expect(field.raw).toEqual(false);
 });
 
-test("custom normalizer", async () => {
+test("custom controlled", async () => {
   const M = types.model("M", {
     foo: types.string
   });
 
   const form = new Form(M, {
     foo: new Field(converters.object, {
-      normalizer: accessor => {
+      controlled: accessor => {
         return {
           weird: accessor.raw,
           onChange: (raw: any) => accessor.setRaw(raw)
@@ -89,7 +89,7 @@ test("custom normalizer", async () => {
   expect(field.raw).toEqual("BAR");
 });
 
-test("default value normalizer for string converter", async () => {
+test("default value controlled for string converter", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -109,7 +109,7 @@ test("default value normalizer for string converter", async () => {
   expect(field.raw).toEqual("BAR");
 });
 
-test("default value normalizer for maybe string converter", async () => {
+test("default value controlled for maybe string converter", async () => {
   const M = types.model("M", {
     foo: types.maybe(types.string)
   });
@@ -129,7 +129,7 @@ test("default value normalizer for maybe string converter", async () => {
   expect(field.raw).toEqual("BAR");
 });
 
-test("default checked normalizer for boolean converter", async () => {
+test("default checked controlled for boolean converter", async () => {
   const M = types.model("M", {
     foo: types.boolean
   });
@@ -149,7 +149,7 @@ test("default checked normalizer for boolean converter", async () => {
   expect(field.raw).toEqual(false);
 });
 
-test("default object normalizer", async () => {
+test("default object controlled", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -169,7 +169,7 @@ test("default object normalizer", async () => {
   expect(field.raw).toEqual("BAR");
 });
 
-test("default object normalizer for maybe converter", async () => {
+test("default object controlled for maybe converter", async () => {
   const M = types.model("M", {
     foo: types.maybe(types.string)
   });

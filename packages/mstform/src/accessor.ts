@@ -358,7 +358,7 @@ export class FieldAccessor<M, R, V> {
 
   @computed
   get inputProps() {
-    const result: any = this.field.normalizer(this);
+    const result: any = this.field.controlled(this);
     result.disabled = this.disabled;
     if (this.state.focusFunc != null) {
       result.onFocus = this.handleFocus;

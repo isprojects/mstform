@@ -1,31 +1,31 @@
 import { FieldAccessor } from "./accessor";
 
-export interface Normalizer {
+export interface Controlled {
   (accessor: FieldAccessor<any, any, any>): any;
 }
 
-const value: Normalizer = accessor => {
+const value: Controlled = accessor => {
   return {
     value: accessor.raw,
     onChange: (ev: any) => accessor.setRaw(ev.target.value)
   };
 };
 
-const checked: Normalizer = accessor => {
+const checked: Controlled = accessor => {
   return {
     checked: accessor.raw,
     onChange: (ev: any) => accessor.setRaw(ev.target.checked)
   };
 };
 
-const object: Normalizer = accessor => {
+const object: Controlled = accessor => {
   return {
     value: accessor.raw,
     onChange: (value: any) => accessor.setRaw(value)
   };
 };
 
-export const normalizers = {
+export const controlled = {
   value,
   checked,
   object
