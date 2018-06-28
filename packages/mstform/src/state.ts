@@ -19,7 +19,6 @@ import {
   RepeatingFormAccessorAllows
 } from "./accessor";
 import { Form, FormDefinition } from "./form";
-import { SaveFunc, ValidationOption } from "./types";
 import {
   addPath,
   deepCopy,
@@ -29,6 +28,19 @@ import {
   pathToSteps,
   removePath
 } from "./utils";
+
+export interface SaveFunc<M> {
+  (node: M): any;
+}
+
+export interface FocusFunc<M, R, V> {
+  (event: any, accessor: FieldAccessor<M, R, V>): void;
+}
+
+// TODO: implement blur and pause validation
+// blur would validate immediately after blur
+// pause would show validation after the user stops input for a while
+export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 
 export interface FormStateOptions<M> {
   save?: SaveFunc<M>;
@@ -42,6 +54,7 @@ export interface FormStateOptions<M> {
   isHidden?: FieldAccessorAllows;
   isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
   extraValidation?: ExtraValidation;
+  focus?: FocusFunc<M, any, any>;
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -66,6 +79,7 @@ export class FormState<M, D extends FormDefinition<M>>
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
+  focusFunc: FocusFunc<M, any, any> | null;
 
   constructor(
     public form: Form<M, D>,
@@ -100,6 +114,7 @@ export class FormState<M, D extends FormDefinition<M>>
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
       this.addModePaths.set("/", false);
+      this.focusFunc = null;
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
       this.isDisabledFunc = options.isDisabled
@@ -117,6 +132,7 @@ export class FormState<M, D extends FormDefinition<M>>
       this.validationBeforeSave = validation.beforeSave || "immediate";
       this.validationAfterSave = validation.afterSave || "immediate";
       this.validationPauseDuration = validation.pauseDuration || 0;
+      this.focusFunc = options.focus ? options.focus : null;
     }
   }
 

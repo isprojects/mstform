@@ -511,3 +511,25 @@ by the field `b`. We implement a change hook to call that action whenever
 `a` is changed. This only happens if `a` passes validation -- changes
 to `a` that result in an error message don't result in an execution
 of the `change` hook.
+
+## Focus hook
+
+You may want to react to field focus events. You can do this with a custom
+onFocus event handler on the input element, but in some cases you want to react
+generically to _all_ focus events in a form. You can pass a special hook
+to the form state options for this:
+
+```javascript
+const state = form.state(o, {
+  focus: (ev, accessor) => {
+    // do something here
+  }
+});
+```
+
+The hook receives the event and the focused field accessor. You can use the
+accessor to get the field name (`accessor.name`), value (`accessor.value`),
+etc. When you define the hook, `inputProps` on the field accessor contains an
+`onFocus` handler, so if you use that with the field it is there automatically.
+For fields where you cannot use `inputProps` directly you need to bind
+``inputProps.onFocus` manually.
