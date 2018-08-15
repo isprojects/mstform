@@ -1,43 +1,48 @@
+# 0.12
+
+-   Rearrange the package structure and eliminate Lerna in favor of something
+    simpler.
+
 # 0.11
 
-- Fix a bug with add mode.
+-   Fix a bug with add mode.
 
-- The onPatch handler can handle all logic safely, so that
-  updating arrays directly in the underlying instance also works.
+-   The onPatch handler can handle all logic safely, so that
+    updating arrays directly in the underlying instance also works.
 
-- Implement a new `focus` hook to automatically fire whenever a user focuses on
-  a field.
+-   Implement a new `focus` hook to automatically fire whenever a user focuses on
+    a field.
 
-- Make `inputProps` do the right thing. You can define a `controlled` function
-  that takes the accessor and returns the controlled input props. We supply a
-  few ourselves too, and make sensible defaults for various converters. This
-  makes `fromEvent` and `getRaw` deprecated.
+-   Make `inputProps` do the right thing. You can define a `controlled` function
+    that takes the accessor and returns the controlled input props. We supply a
+    few ourselves too, and make sensible defaults for various converters. This
+    makes `fromEvent` and `getRaw` deprecated.
 
 # 0.10.2
 
-- Bugfix. Make raw update work with references.
+-   Bugfix. Make raw update work with references.
 
 # 0.10.1
 
-- Bugfix. Safeguard against rendering non-existing fields.
+-   Bugfix. Safeguard against rendering non-existing fields.
 
 # 0.10
 
-- Update the raw value when you change the underlying object.
+-   Update the raw value when you change the underlying object.
 
 # 0.9
 
-- Implement change hooks
+-   Implement change hooks
 
 # 0.8.1
 
-- Change behavior of derived fields: they are not immediately calculated when
-  the form is loaded. Instead they are only calculated when changes are made,
-  which is what is intended. This also avoids a warning that we modify data
-  during render.
+-   Change behavior of derived fields: they are not immediately calculated when
+    the form is loaded. Instead they are only calculated when changes are made,
+    which is what is intended. This also avoids a warning that we modify data
+    during render.
 
 # 0.8.0
 
-- You can set up derived fields. These fields use a value calculated
-  by some MST view, except if the user modifies them by hand. If the view
-  changes, this value takes precedence again.
+-   You can set up derived fields. These fields use a value calculated
+    by some MST view, except if the user modifies them by hand. If the view
+    changes, this value takes precedence again.
