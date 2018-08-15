@@ -8,10 +8,10 @@ import {
   ProcessValue,
   RawType,
   RepeatingForm,
-  ValidationMessage
+  ValidationMessage,
+  ValidationResponse
 } from "./form";
 import { FormState } from "./state";
-import { ValidationResponse } from "./form";
 import { equal, unwrap } from "./utils";
 
 export interface FieldAccessorAllows {
@@ -158,7 +158,9 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     );
   }
 
-  repeatingField(name: string): any {}
+  repeatingField(name: string): any {
+    // not implemented yet
+  }
 }
 
 export class FieldAccessor<M, R, V> {
@@ -173,7 +175,6 @@ export class FieldAccessor<M, R, V> {
     name: string
   ) {
     this.name = name;
-    process;
     this.path = path + "/" + name;
 
     this.createDerivedReaction();
@@ -443,11 +444,11 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
   accessBySteps(steps: string[]): Accessor | undefined {
     const [first, ...rest] = steps;
-    const number = parseInt(first, 10);
-    if (isNaN(number)) {
+    const nr = parseInt(first, 10);
+    if (isNaN(nr)) {
       throw new Error("Expected index of repeating form");
     }
-    const accessor = this.index(number);
+    const accessor = this.index(nr);
     return accessor.accessBySteps(rest);
   }
 

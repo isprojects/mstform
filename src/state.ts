@@ -234,7 +234,7 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   async validate(): Promise<boolean> {
-    return await this.formAccessor.validate();
+    return this.formAccessor.validate();
   }
 
   @action
@@ -352,7 +352,9 @@ export class FormState<M, D extends FormDefinition<M>>
     return this.formAccessor.repeatingForm(name);
   }
 
-  repeatingField(name: string): any {}
+  repeatingField(name: string): any {
+    // not implemented yet
+  }
 
   additionalError(name: string): string | undefined {
     const result = this.additionalErrorTree[name];
