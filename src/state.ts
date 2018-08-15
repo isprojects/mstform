@@ -61,19 +61,26 @@ export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
-  @observable raw: Map<string, any>;
-  @observable errors: Map<string, string>;
-  @observable additionalErrorTree: any;
-  @observable validating: Map<string, boolean>;
-  @observable addModePaths: Map<string, boolean>;
-  @observable derivedDisposers: Map<string, IReactionDisposer>;
+  @observable
+  raw: Map<string, any>;
+  @observable
+  errors: Map<string, string>;
+  @observable
+  additionalErrorTree: any;
+  @observable
+  validating: Map<string, boolean>;
+  @observable
+  addModePaths: Map<string, boolean>;
+  @observable
+  derivedDisposers: Map<string, IReactionDisposer>;
 
   formAccessor: FormAccessor<M, D>;
   saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
-  @observable saveStatus: SaveStatusOptions = "before";
+  @observable
+  saveStatus: SaveStatusOptions = "before";
   isDisabledFunc: FieldAccessorAllows;
   isHiddenFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
