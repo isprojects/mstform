@@ -3,6 +3,9 @@
 -   Rearrange the package structure and eliminate Lerna in favor of something
     simpler.
 
+-   Use mobx.comparer for deep equal comparison instead of fast-deep-equal
+    dependency, which is now dropped.
+
 # 0.11
 
 -   Fix a bug with add mode.

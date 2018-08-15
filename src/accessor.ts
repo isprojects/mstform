@@ -1,4 +1,4 @@
-import { action, computed, isObservable, toJS, reaction } from "mobx";
+import { action, computed, isObservable, toJS, reaction, comparer } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
   ArrayEntryType,
@@ -12,7 +12,6 @@ import {
   ValidationResponse
 } from "./form";
 import { FormState } from "./state";
-import { equal, unwrap } from "./utils";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any, any>): boolean;
@@ -307,7 +306,7 @@ export class FieldAccessor<M, R, V> {
     const currentRaw = this.state.raw.get(this.path);
 
     // if the raw changed in the mean time, bail out
-    if (!equal(unwrap(currentRaw), unwrap(raw))) {
+    if (!comparer.structural(currentRaw, raw)) {
       return;
     }
     // validation only is complete if the currentRaw has been validated
@@ -332,7 +331,7 @@ export class FieldAccessor<M, R, V> {
     }
 
     // if there are no changes, don't do anything
-    if (equal(unwrap(this.value), unwrap(processResult.value))) {
+    if (comparer.structural(this.value, processResult.value)) {
       return;
     }
 

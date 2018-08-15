@@ -1,7 +1,3 @@
-import { isObservable, toJS } from "mobx";
-// have to use this here but loses type information
-export const equal = require("fast-deep-equal");
-
 export function identity<T>(value: T): T {
   return value;
 }
@@ -23,13 +19,6 @@ export function stepsToPath(parts: string[]): string {
 
 export function isInt(s: string): boolean {
   return Number.isInteger(parseInt(s, 10));
-}
-
-export function unwrap(o: any): any {
-  if (isObservable(o)) {
-    return toJS(o);
-  }
-  return o;
 }
 
 export function getByPath(obj: any, path: string): string | undefined {
