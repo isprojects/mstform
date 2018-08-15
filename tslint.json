@@ -1,6 +1,11 @@
 {
     "extends": ["tslint-config-standard", "tslint-config-prettier"],
     "rules": {
-        "variable-name": [true, "check-format", "allow-leading-underscore"]
+        "variable-name": [
+            true,
+            "check-format",
+            "allow-leading-underscore",
+            "allow-pascal-case"
+        ]
     }
 }
