@@ -3,7 +3,7 @@
     "version": "0.11.0",
     "description": "mobx-state-tree powered forms",
     "main": "dist/mstform.js",
-    "typings": "dist/src/types/mstform.d.ts",
+    "typings": "dist/src/index.d.ts",
     "sideEffects": false,
     "files": [
         "dist"
