@@ -1,8 +1,7 @@
+import React, { Component } from "react";
 import { observer } from "mobx-react";
 import { types } from "mobx-state-tree";
 import { Field, Form, converters } from "../src/index";
-import * as React from "react";
-import { Component } from "react";
 
 // we have a MST model with a string field foo
 const M = types.model("M", {
@@ -19,12 +18,12 @@ const form = new Form(M, {
 // we create an instance of the model
 const o = M.create({ foo: "FOO" });
 
-interface InlineErrorProps {
+type InlineErrorProps = {
   error?: string;
-}
+};
 
 @observer
-class InlineError extends Component<InlineErrorProps, {}> {
+class InlineError extends Component<InlineErrorProps> {
   render() {
     const { children, error } = this.props;
     return (
@@ -36,10 +35,10 @@ class InlineError extends Component<InlineErrorProps, {}> {
   }
 }
 
-interface MyFormProps {}
+type MyFormProps = {};
 
 @observer
-export class MyForm extends Component<MyFormProps, {}> {
+export class MyForm extends Component<MyFormProps> {
   state: typeof form.FormStateType;
 
   constructor(props: MyFormProps) {
