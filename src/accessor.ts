@@ -46,6 +46,8 @@ export type RepeatingFormAccess<
 export interface IFormAccessor<M, D extends FormDefinition<M>> {
   validate(): Promise<boolean>;
 
+  isValid: boolean;
+
   restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D>;
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K>;
@@ -77,7 +79,12 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   async validate(): Promise<boolean> {
     const promises = this.accessors.map(accessor => accessor.validate());
     const values = await Promise.all(promises);
-    return values.filter(value => !value).length === 0;
+    return values.every(value => value);
+  }
+
+  @computed
+  get isValid(): boolean {
+    return this.accessors.every(accessor => accessor.isValid);
   }
 
   @computed
@@ -329,6 +336,11 @@ export class FieldAccessor<M, R, V> {
 
   async validate(): Promise<boolean> {
     await this.setRaw(this.raw);
+    return this.isValid;
+  }
+
+  @computed
+  get isValid(): boolean {
     return this.errorValue === undefined;
   }
 
@@ -449,7 +461,12 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
       promises.push(accessor.validate());
     }
     const values = await Promise.all(promises);
-    return values.filter(value => !value).length === 0;
+    return values.every(value => value);
+  }
+
+  @computed
+  get isValid(): boolean {
+    return this.accessors.every(accessor => accessor.isValid);
   }
 
   index(index: number): RepeatingFormIndexedAccessor<M, D> {
@@ -551,6 +568,11 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
 
   async validate(): Promise<boolean> {
     return this.formAccessor.validate();
+  }
+
+  @computed
+  get isValid(): boolean {
+    return this.formAccessor.isValid;
   }
 
   access(name: string): Accessor | undefined {

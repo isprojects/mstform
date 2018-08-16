@@ -34,6 +34,7 @@ test("a group form", async () => {
   await field.setRaw("10");
   expect(field.raw).toEqual("10");
   expect(field.value).toEqual(10);
+  expect(groupAState.isValid).toBeTruthy();
   expect(await groupAState.validate()).toBeTruthy();
 
   expect(() => groupAState.field("baz")).toThrow();
@@ -47,10 +48,13 @@ test("a group form", async () => {
   await field2.setRaw("30");
   expect(field2.raw).toEqual("30");
   expect(field2.value).toEqual(30);
+  expect(groupBState.isValid).toBeTruthy();
   expect(await groupBState.validate()).toBeTruthy();
 
   // now let's make B invalid but A is still valid
   await field2.setRaw("illegal");
+  expect(groupBState.isValid).toBeFalsy();
+  expect(groupAState.isValid).toBeTruthy();
   expect(await groupBState.validate()).toBeFalsy();
   expect(await groupAState.validate()).toBeTruthy();
 });

@@ -198,7 +198,7 @@ const form = new Form(Zoo, {
 We can now use it in our `render` method:
 
 ```js
-// this represents all the subforms
+// this represents all the sub forms
 const animalForms = state.repeatingForm("animals");
 
 const entries = o.animals.map((animal, index) => {
@@ -284,7 +284,7 @@ empty. This is handy when you have a `types.maybe(types.reference())` in MST.
 `converters.object`: this accept any object as raw value and returns it,
 including `null`. Prefer `converters.model` if you can. Warning: the default
 raw value is `null` and using this with basic data types (string, boolean,
-number and such) won't make the typechecker happy as they don't accept "null".
+number and such) won't make the type checker happy as they don't accept "null".
 Use more specific converters instead.
 
 ## Controlled props
@@ -438,30 +438,35 @@ Then when you implement a form submit button, you should call `state.save()`:
 ```js
 @observer
 export class MyForm extends Component {
-  constructor(props) {
-    super(props);
-    // we create a form state for this model
-    this.state = form.state(o) { save: async node => { return node.save() }};
-  }
+    constructor(props) {
+        super(props);
+        // we create a form state for this model
+        this.state = form.state(o, {
+            save: async node => {
+                return node.save();
+            }
+        });
+    }
 
-  handleSave = async () => {
-    const success = await this.state.save();
-    if (success) {
-      // success notification
-    } else {
-      // failure notification}
-  }
+    handleSave = async () => {
+        const success = await this.state.save();
+        if (success) {
+            // success
+        } else {
+            // failure
+        }
+    };
 
-  render() {
-    // we get the foo field from the form
-    const field = this.state.field("foo");
-    return (
-      <div>
-         ... render the form itself
-         <button onClick={this.handleSave}>Save</button>
-      </div>
-    );
-  }
+    render() {
+        // we get the foo field from the form
+        const field = this.state.field("foo");
+        return (
+            <div>
+                ... render the form itself
+                <button onClick={this.handleSave}>Save</button>
+            </div>
+        );
+    }
 }
 ```
 
@@ -571,6 +576,8 @@ is filling in the form.
 
 If you have a form with a lot of fields in the UI you want to split it up into
 multiple tabs or menu entries. Each tab is a coherent set of related fields.
+But if the underlying model instance is saved as a whole, you need to be able
+to show validation issues in other tabs. You can do this using groups.
 
 You can express such groups using `Group`:
 
@@ -582,7 +589,26 @@ const M = types.model("M", {
     qux: types.number
 });
 
-const groupA = new Group(M);
+const groupA = new Group(M, ["foo", "bar"]);
+const groupB = new Group(M, ["baz", "qux"]);
+
+const o = M.create({ foo: 1, bar: 2, baz: 3, qux: 4 });
+
+const state = form.state(o);
+
+const accessGroupA = groupA.access(state);
+const accessGroupB = groupB.access(state);
+```
+
+On `accessGroupA` and `accessGroupB` you can now use `.field()`,
+`.repeatingForm()`, as usual. You're not allowed to access any fields you
+didn't list in the group.
+
+You can request whether a group state is valid using `isValid`:
+
+```js
+const tabAValid = groupA.isValid;
+const tabBValid = groupB.isValid;
 ```
 
 ## Disabled and hidden fields

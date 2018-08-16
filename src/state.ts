@@ -237,6 +237,11 @@ export class FormState<M, D extends FormDefinition<M>>
     return this.formAccessor.validate();
   }
 
+  @computed
+  get isValid(): boolean {
+    return this.formAccessor.isValid;
+  }
+
   @action
   async save(): Promise<boolean> {
     const isValid = await this.validate();
