@@ -13,9 +13,11 @@ export type FormDefinitionType<T> = T extends RepeatingForm<any, infer D>
   ? D
   : never;
 
-export type FormDefinition<M> = {
-  [K in keyof M]?: Field<any, M[K]> | RepeatingForm<ArrayEntryType<M[K]>, any>
-};
+export type FormDefinitionEntry<M, K extends keyof M> =
+  | Field<any, M[K]>
+  | RepeatingForm<ArrayEntryType<M[K]>, any>;
+
+export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
 
 export type ValidationResponse = string | null | undefined | false;
 

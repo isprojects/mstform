@@ -4,6 +4,7 @@ import {
   ArrayEntryType,
   Field,
   FormDefinition,
+  FormDefinitionEntry,
   FormDefinitionType,
   ProcessValue,
   RawType,
@@ -45,6 +46,8 @@ export type RepeatingFormAccess<
 export interface IFormAccessor<M, D extends FormDefinition<M>> {
   validate(): Promise<boolean>;
 
+  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D>;
+
   field<K extends keyof M>(name: K): FieldAccess<M, D, K>;
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K>;
@@ -58,12 +61,18 @@ export interface IFormAccessor<M, D extends FormDefinition<M>> {
 
 export class FormAccessor<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
+  private keys: string[];
+
   constructor(
     public state: FormState<M, D>,
     public definition: any,
     public node: M,
-    public path: string
-  ) {}
+    public path: string,
+    public allowedKeys?: string[]
+  ) {
+    this.keys =
+      allowedKeys != null ? allowedKeys : Object.keys(this.definition);
+  }
 
   async validate(): Promise<boolean> {
     const promises = this.accessors.map(accessor => accessor.validate());
@@ -75,7 +84,7 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   get accessors(): Accessor[] {
     const result: Accessor[] = [];
 
-    Object.keys(this.definition).forEach(key => {
+    this.keys.forEach(key => {
       const entry = this.definition[key];
       if (entry instanceof Field) {
         result.push(this.field(key as keyof M));
@@ -101,6 +110,10 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   }
 
   access(name: string): Accessor | undefined {
+    if (!this.keys.includes(name)) {
+      return undefined;
+    }
+
     // XXX catching errors isn't ideal
     try {
       return this.field(name as keyof M);
@@ -125,8 +138,37 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     return accessor.accessBySteps(rest);
   }
 
+  private getDefinitionEntry<K extends keyof M>(
+    name: K
+  ): FormDefinitionEntry<M, K> | undefined {
+    if (!this.keys.includes(name as string)) {
+      return undefined;
+    }
+    return this.definition[name];
+  }
+
+  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
+    allowedKeys.forEach(key => {
+      if (!this.keys.includes(key as string)) {
+        throw new Error(
+          "Cannot restrict FormAccessor to non-existent key: " + key
+        );
+      }
+    });
+    return new FormAccessor(
+      this.state,
+      this.definition,
+      this.node,
+      this.path,
+      allowedKeys as string[]
+    );
+  }
+
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
-    const field = this.definition[name];
+    const field = this.getDefinitionEntry(name);
+    if (field == null) {
+      throw new Error(`Field ${name} is not in group`);
+    }
     if (!(field instanceof Field)) {
       throw new Error("Not accessing a Field instance");
     }
@@ -140,13 +182,15 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   }
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
-    const repeatingForm = this.definition[name];
+    const repeatingForm = this.getDefinitionEntry(name);
+    if (repeatingForm == null) {
+      throw new Error(`RepeatingForm ${name} is not in group`);
+    }
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
     }
 
-    // we know that the node is an array of M[] at this point
-    const nodes = (this.node[name] as any) as M[];
+    const nodes = (this.node[name] as any) as ArrayEntryType<M[K]>[];
 
     return new RepeatingFormAccessor(
       this.state,
@@ -523,6 +567,10 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
       return undefined;
     }
     return accessor.accessBySteps(steps);
+  }
+
+  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
+    return this.formAccessor.restricted(allowedKeys);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {

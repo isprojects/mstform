@@ -344,6 +344,10 @@ export class FormState<M, D extends FormDefinition<M>>
     return this.formAccessor.access(name);
   }
 
+  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
+    return this.formAccessor.restricted(allowedKeys);
+  }
+
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
     return this.formAccessor.field(name);
   }
