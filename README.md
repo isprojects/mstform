@@ -10,21 +10,21 @@ It doesn't put any requirements on your widgets. It works with any React
 
 ## Features
 
-- It knows about raw input (the value you type) and the converted input (the
-  value you want). You may type a string but want a number, for instance.
-  mstform converts this automatically.
-- It can drive any React controlled component. It normalizes input components
-  so it can generate the right props for it -- whether it be a input type
-  string, type checked or a custom component that works in terms of objects -
-  mstform has you covered.
-- Integrates deeply with a mobx-state-tree (MST) model. You give it a model
-  instance and it renders its contents. When you are ready to submit the form,
-  you have a mobx-state-tree model again. You can modify the mobx-state-tree
-  instance in code as well and the form is automatically updated.
-- Thanks to MST it's easy to convert form contents to JSON and back again.
-- It knows about types. If you use vscode for instance, your editor tells you
-  if you do something wrong. This works even in plain Javascript if you enable
-  `ts-check`.
+-   It knows about raw input (the value you type) and the converted input (the
+    value you want). You may type a string but want a number, for instance.
+    mstform converts this automatically.
+-   It can drive any React controlled component. It normalizes input components
+    so it can generate the right props for it -- whether it be a input type
+    string, type checked or a custom component that works in terms of objects -
+    mstform has you covered.
+-   Integrates deeply with a mobx-state-tree (MST) model. You give it a model
+    instance and it renders its contents. When you are ready to submit the form,
+    you have a mobx-state-tree model again. You can modify the mobx-state-tree
+    instance in code as well and the form is automatically updated.
+-   Thanks to MST it's easy to convert form contents to JSON and back again.
+-   It knows about types. If you use vscode for instance, your editor tells you
+    if you do something wrong. This works even in plain Javascript if you enable
+    `ts-check`.
 
 ## Philosophy
 
@@ -61,7 +61,7 @@ trivial to serialize form contents to JSON and restore it again.
 
 ## A Simple Example
 
-```javascript
+```js
 // @ts-check
 import { observer } from "mobx-react";
 import { types } from "mobx-state-tree";
@@ -71,14 +71,14 @@ import { Component } from "react";
 
 // we have a MST model with a string field foo
 const M = types.model("M", {
-  foo: types.string
+    foo: types.string
 });
 
 // we expose this field in our form
 const form = new Form(M, {
-  foo: new Field(converters.string, {
-    validators: [value => (value !== "correct" ? "Wrong" : false)]
-  })
+    foo: new Field(converters.string, {
+        validators: [value => (value !== "correct" ? "Wrong" : false)]
+    })
 });
 
 // we create an instance of the model
@@ -86,34 +86,34 @@ const o = M.create({ foo: "FOO" });
 
 @observer
 class InlineError extends Component {
-  render() {
-    const { children, error } = this.props;
-    return (
-      <div>
-        {children}
-        <span>{error}</span>
-      </div>
-    );
-  }
+    render() {
+        const { children, error } = this.props;
+        return (
+            <div>
+                {children}
+                <span>{error}</span>
+            </div>
+        );
+    }
 }
 
 @observer
 export class MyForm extends Component {
-  constructor(props) {
-    super(props);
-    // we create a form state for this model
-    this.state = form.state(o);
-  }
+    constructor(props) {
+        super(props);
+        // we create a form state for this model
+        this.state = form.state(o);
+    }
 
-  render() {
-    // we get the foo field from the form
-    const field = this.state.field("foo");
-    return (
-      <InlineError error={field.error}>
-        <input type="text" {...field.inputProps} />
-      </InlineError>
-    );
-  }
+    render() {
+        // we get the foo field from the form
+        const field = this.state.field("foo");
+        return (
+            <InlineError error={field.error}>
+                <input type="text" {...field.inputProps} />
+            </InlineError>
+        );
+    }
 }
 ```
 
@@ -171,52 +171,52 @@ can help to catch errors.
 Many forms have a sub-form that repeats itself. The MST model
 could look like this:
 
-```javascript
+```js
 const Animal = types.model("Animal", {
-  name: types.string,
-  size: types.string
+    name: types.string,
+    size: types.string
 });
 
 const Zoo = types.model("Zoo", {
-  animals: types.array(Animal)
+    animals: types.array(Animal)
 });
 ```
 
 Here we want a form that lets you add and remove animals:
 
-```javascript
+```js
 import { RepeatingForm } from "mstform";
 
 const form = new Form(Zoo, {
-  animals: new RepeatingForm({
-    name: new Field(converters.string),
-    size: new Field(converters.string)
-  })
+    animals: new RepeatingForm({
+        name: new Field(converters.string),
+        size: new Field(converters.string)
+    })
 });
 ```
 
 We can now use it in our `render` method:
 
-```javascript
+```js
 // this represents all the subforms
 const animalForms = state.repeatingForm("animals");
 
 const entries = o.animals.map((animal, index) => {
-  // get the sub-form we want
-  const animalForm = animalForms.index(index);
-  // and get the fields as usual
-  const name = animalForm.field("name");
-  const size = animalForm.field("size");
-  return (
-    <div>
-      <InlineError error={name.error}>
-        <input type="text" {...name.inputProps} />
-      </InlineError>
-      <InlineError error={size.error}>
-        <input type="text" {...name.inputProps} />
-      </InlineError>
-    </div>
-  );
+    // get the sub-form we want
+    const animalForm = animalForms.index(index);
+    // and get the fields as usual
+    const name = animalForm.field("name");
+    const size = animalForm.field("size");
+    return (
+        <div>
+            <InlineError error={name.error}>
+                <input type="text" {...name.inputProps} />
+            </InlineError>
+            <InlineError error={size.error}>
+                <input type="text" {...name.inputProps} />
+            </InlineError>
+        </div>
+    );
 });
 
 return <div>{entries}</div>;
@@ -236,15 +236,15 @@ converter generates a validation error.
 The input raw value is a string. The converted value may be a string or some
 other object:
 
-- `converters.string`: value is a string.
+-   `converters.string`: value is a string.
 
-- `converters.number`: value is a number.
+-   `converters.number`: value is a number.
 
-- `converters.integer`: value is an integer.
+-   `converters.integer`: value is an integer.
 
-- `converters.decimal(maxDigits, decimalPlaces)`: value is a string (not a
-  number) that contains a decimal number with a maximum `maxDigits` before the
-  period and a maximum of `decimalPlaces` after the period.
+-   `converters.decimal(maxDigits, decimalPlaces)`: value is a string (not a
+    number) that contains a decimal number with a maximum `maxDigits` before the
+    period and a maximum of `decimalPlaces` after the period.
 
 ### Boolean
 
@@ -297,15 +297,15 @@ you control these components for you.
 
 Controlled components receive subtly different props:
 
-- `input` type `string` has a `value` prop and an `onChange` with an event. It
-  gets the updated value from `event.target.value`.
+-   `input` type `string` has a `value` prop and an `onChange` with an event. It
+    gets the updated value from `event.target.value`.
 
-- `input` type `checkbox` has a `checked` prop and an `onChange` that receives
-  `event.target.checked` with the updated value.
+-   `input` type `checkbox` has a `checked` prop and an `onChange` that receives
+    `event.target.checked` with the updated value.
 
-- There are also higher level widgets where `value` and `onChange` are
-  symmetrical. A date picker widget for instance could have a JS `Date` as
-  `value` and `onChange` directly returns a new `Date` instance.
+-   There are also higher level widgets where `value` and `onChange` are
+    symmetrical. A date picker widget for instance could have a JS `Date` as
+    `value` and `onChange` directly returns a new `Date` instance.
 
 mstform offers a `controlled` hook. It takes a function that given the field
 accessor returns the right props for control. This can be used to ensure that
@@ -314,14 +314,14 @@ controlled component.
 
 There are three `controlled` implementations built in:
 
-- `controlled.value` - `value` and `onChange` processes
-  `event.target.value`.
+-   `controlled.value` - `value` and `onChange` processes
+    `event.target.value`.
 
-- `controlled.checked` - `checked` and `onChange` processes
-  `event.target.checked`.
+-   `controlled.checked` - `checked` and `onChange` processes
+    `event.target.checked`.
 
-- `controlled.object` - `value` represents some object and `onChange` gets a
-  new object as an argument. Symmetrical `value` and `onChange`.
+-   `controlled.object` - `value` represents some object and `onChange` gets a
+    new object as an argument. Symmetrical `value` and `onChange`.
 
 By default the converter determines which is used. If you use the `string`
 converter or a derivative, `controlled.value` is used, and if you use the
@@ -331,7 +331,7 @@ anything else the default is `controlled.object`.
 You can always override `controlled` in the field configuration. For
 example:
 
-```javascript
+```js
 import { observer } from "mobx-react";
 import { types } from "mobx-state-tree";
 import { Field, Form, FormState, converters, controlled } from "mstform";
@@ -340,14 +340,14 @@ import { Component } from "react";
 
 // we have a MST model with a string field foo
 const M = types.model("M", {
-  foo: types.string
+    foo: types.string
 });
 
 // we expose this field in our form
 const form = new Form(M, {
-  foo: new Field(converters.string, {
-    controlled: controlled.string
-  })
+    foo: new Field(converters.string, {
+        controlled: controlled.string
+    })
 });
 ```
 
@@ -365,9 +365,9 @@ you want to create a new MST instance however: an add form.
 
 Consider this MST model:
 
-```javascript
+```js
 const M = types.model("Foo", {
-  nr: types.number
+    nr: types.number
 });
 ```
 
@@ -378,15 +378,15 @@ an instance with a value for `nr`.
 Let's do that and use an arbitrary number for `nr`. We could have picked
 any number but `0` is probably the most clear, so we use that:
 
-```javascript
+```js
 const node = M.create({ nr: 0 });
 ```
 
 Let's look at the form definition:
 
-```javascript
+```js
 const form = new Form(M, {
-  nr: new Field(converters.number)
+    nr: new Field(converters.number)
 });
 ```
 
@@ -395,7 +395,7 @@ in the input widget the form. That's not what we want to do in an add form; we
 want to display an empty input widget (raw value `""`, the empty string). We
 can accomplish this by setting the form in add mode when we create it:
 
-```javascript
+```js
 const state = form.state(node, { addMode: true });
 ```
 
@@ -419,13 +419,13 @@ When we create the form state, we can pass it some options. One is a function
 that explains how to save the MST instance, for instance by sending JSON
 to a backend:
 
-```javascript
+```js
 this.state = form.state(o, {
-  save: async node => {
-    // we call the real save function that actually knows
-    // how to save the form.
-    return node.save();
-  }
+    save: async node => {
+        // we call the real save function that actually knows
+        // how to save the form.
+        return node.save();
+    }
 });
 ```
 
@@ -435,7 +435,7 @@ saving failed -- we discuss this in a bit.
 
 Then when you implement a form submit button, you should call `state.save()`:
 
-```javascript
+```js
 @observer
 export class MyForm extends Component {
   constructor(props) {
@@ -449,8 +449,7 @@ export class MyForm extends Component {
     if (success) {
       // success notification
     } else {
-      // failure notification
-    }
+      // failure notification}
   }
 
   render() {
@@ -468,15 +467,15 @@ export class MyForm extends Component {
 
 `state.save()` does the following:
 
-- Makes sure the form is completely valid before it's submitted to the server,
-  otherwise displays client-side validation errors.
+-   Makes sure the form is completely valid before it's submitted to the server,
+    otherwise displays client-side validation errors.
 
-- Uses your supplied `save` function do to the actual saving.
+-   Uses your supplied `save` function do to the actual saving.
 
-- Processes any additional validation errors returned by the server.
+-   Processes any additional validation errors returned by the server.
 
-- Returns `true` if saving succeeded, and `false` if not due to validation
-  errors.
+-   Returns `true` if saving succeeded, and `false` if not due to validation
+    errors.
 
 If you don't specify your own `save` you can still call `state.save()`, but
 it gives you a warning on the console that no actual saving could take place.
@@ -495,15 +494,15 @@ return a custom object that contains server validation errors.
 
 This can contain a description of the error, for instance:
 
-```javascript
+```js
 {
-  myError: "We cannot accept this data";
+    myError: "We cannot accept this data";
 }
 ```
 
 You can access these errors (so you can render them to the end user):
 
-```javascript
+```js
 state.additionalError("myError");
 ```
 
@@ -512,18 +511,18 @@ Or you can get a list of all of them with `state.additionalErrors()`.
 You can also specify errors for particular fields, by naming the error key the
 same as the name of the field. So, if you have an MST model like this:
 
-```javascript
+```js
 const M = types.model("M", {
-  name: types.string()
+    name: types.string()
 });
 ```
 
 And you want to display a specific backend-generated error for `name`, the
 error structure returned by `save()` needs to be:
 
-```javascript
+```js
 {
-  name: "Could not be matched in the database";
+    name: "Could not be matched in the database";
 }
 ```
 
@@ -531,9 +530,9 @@ Every `Field` can have an error entry. This also works for repeating forms; if
 you have a repeating structure `entries` and there is an error in `name` of the
 second entry, the error structure should look like this:
 
-```javascript
+```js
 {
-  entries: [{}, { name: "We couldn't handle this" }];
+    entries: [{}, { name: "We couldn't handle this" }];
 }
 ```
 
@@ -543,11 +542,11 @@ By default, mstform displays inline validation errors as soon as you
 make a mistake. This may not be desirable. You can turn it off by
 passing another option:
 
-```javascript
+```js
 this.state = form.state(o, {
-  validation: {
-    beforeSave: "no"
-  }
+    validation: {
+        beforeSave: "no"
+    }
 });
 ```
 
@@ -555,18 +554,36 @@ Now inline validation only occurs after you save the first time, not before.
 
 It's also possible to turn off inline validation altogether:
 
-```javascript
+```js
 this.state = form.state(o, {
-  validation: {
-    beforeSave: "no",
-    afterSave: "no"
-  }
+    validation: {
+        beforeSave: "no",
+        afterSave: "no"
+    }
 });
 ```
 
 In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
+
+## Groups
+
+If you have a form with a lot of fields in the UI you want to split it up into
+multiple tabs or menu entries. Each tab is a coherent set of related fields.
+
+You can express such groups using `Group`:
+
+```js
+const M = types.model("M", {
+    foo: types.number,
+    bar: types.number,
+    baz: types.number,
+    qux: types.number
+});
+
+const groupA = new Group(M);
+```
 
 ## Disabled and hidden fields
 
@@ -577,9 +594,9 @@ to determine whether a field is disabled, but any operation can be
 implemented here. You could for instance retrieve information about which
 fields are disabled dynamically from the backend before you display the form.
 
-```javascript
+```js
 const state = form.state(o, {
-  isDisabled: accessor => accessor.path === "/foo"
+    isDisabled: accessor => accessor.path === "/foo"
 });
 ```
 
@@ -600,13 +617,13 @@ times in the application, each time with different validation requirements.
 mstform has a hook that lets you define additional validation behavior on the
 form level.
 
-```javascript
+```js
 const state = form.state(o, {
-  extraValidation: (accessor, value) => {
-    if (accessor.path === "/foo") {
-      return value === "Wrong" ? "Wrong!" : false;
+    extraValidation: (accessor, value) => {
+        if (accessor.path === "/foo") {
+            return value === "Wrong" ? "Wrong!" : false;
+        }
     }
-  }
 });
 ```
 
@@ -623,25 +640,25 @@ again.
 
 You express such derived values with mstform:
 
-```javascript
+```js
 const M = types
-  .model("M", {
-    calculated: types.number,
-    a: types.number,
-    b: types.number
-  })
-  .views(self => ({
-    sum() {
-      return self.a + self.b;
-    }
-  }));
+    .model("M", {
+        calculated: types.number,
+        a: types.number,
+        b: types.number
+    })
+    .views(self => ({
+        sum() {
+            return self.a + self.b;
+        }
+    }));
 
 const form = new Form(M, {
-  calculated: new Field(converters.number, {
-    derived: node => node.sum()
-  }),
-  a: new Field(converters.number),
-  b: new Field(converters.number)
+    calculated: new Field(converters.number, {
+        derived: node => node.sum()
+    }),
+    a: new Field(converters.number),
+    b: new Field(converters.number)
 });
 ```
 
@@ -662,25 +679,25 @@ When you change one field it's sometimes useful to have some side effect, for
 instance to change the value of another field. You can do so with the `change`
 hook:
 
-```javascript
+```js
 const M = types
-  .model("M", {
-    a: types.number,
-    b: types.number
-  })
-  .actions(self => ({
-    setB(value: number) {
-      self.b = value;
-    }
-  }));
+    .model("M", {
+        a: types.number,
+        b: types.number
+    })
+    .actions(self => ({
+        setB(value: number) {
+            self.b = value;
+        }
+    }));
 
 const form = new Form(M, {
-  a: new Field(converters.number, {
-    change: (node, value) => {
-      node.setB(value);
-    }
-  }),
-  b: new Field(converters.number)
+    a: new Field(converters.number, {
+        change: (node, value) => {
+            node.setB(value);
+        }
+    }),
+    b: new Field(converters.number)
 });
 ```
 
@@ -697,11 +714,11 @@ onFocus event handler on the input element, but in some cases you want to react
 generically to _all_ focus events in a form. You can pass a special hook
 to the form state options for this:
 
-```javascript
+```js
 const state = form.state(o, {
-  focus: (ev, accessor) => {
-    // do something here
-  }
+    focus: (ev, accessor) => {
+        // do something here
+    }
 });
 ```
 
