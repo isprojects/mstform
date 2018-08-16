@@ -6,6 +6,15 @@
 -   Use mobx.comparer for deep equal comparison instead of fast-deep-equal
     dependency, which is now dropped.
 
+-   Introduce `isValid` method. When you access a form, field or repeating form
+    you can call `isValid` on it to determine whether it doesn't have any
+    validation errors. Note that this doesn't trigger revalidation of form
+    state that was incorrect from the very start -- for this you need to call
+    `validate` (and `save` does this for you).
+
+-   Introduce a Group concept. This allows you to Group fields in a larger
+    form together, and track whether everything in the group is valid.
+
 # 0.11
 
 -   Fix a bug with add mode.
