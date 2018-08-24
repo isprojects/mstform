@@ -752,3 +752,56 @@ The hook receives the event and the focused field accessor. You can use the
 accessor to get the field name (`accessor.name`), value (`accessor.value`),
 etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus` handler, so if you use that with the field it is there automatically.
+
+## validationProps
+
+`FieldAccessor` defines a property `validationProps` that can be used to drive
+the UI in a more advanced way than we did above with `InlineError`. Let's look
+at the [antd UI component library](https://ant.design/docs/react/introduce) as
+an example:
+
+```js
+<Form.Item label="My Field" {...myField.validationProps}>
+    <Input {...myField.inputProps} />
+</Form.Item>
+```
+
+Besides `inputProps`, which drives an actual input component, we also use
+`validationProps`, which drive the `Form.Item` object. This takes information
+such as error status. While `inputProps` is fairly universal across form UI
+libraries, `validationProps` is different for each of them.
+
+Out of the box, mstform ships with antd support. This is how you
+enable it globally:
+
+```js
+import { validationProps } from "mstform/antd";
+
+setupValidationProps(validationProps);
+```
+
+You need to do this once when the application starts.
+
+You can also define a custom validationProps that's suitable for your library.
+Here's one for `InlineError` as we defined it above, for instance:
+
+```js
+function myValidationProps(accessor) {
+    return {
+        error: accessor.error
+    };
+}
+
+setupValidationProps(myValidationProps);
+```
+
+Once's that set up you can use `validationProps` with `InlineError`:
+
+```js
+<InlineError {...field.validationProps}>
+    <input type="text" {...field.inputProps} />
+</InlineError>
+```
+
+This way if the behavior of InlineError changes to take more props drived from
+a field accessor you can easily change the way `validationProps` is generated.

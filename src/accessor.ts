@@ -26,6 +26,10 @@ export interface RepeatingFormAccessorAllows {
   (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
 }
 
+export interface ValidationProps {
+  (accessor: FieldAccessor<any, any, any>): object;
+}
+
 export type Accessor =
   | FieldAccessor<any, any, any>
   | RepeatingFormAccessor<any, any>
@@ -59,6 +63,14 @@ export interface IFormAccessor<M, D extends FormDefinition<M>> {
   accessors: Accessor[];
 
   flatAccessors: Accessor[];
+}
+
+let currentValidationProps: ValidationProps = () => {
+  return {};
+};
+
+export function setupValidationProps(validationProps: ValidationProps) {
+  currentValidationProps = validationProps;
 }
 
 export class FormAccessor<M, D extends FormDefinition<M>>
@@ -423,16 +435,8 @@ export class FieldAccessor<M, R, V> {
   }
 
   @computed
-  get validationProps() {
-    const error = this.error;
-    const isValidating = this.isValidating;
-    if (!error) {
-      return { validateStatus: isValidating ? "validating" : "" };
-    }
-    return {
-      validateStatus: isValidating ? "validating" : "error",
-      help: error
-    };
+  get validationProps(): object {
+    return currentValidationProps(this);
   }
 
   accessBySteps(steps: string[]): Accessor {

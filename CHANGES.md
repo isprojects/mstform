@@ -15,6 +15,11 @@
 -   Introduce a Group concept. This allows you to Group fields in a larger
     form together, and track whether everything in the group is valid.
 
+-   Make validationProps behavior pluggable with `setupValidationProps`. This
+    takes a function that given a FieldAccessor should return an object of
+    props. There is a `mstform/antd` module that exposes a `validationProps`
+    function compatible with antd's `Form.Item`.
+
 # 0.11
 
 -   Fix a bug with add mode.
