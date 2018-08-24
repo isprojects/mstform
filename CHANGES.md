@@ -3,7 +3,7 @@
 -   Rearrange the package structure and eliminate Lerna in favor of something
     simpler.
 
--   Use mobx.comparer for deep equal comparison instead of fast-deep-equal
+-   Use `mobx.comparer` for deep equal comparison instead of fast-deep-equal
     dependency, which is now dropped.
 
 -   Introduce `isValid` method. When you access a form, field or repeating form
@@ -15,7 +15,7 @@
 -   Introduce a Group concept. This allows you to Group fields in a larger
     form together, and track whether everything in the group is valid.
 
--   Make validationProps behavior pluggable with `setupValidationProps`. This
+-   Make `validationProps` behavior pluggable with `setupValidationProps`. This
     takes a function that given a FieldAccessor should return an object of
     props. There is a `mstform/antd` module that exposes a `validationProps`
     function compatible with antd's `Form.Item`.
