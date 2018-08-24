@@ -6,9 +6,9 @@ import {
   Form,
   Field,
   setupValidationProps,
-  ValidationProps
+  ValidationProps,
+  antd
 } from "../src";
-import { validationProps } from "../src/antd";
 
 configure({ enforceActions: true });
 
@@ -23,7 +23,7 @@ test("antd validationProps", async () => {
 
   const o = M.create({ foo: 1 });
 
-  setupValidationProps(validationProps);
+  setupValidationProps(antd.validationProps);
 
   const state = form.state(o);
   const field = state.field("foo");

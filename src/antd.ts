@@ -1,8 +1,6 @@
 import { FieldAccessor } from "./accessor";
 
-export function validationProps(
-  accessor: FieldAccessor<any, any, any>
-): object {
+function validationProps(accessor: FieldAccessor<any, any, any>): object {
   const error = accessor.error;
   const isValidating = accessor.isValidating;
   if (!error) {
@@ -13,3 +11,7 @@ export function validationProps(
     help: error
   };
 }
+
+export const antd = {
+  validationProps
+};

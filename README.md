@@ -775,9 +775,9 @@ Out of the box, mstform ships with antd support. This is how you
 enable it globally:
 
 ```js
-import { validationProps } from "mstform/antd";
+import { antd } from "mstform";
 
-setupValidationProps(validationProps);
+setupValidationProps(antd.validationProps);
 ```
 
 You need to do this once when the application starts.

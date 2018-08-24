@@ -1,3 +1,8 @@
+# 0.12.1
+
+-   We claimed we exposed `mstform/antd` but didn't. Instead, export
+    `antd.validationProps`. You import `antd` from `mstform` directly.
+
 # 0.12
 
 -   Rearrange the package structure and eliminate Lerna in favor of something

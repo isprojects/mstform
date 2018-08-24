@@ -253,7 +253,7 @@ export class FieldAccessor<M, R, V> {
     }
     const disposer = reaction(
       () => derivedFunc(this.node),
-      derivedValue => {
+      (derivedValue: any) => {
         this.setRaw(this.field.render(derivedValue));
       }
     );
