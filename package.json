@@ -18,6 +18,7 @@
         "start": "webpack-dev-server --open --config webpack.dev.js",
         "lint": "tslint -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
         "build": "webpack --config webpack.prod.js",
+        "prepublishOnly": "yarn run lint && yarn run test && yarn run build",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:debug": "node --nolazy --inspect-brk=9229 ./node_modules/.bin/jest --runInBand",
