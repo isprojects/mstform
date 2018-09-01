@@ -288,8 +288,13 @@ export class FormState<M, D extends FormDefinition<M>>
 
   isKnownAddModePath(path: string): boolean {
     let found;
+    let foundKey = "";
     this.addModePaths.forEach((value, key) => {
       if (path.startsWith(key)) {
+        if (key.length < foundKey.length) {
+          return;
+        }
+        foundKey = key;
         found = value;
         return;
       }
