@@ -267,7 +267,7 @@ export class FieldAccessor<M, R, V> {
 
   @computed
   get raw(): R {
-    const result = this.state.raw.get(this.path);
+    const result = this.state.getRaw(this.path);
     if (result !== undefined) {
       // this is an object reference. don't convert to JS
       if (isObservable(result) && !(result instanceof Array)) {
@@ -371,7 +371,7 @@ export class FieldAccessor<M, R, V> {
       return;
     }
 
-    const currentRaw = this.state.raw.get(this.path);
+    const currentRaw = this.state.getRaw(this.path);
 
     // if the raw changed in the mean time, bail out
     if (!comparer.structural(currentRaw, raw)) {

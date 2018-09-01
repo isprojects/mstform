@@ -59,10 +59,52 @@ export interface FormStateOptions<M> {
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
+class PathMapEntry {
+  @observable
+  raw?: any;
+
+  @observable
+  error?: string;
+
+  @observable
+  validating?: boolean;
+
+  @observable
+  addMode?: boolean;
+
+  @observable
+  derivedDisposer?: IReactionDisposer;
+
+  @action
+  updateRaw(raw: any) {
+    this.raw = raw;
+  }
+
+  @action
+  updateError(error: string) {
+    this.error = error;
+  }
+
+  @action
+  updateValidating(validating: boolean) {
+    this.validating = validating;
+  }
+
+  @action
+  updateAddMode(addMode: boolean) {
+    this.addMode = addMode;
+  }
+
+  @action
+  updateDerivedDisposer(derivedDisposer: IReactionDisposer) {
+    this.derivedDisposer = derivedDisposer;
+  }
+}
+
 export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   @observable
-  raw: Map<string, any>;
+  pathMap: Map<string, PathMapEntry>;
 
   @observable
   errors: Map<string, string>;
@@ -72,9 +114,6 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @observable
   validating: Map<string, boolean>;
-
-  @observable
-  addModePaths: Map<string, boolean>;
 
   @observable
   derivedDisposers: Map<string, IReactionDisposer>;
@@ -99,10 +138,10 @@ export class FormState<M, D extends FormDefinition<M>>
     public node: M,
     options?: FormStateOptions<M>
   ) {
-    this.raw = observable.map();
+    this.pathMap = observable.map();
+
     this.errors = observable.map();
     this.validating = observable.map();
-    this.addModePaths = observable.map();
     this.derivedDisposers = observable.map();
     this.additionalErrorTree = {};
     this.noRawUpdate = false;
@@ -126,7 +165,7 @@ export class FormState<M, D extends FormDefinition<M>>
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
-      this.addModePaths.set("/", false);
+      this.setAddMode("/", false);
       this.focusFunc = null;
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
@@ -140,7 +179,7 @@ export class FormState<M, D extends FormDefinition<M>>
       this.extraValidationFunc = options.extraValidation
         ? options.extraValidation
         : () => false;
-      this.addModePaths.set("/", options.addMode || false);
+      this.setAddMode("/", options.addMode || false);
       const validation = options.validation || {};
       this.validationBeforeSave = validation.beforeSave || "immediate";
       this.validationAfterSave = validation.afterSave || "immediate";
@@ -170,11 +209,27 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   @action
+  ensurePathMapEntry(path: string): PathMapEntry {
+    let entry = this.pathMap.get(path);
+    if (entry !== undefined) {
+      return entry;
+    }
+    entry = new PathMapEntry();
+    this.pathMap.set(path, entry);
+    return entry;
+  }
+
+  @action
   setRaw(path: string, value: any) {
     if (this.saveStatus === "rightAfter") {
       this.setSaveStatus("after");
     }
-    this.raw.set(path, value);
+    this.ensurePathMapEntry(path).updateRaw(value);
+  }
+
+  @action
+  setAddMode(path: string, value: boolean) {
+    this.ensurePathMapEntry(path).updateAddMode(value);
   }
 
   @action
@@ -215,10 +270,9 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   removePath(path: string) {
-    this.raw = removePath(this.raw, path);
+    this.pathMap = removePath(this.pathMap, path);
     this.errors = removePath(this.errors, path);
     this.validating = removePath(this.validating, path);
-    this.addModePaths = removePath(this.addModePaths, path);
     this.derivedDisposers = removePath(
       this.derivedDisposers,
       path,
@@ -226,17 +280,17 @@ export class FormState<M, D extends FormDefinition<M>>
         value();
       }
     );
-    this.addModePaths.set(path, true);
+    this.ensurePathMapEntry(path).updateAddMode(true);
   }
 
   @action
   addPath(path: string) {
-    this.raw = addPath(this.raw, path);
+    this.pathMap = addPath(this.pathMap, path);
+
     this.errors = addPath(this.errors, path);
     this.validating = addPath(this.validating, path);
-    this.addModePaths = addPath(this.addModePaths, path);
     this.derivedDisposers = addPath(this.derivedDisposers, path);
-    this.addModePaths.set(path, true);
+    this.ensurePathMapEntry(path).updateAddMode(true);
   }
 
   async validate(): Promise<boolean> {
@@ -286,14 +340,27 @@ export class FormState<M, D extends FormDefinition<M>>
     this.errors.clear();
   }
 
+  // isKnownAddModePath(path: string): boolean {
+  //   let found;
+  //   this.pathMap.forEach((entry, key) => {
+  //     if (entry.addMode !== undefined || path.startsWith(key)) {
+  //       found = entry.addMode;
+  //       return;
+  //     }
+  //   });
+  //   if (found === undefined) {
+  //     return false;
+  //   }
+  //   return found;
+  // }
+
   isKnownAddModePath(path: string): boolean {
     let found;
-    this.addModePaths.forEach((value, key) => {
-      if (path.startsWith(key)) {
-        found = value;
-        return;
+    for (const [key, value] of this.pathMap) {
+      if (path.startsWith(key) && value.addMode !== undefined) {
+        found = value.addMode;
       }
-    });
+    }
     if (found === undefined) {
       return false;
     }
@@ -301,7 +368,15 @@ export class FormState<M, D extends FormDefinition<M>>
   }
 
   addMode(path: string): boolean {
-    return this.isKnownAddModePath(path) && this.raw.get(path) === undefined;
+    return this.isKnownAddModePath(path) && this.getRaw(path) === undefined;
+  }
+
+  getRaw(path: string): any {
+    const entry = this.pathMap.get(path);
+    if (entry === undefined) {
+      return undefined;
+    }
+    return entry.raw;
   }
 
   getValue(path: string): any {
