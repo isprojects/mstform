@@ -63,24 +63,30 @@ export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   @observable
   raw: Map<string, any>;
+
   @observable
   errors: Map<string, string>;
+
   @observable
   additionalErrorTree: any;
+
   @observable
   validating: Map<string, boolean>;
+
   @observable
   addModePaths: Map<string, boolean>;
+
   @observable
   derivedDisposers: Map<string, IReactionDisposer>;
+
+  @observable
+  saveStatus: SaveStatusOptions = "before";
 
   formAccessor: FormAccessor<M, D>;
   saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
-  @observable
-  saveStatus: SaveStatusOptions = "before";
   isDisabledFunc: FieldAccessorAllows;
   isHiddenFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
