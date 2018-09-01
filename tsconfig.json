@@ -18,7 +18,6 @@
         "allowSyntheticDefaultImports": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "downlevelIteration": true,
         "jsx": "react",
         "typeRoots": ["node_modules/@types"]
     },
