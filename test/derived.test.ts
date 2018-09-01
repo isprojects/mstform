@@ -2,9 +2,7 @@ import { configure, IReactionDisposer } from "mobx";
 import { types } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
 
-// "strict" leads to trouble during initialization. we may want to lift this
-// restriction in ispnext in the future as we use MST now, which has its
-// own mechanism
+// "strict" leads to trouble during initialization.
 configure({ enforceActions: true });
 
 // a way to wait for all reactions to have been resolved

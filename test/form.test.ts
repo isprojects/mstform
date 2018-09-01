@@ -2,9 +2,7 @@ import { configure } from "mobx";
 import { getSnapshot, types, applySnapshot, onPatch } from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
-// "strict" leads to trouble during initialization. we may want to lift this
-// restriction in ispnext in the future as we use MST now, which has its
-// own mechanism
+// "strict" leads to trouble during initialization.
 configure({ enforceActions: true });
 
 test("a simple form", async () => {
