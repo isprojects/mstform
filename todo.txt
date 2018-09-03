@@ -1,4 +1,10 @@
 
+* Factor out need for node in accessors -- can get it by resolving
+  path anyway if required. This way we can make repeating indexed
+  accessors also be stored -- even if underlying value changes,
+  the accessor is the same.
+
+
 * a Group concept that aggregates validation values. Should deliver true or
   false.
 

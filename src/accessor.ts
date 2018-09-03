@@ -76,6 +76,8 @@ export function setupValidationProps(validationProps: ValidationProps) {
 export class FormAccessor<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   private keys: string[];
+  private fieldAccessors: Map<keyof M, FieldAccessor<any, any, any>>;
+  private repeatingFormAccessors: Map<keyof M, RepeatingFormAccessor<any, any>>;
 
   constructor(
     public state: FormState<M, D>,
@@ -84,6 +86,8 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     public path: string,
     public allowedKeys?: string[]
   ) {
+    this.fieldAccessors = new Map();
+    this.repeatingFormAccessors = new Map();
     this.keys =
       allowedKeys != null ? allowedKeys : Object.keys(this.definition);
   }
@@ -191,13 +195,19 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     if (!(field instanceof Field)) {
       throw new Error("Not accessing a Field instance");
     }
-    return new FieldAccessor(
+    let accessor = this.fieldAccessors.get(name);
+    if (accessor !== undefined) {
+      return accessor;
+    }
+    accessor = new FieldAccessor(
       this.state,
       field,
       this.node,
       this.path,
       name as string
     );
+    this.fieldAccessors.set(name, accessor);
+    return accessor;
   }
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
@@ -209,15 +219,21 @@ export class FormAccessor<M, D extends FormDefinition<M>>
       throw new Error("Not accessing a RepeatingForm instance");
     }
 
-    const nodes = (this.node[name] as any) as ArrayEntryType<M[K]>[];
+    let accessor = this.repeatingFormAccessors.get(name);
+    if (accessor !== undefined) {
+      return accessor;
+    }
 
-    return new RepeatingFormAccessor(
+    const nodes = (this.node[name] as any) as ArrayEntryType<M[K]>[];
+    accessor = new RepeatingFormAccessor(
       this.state,
       repeatingForm,
       nodes,
       this.path,
       name as string
     );
+    this.repeatingFormAccessors.set(name, accessor);
+    return accessor;
   }
 
   repeatingField(name: string): any {
@@ -448,6 +464,11 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   name: string;
   path: string;
 
+  private repeatingFormIndexedAccessors: Map<
+    number,
+    RepeatingFormIndexedAccessor<any, any>
+  >;
+
   constructor(
     public state: FormState<any, any>,
     public repeatingForm: RepeatingForm<M, D>,
@@ -457,6 +478,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   ) {
     this.name = name;
     this.path = path + "/" + name;
+    this.repeatingFormIndexedAccessors = new Map();
   }
 
   async validate(): Promise<boolean> {
