@@ -15,7 +15,8 @@ export type FormDefinitionType<T> = T extends RepeatingForm<any, infer D>
 
 export type FormDefinitionEntry<M, K extends keyof M> =
   | Field<any, M[K]>
-  | RepeatingForm<ArrayEntryType<M[K]>, any>;
+  | RepeatingForm<ArrayEntryType<M[K]>, any>
+  | Form<M[K], any>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
 

@@ -16,7 +16,8 @@ import {
   FormAccessor,
   IFormAccessor,
   RepeatingFormAccess,
-  RepeatingFormAccessorAllows
+  RepeatingFormAccessorAllows,
+  SubFormAccess
 } from "./accessor";
 import { Form, FormDefinition } from "./form";
 import {
@@ -359,6 +360,10 @@ export class FormState<M, D extends FormDefinition<M>>
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
     return this.formAccessor.repeatingForm(name);
+  }
+
+  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
+    return this.formAccessor.subForm(name);
   }
 
   repeatingField(name: string): any {

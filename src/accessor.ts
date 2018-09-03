@@ -1,6 +1,7 @@
 import { action, computed, isObservable, toJS, reaction, comparer } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
+  Form,
   ArrayEntryType,
   Field,
   FormDefinition,
@@ -46,6 +47,12 @@ export type RepeatingFormAccess<
   D extends FormDefinition<M>,
   K extends keyof M
 > = RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>>;
+
+export type SubFormAccess<
+  M,
+  D extends FormDefinition<M>,
+  K extends keyof M
+> = FormAccessor<M[K], FormDefinitionType<D[K]>>;
 
 export interface IFormAccessor<M, D extends FormDefinition<M>> {
   validate(): Promise<boolean>;
@@ -217,6 +224,22 @@ export class FormAccessor<M, D extends FormDefinition<M>>
       nodes,
       this.path,
       name as string
+    );
+  }
+
+  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
+    const subForm = this.getDefinitionEntry(name);
+    if (subForm == null) {
+      throw new Error(`SubForm ${name} is not in group`);
+    }
+    if (!(subForm instanceof Form)) {
+      throw new Error("Not accessing a Form instance");
+    }
+    return new FormAccessor(
+      this.state,
+      subForm.definition,
+      this.node[name],
+      this.path + "/" + name
     );
   }
 
