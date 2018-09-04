@@ -1,6 +1,13 @@
 import { configure } from "mobx";
 import { getSnapshot, types, applySnapshot, onPatch } from "mobx-state-tree";
-import { Converter, Field, Form, RepeatingForm, converters } from "../src";
+import {
+  Converter,
+  Field,
+  Form,
+  SubForm,
+  RepeatingForm,
+  converters
+} from "../src";
 
 // "strict" leads to trouble during initialization.
 configure({ enforceActions: true });
@@ -17,7 +24,7 @@ test("a sub form", async () => {
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    sub: new Form(N, {
+    sub: new SubForm({
       bar: new Field(converters.string)
     })
   });

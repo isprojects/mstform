@@ -1,3 +1,12 @@
+# 0.13
+
+-   SubForm support. You can get fields for a nested object by using `SubForm`,
+    analogous to how you can fields for an array using `RepeatingForm`.
+
+-   Accessors previously had a `node` property. I realized I could remove this
+    as we always can reconstruct the node from the path where needed
+    within the accessors.
+
 # 0.12.1
 
 -   We claimed we exposed `mstform/antd` but didn't. Instead, export

@@ -222,6 +222,46 @@ const entries = o.animals.map((animal, index) => {
 return <div>{entries}</div>;
 ```
 
+## SubForm
+
+Some MST models have a sub-object. When you render the form for such a model,
+you want to be able to include fields for this sub-object. The MST model could
+look like this:
+
+```js
+const Animal = types.model("Animal", {
+    name: types.string,
+    size: types.string
+});
+
+const House = types.model("House", {
+    description: types.string,
+    pet: Animal
+});
+```
+
+We want a form that includes information about the pet:
+
+```js
+import { SubForm } from "mstform";
+
+const form = new Form(Zoo, {
+    description: new Field(converters.string),
+    pet: new SubForm({
+        name: new Field(converters.string),
+        size: new Field(converters.string)
+    })
+});
+```
+
+We can now mix fields from the main form with those from the
+sub-form in our `render` method:
+
+```js
+const description = state.field('description');
+const name = state.subForm('pet').field('name);
+```
+
 ## Supported converters
 
 A converter specifies how to convert a raw value as it is entered in the form

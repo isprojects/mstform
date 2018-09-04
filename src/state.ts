@@ -1,11 +1,4 @@
-import {
-  action,
-  computed,
-  observable,
-  reaction,
-  IReactionDisposer,
-  toJS
-} from "mobx";
+import { action, computed, observable, IReactionDisposer } from "mobx";
 import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import {
   Accessor,
@@ -111,7 +104,7 @@ export class FormState<M, D extends FormDefinition<M>>
         this.setRawFromValue(patch.path);
       }
     });
-    this.formAccessor = new FormAccessor(this, this.form.definition, node, "");
+    this.formAccessor = new FormAccessor(this, this.form.definition, "");
     if (options == null) {
       this.saveFunc = defaultSaveFunc;
       this.isDisabledFunc = () => false;
