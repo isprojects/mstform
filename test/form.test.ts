@@ -1605,6 +1605,55 @@ test("a form with a repeating disabled field", async () => {
   expect(repeating.index(0).field("bar").disabled).toBeFalsy();
 });
 
+test("a form with a hidden field", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const state = form.state(o, {
+    isHidden: accessor => accessor.path.startsWith("/foo")
+  });
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  expect(fooField.hidden).toBeTruthy();
+  expect(barField.hidden).toBeFalsy();
+});
+
+test("a form with a readOnly field", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const state = form.state(o, {
+    isReadOnly: accessor => accessor.path.startsWith("/foo")
+  });
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  expect(fooField.readOnly).toBeTruthy();
+  expect(fooField.inputProps.readOnly).toBeTruthy();
+
+  expect(barField.readOnly).toBeFalsy();
+  expect(barField.inputProps.readOnly).toBeUndefined();
+});
+
 test("extra validation", async () => {
   const M = types.model("M", {
     foo: types.string,

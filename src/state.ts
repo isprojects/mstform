@@ -12,7 +12,7 @@ import {
   RepeatingFormAccessorAllows,
   SubFormAccess
 } from "./accessor";
-import { Form, FormDefinition } from "./form";
+import { Form, FormDefinition, Field } from "./form";
 import {
   addPath,
   deepCopy,
@@ -46,6 +46,7 @@ export interface FormStateOptions<M> {
   };
   isDisabled?: FieldAccessorAllows;
   isHidden?: FieldAccessorAllows;
+  isReadOnly?: FieldAccessorAllows;
   isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
   extraValidation?: ExtraValidation;
   focus?: FocusFunc<M, any, any>;
@@ -83,6 +84,7 @@ export class FormState<M, D extends FormDefinition<M>>
   validationPauseDuration: number;
   isDisabledFunc: FieldAccessorAllows;
   isHiddenFunc: FieldAccessorAllows;
+  isReadOnlyFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
@@ -115,6 +117,7 @@ export class FormState<M, D extends FormDefinition<M>>
       this.saveFunc = defaultSaveFunc;
       this.isDisabledFunc = () => false;
       this.isHiddenFunc = () => false;
+      this.isReadOnlyFunc = () => false;
       this.isRepeatingFormDisabledFunc = () => false;
       this.extraValidationFunc = () => false;
       this.validationBeforeSave = "immediate";
@@ -128,6 +131,9 @@ export class FormState<M, D extends FormDefinition<M>>
         ? options.isDisabled
         : () => false;
       this.isHiddenFunc = options.isHidden ? options.isHidden : () => false;
+      this.isReadOnlyFunc = options.isReadOnly
+        ? options.isReadOnly
+        : () => false;
       this.isRepeatingFormDisabledFunc = options.isRepeatingFormDisabled
         ? options.isRepeatingFormDisabled
         : () => false;
