@@ -15,7 +15,8 @@ export type FormDefinitionType<T> = T extends RepeatingForm<any, infer D>
 
 export type FormDefinitionEntry<M, K extends keyof M> =
   | Field<any, M[K]>
-  | RepeatingForm<ArrayEntryType<M[K]>, any>;
+  | RepeatingForm<ArrayEntryType<M[K]>, any>
+  | SubForm<M[K], any>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
 
@@ -60,6 +61,10 @@ export class Form<M, D extends FormDefinition<M>> {
   state(node: M, options?: FormStateOptions<M>): FormState<M, D> {
     return new FormState(this, node, options);
   }
+}
+
+export class SubForm<M, D extends FormDefinition<M>> {
+  constructor(public definition: D) {}
 }
 
 export class ValidationMessage {

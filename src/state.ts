@@ -1,11 +1,4 @@
-import {
-  action,
-  computed,
-  observable,
-  reaction,
-  IReactionDisposer,
-  toJS
-} from "mobx";
+import { action, computed, observable, IReactionDisposer } from "mobx";
 import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import {
   Accessor,
@@ -16,7 +9,8 @@ import {
   FormAccessor,
   IFormAccessor,
   RepeatingFormAccess,
-  RepeatingFormAccessorAllows
+  RepeatingFormAccessorAllows,
+  SubFormAccess
 } from "./accessor";
 import { Form, FormDefinition } from "./form";
 import {
@@ -116,7 +110,7 @@ export class FormState<M, D extends FormDefinition<M>>
         this.setRawFromValue(patch.path);
       }
     });
-    this.formAccessor = new FormAccessor(this, this.form.definition, node, "");
+    this.formAccessor = new FormAccessor(this, this.form.definition, "");
     if (options == null) {
       this.saveFunc = defaultSaveFunc;
       this.isDisabledFunc = () => false;
@@ -370,6 +364,10 @@ export class FormState<M, D extends FormDefinition<M>>
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
     return this.formAccessor.repeatingForm(name);
+  }
+
+  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
+    return this.formAccessor.subForm(name);
   }
 
   repeatingField(name: string): any {

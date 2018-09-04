@@ -142,7 +142,6 @@ test("repeating form", async () => {
   expect(field.raw).toEqual("QUX");
   expect(field.value).toEqual("QUX");
 
-  expect(forms.nodes).toBe(o.foo);
   expect(field.node).toBe(o.foo[0]);
 });
 
