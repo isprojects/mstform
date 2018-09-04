@@ -258,8 +258,8 @@ We can now mix fields from the main form with those from the
 sub-form in our `render` method:
 
 ```js
-const description = state.field('description');
-const name = state.subForm('pet').field('name);
+const description = state.field("description");
+const name = state.subForm("pet").field("name");
 ```
 
 ## Supported converters
