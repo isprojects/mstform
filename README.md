@@ -102,12 +102,12 @@ export class MyForm extends Component {
     constructor(props) {
         super(props);
         // we create a form state for this model
-        this.state = form.state(o);
+        this.formState = form.state(o);
     }
 
     render() {
         // we get the foo field from the form
-        const field = this.state.field("foo");
+        const field = this.formState.field("foo");
         return (
             <InlineError error={field.error}>
                 <input type="text" {...field.inputProps} />
@@ -420,7 +420,7 @@ that explains how to save the MST instance, for instance by sending JSON
 to a backend:
 
 ```js
-this.state = form.state(o, {
+this.formState = form.state(o, {
     save: async node => {
         // we call the real save function that actually knows
         // how to save the form.
@@ -441,7 +441,7 @@ export class MyForm extends Component {
     constructor(props) {
         super(props);
         // we create a form state for this model
-        this.state = form.state(o, {
+        this.formState = form.state(o, {
             save: async node => {
                 return node.save();
             }
@@ -449,7 +449,7 @@ export class MyForm extends Component {
     }
 
     handleSave = async () => {
-        const success = await this.state.save();
+        const success = await this.formState.save();
         if (success) {
             // success
         } else {
@@ -459,7 +459,7 @@ export class MyForm extends Component {
 
     render() {
         // we get the foo field from the form
-        const field = this.state.field("foo");
+        const field = this.formState.field("foo");
         return (
             <div>
                 ... render the form itself
@@ -548,7 +548,7 @@ make a mistake. This may not be desirable. You can turn it off by
 passing another option:
 
 ```js
-this.state = form.state(o, {
+this.formState = form.state(o, {
     validation: {
         beforeSave: "no"
     }
@@ -560,7 +560,7 @@ Now inline validation only occurs after you save the first time, not before.
 It's also possible to turn off inline validation altogether:
 
 ```js
-this.state = form.state(o, {
+this.formState = form.state(o, {
     validation: {
         beforeSave: "no",
         afterSave: "no"
@@ -805,3 +805,8 @@ Once's that set up you can use `validationProps` with `InlineError`:
 
 This way if the behavior of InlineError changes to take more props drived from
 a field accessor you can easily change the way `validationProps` is generated.
+
+## Tips
+
+-   Don't name your form state `this.state` as this has a special meaning
+    to React and can lead to odd bugs.
