@@ -3,6 +3,8 @@
 -   Update documentation to eliminate references to `this.state`,
     as this can lead to odd bugs.
 
+-   Also export exportables from ``state`` module, like FormState.
+
 # 0.12.1
 
 -   We claimed we exposed `mstform/antd` but didn't. Instead, export
