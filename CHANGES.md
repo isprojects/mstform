@@ -3,6 +3,9 @@
 -   We claimed we exposed `mstform/antd` but didn't. Instead, export
     `antd.validationProps`. You import `antd` from `mstform` directly.
 
+-   Update documentation to eliminate references to `this.state`, as this
+    can lead to odd bugs.
+
 # 0.12
 
 -   Rearrange the package structure and eliminate Lerna in favor of something
