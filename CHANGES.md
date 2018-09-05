@@ -1,3 +1,8 @@
+# 0.14
+
+-   Support for isReadOnly hook and field accessor `readOnly`. This is sent along
+    with `inputProps` only if isReadOnly returns `true` for that accessor.
+
 # 0.13
 
 -   Update documentation to eliminate references to `this.state`,

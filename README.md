@@ -651,14 +651,14 @@ const tabAValid = groupA.isValid;
 const tabBValid = groupB.isValid;
 ```
 
-## Disabled and hidden fields
+## Disabled, hidden and readOnly fields
 
-mstform has two hooks that let you calculate `hidden` and `disabled`
-state based on the field accessor. Here is a small example that makes the
-`foo` field disabled. This uses the JSON Path functionality of mstform
-to determine whether a field is disabled, but any operation can be
-implemented here. You could for instance retrieve information about which
-fields are disabled dynamically from the backend before you display the form.
+mstform has hooks that let you calculate `hidden`, `disabled` and `readOnly`
+state based on the field accessor. Here is a small example that makes the `foo`
+field disabled. This uses the JSON Path functionality of mstform to determine
+whether a field is disabled, but any operation can be implemented here. You
+could for instance retrieve information about which fields are disabled
+dynamically from the backend before you display the form.
 
 ```js
 const state = form.state(o, {
@@ -671,9 +671,14 @@ determine whether a repeating form is disabled from add and remove using
 `isRepeatingFormDisabled`. It's up to you to use this information to render the
 add and remove buttons with the disabled status, however.
 
-`isDisabled` makes the `disabled` prop `true` in `accessor.inputProps`. There
-is no such behavior for `hidden`; use `accessor.hidden` in your form rendering
-code to determine whether a field wants to be hidden.
+To implement readOnly behavior, pass in an `isReadOnly` function.
+
+`isDisabled` returning `true` makes the `disabled` prop `true` in
+`accessor.inputProps`. If `isReadOnly` is true, the `readOnly` flag is added to
+`accessor.inputProps`; otherwise it's absent, but it's up to you to ensure your
+React input widgets support a `readOnly` prop (HTML input does). There is no
+such behavior for `hidden`; use `accessor.hidden` in your form rendering code
+to determine whether a field wants to be hidden.
 
 ## Extra validation
 

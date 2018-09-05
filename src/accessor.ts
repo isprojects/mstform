@@ -376,6 +376,11 @@ export class FieldAccessor<M, R, V> {
     return this.state.isHiddenFunc(this);
   }
 
+  @computed
+  get readOnly(): boolean {
+    return this.state.isReadOnlyFunc(this);
+  }
+
   async validate(): Promise<boolean> {
     await this.setRaw(this.raw);
     return this.isValid;
@@ -458,6 +463,9 @@ export class FieldAccessor<M, R, V> {
   get inputProps() {
     const result: any = this.field.controlled(this);
     result.disabled = this.disabled;
+    if (this.readOnly) {
+      result.readOnly = this.readOnly;
+    }
     if (this.state.focusFunc != null) {
       result.onFocus = this.handleFocus;
     }
