@@ -169,6 +169,25 @@ test("default object controlled", async () => {
   expect(field.raw).toEqual("BAR");
 });
 
+test("default object controlled for stringArray converter", async () => {
+  const M = types.model("M", {
+    foo: types.array(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.stringArray)
+  });
+
+  const o = M.create({ foo: [] });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.inputProps.value).toEqual([]);
+  await field.inputProps.onChange(["a", "b"]);
+  expect(field.raw).toEqual(["a", "b"]);
+});
+
 test("default object controlled for maybe converter", async () => {
   const M = types.model("M", {
     foo: types.maybe(types.string)
