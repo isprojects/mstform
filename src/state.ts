@@ -218,7 +218,18 @@ export class FormState<M, D extends FormDefinition<M>>
 
   @action
   removePath(path: string) {
-    const accessor = this.accessByPath(path);
+    let accessor;
+    try {
+      accessor = this.accessByPath(path);
+    } catch {
+      // it's possible for a path to remove removed but it not
+      // being part of a repeating form -- in case of arrays treated
+      // as a value
+      // XXX not ideal to catch errors here. instead perhaps accessByPath
+      // should return undefined if it cannot resolve the path
+      return;
+    }
+
     if (
       accessor === undefined ||
       !(accessor instanceof RepeatingFormIndexedAccessor)
@@ -265,12 +276,15 @@ export class FormState<M, D extends FormDefinition<M>>
 
     accessor.addIndex(index);
 
-    // this.raw = addPath(this.raw, path);
-    // this.errors = addPath(this.errors, path);
-    // this.validating = addPath(this.validating, path);
-    // this.addModePaths = addPath(this.addModePaths, path);
-    // this.derivedDisposers = addPath(this.derivedDisposers, path);
-    // this.addModePaths.set(path, true);
+    // after all this we can access it and set it into addMode
+    const indexedAccessor = this.accessByPath(path);
+    if (
+      indexedAccessor === undefined ||
+      !(indexedAccessor instanceof RepeatingFormIndexedAccessor)
+    ) {
+      return;
+    }
+    indexedAccessor.setAddMode();
   }
 
   async validate(): Promise<boolean> {

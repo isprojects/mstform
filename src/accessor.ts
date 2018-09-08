@@ -214,6 +214,9 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   }
 
   accessBySteps(steps: string[]): Accessor | undefined {
+    if (steps.length === 0) {
+      return this;
+    }
     const [first, ...rest] = steps;
     const accessor = this.access(first);
     if (rest.length === 0) {
@@ -431,6 +434,7 @@ export class FieldAccessor<M, R, V> {
     return this._error;
   }
 
+  // XXX move this method to state
   @computed
   get canShowValidationMessages(): boolean {
     // immediately after a save we always want messages
@@ -495,6 +499,10 @@ export class FieldAccessor<M, R, V> {
 
   @action
   async setRaw(raw: R) {
+    if (this.state.saveStatus === "rightAfter") {
+      this.state.setSaveStatus("after");
+    }
+
     this._raw = raw;
     this._isValidating = true;
     let processResult;
@@ -874,6 +882,9 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
   }
 
   accessBySteps(steps: string[]): Accessor | undefined {
+    if (steps.length === 0) {
+      return this;
+    }
     return this.formAccessor.accessBySteps(steps);
   }
 
@@ -948,6 +959,9 @@ export class SubFormAccessor<M, D extends FormDefinition<M>>
   }
 
   accessBySteps(steps: string[]): Accessor | undefined {
+    if (steps.length === 0) {
+      return this;
+    }
     return this.formAccessor.accessBySteps(steps);
   }
 
