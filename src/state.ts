@@ -14,7 +14,7 @@ import {
   RepeatingFormIndexedAccessor,
   SubFormAccess
 } from "./accessor";
-import { Form, FormDefinition, Field } from "./form";
+import { Form, FormDefinition } from "./form";
 import {
   deepCopy,
   deleteByPath,
