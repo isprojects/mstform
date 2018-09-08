@@ -57,23 +57,8 @@ export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
-  // @observable
-  // raw: Map<string, any>;
-
-  // @observable
-  // errors: Map<string, string>;
-
   @observable
   additionalErrorTree: any;
-
-  // @observable
-  // validating: Map<string, boolean>;
-
-  // @observable
-  // addModePaths: Map<string, boolean>;
-
-  // @observable
-  // derivedDisposers: Map<string, IReactionDisposer>;
 
   @observable
   saveStatus: SaveStatusOptions = "before";
@@ -96,11 +81,6 @@ export class FormState<M, D extends FormDefinition<M>>
     public node: M,
     options?: FormStateOptions<M>
   ) {
-    //    this.raw = observable.map();
-    // this.errors = observable.map();
-    // this.validating = observable.map();
-    // this.addModePaths = observable.map();
-    // this.derivedDisposers = observable.map();
     this.additionalErrorTree = {};
     this.noRawUpdate = false;
 
@@ -132,7 +112,6 @@ export class FormState<M, D extends FormDefinition<M>>
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
-      // this.addModePaths.set("/", false);
       this.focusFunc = null;
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
@@ -149,7 +128,6 @@ export class FormState<M, D extends FormDefinition<M>>
       this.extraValidationFunc = options.extraValidation
         ? options.extraValidation
         : () => false;
-      // this.addModePaths.set("/", options.addMode || false);
       const validation = options.validation || {};
       this.validationBeforeSave = validation.beforeSave || "immediate";
       this.validationAfterSave = validation.afterSave || "immediate";
@@ -158,33 +136,10 @@ export class FormState<M, D extends FormDefinition<M>>
     }
   }
 
-  // @action
-  // setError(path: string, value: string) {
-  //   this.errors.set(path, value);
-  // }
-
-  // @action
-  // deleteError(path: string) {
-  //   this.errors.delete(path);
-  // }
-
-  // @action
-  // setValidating(path: string, value: boolean) {
-  //   this.validating.set(path, value);
-  // }
-
   @action
   setSaveStatus(status: SaveStatusOptions) {
     this.saveStatus = status;
   }
-
-  // @action
-  // setRaw(path: string, value: any) {
-  //   if (this.saveStatus === "rightAfter") {
-  //     this.setSaveStatus("after");
-  //   }
-  //   this.raw.set(path, value);
-  // }
 
   @action
   setValueWithoutRawUpdate(path: string, value: any) {
@@ -192,11 +147,6 @@ export class FormState<M, D extends FormDefinition<M>>
     applyPatch(this.node, [{ op: "replace", path, value }]);
     this.noRawUpdate = false;
   }
-
-  // @action
-  // setDerivedDisposer(path: string, disposer: IReactionDisposer) {
-  //   this.derivedDisposers.set(path, disposer);
-  // }
 
   @action
   replacePath(path: string) {
@@ -238,15 +188,6 @@ export class FormState<M, D extends FormDefinition<M>>
       return;
     }
     accessor.clear();
-
-    // this.derivedDisposers = removePath(
-    //   this.derivedDisposers,
-    //   path,
-    //   (value: IReactionDisposer) => {
-    //     value();
-    //   }
-    // );
-    // this.addModePaths.set(path, true);
   }
 
   @action
@@ -337,36 +278,9 @@ export class FormState<M, D extends FormDefinition<M>>
     });
   }
 
-  // isKnownAddModePath(path: string): boolean {
-  //   let found;
-  //   let foundKey = "";
-  //   this.addModePaths.forEach((value, key) => {
-  //     if (path.startsWith(key)) {
-  //       if (key.length < foundKey.length) {
-  //         return;
-  //       }
-  //       foundKey = key;
-  //       found = value;
-  //       return;
-  //     }
-  //   });
-  //   if (found === undefined) {
-  //     return false;
-  //   }
-  //   return found;
-  // }
-
-  // addMode(path: string): boolean {
-  //   return this.isKnownAddModePath(path) && this.raw.get(path) === undefined;
-  // }
-
   getValue(path: string): any {
     return resolvePath(this.node, path);
   }
-
-  // getError(path: string): string | undefined {
-  //   return this.errors.get(path);
-  // }
 
   // XXX we can remove this from the API?
   getMstType(path: string): IType<any, any> {
