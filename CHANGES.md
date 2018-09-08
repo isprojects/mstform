@@ -7,6 +7,9 @@
     accessors. This should have a positive effect on performance as mobx will
     be able to keep many more computed values.
 
+-   SubForms weren't discovered when validating the whole form. Now
+    properly integrate SubForms.
+
 # 0.14
 
 -   Support for isReadOnly hook and field accessor `readOnly`. This is sent
