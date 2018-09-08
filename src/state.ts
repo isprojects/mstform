@@ -72,8 +72,8 @@ export class FormState<M, D extends FormDefinition<M>>
   // @observable
   // addModePaths: Map<string, boolean>;
 
-  @observable
-  derivedDisposers: Map<string, IReactionDisposer>;
+  // @observable
+  // derivedDisposers: Map<string, IReactionDisposer>;
 
   @observable
   saveStatus: SaveStatusOptions = "before";
@@ -100,7 +100,7 @@ export class FormState<M, D extends FormDefinition<M>>
     // this.errors = observable.map();
     // this.validating = observable.map();
     // this.addModePaths = observable.map();
-    this.derivedDisposers = observable.map();
+    // this.derivedDisposers = observable.map();
     this.additionalErrorTree = {};
     this.noRawUpdate = false;
 
@@ -193,10 +193,10 @@ export class FormState<M, D extends FormDefinition<M>>
     this.noRawUpdate = false;
   }
 
-  @action
-  setDerivedDisposer(path: string, disposer: IReactionDisposer) {
-    this.derivedDisposers.set(path, disposer);
-  }
+  // @action
+  // setDerivedDisposer(path: string, disposer: IReactionDisposer) {
+  //   this.derivedDisposers.set(path, disposer);
+  // }
 
   @action
   replacePath(path: string) {
@@ -237,7 +237,7 @@ export class FormState<M, D extends FormDefinition<M>>
       // if this isn't a repeating indexed accessor we don't need to react
       return;
     }
-    accessor.remove();
+    accessor.clear();
 
     // this.derivedDisposers = removePath(
     //   this.derivedDisposers,

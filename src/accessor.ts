@@ -5,7 +5,8 @@ import {
   isObservable,
   toJS,
   reaction,
-  comparer
+  comparer,
+  IReactionDisposer
 } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
@@ -131,6 +132,10 @@ export class FormAccessor<M, D extends FormDefinition<M>>
   }
 
   clearError() {
+    // no op
+  }
+
+  clear() {
     // no op
   }
 
@@ -289,7 +294,6 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     if (!(repeatingForm instanceof RepeatingForm)) {
       throw new Error("Not accessing a RepeatingForm instance");
     }
-
     const result: RepeatingFormAccess<M, D, K> = new RepeatingFormAccessor(
       this.state,
       repeatingForm,
@@ -342,6 +346,8 @@ export class FieldAccessor<M, R, V> {
   @observable
   _addMode: boolean = false;
 
+  _disposer: IReactionDisposer | undefined;
+
   constructor(
     public state: FormState<any, any>,
     public field: Field<R, V>,
@@ -352,9 +358,21 @@ export class FieldAccessor<M, R, V> {
     this.createDerivedReaction();
   }
 
+  clear() {
+    if (this._disposer == null) {
+      return;
+    }
+    this._disposer();
+  }
+
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
+  }
+
+  @action
+  setDisposer(disposer: IReactionDisposer) {
+    this._disposer = disposer;
   }
 
   createDerivedReaction() {
@@ -363,7 +381,7 @@ export class FieldAccessor<M, R, V> {
       return;
     }
 
-    if (this.state.derivedDisposers.get(this.path)) {
+    if (this._disposer != null) {
       return;
     }
     // XXX when we have a node that's undefined, we don't
@@ -378,7 +396,7 @@ export class FieldAccessor<M, R, V> {
         this.setRaw(this.field.render(derivedValue));
       }
     );
-    this.state.setDerivedDisposer(this.path, disposer);
+    this._disposer = disposer;
   }
 
   @computed
@@ -636,6 +654,10 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     this.name = name;
   }
 
+  clear() {
+    // no op
+  }
+
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
@@ -829,7 +851,10 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
     this.formAccessor = new FormAccessor(state, definition, this, false);
   }
 
-  remove() {
+  clear() {
+    this.formAccessor.flatAccessors.forEach(accessor => {
+      accessor.clear();
+    });
     return this.parent.removeIndex(this.index);
   }
 
@@ -936,6 +961,10 @@ export class SubFormAccessor<M, D extends FormDefinition<M>>
   }
 
   clearError() {
+    // no op
+  }
+
+  clear() {
     // no op
   }
 
