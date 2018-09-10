@@ -260,70 +260,71 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     );
   }
 
-  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
-    const accessor = this.fieldAccessors.get(name);
-    if (accessor != null) {
-      return accessor;
-    }
-    const field = this.getDefinitionEntry(name);
-    if (field == null) {
-      throw new Error(`Field ${name} is not in group`);
-    }
-    if (!(field instanceof Field)) {
-      throw new Error("Not accessing a Field instance");
-    }
-    const result: FieldAccess<M, D, K> = new FieldAccessor(
-      this.state,
-      field,
-      this,
-      name as string
-    );
-    this.fieldAccessors.set(name, result);
-    return result;
+  initialize() {
+    this.keys.forEach(key => {
+      const entry = this.definition[key];
+      if (entry instanceof Field) {
+        this.createField(key as keyof M, entry);
+      } else if (entry instanceof RepeatingForm) {
+        this.createRepeatingForm(key as keyof M, entry);
+      } else if (entry instanceof SubForm) {
+        this.createSubForm(key as keyof M, entry);
+      }
+    });
   }
 
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
-    const accessor = this.repeatingFormAccessors.get(name);
-    if (accessor != null) {
-      return accessor;
+  createField<K extends keyof M>(name: K, field: Field<any, any>) {
+    const result = new FieldAccessor(this.state, field, this, name as string);
+    this.fieldAccessors.set(name, result);
+  }
+
+  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
+    const accessor = this.fieldAccessors.get(name);
+    if (accessor == null) {
+      throw new Error(`${name} is not a Field`);
     }
-    const repeatingForm = this.getDefinitionEntry(name);
-    if (repeatingForm == null) {
-      throw new Error(`RepeatingForm ${name} is not in group`);
-    }
-    if (!(repeatingForm instanceof RepeatingForm)) {
-      throw new Error("Not accessing a RepeatingForm instance");
-    }
-    const result: RepeatingFormAccess<M, D, K> = new RepeatingFormAccessor(
+    return accessor;
+  }
+
+  createRepeatingForm<K extends keyof M>(
+    name: K,
+    repeatingForm: RepeatingForm<any, any>
+  ) {
+    const result = new RepeatingFormAccessor(
       this.state,
       repeatingForm,
       this,
       name as string
     );
     this.repeatingFormAccessors.set(name, result);
-    return result;
+    result.initialize();
   }
 
-  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
-    const accessor = this.subFormAccessors.get(name);
-    if (accessor != null) {
-      return accessor;
+  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
+    const accessor = this.repeatingFormAccessors.get(name);
+    if (accessor == null) {
+      throw new Error(`${name} is not a RepeatingForm`);
     }
-    const subForm = this.getDefinitionEntry(name);
-    if (subForm == null) {
-      throw new Error(`SubForm ${name} is not in group`);
-    }
-    if (!(subForm instanceof SubForm)) {
-      throw new Error("Not accessing a SubForm instance");
-    }
-    const result: SubFormAccess<M, D, K> = new SubFormAccessor(
+    return accessor;
+  }
+
+  createSubForm<K extends keyof M>(name: K, subForm: SubForm<any, any>) {
+    const result = new SubFormAccessor(
       this.state,
       subForm.definition,
       this,
       name as string
     );
     this.subFormAccessors.set(name, result);
-    return result;
+    result.initialize();
+  }
+
+  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
+    const accessor = this.subFormAccessors.get(name);
+    if (accessor == null) {
+      throw new Error(`${name} is not a SubForm`);
+    }
+    return accessor;
   }
 
   repeatingField(name: string): any {
@@ -692,22 +693,32 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     return this.accessors.every(accessor => accessor.isValid);
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<M, D> {
-    const accessor = this.repeatingFormIndexedAccessors.get(index);
-    if (accessor != null) {
-      return accessor;
-    }
-    const result: RepeatingFormIndexedAccessor<
-      M,
-      D
-    > = new RepeatingFormIndexedAccessor(
+  initialize() {
+    const entries = this.state.getValue(this.path);
+    let i = 0;
+    entries.forEach(() => {
+      this.createFormIndexedAccessor(i);
+      i++;
+    });
+  }
+
+  createFormIndexedAccessor(index: number) {
+    const result = new RepeatingFormIndexedAccessor(
       this.state,
       this.repeatingForm.definition,
       this,
       index
     );
     this.repeatingFormIndexedAccessors.set(index, result);
-    return result;
+    result.initialize();
+  }
+
+  index(index: number): RepeatingFormIndexedAccessor<M, D> {
+    const accessor = this.repeatingFormIndexedAccessors.get(index);
+    if (accessor == null) {
+      throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
+    }
+    return accessor;
   }
 
   @computed
@@ -804,6 +815,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
       toInsert.push(accessor);
     });
     this.executeRenumber(toDelete, toInsert);
+    this.createFormIndexedAccessor(index);
   }
 
   private executeRenumber(
@@ -849,6 +861,10 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
   ) {
     this.index = index;
     this.formAccessor = new FormAccessor(state, definition, this, false);
+  }
+
+  initialize() {
+    this.formAccessor.initialize();
   }
 
   clear() {
@@ -950,6 +966,10 @@ export class SubFormAccessor<M, D extends FormDefinition<M>>
   ) {
     this.name = name;
     this.formAccessor = new FormAccessor(state, definition, this, false);
+  }
+
+  initialize() {
+    this.formAccessor.initialize();
   }
 
   async validate(): Promise<boolean> {

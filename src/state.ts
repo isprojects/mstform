@@ -1,4 +1,4 @@
-import { action, computed, observable, IReactionDisposer } from "mobx";
+import { action, computed, observable } from "mobx";
 import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import {
   Accessor,
@@ -102,6 +102,8 @@ export class FormState<M, D extends FormDefinition<M>>
       null,
       addMode
     );
+    this.formAccessor.initialize();
+
     if (options == null) {
       this.saveFunc = defaultSaveFunc;
       this.isDisabledFunc = () => false;
