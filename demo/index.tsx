@@ -2,4 +2,5 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { MyForm } from "./component";
 
-ReactDOM.render(<MyForm />, document.getElementById("demo"));
+// XXX why the 'as any' hack?
+ReactDOM.render(<MyForm /> as any, document.getElementById("demo"));
