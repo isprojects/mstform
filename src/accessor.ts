@@ -497,16 +497,19 @@ export class FieldAccessor<M, R, V> {
       this.state.setSaveStatus("after");
     }
 
+    // we can still set raw directly before the await
     this._raw = raw;
-    this._isValidating = true;
+
+    this.setValidating(true);
+
     let processResult;
     try {
       // XXX is await correct here? we should await the result
       // later
       processResult = await this.field.process(raw);
     } catch (e) {
-      this._error = "Something went wrong";
-      this._isValidating = false;
+      this.setError("Something went wrong");
+      this.setValidating(false);
       return;
     }
 
@@ -517,13 +520,13 @@ export class FieldAccessor<M, R, V> {
       return;
     }
     // validation only is complete if the currentRaw has been validated
-    this._isValidating = false;
+    this.setValidating(false);
 
     if (processResult instanceof ValidationMessage) {
-      this._error = processResult.message;
+      this.setError(processResult.message);
       return;
     } else {
-      this._error = undefined;
+      this.clearError();
     }
     if (!(processResult instanceof ProcessValue)) {
       throw new Error("Unknown process result");
@@ -534,7 +537,7 @@ export class FieldAccessor<M, R, V> {
     );
     // XXX possible flicker?
     if (typeof extraResult === "string" && extraResult) {
-      this._error = extraResult;
+      this.setError(extraResult);
     }
 
     // if there are no changes, don't do anything
@@ -571,6 +574,11 @@ export class FieldAccessor<M, R, V> {
   @action
   clearError() {
     this._error = undefined;
+  }
+
+  @action
+  setValidating(flag: boolean) {
+    this._isValidating = flag;
   }
 
   // backward compatibility -- use setRaw instead

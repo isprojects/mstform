@@ -1,3 +1,9 @@
+# 0.15.1
+
+-   `setRaw` was an `async` function and was trying to set values directly
+    after an `await`. This doesn't in strict mode. Now use actions to set the
+    value.
+
 # 0.15
 
 -   Performance: Refactored the way accessors are handled. Instead of
