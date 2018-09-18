@@ -341,10 +341,6 @@ export class FormState<M, D extends FormDefinition<M>>
     return this.formAccessor.subForm(name);
   }
 
-  group(name: string): FormAccessor<M, D> {
-    return this.formAccessor.group(name);
-  }
-
   repeatingField(name: string): any {
     // not implemented yet
   }
