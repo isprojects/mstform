@@ -10,6 +10,9 @@
 -   SubForms weren't discovered when validating the whole form. Now
     properly integrate SubForms.
 
+-   Breaking: remove the Group concept for now; it needs to be rethought
+    in the light of the performance oriented refactorings.
+
 # 0.14
 
 -   Support for isReadOnly hook and field accessor `readOnly`. This is sent
