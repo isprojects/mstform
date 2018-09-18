@@ -2,7 +2,13 @@ import React, { Component } from "react";
 import { observer } from "mobx-react";
 import { types, getSnapshot } from "mobx-state-tree";
 import makeInspectable from "mobx-devtools-mst";
-import { Field, Form, converters, FieldAccessor } from "../src/index";
+import {
+  Field,
+  Form,
+  converters,
+  FieldAccessor,
+  inputWrap
+} from "../src/index";
 
 // we have a MST model with a string field foo,
 // and a few number fields
@@ -53,16 +59,18 @@ class InlineError extends Component<InlineErrorProps> {
   }
 }
 
-@observer
-export class MyInput extends Component<{
-  type: string;
-  field: FieldAccessor<any, any, any>;
-}> {
-  render() {
-    const { type, field } = this.props;
-    return <input type={type} {...field.inputProps} />;
-  }
-}
+const MyInput = inputWrap(React.createFactory("input"), "MyInput");
+
+// @observer
+// export class MyInput extends Component<{
+//   type: string;
+//   field: FieldAccessor<any, any, any>;
+// }> {
+//   render() {
+//     const { type, field } = this.props;
+//     return <input type={type} {...field.inputProps} />;
+//   }
+// }
 
 type MyFormProps = {};
 

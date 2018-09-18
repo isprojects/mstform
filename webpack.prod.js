@@ -8,7 +8,10 @@ module.exports = merge(common, {
   devtool: "source-map",
   externals: {
     mobx: "mobx",
-    "mobx-state-tree": "mobx-state-tree"
+    "mobx-react": "mobx-react",
+    "mobx-state-tree": "mobx-state-tree",
+    react: "react",
+    "react-dom": "react-dom"
   },
   plugins: [
     new webpack.DefinePlugin({

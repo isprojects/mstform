@@ -5,3 +5,5 @@ export * from "./accessor";
 export * from "./controlled";
 export * from "./antd";
 export * from "./state";
+export * from "./renderPolicy";
+export * from "./wrap";
