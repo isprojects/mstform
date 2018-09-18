@@ -12,10 +12,12 @@ import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
   SubForm,
   ArrayEntryType,
+  Form,
   Field,
   FormDefinition,
-  FormDefinitionEntry,
-  FormDefinitionType,
+  Group,
+  RepeatingFormDefinitionType,
+  SubFormDefinitionType,
   ProcessValue,
   RawType,
   RepeatingForm,
@@ -57,20 +59,21 @@ export type RepeatingFormAccess<
   M,
   D extends FormDefinition<M>,
   K extends keyof M
-> = RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>>;
+> = RepeatingFormAccessor<
+  ArrayEntryType<M[K]>,
+  RepeatingFormDefinitionType<D[K]>
+>;
 
 export type SubFormAccess<
   M,
   D extends FormDefinition<M>,
   K extends keyof M
-> = SubFormAccessor<M[K], FormDefinitionType<D[K]>>;
+> = SubFormAccessor<M[K], SubFormDefinitionType<D[K]>>;
 
 export interface IFormAccessor<M, D extends FormDefinition<M>> {
   validate(): Promise<boolean>;
 
   isValid: boolean;
-
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D>;
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K>;
 
@@ -119,6 +122,7 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     this.keys =
       allowedKeys != null ? allowedKeys : Object.keys(this.definition);
     this._addMode = addMode;
+    this.initialize();
   }
 
   async validate(): Promise<boolean> {
@@ -231,33 +235,6 @@ export class FormAccessor<M, D extends FormDefinition<M>>
       return accessor;
     }
     return accessor.accessBySteps(rest);
-  }
-
-  private getDefinitionEntry<K extends keyof M>(
-    name: K
-  ): FormDefinitionEntry<M, K> | undefined {
-    if (!this.keys.includes(name as string)) {
-      return undefined;
-    }
-    return this.definition[name];
-  }
-
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
-    allowedKeys.forEach(key => {
-      if (!this.keys.includes(key as string)) {
-        throw new Error(
-          "Cannot restrict FormAccessor to non-existent key: " + key
-        );
-      }
-    });
-    // XXX should cache things
-    return new FormAccessor(
-      this.state,
-      this.definition,
-      this,
-      false,
-      allowedKeys as string[]
-    );
   }
 
   initialize() {
@@ -929,10 +906,6 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
     return this.formAccessor.accessBySteps(steps);
   }
 
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
-    return this.formAccessor.restricted(allowedKeys);
-  }
-
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
     return this.formAccessor.field(name);
   }
@@ -1012,10 +985,6 @@ export class SubFormAccessor<M, D extends FormDefinition<M>>
       return this;
     }
     return this.formAccessor.accessBySteps(steps);
-  }
-
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
-    return this.formAccessor.restricted(allowedKeys);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
