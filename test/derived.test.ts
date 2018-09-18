@@ -150,7 +150,7 @@ test("calculated repeating push and remove", async () => {
   // we get a form and field here so we can see that its reaction is disposed
   // later
   const laterRemoved = forms.index(0);
-  laterRemoved.field("calculated");
+  const removedCalculated = laterRemoved.field("calculated");
 
   const sub = forms.index(1);
   const calculated = sub.field("calculated");
@@ -174,7 +174,7 @@ test("calculated repeating push and remove", async () => {
   // and also the underlying value, immediately
   expect(calculated.value).toEqual(6);
 
-  const disposer = state.derivedDisposers.get("/foo/0/calculated");
+  const disposer = removedCalculated._disposer;
   expect(disposer).not.toBeUndefined();
   // to please TS
   if (disposer == null) {
@@ -185,17 +185,19 @@ test("calculated repeating push and remove", async () => {
     touched = true;
     disposer();
   };
+
   // a bit of a hack to track whether the disposer is called
-  state.derivedDisposers.set(
-    "/foo/0/calculated",
-    wrappedDisposer as IReactionDisposer
-  );
+  removedCalculated._disposer = wrappedDisposer as IReactionDisposer;
 
   forms.remove(o.foo[0]);
   const sub2 = forms.index(0);
   const calculated2 = sub2.field("calculated");
   expect(calculated2.raw).toEqual("6");
-  // and also the underlying value, immediately
   expect(calculated2.value).toEqual(6);
+  await calculated2.setRaw("4");
+  expect(calculated2.value).toEqual(4);
+  const a2 = sub.field("a");
+  await a2.setRaw("7");
+  expect(calculated2.raw).toBe("10");
   expect(touched).toBeTruthy();
 });

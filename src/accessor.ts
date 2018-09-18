@@ -1,12 +1,21 @@
-import { action, computed, isObservable, toJS, reaction, comparer } from "mobx";
+import {
+  action,
+  observable,
+  computed,
+  isObservable,
+  toJS,
+  reaction,
+  comparer,
+  IReactionDisposer
+} from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import {
   SubForm,
   ArrayEntryType,
   Field,
   FormDefinition,
-  FormDefinitionEntry,
-  FormDefinitionType,
+  RepeatingFormDefinitionType,
+  SubFormDefinitionType,
   ProcessValue,
   RawType,
   RepeatingForm,
@@ -32,9 +41,11 @@ export interface ValidationProps {
 }
 
 export type Accessor =
+  | FormAccessor<any, any>
   | FieldAccessor<any, any, any>
   | RepeatingFormAccessor<any, any>
-  | RepeatingFormIndexedAccessor<any, any>;
+  | RepeatingFormIndexedAccessor<any, any>
+  | SubFormAccessor<any, any>;
 
 export type FieldAccess<
   M,
@@ -46,20 +57,21 @@ export type RepeatingFormAccess<
   M,
   D extends FormDefinition<M>,
   K extends keyof M
-> = RepeatingFormAccessor<ArrayEntryType<M[K]>, FormDefinitionType<D[K]>>;
+> = RepeatingFormAccessor<
+  ArrayEntryType<M[K]>,
+  RepeatingFormDefinitionType<D[K]>
+>;
 
 export type SubFormAccess<
   M,
   D extends FormDefinition<M>,
   K extends keyof M
-> = SubFormAccessor<M[K], FormDefinitionType<D[K]>>;
+> = SubFormAccessor<M[K], SubFormDefinitionType<D[K]>>;
 
 export interface IFormAccessor<M, D extends FormDefinition<M>> {
   validate(): Promise<boolean>;
 
   isValid: boolean;
-
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D>;
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K>;
 
@@ -83,21 +95,58 @@ export function setupValidationProps(validationProps: ValidationProps) {
 export class FormAccessor<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   private keys: string[];
+  fieldAccessors: Map<keyof M, FieldAccessor<any, any, any>> = observable.map();
+  repeatingFormAccessors: Map<
+    keyof M,
+    RepeatingFormAccessor<any, any>
+  > = observable.map();
+  subFormAccessors: Map<keyof M, SubFormAccessor<any, any>> = observable.map();
+
+  @observable
+  _addMode: boolean;
 
   constructor(
     public state: FormState<M, D>,
     public definition: any,
-    public path: string,
+    public parent:
+      | FormAccessor<any, any>
+      | SubFormAccessor<any, any>
+      | RepeatingFormAccessor<any, any>
+      | RepeatingFormIndexedAccessor<any, any>
+      | null,
+    addMode: boolean,
     public allowedKeys?: string[]
   ) {
     this.keys =
       allowedKeys != null ? allowedKeys : Object.keys(this.definition);
+    this._addMode = addMode;
+    this.initialize();
   }
 
   async validate(): Promise<boolean> {
     const promises = this.accessors.map(accessor => accessor.validate());
     const values = await Promise.all(promises);
     return values.every(value => value);
+  }
+
+  setError(error: string) {
+    // no op
+  }
+
+  clearError() {
+    // no op
+  }
+
+  clear() {
+    // no op
+  }
+
+  @computed
+  get path(): string {
+    if (this.parent == null) {
+      return "";
+    }
+    return this.parent.path;
   }
 
   @computed
@@ -115,6 +164,8 @@ export class FormAccessor<M, D extends FormDefinition<M>>
         result.push(this.field(key as keyof M));
       } else if (entry instanceof RepeatingForm) {
         result.push(this.repeatingForm(key as keyof M));
+      } else if (entry instanceof SubForm) {
+        result.push(this.subForm(key as keyof M));
       }
     });
     return result;
@@ -129,9 +180,23 @@ export class FormAccessor<M, D extends FormDefinition<M>>
       } else if (accessor instanceof RepeatingFormAccessor) {
         result.push(...accessor.flatAccessors);
         result.push(accessor);
+      } else if (accessor instanceof SubFormAccessor) {
+        result.push(...accessor.flatAccessors);
+        result.push(accessor);
       }
     });
     return result;
+  }
+
+  @computed
+  get addMode(): boolean {
+    if (this._addMode) {
+      return true;
+    }
+    if (this.parent == null) {
+      return false;
+    }
+    return this.parent.addMode;
   }
 
   access(name: string): Accessor | undefined {
@@ -146,12 +211,19 @@ export class FormAccessor<M, D extends FormDefinition<M>>
       try {
         return this.repeatingForm(name as keyof M);
       } catch {
-        return undefined;
+        try {
+          return this.subForm(name as keyof M);
+        } catch {
+          return undefined;
+        }
       }
     }
   }
 
   accessBySteps(steps: string[]): Accessor | undefined {
+    if (steps.length === 0) {
+      return this;
+    }
     const [first, ...rest] = steps;
     const accessor = this.access(first);
     if (rest.length === 0) {
@@ -163,73 +235,71 @@ export class FormAccessor<M, D extends FormDefinition<M>>
     return accessor.accessBySteps(rest);
   }
 
-  private getDefinitionEntry<K extends keyof M>(
-    name: K
-  ): FormDefinitionEntry<M, K> | undefined {
-    if (!this.keys.includes(name as string)) {
-      return undefined;
-    }
-    return this.definition[name];
-  }
-
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
-    allowedKeys.forEach(key => {
-      if (!this.keys.includes(key as string)) {
-        throw new Error(
-          "Cannot restrict FormAccessor to non-existent key: " + key
-        );
+  initialize() {
+    this.keys.forEach(key => {
+      const entry = this.definition[key];
+      if (entry instanceof Field) {
+        this.createField(key as keyof M, entry);
+      } else if (entry instanceof RepeatingForm) {
+        this.createRepeatingForm(key as keyof M, entry);
+      } else if (entry instanceof SubForm) {
+        this.createSubForm(key as keyof M, entry);
       }
     });
-    return new FormAccessor(
-      this.state,
-      this.definition,
-      this.path,
-      allowedKeys as string[]
-    );
+  }
+
+  createField<K extends keyof M>(name: K, field: Field<any, any>) {
+    const result = new FieldAccessor(this.state, field, this, name as string);
+    this.fieldAccessors.set(name, result);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
-    const field = this.getDefinitionEntry(name);
-    if (field == null) {
-      throw new Error(`Field ${name} is not in group`);
+    const accessor = this.fieldAccessors.get(name);
+    if (accessor == null) {
+      throw new Error(`${name} is not a Field`);
     }
-    if (!(field instanceof Field)) {
-      throw new Error("Not accessing a Field instance");
-    }
-    return new FieldAccessor(this.state, field, this.path, name as string);
+    return accessor;
+  }
+
+  createRepeatingForm<K extends keyof M>(
+    name: K,
+    repeatingForm: RepeatingForm<any, any>
+  ) {
+    const result = new RepeatingFormAccessor(
+      this.state,
+      repeatingForm,
+      this,
+      name as string
+    );
+    this.repeatingFormAccessors.set(name, result);
+    result.initialize();
   }
 
   repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
-    const repeatingForm = this.getDefinitionEntry(name);
-    if (repeatingForm == null) {
-      throw new Error(`RepeatingForm ${name} is not in group`);
+    const accessor = this.repeatingFormAccessors.get(name);
+    if (accessor == null) {
+      throw new Error(`${name} is not a RepeatingForm`);
     }
-    if (!(repeatingForm instanceof RepeatingForm)) {
-      throw new Error("Not accessing a RepeatingForm instance");
-    }
+    return accessor;
+  }
 
-    return new RepeatingFormAccessor(
+  createSubForm<K extends keyof M>(name: K, subForm: SubForm<any, any>) {
+    const result = new SubFormAccessor(
       this.state,
-      repeatingForm,
-      this.path,
+      subForm.definition,
+      this,
       name as string
     );
+    this.subFormAccessors.set(name, result);
+    result.initialize();
   }
 
   subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
-    const subForm = this.getDefinitionEntry(name);
-    if (subForm == null) {
-      throw new Error(`SubForm ${name} is not in group`);
+    const accessor = this.subFormAccessors.get(name);
+    if (accessor == null) {
+      throw new Error(`${name} is not a SubForm`);
     }
-    if (!(subForm instanceof SubForm)) {
-      throw new Error("Not accessing a SubForm instance");
-    }
-    return new SubFormAccessor(
-      this.state,
-      subForm.definition,
-      this.path,
-      name as string
-    );
+    return accessor;
   }
 
   repeatingField(name: string): any {
@@ -238,21 +308,47 @@ export class FormAccessor<M, D extends FormDefinition<M>>
 }
 
 export class FieldAccessor<M, R, V> {
-  path: string;
   name: string;
-  nodePath: string;
+
+  @observable
+  _raw: R | undefined;
+
+  @observable
+  _error: string | undefined;
+
+  @observable
+  _isValidating: boolean = false;
+
+  @observable
+  _addMode: boolean = false;
+
+  _disposer: IReactionDisposer | undefined;
 
   constructor(
     public state: FormState<any, any>,
     public field: Field<R, V>,
-    path: string,
+    public parent: FormAccessor<any, any>,
     name: string
   ) {
     this.name = name;
-    this.nodePath = path;
-    this.path = path + "/" + name;
-
     this.createDerivedReaction();
+  }
+
+  clear() {
+    if (this._disposer == null) {
+      return;
+    }
+    this._disposer();
+  }
+
+  @computed
+  get path(): string {
+    return this.parent.path + "/" + this.name;
+  }
+
+  @action
+  setDisposer(disposer: IReactionDisposer) {
+    this._disposer = disposer;
   }
 
   createDerivedReaction() {
@@ -261,7 +357,7 @@ export class FieldAccessor<M, R, V> {
       return;
     }
 
-    if (this.state.derivedDisposers.get(this.path)) {
+    if (this._disposer != null) {
       return;
     }
     // XXX when we have a node that's undefined, we don't
@@ -276,7 +372,7 @@ export class FieldAccessor<M, R, V> {
         this.setRaw(this.field.render(derivedValue));
       }
     );
-    this.state.setDerivedDisposer(this.path, disposer);
+    this._disposer = disposer;
   }
 
   @computed
@@ -284,7 +380,7 @@ export class FieldAccessor<M, R, V> {
     // XXX it's possible for this to be called for a node that has since
     // been removed. It's not ideal but we return undefined in such a case.
     try {
-      return this.state.getValue(this.nodePath);
+      return this.state.getValue(this.parent.path);
     } catch {
       return undefined;
     }
@@ -292,12 +388,15 @@ export class FieldAccessor<M, R, V> {
 
   @computed
   get addMode(): boolean {
-    return this.state.addMode(this.path);
+    if (this._raw !== undefined) {
+      return false;
+    }
+    return this._addMode || this.parent.addMode;
   }
 
   @computed
   get raw(): R {
-    const result = this.state.raw.get(this.path);
+    const result = this._raw;
     if (result !== undefined) {
       // this is an object reference. don't convert to JS
       if (isObservable(result) && !(result instanceof Array)) {
@@ -326,9 +425,10 @@ export class FieldAccessor<M, R, V> {
 
   @computed
   get errorValue(): string | undefined {
-    return this.state.getError(this.path);
+    return this._error;
   }
 
+  // XXX move this method to state
   @computed
   get canShowValidationMessages(): boolean {
     // immediately after a save we always want messages
@@ -363,7 +463,7 @@ export class FieldAccessor<M, R, V> {
 
   @computed
   get isValidating(): boolean {
-    return this.state.validating.get(this.path) || false;
+    return this._isValidating;
   }
 
   @computed
@@ -393,33 +493,37 @@ export class FieldAccessor<M, R, V> {
 
   @action
   async setRaw(raw: R) {
-    this.state.setRaw(this.path, raw);
-    this.state.setValidating(this.path, true);
+    if (this.state.saveStatus === "rightAfter") {
+      this.state.setSaveStatus("after");
+    }
+
+    this._raw = raw;
+    this._isValidating = true;
     let processResult;
     try {
       // XXX is await correct here? we should await the result
       // later
       processResult = await this.field.process(raw);
     } catch (e) {
-      this.state.setError(this.path, "Something went wrong");
-      this.state.setValidating(this.path, false);
+      this._error = "Something went wrong";
+      this._isValidating = false;
       return;
     }
 
-    const currentRaw = this.state.raw.get(this.path);
+    const currentRaw = this._raw;
 
     // if the raw changed in the mean time, bail out
     if (!comparer.structural(currentRaw, raw)) {
       return;
     }
     // validation only is complete if the currentRaw has been validated
-    this.state.setValidating(this.path, false);
+    this._isValidating = false;
 
     if (processResult instanceof ValidationMessage) {
-      this.state.setError(this.path, processResult.message);
+      this._error = processResult.message;
       return;
     } else {
-      this.state.deleteError(this.path);
+      this._error = undefined;
     }
     if (!(processResult instanceof ProcessValue)) {
       throw new Error("Unknown process result");
@@ -430,7 +534,7 @@ export class FieldAccessor<M, R, V> {
     );
     // XXX possible flicker?
     if (typeof extraResult === "string" && extraResult) {
-      this.state.setError(this.path, extraResult);
+      this._error = extraResult;
     }
 
     // if there are no changes, don't do anything
@@ -444,6 +548,29 @@ export class FieldAccessor<M, R, V> {
     if (changeFunc != null) {
       changeFunc(this.node, processResult.value);
     }
+  }
+
+  setRawFromValue() {
+    // we get the value ignoring add mode
+    // this is why we can't use this.value
+    const value = this.state.getValue(this.path);
+
+    // we don't use setRaw on the field as the value is already
+    // correct. setting raw causes addMode for the field
+    // to be disabled
+    this._raw = this.field.render(value);
+    // trigger validation
+    this.validate();
+  }
+
+  @action
+  setError(error: string) {
+    this._error = error;
+  }
+
+  @action
+  clearError() {
+    this._error = undefined;
   }
 
   // backward compatibility -- use setRaw instead
@@ -484,16 +611,42 @@ export class FieldAccessor<M, R, V> {
 
 export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   name: string;
-  path: string;
+
+  @observable
+  _error: string | undefined;
+
+  @observable
+  repeatingFormIndexedAccessors: Map<
+    number,
+    RepeatingFormIndexedAccessor<any, any>
+  > = observable.map();
 
   constructor(
     public state: FormState<any, any>,
     public repeatingForm: RepeatingForm<M, D>,
-    path: string,
+    public parent: FormAccessor<any, any>,
     name: string
   ) {
     this.name = name;
-    this.path = path + "/" + name;
+  }
+
+  clear() {
+    // no op
+  }
+
+  @computed
+  get path(): string {
+    return this.parent.path + "/" + this.name;
+  }
+
+  @action
+  setError(error: string) {
+    this._error = error;
+  }
+
+  @action
+  clearError() {
+    this._error = undefined;
   }
 
   async validate(): Promise<boolean> {
@@ -506,17 +659,41 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   }
 
   @computed
+  get addMode(): boolean {
+    return this.parent.addMode;
+  }
+
+  @computed
   get isValid(): boolean {
     return this.accessors.every(accessor => accessor.isValid);
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<M, D> {
-    return new RepeatingFormIndexedAccessor(
+  initialize() {
+    const entries = this.state.getValue(this.path);
+    let i = 0;
+    entries.forEach(() => {
+      this.createFormIndexedAccessor(i);
+      i++;
+    });
+  }
+
+  createFormIndexedAccessor(index: number) {
+    const result = new RepeatingFormIndexedAccessor(
       this.state,
       this.repeatingForm.definition,
-      this.path,
+      this,
       index
     );
+    this.repeatingFormIndexedAccessors.set(index, result);
+    result.initialize();
+  }
+
+  index(index: number): RepeatingFormIndexedAccessor<M, D> {
+    const accessor = this.repeatingFormIndexedAccessors.get(index);
+    if (accessor == null) {
+      throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
+    }
+    return accessor;
   }
 
   @computed
@@ -554,7 +731,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
   @computed
   get error(): string | undefined {
-    return this.state.errors.get(this.path);
+    return this._error;
   }
 
   insert(index: number, node: any) {
@@ -579,6 +756,59 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     ]);
   }
 
+  removeIndex(index: number) {
+    const accessors = this.repeatingFormIndexedAccessors;
+    const isRemoved = accessors.delete(index);
+    if (!isRemoved) {
+      return;
+    }
+    const toDelete: number[] = [];
+    const toInsert: RepeatingFormIndexedAccessor<any, any>[] = [];
+
+    accessors.forEach((accessor, i) => {
+      if (i <= index) {
+        return;
+      }
+      accessor.setIndex(i - 1);
+      toDelete.push(i);
+      toInsert.push(accessor);
+    });
+    this.executeRenumber(toDelete, toInsert);
+  }
+
+  addIndex(index: number) {
+    const accessors = this.repeatingFormIndexedAccessors;
+
+    const toDelete: number[] = [];
+    const toInsert: RepeatingFormIndexedAccessor<any, any>[] = [];
+    accessors.forEach((accessor, i) => {
+      if (i < index) {
+        return;
+      }
+      accessor.setIndex(i + 1);
+      toDelete.push(i);
+      toInsert.push(accessor);
+    });
+    this.executeRenumber(toDelete, toInsert);
+    this.createFormIndexedAccessor(index);
+  }
+
+  private executeRenumber(
+    toDelete: number[],
+    toInsert: RepeatingFormIndexedAccessor<any, any>[]
+  ) {
+    const accessors = this.repeatingFormIndexedAccessors;
+
+    // first remove all accessors that are renumbered
+    toDelete.forEach(index => {
+      accessors.delete(index);
+    });
+    // insert renumbered accessors all at once afterwards
+    toInsert.forEach(accessor => {
+      accessors.set(accessor.index, accessor);
+    });
+  }
+
   get length(): number {
     const a = resolvePath(this.state.node, this.path) as any[];
     return a.length;
@@ -587,17 +817,36 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
 export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
-  path: string;
   formAccessor: FormAccessor<M, D>;
+
+  @observable
+  _error: string | undefined;
+
+  @observable
+  index: number;
+
+  @observable
+  _addMode: boolean = false;
 
   constructor(
     public state: FormState<any, any>,
     public definition: any,
-    path: string,
-    public index: number
+    public parent: RepeatingFormAccessor<any, any>,
+    index: number
   ) {
-    this.path = path + "/" + index;
-    this.formAccessor = new FormAccessor(state, definition, path + "/" + index);
+    this.index = index;
+    this.formAccessor = new FormAccessor(state, definition, this, false);
+  }
+
+  initialize() {
+    this.formAccessor.initialize();
+  }
+
+  clear() {
+    this.formAccessor.flatAccessors.forEach(accessor => {
+      accessor.clear();
+    });
+    return this.parent.removeIndex(this.index);
   }
 
   async validate(): Promise<boolean> {
@@ -605,8 +854,43 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
   }
 
   @computed
+  get path(): string {
+    return this.parent.path + "/" + this.index;
+  }
+
+  @action
+  setIndex(index: number) {
+    this.index = index;
+  }
+
+  @action
+  setError(error: string) {
+    this._error = error;
+  }
+
+  @action
+  setAddMode() {
+    this._addMode = true;
+  }
+
+  @action
+  clearError() {
+    this._error = undefined;
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this._error;
+  }
+
+  @computed
   get isValid(): boolean {
     return this.formAccessor.isValid;
+  }
+
+  @computed
+  get addMode(): boolean {
+    return this._addMode || this.parent.addMode;
   }
 
   access(name: string): Accessor | undefined {
@@ -614,19 +898,10 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
   }
 
   accessBySteps(steps: string[]): Accessor | undefined {
-    const [first, ...rest] = steps;
-    const accessor = this.access(first);
-    if (rest.length === 0) {
-      return accessor;
+    if (steps.length === 0) {
+      return this;
     }
-    if (accessor === undefined) {
-      return undefined;
-    }
-    return accessor.accessBySteps(steps);
-  }
-
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
-    return this.formAccessor.restricted(allowedKeys);
+    return this.formAccessor.accessBySteps(steps);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
@@ -653,20 +928,40 @@ export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
 export class SubFormAccessor<M, D extends FormDefinition<M>>
   implements IFormAccessor<M, D> {
   formAccessor: FormAccessor<M, D>;
-  path: string;
 
   constructor(
     public state: FormState<any, any>,
     public definition: any,
-    path: string,
+    public parent: FormAccessor<any, any>,
     public name: string
   ) {
-    this.path = path + "/" + name;
-    this.formAccessor = new FormAccessor(state, definition, this.path);
+    this.name = name;
+    this.formAccessor = new FormAccessor(state, definition, this, false);
+  }
+
+  initialize() {
+    this.formAccessor.initialize();
   }
 
   async validate(): Promise<boolean> {
     return this.formAccessor.validate();
+  }
+
+  setError(error: string) {
+    // no op
+  }
+
+  clearError() {
+    // no op
+  }
+
+  clear() {
+    // no op
+  }
+
+  @computed
+  get path(): string {
+    return this.parent.path + "/" + this.name;
   }
 
   @computed
@@ -674,24 +969,20 @@ export class SubFormAccessor<M, D extends FormDefinition<M>>
     return this.formAccessor.isValid;
   }
 
+  @computed
+  get addMode(): boolean {
+    return this.parent.addMode;
+  }
+
   access(name: string): Accessor | undefined {
     return this.formAccessor.access(name);
   }
 
   accessBySteps(steps: string[]): Accessor | undefined {
-    const [first, ...rest] = steps;
-    const accessor = this.access(first);
-    if (rest.length === 0) {
-      return accessor;
+    if (steps.length === 0) {
+      return this;
     }
-    if (accessor === undefined) {
-      return undefined;
-    }
-    return accessor.accessBySteps(steps);
-  }
-
-  restricted<K extends keyof M>(allowedKeys: K[]): IFormAccessor<M, D> {
-    return this.formAccessor.restricted(allowedKeys);
+    return this.formAccessor.accessBySteps(steps);
   }
 
   field<K extends keyof M>(name: K): FieldAccess<M, D, K> {

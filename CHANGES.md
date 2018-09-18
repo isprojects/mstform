@@ -1,7 +1,23 @@
+# 0.15
+
+-   Performance: Refactored the way accessors are handled. Instead of
+    recreating them each time you access a field (or sub-object, repeating
+    form), they are now persisted. They are created once and then reused. The
+    form state (raw values, errors, etc) is now maintained directly on the
+    accessors. This should have a positive effect on performance as mobx will
+    be able to keep many more computed values.
+
+-   SubForms weren't discovered when validating the whole form. Now
+    properly integrate SubForms.
+
+-   Breaking: remove the Group concept for now; it needs to be rethought
+    in the light of the performance oriented refactorings.
+
 # 0.14
 
--   Support for isReadOnly hook and field accessor `readOnly`. This is sent along
-    with `inputProps` only if isReadOnly returns `true` for that accessor.
+-   Support for isReadOnly hook and field accessor `readOnly`. This is sent
+    along with `inputProps` only if isReadOnly returns `true` for that
+    accessor.
 
 # 0.13
 

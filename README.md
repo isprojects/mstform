@@ -85,13 +85,21 @@ const form = new Form(M, {
 const o = M.create({ foo: "FOO" });
 
 @observer
+class Input extends Component {
+    render() {
+        const { type, field } = this.props;
+        return <input type={type} {...field.inputProps} />;
+    }
+}
+
+@observer
 class InlineError extends Component {
     render() {
-        const { children, error } = this.props;
+        const { children, field } = this.props;
         return (
             <div>
                 {children}
-                <span>{error}</span>
+                <span>{field.error}</span>
             </div>
         );
     }
@@ -109,8 +117,8 @@ export class MyForm extends Component {
         // we get the foo field from the form
         const field = this.formState.field("foo");
         return (
-            <InlineError error={field.error}>
-                <input type="text" {...field.inputProps} />
+            <InlineError field={field}>
+                <Input type="text" field={field} />
             </InlineError>
         );
     }
@@ -139,9 +147,14 @@ stored in the underlying model instance. If the validation is successful, the
 function should return `false`, `null` or `undefined`; not returning any value
 is a successful validation.
 
-We define a simple `InlineError` component that can display error text. Your UI
-component library probably has a nicer component that helps to display errors
--- Ant Design for instance has `Form.Item`.
+We define a simple `InlineError` component that can display error text. It
+takes a `field` and displays its error (which may be empty). Your UI component
+library probably has a nicer component that helps to display errors -- Ant
+Design for instance has `Form.Item`.
+
+We also define a simple `Input` component that is our input; it takes a `field`
+prop too and uses this to set the required input props (`value` and
+`onChange`).
 
 We then define a `MyForm` component that actually displays the form. To display
 a form we need to initialize its _form state_. We create the form state with
@@ -160,7 +173,7 @@ edit in the form comes in as a prop, and we can access it here.
 
 Then in `render` we retrieve the field accessor for the `foo` field. This has
 everything we need: `error` to show the current error, and `inputProps` for the
-input component.
+input component, so we pass the field to `InlineError` and `Input`.
 
 I've enabled `ts-check` on top. If you're using vscode you can see
 it reflect the correct types -- it knows raw is a string, for instance. This
@@ -209,11 +222,11 @@ const entries = o.animals.map((animal, index) => {
     const size = animalForm.field("size");
     return (
         <div>
-            <InlineError error={name.error}>
-                <input type="text" {...name.inputProps} />
+            <InlineError field={name}>
+                <Input type="text" field={name} />
             </InlineError>
-            <InlineError error={size.error}>
-                <input type="text" {...name.inputProps} />
+            <InlineError field={size}>
+                <Input type="text" field={size} />
             </InlineError>
         </div>
     );
@@ -612,45 +625,6 @@ In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
 
-## Groups
-
-If you have a form with a lot of fields in the UI you want to split it up into
-multiple tabs or menu entries. Each tab is a coherent set of related fields.
-But if the underlying model instance is saved as a whole, you need to be able
-to show validation issues in other tabs. You can do this using groups.
-
-You can express such groups using `Group`:
-
-```js
-const M = types.model("M", {
-    foo: types.number,
-    bar: types.number,
-    baz: types.number,
-    qux: types.number
-});
-
-const groupA = new Group(M, ["foo", "bar"]);
-const groupB = new Group(M, ["baz", "qux"]);
-
-const o = M.create({ foo: 1, bar: 2, baz: 3, qux: 4 });
-
-const state = form.state(o);
-
-const accessGroupA = groupA.access(state);
-const accessGroupB = groupB.access(state);
-```
-
-On `accessGroupA` and `accessGroupB` you can now use `.field()`,
-`.repeatingForm()`, as usual. You're not allowed to access any fields you
-didn't list in the group.
-
-You can request whether a group state is valid using `isValid`:
-
-```js
-const tabAValid = groupA.isValid;
-const tabBValid = groupB.isValid;
-```
-
 ## Disabled, hidden and readOnly fields
 
 mstform has hooks that let you calculate `hidden`, `disabled` and `readOnly`
@@ -677,8 +651,8 @@ To implement readOnly behavior, pass in an `isReadOnly` function.
 `accessor.inputProps`. If `isReadOnly` is true, the `readOnly` flag is added to
 `accessor.inputProps`; otherwise it's absent, but it's up to you to ensure your
 React input widgets support a `readOnly` prop (HTML input does). There is no
-such behavior for `hidden`; use `accessor.hidden` in your form rendering code
-to determine whether a field wants to be hidden.
+such behavior for `hidden`; use `accessor.hidden` in your rendering code to
+determine whether a field wants to be hidden.
 
 ## Extra validation
 
@@ -843,15 +817,13 @@ setupValidationProps(myValidationProps);
 Once's that set up you can use `validationProps` with `InlineError`:
 
 ```js
-<InlineError {...field.validationProps}>
-    <input type="text" {...field.inputProps} />
-</InlineError>
+<InlineError {...field.validationProps}>...</InlineError>
 ```
 
-This way if the behavior of InlineError changes to take more props drived from
+This way if the behavior of InlineError changes to take more props derived from
 a field accessor you can easily change the way `validationProps` is generated.
 
 ## Tips
 
--   Don't name your form state `this.state` as this has a special meaning
-    to React and can lead to odd bugs.
+-   Don't name your form state `this.state` on a React component as this has a
+    special meaning to React and can lead to odd bugs.

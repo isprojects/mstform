@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import { observer } from "mobx-react";
 import { types, getSnapshot } from "mobx-state-tree";
-import { Field, Form, converters } from "../src/index";
+import makeInspectable from "mobx-devtools-mst";
+import { Field, Form, converters, FieldAccessor } from "../src/index";
 
 // we have a MST model with a string field foo,
 // and a few number fields
@@ -21,6 +22,8 @@ const M = types
 // we create an instance of the model
 const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4 });
 
+makeInspectable(o);
+
 // we expose this field in our form
 const form = new Form(M, {
   foo: new Field(converters.string, {
@@ -34,19 +37,30 @@ const form = new Form(M, {
 });
 
 type InlineErrorProps = {
-  error?: string;
+  field?: FieldAccessor<any, any, any>;
 };
 
 @observer
 class InlineError extends Component<InlineErrorProps> {
   render() {
-    const { children, error } = this.props;
+    const { children, field } = this.props;
     return (
       <div>
         {children}
-        <span>{error}</span>
+        {field && <span>{field.error}</span>}
       </div>
     );
+  }
+}
+
+@observer
+export class MyInput extends Component<{
+  type: string;
+  field: FieldAccessor<any, any, any>;
+}> {
+  render() {
+    const { type, field } = this.props;
+    return <input type={type} {...field.inputProps} />;
   }
 }
 
@@ -54,12 +68,12 @@ type MyFormProps = {};
 
 @observer
 export class MyForm extends Component<MyFormProps> {
-  state: typeof form.FormStateType;
+  formState: typeof form.FormStateType;
 
   constructor(props: MyFormProps) {
     super(props);
     // we create a form state for this model
-    this.state = form.state(o, {
+    this.formState = form.state(o, {
       save: node => {
         console.log(getSnapshot(node));
         return null;
@@ -68,34 +82,35 @@ export class MyForm extends Component<MyFormProps> {
   }
 
   handleSave = () => {
-    this.state.save().then(r => {
+    this.formState.save().then(r => {
       console.log("saved success", r);
     });
   };
 
   render() {
-    const state = this.state;
-    const foo = state.field("foo");
-    const a = state.field("a");
-    const b = state.field("b");
-    const derived = state.field("derived");
+    const formState = this.formState;
+
+    const foo = formState.field("foo");
+    const a = formState.field("a");
+    const b = formState.field("b");
+    const derived = formState.field("derived");
     return (
       <div>
         <span>Simple text field with validator (set it to "correct")</span>
-        <InlineError error={foo.error}>
-          <input type="text" {...foo.inputProps} />
+        <InlineError field={foo}>
+          <MyInput type="text" field={foo} />
         </InlineError>
         <span>a input number for derived</span>
-        <InlineError error={a.error}>
-          <input type="text" {...a.inputProps} />
+        <InlineError field={a}>
+          <MyInput type="text" field={a} />
         </InlineError>
         <span>b input number for derived</span>
-        <InlineError error={b.error}>
-          <input type="text" {...b.inputProps} />
+        <InlineError field={b}>
+          <MyInput type="text" field={b} />
         </InlineError>
         <span>derived from a + b with override</span>
-        <InlineError error={derived.error}>
-          <input type="text" {...derived.inputProps} />
+        <InlineError field={derived}>
+          <MyInput type="text" field={derived} />
         </InlineError>
         <button onClick={this.handleSave}>Save</button>
       </div>
