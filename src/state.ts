@@ -4,14 +4,10 @@ import {
   Accessor,
   ExtraValidation,
   FieldAccess,
-  FieldAccessor,
   FieldAccessorAllows,
-  FormAccessor,
   IFormAccessor,
   RepeatingFormAccess,
   RepeatingFormAccessorAllows,
-  RepeatingFormAccessor,
-  RepeatingFormIndexedAccessor,
   SubFormAccess
 } from "./accessor";
 import { Form, FormDefinition } from "./form";
@@ -23,6 +19,10 @@ import {
   pathToSteps,
   stepsToPath
 } from "./utils";
+import { FieldAccessor } from "./field-accessor";
+import { FormAccessor } from "./form-accessor";
+import { RepeatingFormAccessor } from "./repeating-form-accessor";
+import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 
 export interface SaveFunc<M> {
   (node: M): any;
