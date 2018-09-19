@@ -13,8 +13,7 @@ import {
   FormDefinition,
   RepeatingFormDefinitionType,
   SubFormDefinitionType,
-  RawType,
-  ValidationResponse
+  RawType
 } from "./form";
 import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
