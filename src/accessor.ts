@@ -21,10 +21,6 @@ import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { SubFormAccessor } from "./sub-form-accessor";
 
-export interface RepeatingFormAccessorAllows {
-  (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
-}
-
 export type Accessor =
   | FormAccessor<any, any>
   | FieldAccessor<any, any, any>

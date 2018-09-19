@@ -5,7 +5,6 @@ import {
   FieldAccess,
   IFormAccessor,
   RepeatingFormAccess,
-  RepeatingFormAccessorAllows,
   SubFormAccess
 } from "./accessor";
 import { Form, FormDefinition, ValidationResponse } from "./form";
@@ -28,6 +27,10 @@ export interface FieldAccessorAllows {
 
 export interface ExtraValidation {
   (fieldAccessor: FieldAccessor<any, any, any>, value: any): ValidationResponse;
+}
+
+export interface RepeatingFormAccessorAllows {
+  (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
 }
 
 export interface SaveFunc<M> {
