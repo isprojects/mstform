@@ -4,7 +4,6 @@ import {
   Accessor,
   ExtraValidation,
   FieldAccess,
-  FieldAccessorAllows,
   IFormAccessor,
   RepeatingFormAccess,
   RepeatingFormAccessorAllows,
@@ -23,6 +22,10 @@ import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
+
+export interface FieldAccessorAllows {
+  (fieldAccessor: FieldAccessor<any, any, any>): boolean;
+}
 
 export interface SaveFunc<M> {
   (node: M): any;
