@@ -1,4 +1,4 @@
-import { FieldAccessor } from "./accessor";
+import { FieldAccessor } from "./field-accessor";
 
 function validationProps(accessor: FieldAccessor<any, any, any>): object {
   const error = accessor.error;

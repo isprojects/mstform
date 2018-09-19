@@ -1,4 +1,4 @@
-import { FieldAccessor } from "./accessor";
+import { FieldAccessor } from "./field-accessor";
 
 export interface Controlled {
   (accessor: FieldAccessor<any, any, any>): any;
