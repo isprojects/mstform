@@ -22,10 +22,6 @@ import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { SubFormAccessor } from "./sub-form-accessor";
 
-export interface ExtraValidation {
-  (fieldAccessor: FieldAccessor<any, any, any>, value: any): ValidationResponse;
-}
-
 export interface RepeatingFormAccessorAllows {
   (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
 }

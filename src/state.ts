@@ -2,14 +2,13 @@ import { action, computed, observable } from "mobx";
 import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import {
   Accessor,
-  ExtraValidation,
   FieldAccess,
   IFormAccessor,
   RepeatingFormAccess,
   RepeatingFormAccessorAllows,
   SubFormAccess
 } from "./accessor";
-import { Form, FormDefinition } from "./form";
+import { Form, FormDefinition, ValidationResponse } from "./form";
 import {
   deepCopy,
   deleteByPath,
@@ -25,6 +24,10 @@ import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor"
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any, any>): boolean;
+}
+
+export interface ExtraValidation {
+  (fieldAccessor: FieldAccessor<any, any, any>, value: any): ValidationResponse;
 }
 
 export interface SaveFunc<M> {
