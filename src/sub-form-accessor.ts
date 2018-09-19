@@ -1,18 +1,12 @@
 import { computed } from "mobx";
 import { FormDefinition } from "./form";
 import { FormState } from "./state";
-import {
-  IFormAccessor,
-  Accessor,
-  FieldAccess,
-  RepeatingFormAccess
-} from "./accessor";
+import { Accessor, FieldAccess, RepeatingFormAccess } from "./accessor";
 import { FormAccessor } from "./form-accessor";
 
 // XXX this is so close to FormAccessor and RepeatingFormIndexedAccessor
 // We need to consolidate the code.
-export class SubFormAccessor<M, D extends FormDefinition<M>>
-  implements IFormAccessor<M, D> {
+export class SubFormAccessor<M, D extends FormDefinition<M>> {
   formAccessor: FormAccessor<M, D>;
 
   constructor(

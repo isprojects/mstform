@@ -1,17 +1,11 @@
 import { action, observable, computed } from "mobx";
 import { FormDefinition } from "./form";
 import { FormState } from "./state";
-import {
-  IFormAccessor,
-  Accessor,
-  FieldAccess,
-  RepeatingFormAccess
-} from "./accessor";
+import { Accessor, FieldAccess, RepeatingFormAccess } from "./accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { FormAccessor } from "./form-accessor";
 
-export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>>
-  implements IFormAccessor<M, D> {
+export class RepeatingFormIndexedAccessor<M, D extends FormDefinition<M>> {
   formAccessor: FormAccessor<M, D>;
 
   @observable

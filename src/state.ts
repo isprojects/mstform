@@ -3,7 +3,6 @@ import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import {
   Accessor,
   FieldAccess,
-  IFormAccessor,
   RepeatingFormAccess,
   SubFormAccess
 } from "./accessor";
@@ -64,8 +63,7 @@ export interface FormStateOptions<M> {
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
-export class FormState<M, D extends FormDefinition<M>>
-  implements IFormAccessor<M, D> {
+export class FormState<M, D extends FormDefinition<M>> {
   @observable
   additionalErrorTree: any;
 

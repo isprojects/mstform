@@ -48,19 +48,3 @@ export type SubFormAccess<
   D extends FormDefinition<M>,
   K extends keyof M
 > = SubFormAccessor<M[K], SubFormDefinitionType<D[K]>>;
-
-export interface IFormAccessor<M, D extends FormDefinition<M>> {
-  validate(): Promise<boolean>;
-
-  isValid: boolean;
-
-  field<K extends keyof M>(name: K): FieldAccess<M, D, K>;
-
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K>;
-
-  access(name: string): Accessor | undefined;
-
-  accessors: Accessor[];
-
-  flatAccessors: Accessor[];
-}

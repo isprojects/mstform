@@ -2,7 +2,6 @@ import { observable, computed } from "mobx";
 import { SubForm, Field, FormDefinition, RepeatingForm } from "./form";
 import { FormState } from "./state";
 import {
-  IFormAccessor,
   Accessor,
   FieldAccess,
   RepeatingFormAccess,
@@ -13,8 +12,7 @@ import { SubFormAccessor } from "./sub-form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 
-export class FormAccessor<M, D extends FormDefinition<M>>
-  implements IFormAccessor<M, D> {
+export class FormAccessor<M, D extends FormDefinition<M>> {
   private keys: string[];
   fieldAccessors: Map<keyof M, FieldAccessor<any, any, any>> = observable.map();
   repeatingFormAccessors: Map<
