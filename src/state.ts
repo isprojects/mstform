@@ -1,11 +1,6 @@
 import { action, computed, observable } from "mobx";
 import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
-import {
-  Accessor,
-  FieldAccess,
-  RepeatingFormAccess,
-  SubFormAccess
-} from "./accessor";
+import { Accessor } from "./accessor";
 import { Form, FormDefinition, ValidationResponse } from "./form";
 import {
   deepCopy,
@@ -19,6 +14,7 @@ import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
+import { FormAccessorBase } from "./form-accessor-base";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any, any>): boolean;
@@ -63,7 +59,10 @@ export interface FormStateOptions<M> {
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
-export class FormState<M, D extends FormDefinition<M>> {
+export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
+  M,
+  D
+> {
   @observable
   additionalErrorTree: any;
 
@@ -88,6 +87,7 @@ export class FormState<M, D extends FormDefinition<M>> {
     public node: M,
     options?: FormStateOptions<M>
   ) {
+    super();
     this.additionalErrorTree = {};
     this.noRawUpdate = false;
 
@@ -237,15 +237,6 @@ export class FormState<M, D extends FormDefinition<M>> {
     indexedAccessor.setAddMode();
   }
 
-  async validate(): Promise<boolean> {
-    return this.formAccessor.validate();
-  }
-
-  @computed
-  get isValid(): boolean {
-    return this.formAccessor.isValid;
-  }
-
   @action
   async save(): Promise<boolean> {
     const isValid = await this.validate();
@@ -313,16 +304,6 @@ export class FormState<M, D extends FormDefinition<M>> {
     );
   }
 
-  @computed
-  get accessors(): Accessor[] {
-    return this.formAccessor.accessors;
-  }
-
-  @computed
-  get flatAccessors(): Accessor[] {
-    return this.formAccessor.flatAccessors;
-  }
-
   accessByPath(path: string): Accessor | undefined {
     const steps = pathToSteps(path);
     return this.accessBySteps(steps);
@@ -330,26 +311,6 @@ export class FormState<M, D extends FormDefinition<M>> {
 
   accessBySteps(steps: string[]): Accessor | undefined {
     return this.formAccessor.accessBySteps(steps);
-  }
-
-  access(name: string): Accessor | undefined {
-    return this.formAccessor.access(name);
-  }
-
-  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
-    return this.formAccessor.field(name);
-  }
-
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
-    return this.formAccessor.repeatingForm(name);
-  }
-
-  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
-    return this.formAccessor.subForm(name);
-  }
-
-  repeatingField(name: string): any {
-    // not implemented yet
   }
 
   additionalError(name: string): string | undefined {

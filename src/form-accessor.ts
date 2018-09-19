@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 import { SubForm, Field, FormDefinition, RepeatingForm } from "./form";
 import { FormState } from "./state";
 import {
@@ -20,6 +20,9 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     RepeatingFormAccessor<any, any>
   > = observable.map();
   subFormAccessors: Map<keyof M, SubFormAccessor<any, any>> = observable.map();
+
+  @observable
+  _error: string | undefined;
 
   @observable
   _addMode: boolean;
@@ -48,12 +51,14 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     return values.every(value => value);
   }
 
+  @action
   setError(error: string) {
-    // no op
+    this._error = error;
   }
 
+  @action
   clearError() {
-    // no op
+    this._error = undefined;
   }
 
   clear() {
@@ -66,6 +71,11 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
       return "";
     }
     return this.parent.path;
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.error;
   }
 
   @computed
