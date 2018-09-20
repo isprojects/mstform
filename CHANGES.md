@@ -2,6 +2,8 @@
 
 -   Internal reorganization that allows us to reuse a bit more code.
 
+-   `isRequired` hook to drive required validation dynamically.
+
 # 0.15.1
 
 -   `setRaw` was an `async` function and was trying to set values directly
