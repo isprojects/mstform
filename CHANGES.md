@@ -4,6 +4,9 @@
 
 -   `isRequired` hook to drive required validation dynamically.
 
+-   Remove antd support. We're maintaining this in a separate code base now
+    (hopefully soon to be open source).
+
 # 0.15.1
 
 -   `setRaw` was an `async` function and was trying to set values directly
