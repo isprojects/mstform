@@ -9,5 +9,4 @@ export * from "./repeating-form-indexed-accessor";
 export * from "./sub-form-accessor";
 export * from "./validation-props";
 export * from "./controlled";
-export * from "./antd";
 export * from "./state";
