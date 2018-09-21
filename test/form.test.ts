@@ -957,6 +957,59 @@ test("required", async () => {
   expect(field.value).toEqual(3);
 });
 
+test("required with save", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.error).toBeUndefined();
+
+  await state.save();
+
+  expect(field.error).toEqual("Required");
+});
+
+test("dynamic required with save", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "", bar: "" });
+
+  const state = form.state(o, { isRequired: () => true });
+
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  expect(fooField.raw).toEqual("");
+  expect(fooField.error).toBeUndefined();
+  expect(barField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(fooField.error).toEqual("Required");
+  expect(barField.error).toEqual("Required");
+});
+
 test("required for number is implied", async () => {
   const M = types.model("M", {
     foo: types.number
@@ -1626,6 +1679,88 @@ test("a form with a hidden field", async () => {
 
   expect(fooField.hidden).toBeTruthy();
   expect(barField.hidden).toBeFalsy();
+});
+
+test("a form with a dynamic required field", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  let touched = false;
+
+  async function save(data: any) {
+    touched = true;
+    if (data.foo === "") {
+      return { foo: "Required by save" };
+    }
+    return null;
+  }
+
+  const state = form.state(o, {
+    isRequired: accessor => accessor.path.startsWith("/foo"),
+    save
+  });
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  expect(fooField.required).toBeTruthy();
+  expect(barField.required).toBeFalsy();
+
+  // do something not allowed
+  await fooField.setRaw("");
+  // we should see a problem immediately
+  expect(fooField.error).toEqual("Required");
+
+  // now communicate with the server by doing the save
+  const saved = await state.save();
+  expect(touched).toBeFalsy();
+  // cannot save as we didn't validate
+  expect(saved).toBe(false);
+  // still same client-side validation errors
+  expect(fooField.error).toEqual("Required");
+
+  // correct things
+  await fooField.setRaw("BAR");
+  // editing always wipes out the errors
+  expect(fooField.error).toBeUndefined();
+
+  const saved2 = await state.save();
+  expect(fooField.error).toBeUndefined();
+  expect(saved2).toBeTruthy();
+  expect(touched).toBeTruthy();
+});
+
+test("a hard required trumps dynamic required", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string, { required: true })
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  let touched = false;
+
+  const state = form.state(o, {
+    isRequired: accessor => accessor.path.startsWith("/foo")
+  });
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  expect(fooField.required).toBeTruthy();
+  expect(barField.required).toBeTruthy();
 });
 
 test("a form with a readOnly field", async () => {
