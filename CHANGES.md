@@ -1,3 +1,7 @@
+# 0.16.1
+
+-   Actual release with what I intended.
+
 # 0.16.0
 
 -   Internal reorganization that allows us to reuse a bit more code.
