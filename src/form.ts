@@ -149,8 +149,8 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  async process(raw: R): Promise<ProcessResponse<V>> {
-    if (raw === this.converter.emptyRaw && this.required) {
+  async process(raw: R, required: boolean): Promise<ProcessResponse<V>> {
+    if (raw === this.converter.emptyRaw && required) {
       return new ValidationMessage(this.requiredError);
     }
 

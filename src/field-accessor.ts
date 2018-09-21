@@ -188,6 +188,13 @@ export class FieldAccessor<M, R, V> {
     return this.state.isReadOnlyFunc(this);
   }
 
+  @computed
+  get required(): boolean {
+    // if the field is required, ignore dynamic required logic
+    // if the field isn't required, we can dynamically influence whether it is
+    return this.field.required || this.state.isRequiredFunc(this);
+  }
+
   async validate(): Promise<boolean> {
     await this.setRaw(this.raw);
     return this.isValid;
@@ -213,7 +220,7 @@ export class FieldAccessor<M, R, V> {
     try {
       // XXX is await correct here? we should await the result
       // later
-      processResult = await this.field.process(raw);
+      processResult = await this.field.process(raw, this.required);
     } catch (e) {
       this.setError("Something went wrong");
       this.setValidating(false);

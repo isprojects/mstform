@@ -53,6 +53,8 @@ export interface FormStateOptions<M> {
   isHidden?: FieldAccessorAllows;
   isReadOnly?: FieldAccessorAllows;
   isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
+  isRequired?: FieldAccessorAllows;
+
   extraValidation?: ExtraValidation;
   focus?: FocusFunc<M, any, any>;
 }
@@ -77,6 +79,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
   isDisabledFunc: FieldAccessorAllows;
   isHiddenFunc: FieldAccessorAllows;
   isReadOnlyFunc: FieldAccessorAllows;
+  isRequiredFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
@@ -116,6 +119,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.isDisabledFunc = () => false;
       this.isHiddenFunc = () => false;
       this.isReadOnlyFunc = () => false;
+      this.isRequiredFunc = () => false;
       this.isRepeatingFormDisabledFunc = () => false;
       this.extraValidationFunc = () => false;
       this.validationBeforeSave = "immediate";
@@ -130,6 +134,9 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.isHiddenFunc = options.isHidden ? options.isHidden : () => false;
       this.isReadOnlyFunc = options.isReadOnly
         ? options.isReadOnly
+        : () => false;
+      this.isRequiredFunc = options.isRequired
+        ? options.isRequired
         : () => false;
       this.isRepeatingFormDisabledFunc = options.isRepeatingFormDisabled
         ? options.isRepeatingFormDisabled

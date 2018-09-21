@@ -2,6 +2,8 @@
 
 -   Internal reorganization that allows us to reuse a bit more code.
 
+-   `isRequired` hook to drive required validation dynamically.
+
 -   Remove antd support. We're maintaining this in a separate code base now
     (hopefully soon to be open source).
 
