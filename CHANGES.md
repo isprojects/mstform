@@ -1,7 +1,7 @@
 # 0.17.0
 
--   Added a neverRequired option to converters. Make it so that the
-    boolean converter is never required.
+-   Added a `neverRequired` option to converters. Make it so that the
+    `boolean` converter is never required.
 
 # 0.16.1
 
