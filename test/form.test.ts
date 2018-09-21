@@ -957,6 +957,59 @@ test("required", async () => {
   expect(field.value).toEqual(3);
 });
 
+test("required with save", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.error).toBeUndefined();
+
+  await state.save();
+
+  expect(field.error).toEqual("Required");
+});
+
+test("dynamic required with save", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "", bar: "" });
+
+  const state = form.state(o, { isRequired: () => true });
+
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+
+  expect(fooField.raw).toEqual("");
+  expect(fooField.error).toBeUndefined();
+  expect(barField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(fooField.error).toEqual("Required");
+  expect(barField.error).toEqual("Required");
+});
+
 test("required for number is implied", async () => {
   const M = types.model("M", {
     foo: types.number
