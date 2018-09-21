@@ -1053,6 +1053,30 @@ test("required with string", async () => {
   expect(field.error).toEqual("Required");
 });
 
+test("required with boolean has no effect", async () => {
+  const M = types.model("M", {
+    foo: types.boolean
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.boolean, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: false });
+
+  const state = form.state(o, { save: () => null });
+
+  const field = state.field("foo");
+
+  await field.setRaw(false);
+  expect(field.error).toBeUndefined();
+
+  await state.save();
+  expect(field.error).toBeUndefined();
+});
+
 test("required with maybe", async () => {
   const M = types.model("M", {
     foo: types.maybe(types.number)

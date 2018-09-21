@@ -150,7 +150,11 @@ export class Field<R, V> {
   }
 
   async process(raw: R, required: boolean): Promise<ProcessResponse<V>> {
-    if (raw === this.converter.emptyRaw && required) {
+    if (
+      !this.converter.neverRequired &&
+      raw === this.converter.emptyRaw &&
+      required
+    ) {
       return new ValidationMessage(this.requiredError);
     }
 
