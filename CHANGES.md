@@ -1,3 +1,8 @@
+# 0.17.1
+
+-   When a field is `neverRequired` then we want the 'required' property
+    to be false, no matter what.
+
 # 0.17.0
 
 -   Added a `neverRequired` option to converters. Make it so that the
