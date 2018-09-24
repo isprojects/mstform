@@ -7,6 +7,7 @@ export interface ConverterOptions<R, V> {
   validate?(value: V): boolean | Promise<boolean>;
   emptyRaw: R;
   defaultControlled?: Controlled;
+  neverRequired?: boolean;
 }
 
 export interface IConverter<R, V> {
@@ -14,6 +15,7 @@ export interface IConverter<R, V> {
   convert(raw: R): Promise<ConversionResponse<V>>;
   render(value: V): R;
   defaultControlled: Controlled;
+  neverRequired: boolean;
 }
 
 export class ConversionValue<V> {
@@ -29,12 +31,14 @@ export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 export class Converter<R, V> implements IConverter<R, V> {
   emptyRaw: R;
   defaultControlled: Controlled;
+  neverRequired: boolean = false;
 
   constructor(public definition: ConverterOptions<R, V>) {
     this.emptyRaw = definition.emptyRaw;
     this.defaultControlled = definition.defaultControlled
       ? definition.defaultControlled
       : controlled.object;
+    this.neverRequired = !!definition.neverRequired;
   }
 
   async convert(raw: R): Promise<ConversionResponse<V>> {

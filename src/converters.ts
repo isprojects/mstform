@@ -65,7 +65,8 @@ const boolean = new Converter<boolean, boolean>({
   render(value) {
     return value;
   },
-  defaultControlled: controlled.checked
+  defaultControlled: controlled.checked,
+  neverRequired: true
 });
 
 class Decimal implements IConverter<string, string> {
@@ -73,6 +74,7 @@ class Decimal implements IConverter<string, string> {
 
   emptyRaw: string;
   defaultControlled = controlled.value;
+  neverRequired = false;
 
   constructor(public maxWholeDigits: number, public decimalPlaces: number) {
     this.emptyRaw = "";
@@ -143,6 +145,7 @@ function maybe<R, V>(
 class StringMaybe<V> implements IConverter<string, V | null> {
   emptyRaw: string;
   defaultControlled = controlled.value;
+  neverRequired = false;
 
   constructor(public converter: StringConverter<V>) {
     this.emptyRaw = "";
@@ -166,6 +169,7 @@ class StringMaybe<V> implements IConverter<string, V | null> {
 class Model<M> implements IConverter<M | null, M> {
   emptyRaw: M | null;
   defaultControlled: Controlled;
+  neverRequired = false;
 
   constructor(model: IModelType<any, M>) {
     this.emptyRaw = null;
