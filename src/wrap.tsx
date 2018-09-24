@@ -1,6 +1,6 @@
 import React from "react";
 import { observer, inject } from "mobx-react";
-import { FieldAccessor } from "./accessor";
+import { FieldAccessor } from "./field-accessor";
 import { ReadOnlyPolicy } from "./renderPolicy";
 
 export interface WithFieldProps {
@@ -28,7 +28,7 @@ export function formItemWrap<P extends object>(
     }
     let newProps: object = remaining;
     if (field != null) {
-      newProps = { ...newProps, ...field.validationProps };
+      newProps = { ...field.validationProps, ...newProps };
     }
     return <Component {...newProps} />;
   };
@@ -73,7 +73,7 @@ export function inputWrap<P extends object>(
     }
     let newProps: object = remaining;
     if (field != null) {
-      newProps = { ...newProps, ...field.inputProps };
+      newProps = { ...field.inputProps, ...newProps };
     }
     return <Component {...newProps} />;
   };

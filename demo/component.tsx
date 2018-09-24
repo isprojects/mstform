@@ -59,6 +59,7 @@ class InlineError extends Component<InlineErrorProps> {
   }
 }
 
+class Input extends Component<{value: string, onChange: }
 const MyInput = inputWrap(React.createFactory("input"), "MyInput");
 
 // @observer
