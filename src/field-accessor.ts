@@ -192,7 +192,10 @@ export class FieldAccessor<M, R, V> {
   get required(): boolean {
     // if the field is required, ignore dynamic required logic
     // if the field isn't required, we can dynamically influence whether it is
-    return this.field.required || this.state.isRequiredFunc(this);
+    return (
+      !this.field.converter.neverRequired &&
+      (this.field.required || this.state.isRequiredFunc(this))
+    );
   }
 
   async validate(): Promise<boolean> {

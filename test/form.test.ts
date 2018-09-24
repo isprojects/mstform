@@ -1070,6 +1070,7 @@ test("required with boolean has no effect", async () => {
 
   const field = state.field("foo");
 
+  expect(field.required).toBeFalsy();
   await field.setRaw(false);
   expect(field.error).toBeUndefined();
 
