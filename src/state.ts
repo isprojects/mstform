@@ -233,15 +233,9 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
 
     accessor.addIndex(index);
 
-    // after all this we can access it and set it into addMode
-    const indexedAccessor = this.accessByPath(path);
-    if (
-      indexedAccessor === undefined ||
-      !(indexedAccessor instanceof RepeatingFormIndexedAccessor)
-    ) {
-      return;
-    }
-    indexedAccessor.setAddMode();
+    // we cannot set it into add mode here, as this can be triggered
+    // by code like applySnapshot. Instead use the RepeatingFormAccessor
+    // API to ensure add mode is set
   }
 
   @action

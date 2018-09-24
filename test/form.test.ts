@@ -242,6 +242,37 @@ test("repeating form insert", async () => {
   expect(field.value).toEqual("FLURB");
 });
 
+test("repeating form applySnapshot shouldn't trigger addMode", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  const oneForm = forms.index(0);
+
+  const field = oneForm.field("bar");
+  expect(field.addMode).toBeFalsy();
+
+  applySnapshot(o, { foo: [{ bar: "BAZ" }] });
+  const oneForm2 = forms.index(0);
+  const field2 = oneForm2.field("bar");
+  expect(field2.addMode).toBeFalsy();
+});
+
 test("repeating form remove", async () => {
   const N = types.model("N", {
     bar: types.string

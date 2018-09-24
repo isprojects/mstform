@@ -1,3 +1,13 @@
+# 0.18.0
+
+-   Previously we tried to set a new repeating form in add mode if there
+    was a JSON patch from MST that added an item. Unfortunately this triggers
+    too often -- with applySnapshot for instance.
+
+    Instead we only set a new entry into add mode when we use the API on the
+    repeating form accessor: `push()` and `insert()`. This is only called by
+    form code itself so therefore safe to do.
+
 # 0.17.1
 
 -   When a field is `neverRequired` then we want the 'required' property
