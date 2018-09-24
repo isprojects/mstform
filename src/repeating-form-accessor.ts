@@ -134,12 +134,15 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   insert(index: number, node: any) {
     const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
+    this.index(index).setAddMode();
   }
 
   push(node: any) {
     const a = resolvePath(this.state.node, this.path) as any[];
-    const path = this.path + "/" + a.length;
+    const index = a.length;
+    const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
+    this.index(index).setAddMode();
   }
 
   remove(node: any) {
