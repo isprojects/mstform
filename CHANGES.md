@@ -1,3 +1,14 @@
+# 0.19.0
+
+-   Extended converter with "preprocessRaw": a hook to do some processing on
+    the raw value before further validation and conversion starts. It's used
+    to trim string input.
+
+-   string fields now trim their input of spaces before validation and
+    conversion starts. These spaces won't end up in the underlying
+    value. This way a field that only contains whitespace will be marked
+    as required.
+
 # 0.18.0
 
 -   Previously we tried to set a new repeating form in add mode if there

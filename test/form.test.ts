@@ -1084,6 +1084,48 @@ test("required with string", async () => {
   expect(field.error).toEqual("Required");
 });
 
+test("required with string and whitespace", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  await field.setRaw("   ");
+  expect(field.error).toEqual("Required");
+});
+
+test("required with number and whitespace", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: 3 });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  await field.setRaw("  ");
+  expect(field.error).toEqual("Required");
+});
+
 test("required with boolean has no effect", async () => {
   const M = types.model("M", {
     foo: types.boolean
@@ -2187,4 +2229,55 @@ test("focus hook", async () => {
   const state2 = form.state(o);
   const fooField2 = state2.field("foo");
   expect(fooField2.inputProps.onFocus).toBeUndefined();
+});
+
+test("string is trimmed", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "  FOO" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("  FOO");
+  await field.setRaw("  FOO");
+  expect(field.value).toEqual("FOO");
+
+  await field.setRaw("BAR  ");
+  expect(field.raw).toEqual("BAR  ");
+  expect(field.value).toEqual("BAR");
+  await field.setRaw("  BAR");
+  expect(field.value).toEqual("BAR");
+});
+
+test("string is trimmed and save", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "  FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  let saved = null;
+  async function save(data: any) {
+    saved = data;
+    return null;
+  }
+
+  const state = form.state(o, { save });
+
+  const field = state.field("foo");
+
+  await state.save();
+  expect(field.value).toEqual("FOO");
+  expect(saved).toEqual({ foo: "FOO" });
 });

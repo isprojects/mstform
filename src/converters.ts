@@ -15,6 +15,9 @@ const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
 export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
+  preprocessRaw(raw: string): string {
+    return raw.trim();
+  }
 }
 
 const string = new StringConverter<string>({
@@ -99,6 +102,10 @@ class Decimal implements IConverter<string, string> {
     });
   }
 
+  preprocessRaw(raw: string): string {
+    return raw.trim();
+  }
+
   convert(raw: string) {
     return this.converter.convert(raw);
   }
@@ -151,6 +158,10 @@ class StringMaybe<V> implements IConverter<string, V | null> {
     this.emptyRaw = "";
   }
 
+  preprocessRaw(raw: string): string {
+    return raw.trim();
+  }
+
   async convert(raw: string): Promise<ConversionResponse<V | null>> {
     if (raw.trim() === "") {
       return new ConversionValue(null);
@@ -174,6 +185,9 @@ class Model<M> implements IConverter<M | null, M> {
   constructor(model: IModelType<any, M>) {
     this.emptyRaw = null;
     this.defaultControlled = controlled.object;
+  }
+  preprocessRaw(raw: M): M {
+    return raw;
   }
 
   async convert(raw: M | null): Promise<ConversionResponse<M>> {

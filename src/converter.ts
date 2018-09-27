@@ -16,6 +16,7 @@ export interface IConverter<R, V> {
   render(value: V): R;
   defaultControlled: Controlled;
   neverRequired: boolean;
+  preprocessRaw(raw: R): R;
 }
 
 export class ConversionValue<V> {
@@ -39,6 +40,10 @@ export class Converter<R, V> implements IConverter<R, V> {
       ? definition.defaultControlled
       : controlled.object;
     this.neverRequired = !!definition.neverRequired;
+  }
+
+  preprocessRaw(raw: R): R {
+    return raw;
   }
 
   async convert(raw: R): Promise<ConversionResponse<V>> {
