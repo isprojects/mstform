@@ -686,6 +686,27 @@ such behavior for `hidden` or `required`; use `accessor.hidden` and
 ``accessor.required` in your rendering code to determine whether a field wants
 to be hidden or required.
 
+## Warnings
+
+mstform has a hook which allows you to include `warning` messages in the fields.
+Warnings are similar to errors, however, the philosophy behind it is that you
+can show warnings in your form without making it impossible to save your form.
+
+```js
+const state = form.state(o, {
+    getWarning: accessor => accessor.raw < 0 ? ("This value is negative") : undefined
+})
+```
+
+To implement warnings, pass a `getWarning` function. It is up to you to decide
+how and when you which to show these warnings in the UI. To check if the form
+contains any warnings, you can use
+
+```js
+state.isWarningFree  // true or false
+```
+
+
 ## Extra validation
 
 Sometimes the information needed to validate the form cannot be known in
