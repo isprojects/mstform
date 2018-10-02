@@ -29,6 +29,7 @@ test("a simple warning", async () => {
   expect(fooField.warning).toEqual("Please reconsider");
   expect(barField.raw).toEqual("BAR");
   expect(barField.warning).toBeUndefined();
+  expect(state.isWarningFree).toBeFalsy();
 
   await state.save();
   // warnings are not cleared by a save
@@ -53,6 +54,7 @@ test("a simple error", () => {
 
   expect(fooField.raw).toEqual("FOO");
   expect(fooField.error).toEqual("Wrong");
+  expect(state.isWarningFree).toBeTruthy();
 });
 
 test("both errors and warnings", () => {
@@ -76,6 +78,7 @@ test("both errors and warnings", () => {
   expect(fooField.raw).toEqual("FOO");
   expect(fooField.error).toEqual("Wrong");
   expect(fooField.warning).toEqual("Please reconsider");
+  expect(state.isWarningFree).toBeFalsy();
 });
 
 test("warning in repeating form", () => {
@@ -107,6 +110,7 @@ test("warning in repeating form", () => {
   expect(barField1.warning).toBeUndefined();
   expect(barField2.raw).toEqual("incorrect");
   expect(barField2.warning).toEqual("Please reconsider");
+  expect(state.isWarningFree).toBeFalsy();
 });
 
 test("warning in subform", () => {
@@ -133,7 +137,11 @@ test("warning in subform", () => {
       accessor.path === "/sub/bar" ? "Please reconsider" : undefined
   });
 
+  const fooField = state.field("foo");
   const barField = state.subForm("sub").field("bar");
+  expect(fooField.raw).toEqual("FOO");
+  expect(fooField.warning).toBeUndefined();
   expect(barField.raw).toEqual("BAR");
   expect(barField.warning).toEqual("Please reconsider");
+  expect(state.isWarningFree).toBeFalsy();
 });
