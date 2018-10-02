@@ -31,12 +31,18 @@ test("a simple warning", async () => {
   expect(barField.warning).toBeUndefined();
   expect(state.isWarningFree).toBeFalsy();
 
-  await state.save();
-  // warnings are not cleared by a save
+  // warnings don't make a form invalid
+  const result2 = await state.validate();
+  expect(result2).toBeTruthy();
+
+  const isSaved = await state.save();
+  // warnings are not cleared by a save...
   expect(fooField.warning).toEqual("Please reconsider");
+  // ...and don't prevent a save
+  expect(isSaved).toBeTruthy();
 });
 
-test("a simple error", () => {
+test("a simple error", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -52,9 +58,49 @@ test("a simple error", () => {
   });
   const fooField = state.field("foo");
 
+  const result2 = await state.validate();
+  expect(result2).toBeFalsy();
+
+  const isSaved = await state.save();
+
   expect(fooField.raw).toEqual("FOO");
   expect(fooField.error).toEqual("Wrong");
   expect(state.isWarningFree).toBeTruthy();
+  expect(isSaved).toBeFalsy();
+});
+
+test("client side errors trumps getError", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  // The validator expects "correct"
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [value => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "not correct" });
+
+  // the getErrors expects uppercase
+  const state = form.state(o, {
+    getError: accessor =>
+      accessor.raw !== accessor.raw.toUpperCase() ? "Not uppercase" : undefined
+  });
+  const field = state.field("foo");
+  // The getErrors hook already fills in the error
+  expect(field.error).toEqual("Not uppercase");
+  // Form validation should trump the old error
+  const result1 = await state.validate();
+  expect(field.error).toEqual("Wrong");
+  expect(result1).toBeFalsy();
+
+  await field.setRaw("correct");
+  const result2 = await state.validate();
+  // We fix one error, the other remains
+  expect(field.error).toEqual("Not uppercase");
+  expect(result2).toBeFalsy();
 });
 
 test("both errors and warnings", () => {

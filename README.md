@@ -594,6 +594,20 @@ second entry, the error structure should look like this:
 }
 ```
 
+Additionally, you can assign errors to a field using your own functions.
+
+```js
+this.formState = form.state(o, {
+    getError: accessor => accessor.raw === "wrong" ? "Is wrong" : undefined
+})
+```
+
+The `error` property of the field will contain the "Is wrong" error message if
+the field return `true` with the `getError` function. If a field contains both
+an internally generated error message and one that is generated via `getErrors`,
+the internally generated message trumps the one returned by the `getError` hook.
+
+
 ## Controlling validation messages
 
 By default, mstform displays inline validation errors as soon as you
@@ -624,6 +638,7 @@ this.formState = form.state(o, {
 In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
+
 
 ## required fields
 
@@ -689,8 +704,9 @@ to be hidden or required.
 ## Warnings
 
 mstform has a hook which allows you to include `warning` messages in the fields.
-Warnings are similar to errors, however, the philosophy behind it is that you
-can show warnings in your form without making it impossible to save your form.
+Warnings are similar to errors, but don't make the form invalid. The idea is
+that you can show warnings for certain fields in your form as a notification to
+the user.
 
 ```js
 const state = form.state(o, {
