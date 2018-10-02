@@ -599,7 +599,7 @@ mstform
 
 ```js
 this.formState = form.state(o, {
-    getError: accessor => accessor.raw === "wrong" ? "Is wrong" : undefined
+    getError: accessor => accessor.path === "/name" ? "Is wrong" : undefined
 })
 ```
 
