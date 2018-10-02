@@ -132,7 +132,15 @@ export class FieldAccessor<M, R, V> {
 
   @computed
   get errorValue(): string | undefined {
+    if (this._error === undefined) {
+      return this.state.getErrorFunc(this);
+    }
     return this._error;
+  }
+
+  @computed
+  get warningValue(): string | undefined {
+    return this.state.getWarningFunc(this);
   }
 
   // XXX move this method to state
@@ -163,6 +171,15 @@ export class FieldAccessor<M, R, V> {
   get error(): string | undefined {
     if (this.canShowValidationMessages) {
       return this.errorValue;
+    } else {
+      return undefined;
+    }
+  }
+
+  @computed
+  get warning(): string | undefined {
+    if (this.canShowValidationMessages) {
+      return this.warningValue;
     } else {
       return undefined;
     }
