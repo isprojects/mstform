@@ -61,7 +61,6 @@ export interface FormStateOptions<M> {
 
   getError?: ErrorOrWarning;
   getWarning?: ErrorOrWarning;
-  isWarningFree?: FieldAccessorAllows;
 
   extraValidation?: ExtraValidation;
   focus?: FocusFunc<M, any, any>;

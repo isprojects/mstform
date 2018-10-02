@@ -594,7 +594,8 @@ second entry, the error structure should look like this:
 }
 ```
 
-Additionally, you can assign errors to a field using your own functions.
+Additionally you can also assign errors to a field that are managed outside of
+mstform
 
 ```js
 this.formState = form.state(o, {
@@ -603,9 +604,10 @@ this.formState = form.state(o, {
 ```
 
 The `error` property of the field will contain the "Is wrong" error message if
-the field return `true` with the `getError` function. If a field contains both
-an internally generated error message and one that is generated via `getErrors`,
-the internally generated message trumps the one returned by the `getError` hook.
+the field does not return `undefined` with the `getError` function. If a field
+contains both an internally generated error message and one that is generated
+via `getError`, the internally generated message trumps the one returned by the
+`getError` hook.
 
 
 ## Controlling validation messages
