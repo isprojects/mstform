@@ -20,6 +20,10 @@ export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any, any>): boolean;
 }
 
+export interface ErrorOrWarning {
+  (fieldAccessor: FieldAccessor<any, any, any>): string | undefined;
+}
+
 export interface ExtraValidation {
   (fieldAccessor: FieldAccessor<any, any, any>, value: any): ValidationResponse;
 }
@@ -55,6 +59,9 @@ export interface FormStateOptions<M> {
   isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
   isRequired?: FieldAccessorAllows;
 
+  getError?: ErrorOrWarning;
+  getWarning?: ErrorOrWarning;
+
   extraValidation?: ExtraValidation;
   focus?: FocusFunc<M, any, any>;
 }
@@ -81,6 +88,8 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
   isReadOnlyFunc: FieldAccessorAllows;
   isRequiredFunc: FieldAccessorAllows;
   isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
+  getErrorFunc: ErrorOrWarning;
+  getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
   focusFunc: FocusFunc<M, any, any> | null;
@@ -121,6 +130,8 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.isReadOnlyFunc = () => false;
       this.isRequiredFunc = () => false;
       this.isRepeatingFormDisabledFunc = () => false;
+      this.getErrorFunc = () => undefined;
+      this.getWarningFunc = () => undefined;
       this.extraValidationFunc = () => false;
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
@@ -141,6 +152,10 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.isRepeatingFormDisabledFunc = options.isRepeatingFormDisabled
         ? options.isRepeatingFormDisabled
         : () => false;
+      this.getErrorFunc = options.getError ? options.getError : () => undefined;
+      this.getWarningFunc = options.getWarning
+        ? options.getWarning
+        : () => undefined;
       this.extraValidationFunc = options.extraValidation
         ? options.extraValidation
         : () => false;
@@ -334,6 +349,16 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
     });
     result.sort();
     return result;
+  }
+
+  @computed
+  get isWarningFree(): boolean {
+    return !this.flatAccessors.some(
+      accessor =>
+        accessor instanceof FieldAccessor
+          ? accessor.warningValue !== undefined
+          : false
+    );
   }
 }
 

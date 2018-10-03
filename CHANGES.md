@@ -1,3 +1,13 @@
+# 0.20.0
+
+-   Added a warning hook in the field accessors, allowing you to define
+    a warning that can exist next to the errors. The form state now includes
+    an "isWarningFree" method to determine if the form state contains any
+    warnings.
+
+-   Added an error hook in the field accessors, allowing you to define
+    errors that you can set via an external function.
+
 # 0.19.0
 
 -   Extended converter with "preprocessRaw": a hook to do some processing on

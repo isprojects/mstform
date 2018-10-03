@@ -594,6 +594,22 @@ second entry, the error structure should look like this:
 }
 ```
 
+Additionally you can also assign errors to a field that are managed outside of
+mstform
+
+```js
+this.formState = form.state(o, {
+    getError: accessor => accessor.path === "/name" ? "Is wrong" : undefined
+})
+```
+
+The `error` property of the field will contain the "Is wrong" error message if
+the field does not return `undefined` with the `getError` function. If a field
+contains both an internally generated error message and one that is generated
+via `getError`, the internally generated message trumps the one returned by the
+`getError` hook.
+
+
 ## Controlling validation messages
 
 By default, mstform displays inline validation errors as soon as you
@@ -624,6 +640,7 @@ this.formState = form.state(o, {
 In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
+
 
 ## required fields
 
@@ -685,6 +702,28 @@ React input widgets support a `readOnly` prop (HTML input does). There is no
 such behavior for `hidden` or `required`; use `accessor.hidden` and
 ``accessor.required` in your rendering code to determine whether a field wants
 to be hidden or required.
+
+## Warnings
+
+mstform has a hook which allows you to include `warning` messages in the fields.
+Warnings are similar to errors, but don't make the form invalid. The idea is
+that you can show warnings for certain fields in your form as a notification to
+the user.
+
+```js
+const state = form.state(o, {
+    getWarning: accessor => accessor.raw < 0 ? ("This value is negative") : undefined
+})
+```
+
+To implement warnings, pass a `getWarning` function. It is up to you to decide
+how and when you which to show these warnings in the UI. To check if the form
+contains any warnings, you can use
+
+```js
+state.isWarningFree  // true or false
+```
+
 
 ## Extra validation
 
