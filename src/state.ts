@@ -361,12 +361,12 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
 
   @computed
   get isWarningFree(): boolean {
-    console.log(this.formAccessor.warning);
     if (this.formAccessor.warningValue !== undefined) {
       return false;
     }
     return !this.flatAccessors.some(
       accessor =>
+        // Maybe I can remove these instanceof checks
         (accessor instanceof FieldAccessor
           ? accessor.warningValue !== undefined
           : false) ||

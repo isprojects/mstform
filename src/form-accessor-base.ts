@@ -20,16 +20,6 @@ export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
     return this.formAccessor.validate();
   }
 
-  @action
-  setError(error: string) {
-    this.formAccessor.setError(error);
-  }
-
-  @action
-  clearError() {
-    this.formAccessor.clearError();
-  }
-
   @computed
   get error(): string | undefined {
     return this.formAccessor.error;

@@ -25,6 +25,10 @@ export class SubFormAccessor<
     // no op
   }
 
+  async validate(): Promise<boolean> {
+    return this.errorValue === undefined;
+  }
+
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
@@ -33,6 +37,16 @@ export class SubFormAccessor<
   @computed
   get addMode(): boolean {
     return this.parent.addMode;
+  }
+
+  @computed
+  get errorValue(): string | undefined {
+    return this.state.getErrorFunc(this);
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.errorValue;
   }
 
   @computed

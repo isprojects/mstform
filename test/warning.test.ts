@@ -203,6 +203,44 @@ test("warning in subform", () => {
   expect(state.isWarningFree).toBeFalsy();
 });
 
+test("error on repeating form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [] });
+
+  const state = form.state(o, {
+    getError: (accessor: any) =>
+      accessor instanceof RepeatingFormAccessor && accessor.length === 0
+        ? "Empty"
+        : undefined
+  });
+
+  const result1 = await state.validate();
+
+  const repeatingForms = state.repeatingForm("foo");
+
+  expect(repeatingForms.error).toEqual("Empty");
+  expect(state.isWarningFree).toBeTruthy();
+  expect(result1).toBeFalsy();
+
+  repeatingForms.push({ bar: "BAR" });
+  const result2 = await state.validate();
+
+  expect(repeatingForms.error).toBeUndefined();
+  expect(result2).toBeTruthy();
+});
+
 test("warning on repeating form", async () => {
   const N = types.model("N", {
     bar: types.string
@@ -238,6 +276,39 @@ test("warning on repeating form", async () => {
   expect(state.isWarningFree).toBeTruthy();
 });
 
+test("error on subform", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.string,
+    sub: N
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    sub: new SubForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: "FOO", sub: { bar: "BAR" } });
+
+  const state = form.state(o, {
+    getError: (accessor: any) =>
+      accessor instanceof SubFormAccessor ? "Error" : undefined
+  });
+
+  const result = await state.validate();
+
+  const subForms = state.subForm("sub");
+
+  expect(subForms.error).toEqual("Error");
+  expect(state.isWarningFree).toBeTruthy();
+  expect(result).toBeFalsy();
+});
+
 test("warning on subform", () => {
   const N = types.model("N", {
     bar: types.string
@@ -266,6 +337,30 @@ test("warning on subform", () => {
 
   expect(subform.warning).toEqual("Warning");
   expect(state.isWarningFree).toBeFalsy();
+});
+
+test("error on formstate", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, {
+    getError: (accessor: any) =>
+      accessor instanceof FormAccessor ? "Error" : undefined
+  });
+
+  const result = await state.validate();
+  const formState = state.formAccessor;
+
+  expect(formState.error).toEqual("Error");
+  expect(state.isWarningFree).toBeTruthy();
+  expect(result).toBeFalsy();
 });
 
 test("warning on formstate", () => {

@@ -45,6 +45,7 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
   async validate(): Promise<boolean> {
     const promises = this.accessors.map(accessor => accessor.validate());
     const values = await Promise.all(promises);
+    values.push(this.errorValue === undefined);
     return values.every(value => value);
   }
 
@@ -58,11 +59,6 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
       return "";
     }
     return this.parent.path;
-  }
-
-  @computed
-  get error(): string | undefined {
-    return this.error;
   }
 
   @computed
@@ -220,6 +216,16 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
 
   repeatingField(name: string): any {
     // not implemented yet
+  }
+
+  @computed
+  get errorValue(): string | undefined {
+    return this.state.getErrorFunc(this);
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.errorValue;
   }
 
   @computed
