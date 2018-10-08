@@ -730,52 +730,6 @@ test("setErrors", async () => {
   expect(field.error).toEqual("WRONG");
 });
 
-test("setErrors repeating", async () => {
-  const N = types.model("N", {
-    bar: types.string
-  });
-  const M = types.model("M", {
-    foo: types.array(N)
-  });
-
-  const form = new Form(M, {
-    foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
-  });
-
-  const o = M.create({ foo: [{ bar: "FOO" }] });
-
-  const state = form.state(o);
-  state.setErrors({ foo: [{ bar: "WRONG" }] });
-
-  const field = state.repeatingForm("foo").accessors[0].field("bar");
-  expect(field.error).toEqual("WRONG");
-});
-
-test("setErrors directly on repeating", async () => {
-  const N = types.model("N", {
-    bar: types.string
-  });
-  const M = types.model("M", {
-    foo: types.array(N)
-  });
-
-  const form = new Form(M, {
-    foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
-  });
-
-  const o = M.create({ foo: [{ bar: "FOO" }] });
-
-  const state = form.state(o);
-  state.setErrors({ foo: "WRONG" });
-
-  const accessor = state.repeatingForm("foo");
-  expect(accessor.error).toEqual("WRONG");
-});
-
 test("additional error by name", async () => {
   const M = types.model("M", {
     foo: types.string

@@ -10,9 +10,6 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   name: string;
 
   @observable
-  _error: string | undefined;
-
-  @observable
   repeatingFormIndexedAccessors: Map<
     number,
     RepeatingFormIndexedAccessor<any, any>
@@ -36,16 +33,6 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     return this.parent.path + "/" + this.name;
   }
 
-  @action
-  setError(error: string) {
-    this._error = error;
-  }
-
-  @action
-  clearError() {
-    this._error = undefined;
-  }
-
   async validate(): Promise<boolean> {
     const promises: Promise<any>[] = [];
     for (const accessor of this.accessors) {
@@ -62,6 +49,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
   @computed
   get isValid(): boolean {
+    // This also needs to support errors on repeatingformaccessor itself
     return this.accessors.every(accessor => accessor.isValid);
   }
 
@@ -128,7 +116,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
   @computed
   get error(): string | undefined {
-    return this._error;
+    return undefined;
   }
 
   insert(index: number, node: any) {
@@ -212,5 +200,15 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   get length(): number {
     const a = resolvePath(this.state.node, this.path) as any[];
     return a.length;
+  }
+
+  @computed
+  get warningValue(): string | undefined {
+    return this.state.getWarningFunc(this);
+  }
+
+  @computed
+  get warning(): string | undefined {
+    return this.warningValue;
   }
 }

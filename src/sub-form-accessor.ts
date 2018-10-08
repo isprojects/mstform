@@ -34,4 +34,14 @@ export class SubFormAccessor<
   get addMode(): boolean {
     return this.parent.addMode;
   }
+
+  @computed
+  get warningValue(): string | undefined {
+    return this.state.getWarningFunc(this);
+  }
+
+  @computed
+  get warning(): string | undefined {
+    return this.warningValue;
+  }
 }
