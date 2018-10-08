@@ -609,6 +609,10 @@ contains both an internally generated error message and one that is generated
 via `getError`, the internally generated message trumps the one returned by the
 `getError` hook.
 
+Other accessors in mstform - `SubForm`, `RepeatingForm` and `Form` - also contain
+this error hook, allowing you to set errors on the complete form - or any accessor
+within it. Indexed entries within repeating forms can also be set with an error.
+
 
 ## Controlling validation messages
 
@@ -705,7 +709,7 @@ to be hidden or required.
 
 ## Warnings
 
-mstform has a hook which allows you to include `warning` messages in the fields.
+mstform has a hook which allows you to include `warning` messages in its accessors.
 Warnings are similar to errors, but don't make the form invalid. The idea is
 that you can show warnings for certain fields in your form as a notification to
 the user.

@@ -24,6 +24,9 @@ export interface FieldAccessorAllows {
 export interface ErrorOrWarning {
   (fieldAccessor: FieldAccessor<any, any, any>): string | undefined;
   (repeatingFormAccessor: RepeatingFormAccessor<any, any>): string | undefined;
+  (repeatingFormIndexedAccessor: RepeatingFormIndexedAccessor<any, any>):
+    | string
+    | undefined;
   (subFormAccessor: SubFormAccessor<any, any>): string | undefined;
   (formAccessor: FormAccessor<any, any>): string | undefined;
 }

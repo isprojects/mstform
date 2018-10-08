@@ -4,6 +4,7 @@ import {
   Field,
   Form,
   FormAccessor,
+  FieldAccessor,
   RepeatingForm,
   RepeatingFormAccessor,
   SubForm,
@@ -96,7 +97,10 @@ test("client side errors trumps getError", async () => {
   // the getErrors expects uppercase
   const state = form.state(o, {
     getError: (accessor: any) =>
-      accessor.raw !== accessor.raw.toUpperCase() ? "Not uppercase" : undefined
+      accessor instanceof FieldAccessor &&
+      accessor.raw !== accessor.raw.toUpperCase()
+        ? "Not uppercase"
+        : undefined
   });
   const field = state.field("foo");
   // The getErrors hook already fills in the error
@@ -274,6 +278,69 @@ test("warning on repeating form", async () => {
 
   expect(repeatingForms.warning).toBeUndefined();
   expect(state.isWarningFree).toBeTruthy();
+});
+
+test("error on indexed repeating form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "correct" }, { bar: "incorrect" }] });
+
+  const state = form.state(o, {
+    getError: (accessor: any) =>
+      accessor.path === "/foo/1" ? "Error" : undefined
+  });
+
+  const result = await state.validate();
+
+  const forms = state.repeatingForm("foo");
+  const fooForm1 = forms.index(0);
+  const fooForm2 = forms.index(1);
+
+  expect(fooForm1.error).toBeUndefined();
+  expect(fooForm2.error).toEqual("Error");
+  expect(state.isWarningFree).toBeTruthy();
+  expect(result).toBeFalsy();
+});
+
+test("warning on indexed repeating form", () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "correct" }, { bar: "incorrect" }] });
+
+  const state = form.state(o, {
+    getWarning: (accessor: any) =>
+      accessor.path === "/foo/1" ? "Warning" : undefined
+  });
+
+  const forms = state.repeatingForm("foo");
+  const fooForm1 = forms.index(0);
+  const fooForm2 = forms.index(1);
+
+  expect(fooForm1.warning).toBeUndefined();
+  expect(fooForm2.warning).toEqual("Warning");
+  expect(state.isWarningFree).toBeFalsy();
 });
 
 test("error on subform", async () => {

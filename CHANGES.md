@@ -1,3 +1,9 @@
+# 0.20.1
+
+-   Added a warning and error hook to the `Subform`, `RepearingForm`,
+    and `Form` accessors. These hooks are accesible the same way as
+    the warning and error hooks of the field accessors.
+
 # 0.20.0
 
 -   Added a warning hook in the field accessors, allowing you to define
