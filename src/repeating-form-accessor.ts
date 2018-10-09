@@ -51,7 +51,6 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
 
   @computed
   get isValid(): boolean {
-    // This also needs to support errors on repeatingformaccessor itself
     return this.accessors.every(accessor => accessor.isValid);
   }
 
