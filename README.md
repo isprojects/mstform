@@ -609,9 +609,19 @@ contains both an internally generated error message and one that is generated
 via `getError`, the internally generated message trumps the one returned by the
 `getError` hook.
 
-Other accessors in mstform - `SubForm`, `RepeatingForm` and `Form` - also contain
+Other accessors in mstform - `SubForm`, `RepeatingForm` and `Form` - also use
 this error hook, allowing you to set errors on the complete form - or any accessor
 within it. Indexed entries within repeating forms can also be set with an error.
+If, for example, we want to raise an error when a `RepeatingForm` is empty, we
+can raise an error on the repeating form accessor like this
+
+```js
+this.formState = form.state(o, {
+    getError: accessor => accessor instanceof RepeatingFormAccessor && accessor.length === 0
+      ? "The repeating form must contain at least one form"
+      : undefined
+})
+```
 
 
 ## Controlling validation messages
