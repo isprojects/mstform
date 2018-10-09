@@ -364,9 +364,6 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
 
   @computed
   get isWarningFree(): boolean {
-    console.log(
-      this.flatAccessors.map(accessor => console.log(accessor.warning))
-    );
     if (this.formAccessor.warningValue !== undefined) {
       return false;
     }

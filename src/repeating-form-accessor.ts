@@ -102,6 +102,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     const result: Accessor[] = [];
     this.accessors.forEach(accessor => {
       result.push(...accessor.flatAccessors);
+      result.push(accessor);
     });
     return result;
   }
