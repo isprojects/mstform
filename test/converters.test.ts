@@ -50,20 +50,21 @@ test("integer converter", async () => {
 });
 
 test("decimal converter", async () => {
-  await check(converters.decimal(4, 2), "3", "3");
-  await check(converters.decimal(4, 2), "3.14", "3.14");
-  await check(converters.decimal(4, 2), "43.14", "43.14");
-  await check(converters.decimal(4, 2), "4313", "4313");
-
-  await check(converters.decimal(4, 2), "-3.14", "-3.14");
-  await check(converters.decimal(4, 2), "0", "0");
-  await check(converters.decimal(4, 2), ".14", ".14");
-  await check(converters.decimal(4, 2), "14.", "14.");
-  await fails(converters.decimal(4, 2), "foo");
-  await fails(converters.decimal(4, 2), "1foo");
-  await fails(converters.decimal(4, 2), "");
-  await fails(converters.decimal(4, 2), "12345.34");
-  await fails(converters.decimal(4, 2), "12.444");
+  await check(converters.decimal({}), "3", "3");
+  await check(converters.decimal({}), "3.14", "3.14");
+  await check(converters.decimal({}), "43.14", "43.14");
+  await check(converters.decimal({}), "4313", "4313");
+  await check(converters.decimal({}), "-3.14", "-3.14");
+  await check(converters.decimal({}), "0", "0");
+  await check(converters.decimal({}), ".14", ".14");
+  await check(converters.decimal({}), "14.", "14.");
+  await fails(converters.decimal({}), "foo");
+  await fails(converters.decimal({}), "1foo");
+  await fails(converters.decimal({}), "");
+  await fails(converters.decimal({}), ".");
+  await fails(converters.decimal({ maxWholeDigits: 4 }), "12345.34");
+  await fails(converters.decimal({ decimalPlaces: 2 }), "12.444");
+  await fails(converters.decimal({ allowNegative: false }), "-45.34");
 });
 
 test("boolean converter", async () => {

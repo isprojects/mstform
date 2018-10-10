@@ -5,6 +5,11 @@
     This can be used in application code to help implement the `getError` and
     `getWarning` hooks.
 
+-   Rewrite of decimal-converter, added `allowNegative` parameter, handle input
+    `"."` as errorous. It now takes a single options argument that allows you
+    to configure it.
+    Mind: This breaks the previous API of decimal
+
 # 0.21.0
 
 -   Added a warning and error hook to the `Subform`, `RepeatingForm`,

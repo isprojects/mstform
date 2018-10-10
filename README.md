@@ -295,9 +295,11 @@ other object:
 
 -   `converters.integer`: value is an integer.
 
--   `converters.decimal(maxDigits, decimalPlaces)`: value is a string (not a
-    number) that contains a decimal number with a maximum `maxDigits` before the
-    period and a maximum of `decimalPlaces` after the period.
+-   `converters.decimal({maxWholeDigits:x, decimalPlaces:y, allowNegative:z})`:
+    value is a string (not a number) that contains a decimal number with a
+    maximum `maxWholeDigits` (default 10) before the period and a maximum of
+    `decimalPlaces` (default 2) after the period. With `allowNegative`
+    (boolean, default true) you can specify if negatives are allowed
 
 ### Boolean
 
