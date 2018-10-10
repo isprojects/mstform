@@ -1,3 +1,10 @@
+# 0.22.0
+
+-   Implemented a `resolveMessage()` which takes a messages structure and a
+    path and resolves the path to a message using certain rules (see docs).
+    This can be used in application code to help implement the `getError` and
+    `getWarning` hooks.
+
 # 0.21.0
 
 -   Added a warning and error hook to the `Subform`, `RepeatingForm`,
