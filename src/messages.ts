@@ -20,7 +20,7 @@ function resolveSteps(messages: Messages, steps: string[]): string | undefined {
     return undefined;
   }
   if (steps.length === 0) {
-    return getError(messages);
+    return getMessage(messages);
   }
   return resolveStep(messages, steps);
 }
@@ -46,11 +46,11 @@ function resolveObject(
   steps: string[]
 ): string | undefined {
   if (steps.length === 0) {
-    return getError(messages);
+    return getMessage(messages);
   }
   const [first, ...rest] = steps;
   if (rest.length === 0) {
-    const propError = getPropError(messages, first);
+    const propError = getPropMessage(messages, first);
     if (propError !== undefined) {
       return propError;
     }
@@ -77,7 +77,7 @@ function resolveArray(
   return resolveStep(value, rest);
 }
 
-function getError(value: SomeMessage): string | undefined {
+function getMessage(value: SomeMessage): string | undefined {
   if (value === undefined) {
     return undefined;
   }
@@ -87,14 +87,17 @@ function getError(value: SomeMessage): string | undefined {
   if (value instanceof Array) {
     return undefined;
   }
-  return errorValue(value.__error__);
+  return messageValue(value.__message__);
 }
 
-function getPropError(value: MessagesObject, step: string): string | undefined {
-  return errorValue(value["__error__" + step]);
+function getPropMessage(
+  value: MessagesObject,
+  step: string
+): string | undefined {
+  return messageValue(value["__message__" + step]);
 }
 
-function errorValue(error: any): string | undefined {
+function messageValue(error: any): string | undefined {
   if (error === undefined) {
     return undefined;
   }

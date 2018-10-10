@@ -49,7 +49,7 @@ test("FormState error", () => {
   // FormState
   // path:
   const messages = {
-    __error__: "Wrong"
+    __message__: "Wrong"
   };
 
   expect(resolveMessage(messages, "")).toEqual("Wrong");
@@ -60,7 +60,7 @@ test("SubForm error", () => {
   // path: foo
   const messages = {
     foo: {
-      __error__: "Wrong"
+      __message__: "Wrong"
     }
   };
 
@@ -71,7 +71,7 @@ test("RepeatingFormAccessor error", () => {
   // RepeatingFormAccessor "foo"
   // path: foo
   const messages = {
-    __error__foo: "Wrong"
+    __message__foo: "Wrong"
   };
 
   expect(resolveMessage(messages, "foo")).toEqual("Wrong");
@@ -84,7 +84,7 @@ test("RepeatingFormIndexedAccessor error", () => {
     foo: [
       {},
       {
-        __error__: "Wrong"
+        __message__: "Wrong"
       }
     ]
   };

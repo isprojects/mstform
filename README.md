@@ -595,12 +595,12 @@ second entry, the error structure should look like this:
 ```
 
 Additionally you can also assign errors to a field that are managed outside of
-mstform
+mstform:
 
 ```js
 this.formState = form.state(o, {
-    getError: accessor => accessor.path === "/name" ? "Is wrong" : undefined
-})
+    getError: accessor => (accessor.path === "/name" ? "Is wrong" : undefined)
+});
 ```
 
 The `error` property of the field will contain the "Is wrong" error message if
@@ -617,12 +617,44 @@ can raise an error on the repeating form accessor like this
 
 ```js
 this.formState = form.state(o, {
-    getError: accessor => accessor instanceof RepeatingFormAccessor && accessor.length === 0
-      ? "The repeating form must contain at least one form"
-      : undefined
-})
+    getError: accessor =>
+        accessor instanceof RepeatingFormAccessor && accessor.length === 0
+            ? "The repeating form must contain at least one form"
+            : undefined
+});
 ```
 
+To help implement the error (and warning) hooks, you can use the
+`resolveMessage` function. This takes a messages structure and a path as
+argument and returns either a message string or undefined. The messages
+structure is an object that has the same structure as the form: if there's an
+error message for field "foo" then there's a message structure:
+
+```js
+{
+    foo: "Error message";
+}
+```
+
+Sub forms are represented by sub objects in the messages structure, repeating
+forms by arrays with object entries. Besides this you can also hook up an error
+message to objects with the special key `__error__`:
+
+```js
+{
+    "__message__": "Object specific error message"
+}
+```
+
+This way you can associate messages with `FormState`, `SubFormAccessor` and
+`RepeatingFormIndexedAccessor` when you use . You can also associate a message
+with `RepeatingFormAccessor`, i.e. the array itself, with `__message__<name>`:
+
+```js
+{
+    "__message__foo": "Array specific error message"
+}
+```
 
 ## Controlling validation messages
 
@@ -654,7 +686,6 @@ this.formState = form.state(o, {
 In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
-
 
 ## required fields
 
@@ -726,8 +757,9 @@ the user.
 
 ```js
 const state = form.state(o, {
-    getWarning: accessor => accessor.raw < 0 ? ("This value is negative") : undefined
-})
+    getWarning: accessor =>
+        accessor.raw < 0 ? "This value is negative" : undefined
+});
 ```
 
 To implement warnings, pass a `getWarning` function. It is up to you to decide
@@ -735,9 +767,8 @@ how and when you which to show these warnings in the UI. To check if the form
 contains any warnings, you can use
 
 ```js
-state.isWarningFree  // true or false
+state.isWarningFree; // true or false
 ```
-
 
 ## Extra validation
 
