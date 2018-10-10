@@ -14,6 +14,7 @@ import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
+import { SubFormAccessor } from "./sub-form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 
 export interface FieldAccessorAllows {
@@ -21,7 +22,7 @@ export interface FieldAccessorAllows {
 }
 
 export interface ErrorOrWarning {
-  (fieldAccessor: FieldAccessor<any, any, any>): string | undefined;
+  (accessor: Accessor): string | undefined;
 }
 
 export interface ExtraValidation {
@@ -276,11 +277,13 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
     const additionalErrors = deepCopy(errors);
     this.flatAccessors.map(accessor => {
       const error = getByPath(errors, accessor.path);
-      if (error != null) {
-        accessor.setError(error);
-        // this.errors.set(accessor.path, error);
-        // delete from remaining structure
-        deleteByPath(additionalErrors, accessor.path);
+      if (accessor instanceof FieldAccessor) {
+        if (error != null) {
+          accessor.setError(error);
+          // this.errors.set(accessor.path, error);
+          // delete from remaining structure
+          deleteByPath(additionalErrors, accessor.path);
+        }
       }
     });
     this.additionalErrorTree = additionalErrors;
@@ -290,7 +293,9 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
   clearErrors() {
     this.additionalErrorTree = {};
     this.flatAccessors.map(accessor => {
-      accessor.clearError();
+      if (accessor instanceof FieldAccessor) {
+        accessor.clearError();
+      }
     });
   }
 
@@ -353,11 +358,11 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
 
   @computed
   get isWarningFree(): boolean {
+    if (this.formAccessor.warningValue !== undefined) {
+      return false;
+    }
     return !this.flatAccessors.some(
-      accessor =>
-        accessor instanceof FieldAccessor
-          ? accessor.warningValue !== undefined
-          : false
+      accessor => (accessor ? accessor.warningValue !== undefined : false)
     );
   }
 }

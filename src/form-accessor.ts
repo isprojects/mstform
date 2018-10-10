@@ -22,9 +22,6 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
   subFormAccessors: Map<keyof M, SubFormAccessor<any, any>> = observable.map();
 
   @observable
-  _error: string | undefined;
-
-  @observable
   _addMode: boolean;
 
   constructor(
@@ -48,17 +45,8 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
   async validate(): Promise<boolean> {
     const promises = this.accessors.map(accessor => accessor.validate());
     const values = await Promise.all(promises);
+    values.push(this.errorValue === undefined); // add possible error of the form itself
     return values.every(value => value);
-  }
-
-  @action
-  setError(error: string) {
-    this._error = error;
-  }
-
-  @action
-  clearError() {
-    this._error = undefined;
   }
 
   clear() {
@@ -71,11 +59,6 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
       return "";
     }
     return this.parent.path;
-  }
-
-  @computed
-  get error(): string | undefined {
-    return this.error;
   }
 
   @computed
@@ -233,5 +216,25 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
 
   repeatingField(name: string): any {
     // not implemented yet
+  }
+
+  @computed
+  get errorValue(): string | undefined {
+    return this.state.getErrorFunc(this);
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.errorValue;
+  }
+
+  @computed
+  get warningValue(): string | undefined {
+    return this.state.getWarningFunc(this);
+  }
+
+  @computed
+  get warning(): string | undefined {
+    return this.warningValue;
   }
 }

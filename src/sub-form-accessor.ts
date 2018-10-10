@@ -25,6 +25,13 @@ export class SubFormAccessor<
     // no op
   }
 
+  async validate(): Promise<boolean> {
+    const promises = this.accessors.map(accessor => accessor.validate());
+    const values = await Promise.all(promises);
+    values.push(this.errorValue === undefined);
+    return values.every(value => value);
+  }
+
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
@@ -33,5 +40,25 @@ export class SubFormAccessor<
   @computed
   get addMode(): boolean {
     return this.parent.addMode;
+  }
+
+  @computed
+  get errorValue(): string | undefined {
+    return this.state.getErrorFunc(this);
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.errorValue;
+  }
+
+  @computed
+  get warningValue(): string | undefined {
+    return this.state.getWarningFunc(this);
+  }
+
+  @computed
+  get warning(): string | undefined {
+    return this.warningValue;
   }
 }
