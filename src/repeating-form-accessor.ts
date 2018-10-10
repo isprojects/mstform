@@ -10,9 +10,6 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   name: string;
 
   @observable
-  _error: string | undefined;
-
-  @observable
   repeatingFormIndexedAccessors: Map<
     number,
     RepeatingFormIndexedAccessor<any, any>
@@ -36,22 +33,14 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     return this.parent.path + "/" + this.name;
   }
 
-  @action
-  setError(error: string) {
-    this._error = error;
-  }
-
-  @action
-  clearError() {
-    this._error = undefined;
-  }
-
   async validate(): Promise<boolean> {
     const promises: Promise<any>[] = [];
     for (const accessor of this.accessors) {
       promises.push(accessor.validate());
     }
     const values = await Promise.all(promises);
+    // appending possible error on the repeatingform itself
+    values.push(this.errorValue === undefined);
     return values.every(value => value);
   }
 
@@ -112,6 +101,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     const result: Accessor[] = [];
     this.accessors.forEach(accessor => {
       result.push(...accessor.flatAccessors);
+      result.push(accessor);
     });
     return result;
   }
@@ -124,11 +114,6 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     }
     const accessor = this.index(nr);
     return accessor.accessBySteps(rest);
-  }
-
-  @computed
-  get error(): string | undefined {
-    return this._error;
   }
 
   insert(index: number, node: any) {
@@ -212,5 +197,25 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   get length(): number {
     const a = resolvePath(this.state.node, this.path) as any[];
     return a.length;
+  }
+
+  @computed
+  get errorValue(): string | undefined {
+    return this.state.getErrorFunc(this);
+  }
+
+  @computed
+  get error(): string | undefined {
+    return this.errorValue;
+  }
+
+  @computed
+  get warningValue(): string | undefined {
+    return this.state.getWarningFunc(this);
+  }
+
+  @computed
+  get warning(): string | undefined {
+    return this.warningValue;
   }
 }
