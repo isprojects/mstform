@@ -1,3 +1,9 @@
+# 0.22.0
+
+-   Rewrite of decimal-converter, added `allowNegative` parameter, handle input
+    `"."` as errorous
+    Mind: This breaks the previous API of decimal
+
 # 0.21.0
 
 -   Added a warning and error hook to the `Subform`, `RepeatingForm`,

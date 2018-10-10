@@ -295,9 +295,11 @@ other object:
 
 -   `converters.integer`: value is an integer.
 
--   `converters.decimal(maxDigits, decimalPlaces)`: value is a string (not a
-    number) that contains a decimal number with a maximum `maxDigits` before the
-    period and a maximum of `decimalPlaces` after the period.
+-   `converters.decimal({maxDigits:x, decimalPlaces:y, allowNegative:z})`: value
+    is a string (not a number) that contains a decimal number with a maximum
+    `maxDigits` (default 10) before the period and a maximum of `decimalPlaces`
+    (default 2) after the period. With `allowNegative` (boolean, default true)
+    you can specify if negatives are allowed
 
 ### Boolean
 
@@ -599,8 +601,8 @@ mstform
 
 ```js
 this.formState = form.state(o, {
-    getError: accessor => accessor.path === "/name" ? "Is wrong" : undefined
-})
+    getError: accessor => (accessor.path === "/name" ? "Is wrong" : undefined)
+});
 ```
 
 The `error` property of the field will contain the "Is wrong" error message if
@@ -617,12 +619,12 @@ can raise an error on the repeating form accessor like this
 
 ```js
 this.formState = form.state(o, {
-    getError: accessor => accessor instanceof RepeatingFormAccessor && accessor.length === 0
-      ? "The repeating form must contain at least one form"
-      : undefined
-})
+    getError: accessor =>
+        accessor instanceof RepeatingFormAccessor && accessor.length === 0
+            ? "The repeating form must contain at least one form"
+            : undefined
+});
 ```
-
 
 ## Controlling validation messages
 
@@ -654,7 +656,6 @@ this.formState = form.state(o, {
 In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
-
 
 ## required fields
 
@@ -726,8 +727,9 @@ the user.
 
 ```js
 const state = form.state(o, {
-    getWarning: accessor => accessor.raw < 0 ? ("This value is negative") : undefined
-})
+    getWarning: accessor =>
+        accessor.raw < 0 ? "This value is negative" : undefined
+});
 ```
 
 To implement warnings, pass a `getWarning` function. It is up to you to decide
@@ -735,9 +737,8 @@ how and when you which to show these warnings in the UI. To check if the form
 contains any warnings, you can use
 
 ```js
-state.isWarningFree  // true or false
+state.isWarningFree; // true or false
 ```
-
 
 ## Extra validation
 

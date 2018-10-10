@@ -72,6 +72,12 @@ const boolean = new Converter<boolean, boolean>({
   neverRequired: true
 });
 
+export interface DecimalOptions {
+  maxWholeDigits?: number;
+  decimalPlaces?: number;
+  allowNegative?: boolean;
+}
+
 class Decimal implements IConverter<string, string> {
   public converter: StringConverter<string>;
 
@@ -79,14 +85,28 @@ class Decimal implements IConverter<string, string> {
   defaultControlled = controlled.value;
   neverRequired = false;
 
-  constructor(public maxWholeDigits: number, public decimalPlaces: number) {
+  constructor(options?: DecimalOptions) {
+    const maxWholeDigits: number =
+      options == null || !options.maxWholeDigits ? 10 : options.maxWholeDigits;
+    const decimalPlaces: number =
+      options == null || !options.decimalPlaces ? 2 : options.decimalPlaces;
+    const allowNegative: boolean =
+      options == null || options.allowNegative == null
+        ? true
+        : options.allowNegative;
+
     this.emptyRaw = "";
     const regex = new RegExp(
-      `^-?(0|[1-9]\\d{0,${maxWholeDigits - 1}})(\\.\\d{0,${decimalPlaces}})?$`
+      `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
+        1}})(\\.\\d{0,${decimalPlaces}})?$`
     );
+
     this.converter = new StringConverter<string>({
       emptyRaw: "",
       rawValidate(raw) {
+        if (raw === "" || raw === ".") {
+          return false;
+        }
         // deal with case when string starts with .
         if (raw.startsWith(".")) {
           raw = "0" + raw;
@@ -117,11 +137,8 @@ class Decimal implements IConverter<string, string> {
   }
 }
 
-function decimal(
-  maxDigits: number,
-  decimalPlaces: number
-): IConverter<string, string> {
-  return new Decimal(maxDigits, decimalPlaces);
+function decimal(props: any): IConverter<string, string> {
+  return new Decimal(props);
 }
 
 // XXX create a way to create arrays with mobx state tree types
