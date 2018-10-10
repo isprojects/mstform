@@ -77,13 +77,18 @@ test("RepeatingFormAccessor error", () => {
   expect(resolveMessage(messages, "foo")).toEqual("Wrong");
 });
 
-// RepeatingFormIndexed accessor 2 of RepeatingFormAccessor "foo"
-// path: foo/1
-const repeatingFormError = {
-  foo: [
-    {},
-    {
-      __error__: "Wrong"
-    }
-  ]
-};
+test("RepeatingFormIndexedAccessor error", () => {
+  // RepeatingFormIndexed accessor 2 of RepeatingFormAccessor "foo"
+  // path: foo/1
+  const messages: Messages = {
+    foo: [
+      {},
+      {
+        __error__: "Wrong"
+      }
+    ]
+  };
+  expect(resolveMessage(messages, "foo/1")).toEqual("Wrong");
+  expect(resolveMessage(messages, "foo/0")).toBeUndefined();
+  expect(resolveMessage(messages, "foo/2")).toBeUndefined();
+});

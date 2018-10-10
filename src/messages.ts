@@ -45,32 +45,36 @@ function resolveObject(
   messages: MessagesObject,
   steps: string[]
 ): string | undefined {
+  if (steps.length === 0) {
+    return getError(messages);
+  }
   const [first, ...rest] = steps;
   if (rest.length === 0) {
-    return resolveObjectFinalStep(messages, first);
+    const propError = getPropError(messages, first);
+    if (propError !== undefined) {
+      return propError;
+    }
   }
   return resolveStep(messages[first], rest);
 }
 
-function resolveObjectFinalStep(
-  messages: MessagesObject,
-  step: string
-): string | undefined {
-  const propError = getPropError(messages, step);
-  if (propError !== undefined) {
-    return propError;
-  }
-  const value = messages[step];
-  if (typeof value === "string") {
-    return value;
-  }
-  if (value instanceof Array) {
+function resolveString(messages: string, steps: string[]): string | undefined {
+  if (steps.length > 0) {
     return undefined;
   }
-  if (value instanceof Object) {
-    return getError(value);
+  return messages;
+}
+
+function resolveArray(
+  messages: MessagesArray,
+  steps: string[]
+): string | undefined {
+  const [first, ...rest] = steps;
+  if (!isInt(first)) {
+    return undefined;
   }
-  return undefined;
+  const value = messages[parseInt(first, 10)];
+  return resolveStep(value, rest);
 }
 
 function getError(value: SomeMessage): string | undefined {
@@ -98,23 +102,4 @@ function errorValue(error: any): string | undefined {
     return undefined;
   }
   return error;
-}
-
-function resolveString(messages: string, steps: string[]): string | undefined {
-  if (steps.length > 0) {
-    return undefined;
-  }
-  return messages;
-}
-
-function resolveArray(
-  messages: MessagesArray,
-  steps: string[]
-): string | undefined {
-  const [first, ...rest] = steps;
-  if (!isInt(first)) {
-    return undefined;
-  }
-  const value = messages[parseInt(first, 10)];
-  return resolveStep(value, rest);
 }
