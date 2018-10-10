@@ -1,7 +1,8 @@
 # 0.22.0
 
 -   Rewrite of decimal-converter, added `allowNegative` parameter, handle input
-    `"."` as errorous
+    `"."` as errorous. It now takes a single options argument that allows you
+    to configure it.
     Mind: This breaks the previous API of decimal
 
 # 0.21.0
