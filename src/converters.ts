@@ -137,8 +137,8 @@ class Decimal implements IConverter<string, string> {
   }
 }
 
-function decimal(props: any): IConverter<string, string> {
-  return new Decimal(props);
+function decimal(options?: DecimalOptions): IConverter<string, string> {
+  return new Decimal(options);
 }
 
 // XXX create a way to create arrays with mobx state tree types
