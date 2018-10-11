@@ -1,3 +1,8 @@
+# 0.23.0
+
+-   Implement a `blur` hook that is called when the blur event fires for a
+    field.
+
 # 0.22.0
 
 -   Implemented a `resolveMessage()` which takes a messages structure and a
