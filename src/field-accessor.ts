@@ -328,6 +328,13 @@ export class FieldAccessor<M, R, V> {
     this.state.focusFunc(event, this);
   };
 
+  handleBlur = (event: any) => {
+    if (this.state.blurFunc == null) {
+      return;
+    }
+    this.state.blurFunc(event, this);
+  };
+
   @computed
   get inputProps() {
     const result: any = this.field.controlled(this);
@@ -337,6 +344,9 @@ export class FieldAccessor<M, R, V> {
     }
     if (this.state.focusFunc != null) {
       result.onFocus = this.handleFocus;
+    }
+    if (this.state.blurFunc != null) {
+      result.onBlur = this.handleBlur;
     }
     return result;
   }

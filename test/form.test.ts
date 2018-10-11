@@ -2208,6 +2208,50 @@ test("focus hook", async () => {
   expect(fooField2.inputProps.onFocus).toBeUndefined();
 });
 
+test("blur hook", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const blurred: any[] = [];
+
+  const state = form.state(o, {
+    blur: (ev, accessor) => {
+      blurred.push({
+        raw: accessor.raw,
+        value: accessor.value,
+        name: accessor.name
+      });
+    }
+  });
+
+  const fooField = state.field("foo");
+  expect(fooField.inputProps.onBlur).toBeDefined();
+
+  fooField.handleBlur(null);
+
+  const barField = state.field("bar");
+  barField.handleBlur(null);
+
+  expect(blurred).toEqual([
+    { name: "foo", raw: "FOO", value: "FOO" },
+    { name: "bar", raw: "BAR", value: "BAR" }
+  ]);
+
+  // no blur hook
+  const state2 = form.state(o);
+  const fooField2 = state2.field("foo");
+  expect(fooField2.inputProps.onBlur).toBeUndefined();
+});
+
 test("string is trimmed", async () => {
   const M = types.model("M", {
     foo: types.string

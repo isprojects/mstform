@@ -14,7 +14,6 @@ import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
-import { SubFormAccessor } from "./sub-form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 
 export interface FieldAccessorAllows {
@@ -37,7 +36,7 @@ export interface SaveFunc<M> {
   (node: M): any;
 }
 
-export interface FocusFunc<M, R, V> {
+export interface EventFunc<M, R, V> {
   (event: any, accessor: FieldAccessor<M, R, V>): void;
 }
 
@@ -64,7 +63,8 @@ export interface FormStateOptions<M> {
   getWarning?: ErrorOrWarning;
 
   extraValidation?: ExtraValidation;
-  focus?: FocusFunc<M, any, any>;
+  focus?: EventFunc<M, any, any>;
+  blur?: EventFunc<M, any, any>;
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -93,7 +93,8 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
-  focusFunc: FocusFunc<M, any, any> | null;
+  focusFunc: EventFunc<M, any, any> | null;
+  blurFunc: EventFunc<M, any, any> | null;
 
   constructor(
     public form: Form<M, D>,
@@ -133,11 +134,13 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.isRepeatingFormDisabledFunc = () => false;
       this.getErrorFunc = () => undefined;
       this.getWarningFunc = () => undefined;
+      this.blurFunc = () => undefined;
       this.extraValidationFunc = () => false;
       this.validationBeforeSave = "immediate";
       this.validationAfterSave = "immediate";
       this.validationPauseDuration = 0;
       this.focusFunc = null;
+      this.blurFunc = null;
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
       this.isDisabledFunc = options.isDisabled
@@ -165,6 +168,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.validationAfterSave = validation.afterSave || "immediate";
       this.validationPauseDuration = validation.pauseDuration || 0;
       this.focusFunc = options.focus ? options.focus : null;
+      this.blurFunc = options.blur ? options.blur : null;
     }
   }
 
