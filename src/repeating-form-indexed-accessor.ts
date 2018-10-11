@@ -54,24 +54,4 @@ export class RepeatingFormIndexedAccessor<
   get addMode(): boolean {
     return this._addMode || this.parent.addMode;
   }
-
-  @computed
-  get errorValue(): string | undefined {
-    return this.state.getErrorFunc(this);
-  }
-
-  @computed
-  get error(): string | undefined {
-    return this.errorValue;
-  }
-
-  @computed
-  get warningValue(): string | undefined {
-    return this.state.getWarningFunc(this);
-  }
-
-  @computed
-  get warning(): string | undefined {
-    return this.warningValue;
-  }
 }

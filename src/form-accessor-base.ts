@@ -21,8 +21,23 @@ export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
   }
 
   @computed
+  get warningValue(): string | undefined {
+    return this.warning;
+  }
+
+  @computed
+  get errorValue(): string | undefined {
+    return this.error;
+  }
+
+  @computed
   get error(): string | undefined {
     return this.formAccessor.error;
+  }
+
+  @computed
+  get warning(): string | undefined {
+    return this.formAccessor.warning;
   }
 
   @computed

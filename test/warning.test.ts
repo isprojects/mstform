@@ -160,7 +160,7 @@ test("warning in repeating form", () => {
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.raw === "incorrect" ? "Please reconsider" : undefined
+      accessor.path === "/foo/1/bar" ? "Please reconsider" : undefined
   });
 
   const forms = state.repeatingForm("foo");
@@ -174,7 +174,7 @@ test("warning in repeating form", () => {
   expect(state.isWarningFree).toBeFalsy();
 });
 
-test("warning in subform", () => {
+test("warning in subform field", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -262,10 +262,14 @@ test("warning on repeating form", async () => {
   const o = M.create({ foo: [] });
 
   const state = form.state(o, {
-    getWarning: (accessor: any) =>
-      accessor instanceof RepeatingFormAccessor && accessor.length === 0
+    getWarning: (accessor: any) => {
+      if (accessor instanceof RepeatingFormAccessor) {
+        expect(accessor.path).toEqual("/foo");
+      }
+      return accessor instanceof RepeatingFormAccessor && accessor.length === 0
         ? "Empty"
-        : undefined
+        : undefined;
+    }
   });
 
   const repeatingForms = state.repeatingForm("foo");
@@ -364,7 +368,7 @@ test("error on subform", async () => {
 
   const state = form.state(o, {
     getError: (accessor: any) =>
-      accessor instanceof SubFormAccessor ? "Error" : undefined
+      accessor.path === "/sub" ? "Error" : undefined
   });
 
   const result = await state.validate();
@@ -397,7 +401,7 @@ test("warning on subform", () => {
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor instanceof SubFormAccessor ? "Warning" : undefined
+      accessor.path === "/sub" ? "Warning" : undefined
   });
 
   const subform = state.subForm("sub");
@@ -418,14 +422,19 @@ test("error on formstate", async () => {
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o, {
-    getError: (accessor: any) =>
-      accessor instanceof FormAccessor ? "Error" : undefined
+    getError: (accessor: any) => {
+      if (accessor instanceof FormAccessor) {
+        expect(accessor.path).toEqual("");
+        return "Error";
+      } else {
+        return undefined;
+      }
+    }
   });
 
   const result = await state.validate();
-  const formState = state.formAccessor;
 
-  expect(formState.error).toEqual("Error");
+  expect(state.error).toEqual("Error");
   expect(state.isWarningFree).toBeTruthy();
   expect(result).toBeFalsy();
 });
@@ -442,11 +451,16 @@ test("warning on formstate", () => {
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o, {
-    getWarning: (accessor: any) =>
-      accessor instanceof FormAccessor ? "Warning" : undefined
+    getWarning: (accessor: any) => {
+      if (accessor instanceof FormAccessor) {
+        expect(accessor.path).toEqual("");
+        return "Warning";
+      } else {
+        return undefined;
+      }
+    }
   });
 
-  const formState = state.formAccessor;
-  expect(formState.warning).toEqual("Warning");
+  expect(state.warning).toEqual("Warning");
   expect(state.isWarningFree).toBeFalsy();
 });
