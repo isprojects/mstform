@@ -26,6 +26,11 @@ export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
   }
 
   @computed
+  get warning(): string | undefined {
+    return this.formAccessor.warning;
+  }
+
+  @computed
   get isValid(): boolean {
     return this.formAccessor.isValid;
   }

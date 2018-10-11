@@ -423,9 +423,8 @@ test("error on formstate", async () => {
   });
 
   const result = await state.validate();
-  const formState = state.formAccessor;
 
-  expect(formState.error).toEqual("Error");
+  expect(state.error).toEqual("Error");
   expect(state.isWarningFree).toBeTruthy();
   expect(result).toBeFalsy();
 });
@@ -446,7 +445,6 @@ test("warning on formstate", () => {
       accessor instanceof FormAccessor ? "Warning" : undefined
   });
 
-  const formState = state.formAccessor;
-  expect(formState.warning).toEqual("Warning");
+  expect(state.warning).toEqual("Warning");
   expect(state.isWarningFree).toBeFalsy();
 });
