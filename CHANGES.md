@@ -3,6 +3,12 @@
 -   Implement a `blur` hook that is called when the blur event fires for a
     field.
 
+-   `warning` wasn't properly exposed to `FormState`.
+
+-   Some refactorings to help code reuse. As a result the accessor sent
+    into `getError` and `getWarning` is the generic `FormAccessor` for
+    `SubFormAccessor`, `RepeatingFormIndexedAccessor` and `FormState`.
+
 # 0.22.0
 
 -   Implemented a `resolveMessage()` which takes a messages structure and a
