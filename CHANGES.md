@@ -17,7 +17,7 @@
     `getWarning` hooks.
 
 -   Rewrite of decimal-converter, added `allowNegative` parameter, handle input
-    `"."` as errorous. It now takes a single options argument that allows you
+    `"."` as erroneous. It now takes a single options argument that allows you
     to configure it.
     Mind: This breaks the previous API of decimal
 
