@@ -1,3 +1,8 @@
+# 0.24.0
+
+-   Implement a `update` hook on the state options that is called when a field is
+    changed and it passes validation.
+
 # 0.23.0
 
 -   Implement a `blur` hook that is called when the blur event fires for a

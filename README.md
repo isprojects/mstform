@@ -890,7 +890,25 @@ etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus`/`onBlur` handler, so if you use that with the field it is there
 automatically.
 
+## Update hook
+
+When you want to react to changes to any field value in the form, you can
+implement the update hook. This hook is triggered only when a change happens to
+the _value_, not when the _raw_ is updated, so only when the underlying
+instance that the form represents is updated. This means that if there are any
+client-side validation messages, the update hook isn't yet triggered.
+
+```js
+const state = form.state(o, {
+    update: accessor => {}
+});
+```
+
 ## Tips
 
 -   Don't name your form state `this.state` on a React component as this has a
     special meaning to React and can lead to odd bugs.
+
+```
+
+```
