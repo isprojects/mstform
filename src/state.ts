@@ -40,6 +40,10 @@ export interface EventFunc<M, R, V> {
   (event: any, accessor: FieldAccessor<M, R, V>): void;
 }
 
+export interface UpdateFunc<M, R, V> {
+  (accessor: FieldAccessor<M, R, V>): void;
+}
+
 // TODO: implement blur and pause validation
 // blur would validate immediately after blur
 // pause would show validation after the user stops input for a while
@@ -65,6 +69,7 @@ export interface FormStateOptions<M> {
   extraValidation?: ExtraValidation;
   focus?: EventFunc<M, any, any>;
   blur?: EventFunc<M, any, any>;
+  update?: UpdateFunc<M, any, any>;
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -95,6 +100,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
   private noRawUpdate: boolean;
   focusFunc: EventFunc<M, any, any> | null;
   blurFunc: EventFunc<M, any, any> | null;
+  updateFunc: UpdateFunc<M, any, any> | null;
 
   constructor(
     public form: Form<M, D>,
@@ -141,6 +147,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.validationPauseDuration = 0;
       this.focusFunc = null;
       this.blurFunc = null;
+      this.updateFunc = null;
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
       this.isDisabledFunc = options.isDisabled
@@ -169,6 +176,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
       this.validationPauseDuration = validation.pauseDuration || 0;
       this.focusFunc = options.focus ? options.focus : null;
       this.blurFunc = options.blur ? options.blur : null;
+      this.updateFunc = options.update ? options.update : null;
     }
   }
 

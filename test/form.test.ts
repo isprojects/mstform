@@ -2252,6 +2252,42 @@ test("blur hook", async () => {
   expect(fooField2.inputProps.onBlur).toBeUndefined();
 });
 
+test("update hook", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const updated: any[] = [];
+
+  const state = form.state(o, {
+    update: accessor => {
+      updated.push({
+        raw: accessor.raw,
+        value: accessor.value,
+        name: accessor.name
+      });
+    }
+  });
+
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+  await fooField.setRaw("FOO!");
+  await barField.setRaw("BAR!");
+
+  expect(updated).toEqual([
+    { name: "foo", raw: "FOO!", value: "FOO!" },
+    { name: "bar", raw: "BAR!", value: "BAR!" }
+  ]);
+});
+
 test("string is trimmed", async () => {
   const M = types.model("M", {
     foo: types.string

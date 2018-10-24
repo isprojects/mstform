@@ -281,9 +281,16 @@ export class FieldAccessor<M, R, V> {
 
     this.state.setValueWithoutRawUpdate(this.path, processResult.value);
 
+    // XXX maybe rename this to 'update' as change might imply onChange
+    // this is why I named 'updateFunc' on state that way instead of
+    // 'changeFunc'
     const changeFunc = this.field.changeFunc;
     if (changeFunc != null) {
       changeFunc(this.node, processResult.value);
+    }
+    const updateFunc = this.state.updateFunc;
+    if (updateFunc != null) {
+      updateFunc(this);
     }
   }
 
