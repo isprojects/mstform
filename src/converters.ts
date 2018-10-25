@@ -160,7 +160,7 @@ function maybe<R>(converter: IConverter<R, R>): IConverter<R | null, R | null>;
 function maybe<R, V>(
   converter: Converter<string, V> | IConverter<R, R>
 ): IConverter<string, V | null> | IConverter<R | null, R | null> {
-  if (converter instanceof StringConverter) {
+  if (converter instanceof StringConverter || converter instanceof Decimal) {
     return new StringMaybe(converter);
   }
   return maybeModel(converter as IConverter<R, R>);
@@ -171,7 +171,7 @@ class StringMaybe<V> implements IConverter<string, V | null> {
   defaultControlled = controlled.value;
   neverRequired = false;
 
-  constructor(public converter: StringConverter<V>) {
+  constructor(public converter: IConverter<string, V>) {
     this.emptyRaw = "";
   }
 
