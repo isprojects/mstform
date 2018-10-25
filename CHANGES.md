@@ -1,3 +1,8 @@
+# 0.24.1
+
+-   Fix a bug where `converters.maybe(converters.decimal())` wasn't doing the
+    right thing. Now the empty decimal will result in the null value.
+
 # 0.24.0
 
 -   Implement a `update` hook on the state options that is called when a field is
