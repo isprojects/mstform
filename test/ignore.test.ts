@@ -68,3 +68,51 @@ test("FormState can be saved ignoring required", async () => {
   expect(saveResult1).toBeFalsy();
   expect(field.error).toEqual("Required");
 });
+
+test("FormState can be saved ignoring external errors", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  let saved = false;
+
+  async function save(data: any) {
+    saved = true;
+    return null;
+  }
+
+  const state = form.state(o, {
+    save,
+    getError: accessor => (accessor.path === "/foo" ? "Wrong!" : undefined)
+  });
+
+  const field = state.field("foo");
+
+  // we change a value to trigger the error
+  await field.setRaw("BAR");
+  expect(field.error).toEqual("Wrong!");
+  // this is an external error, so change does happen
+  expect(o.foo).toEqual("BAR");
+
+  expect(field.isInternallyValid).toBeTruthy();
+  // we are without internal errors
+  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+
+  // now we save, ignoring external error
+  const saveResult = await state.save({ ignoreGetError: true });
+  expect(field.error).toEqual("Wrong!");
+  expect(o.foo).toEqual("BAR");
+  expect(saveResult).toBeTruthy();
+  expect(saved).toBeTruthy();
+
+  // but saving again without ignoreGetError will be an error
+  const saveResult1 = await state.save();
+  expect(saveResult1).toBeFalsy();
+  expect(field.error).toEqual("Wrong!");
+});

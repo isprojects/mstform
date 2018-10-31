@@ -274,9 +274,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
     if (!isValid) {
       return false;
     }
-    let errors;
-
-    errors = await this.saveFunc(this.node);
+    const errors = await this.saveFunc(this.node);
     if (errors != null) {
       this.setErrors(errors);
       return false;
