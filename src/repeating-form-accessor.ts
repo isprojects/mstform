@@ -1,10 +1,11 @@
-import { action, observable, computed } from "mobx";
+import { observable, computed } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
 import { FormDefinition, RepeatingForm } from "./form";
 import { FormState } from "./state";
 import { Accessor } from "./accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessor } from "./form-accessor";
+import { ValidateOptions } from "./validate-options";
 
 export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   name: string;
@@ -33,10 +34,10 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     return this.parent.path + "/" + this.name;
   }
 
-  async validate(): Promise<boolean> {
+  async validate(options?: ValidateOptions): Promise<boolean> {
     const promises: Promise<any>[] = [];
     for (const accessor of this.accessors) {
-      promises.push(accessor.validate());
+      promises.push(accessor.validate(options));
     }
     const values = await Promise.all(promises);
     // appending possible error on the repeatingform itself

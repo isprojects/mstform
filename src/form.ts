@@ -84,6 +84,10 @@ export class ProcessValue<V> {
 
 export type ProcessResponse<V> = ProcessValue<V> | ValidationMessage;
 
+export interface ProcessOptions {
+  ignoreRequired?: boolean;
+}
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
@@ -149,11 +153,16 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  async process(raw: R, required: boolean): Promise<ProcessResponse<V>> {
+  async process(
+    raw: R,
+    required: boolean,
+    options?: ProcessOptions
+  ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw);
-
+    const ignoreRequired = options != null ? options.ignoreRequired : false;
     if (
       !this.converter.neverRequired &&
+      !ignoreRequired &&
       raw === this.converter.emptyRaw &&
       required
     ) {
