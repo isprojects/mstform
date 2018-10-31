@@ -658,6 +658,23 @@ with `RepeatingFormAccessor`, i.e. the array itself, with `__message__<name>`:
 }
 ```
 
+### Ignoring the required validation
+
+You can pass an option into `save()` to ignore the required validation. This
+can be useful if you have fields which are required in the form yet want allow
+intermediate saves where this required setting is ignored.
+
+Here's how to ignore the `required` validation:
+
+```js
+this.formState.save({ ignoreRequired: true });
+```
+
+This will let `save` proceed even if fields marked as required are not filled
+in. It's up to you to construct the underlying MST model to allow empty values
+(typically with `types.maybe()`) and to let the form accept them too (typically
+with `converters.maybe()`).
+
 ## Controlling validation messages
 
 By default, mstform displays inline validation errors as soon as you
