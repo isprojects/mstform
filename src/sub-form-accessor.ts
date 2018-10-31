@@ -29,7 +29,10 @@ export class SubFormAccessor<
   async validate(options?: ValidateOptions): Promise<boolean> {
     const promises = this.accessors.map(accessor => accessor.validate(options));
     const values = await Promise.all(promises);
-    values.push(this.errorValue === undefined);
+    const ignoreGetError = options != null ? options.ignoreGetError : false;
+    if (!ignoreGetError) {
+      values.push(this.errorValue === undefined);
+    }
     return values.every(value => value);
   }
 

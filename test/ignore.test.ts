@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, converters } from "../src";
+import { Field, Form, RepeatingForm, SubForm, converters } from "../src";
 
 // "strict" leads to trouble during initialization.
 configure({ enforceActions: true });
@@ -115,4 +115,168 @@ test("FormState can be saved ignoring external errors", async () => {
   const saveResult1 = await state.save();
   expect(saveResult1).toBeFalsy();
   expect(field.error).toEqual("Wrong!");
+});
+
+test("FormState can be saved ignoring non-field external errors", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  let saved = false;
+
+  async function save(data: any) {
+    saved = true;
+    return null;
+  }
+
+  const state = form.state(o, {
+    save,
+    getError: accessor => (accessor.path === "" ? "Wrong!" : undefined)
+  });
+
+  const field = state.field("foo");
+
+  // we have an internal error
+  expect(await state.validate()).toBeFalsy();
+  // we can ignore it
+  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+
+  // now we save, ignoring external error
+  const saveResult = await state.save({ ignoreGetError: true });
+  expect(state.error).toEqual("Wrong!");
+  expect(saveResult).toBeTruthy();
+  expect(saved).toBeTruthy();
+
+  // but saving again without ignoreGetError will be an error
+  const saveResult1 = await state.save();
+  expect(saveResult1).toBeFalsy();
+});
+
+test("ignoreGetError repeating indexed accessor non-field external", async () => {
+  const N = types.model("N", {
+    foo: types.string
+  });
+  const M = types.model("M", {
+    items: types.array(N)
+  });
+
+  const o = M.create({ items: [{ foo: "FOO" }] });
+
+  const form = new Form(M, {
+    items: new RepeatingForm({ foo: new Field(converters.string) })
+  });
+
+  let saved = false;
+
+  async function save(data: any) {
+    saved = true;
+    return null;
+  }
+
+  const state = form.state(o, {
+    save,
+    getError: accessor => (accessor.path === "/items/0" ? "Wrong!" : undefined)
+  });
+
+  // we have an internal error
+  expect(await state.validate()).toBeFalsy();
+  // we can ignore it
+  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+
+  // now we save, ignoring external error
+  const saveResult = await state.save({ ignoreGetError: true });
+  expect(saveResult).toBeTruthy();
+  expect(saved).toBeTruthy();
+
+  // but saving again without ignoreGetError will be an error
+  const saveResult1 = await state.save();
+  expect(saveResult1).toBeFalsy();
+});
+
+test("ignoreGetError repeating accessor non-field external", async () => {
+  const N = types.model("N", {
+    foo: types.string
+  });
+  const M = types.model("M", {
+    items: types.array(N)
+  });
+
+  const o = M.create({ items: [{ foo: "FOO" }] });
+
+  const form = new Form(M, {
+    items: new RepeatingForm({ foo: new Field(converters.string) })
+  });
+
+  let saved = false;
+
+  async function save(data: any) {
+    saved = true;
+    return null;
+  }
+
+  const state = form.state(o, {
+    save,
+    getError: accessor => (accessor.path === "/items" ? "Wrong!" : undefined)
+  });
+
+  // we have an internal error
+  expect(await state.validate()).toBeFalsy();
+  // we can ignore it
+  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+
+  // now we save, ignoring external error
+  const saveResult = await state.save({ ignoreGetError: true });
+  expect(saveResult).toBeTruthy();
+  expect(saved).toBeTruthy();
+
+  // but saving again without ignoreGetError will be an error
+  const saveResult1 = await state.save();
+  expect(saveResult1).toBeFalsy();
+});
+
+test("ignoreGetError sub form accessor non-field external", async () => {
+  const N = types.model("N", {
+    foo: types.string
+  });
+  const M = types.model("M", {
+    item: N
+  });
+
+  const o = M.create({ item: { foo: "FOO" } });
+
+  const form = new Form(M, {
+    item: new SubForm({ foo: new Field(converters.string) })
+  });
+
+  let saved = false;
+
+  async function save(data: any) {
+    saved = true;
+    return null;
+  }
+
+  const state = form.state(o, {
+    save,
+    getError: accessor => (accessor.path === "/item" ? "Wrong!" : undefined)
+  });
+
+  // we have an internal error
+  expect(await state.validate()).toBeFalsy();
+  // we can ignore it
+  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+
+  // now we save, ignoring external error
+  const saveResult = await state.save({ ignoreGetError: true });
+  expect(saveResult).toBeTruthy();
+  expect(saved).toBeTruthy();
+
+  // but saving again without ignoreGetError will be an error
+  const saveResult1 = await state.save();
+  expect(saveResult1).toBeFalsy();
 });

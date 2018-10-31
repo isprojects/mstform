@@ -46,7 +46,10 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
   async validate(options?: ValidateOptions): Promise<boolean> {
     const promises = this.accessors.map(accessor => accessor.validate(options));
     const values = await Promise.all(promises);
-    values.push(this.errorValue === undefined); // add possible error of the form itself
+    const ignoreGetError = options != null ? options.ignoreGetError : false;
+    if (!ignoreGetError) {
+      values.push(this.errorValue === undefined); // add possible error of the form itself
+    }
     return values.every(value => value);
   }
 

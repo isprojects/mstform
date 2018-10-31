@@ -41,7 +41,10 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     }
     const values = await Promise.all(promises);
     // appending possible error on the repeatingform itself
-    values.push(this.errorValue === undefined);
+    const ignoreGetError = options != null ? options.ignoreGetError : false;
+    if (!ignoreGetError) {
+      values.push(this.errorValue === undefined);
+    }
     return values.every(value => value);
   }
 

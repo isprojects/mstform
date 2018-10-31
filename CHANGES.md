@@ -1,3 +1,7 @@
+# 0.25.1
+
+-   `ignoreGetError` wasn't ignoring non-field errors properly. Fixed now.
+
 # 0.25.0
 
 -   You can now pass options into `save()` as an optional argument to ignore
