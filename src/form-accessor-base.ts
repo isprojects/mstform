@@ -1,4 +1,4 @@
-import { action, computed } from "mobx";
+import { computed } from "mobx";
 import { FormDefinition } from "./form";
 import {
   Accessor,
@@ -7,6 +7,7 @@ import {
   SubFormAccess
 } from "./accessor";
 import { FormAccessor } from "./form-accessor";
+import { ValidateOptions } from "./validate-options";
 
 // a base class that delegates to a form accessor
 export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
@@ -16,8 +17,8 @@ export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
     this.formAccessor.initialize();
   }
 
-  async validate(): Promise<boolean> {
-    return this.formAccessor.validate();
+  async validate(options?: ValidateOptions): Promise<boolean> {
+    return this.formAccessor.validate(options);
   }
 
   @computed

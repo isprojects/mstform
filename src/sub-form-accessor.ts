@@ -3,6 +3,7 @@ import { FormDefinition } from "./form";
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
+import { ValidateOptions } from "./validate-options";
 
 export class SubFormAccessor<
   M,
@@ -25,8 +26,8 @@ export class SubFormAccessor<
     // no op
   }
 
-  async validate(): Promise<boolean> {
-    const promises = this.accessors.map(accessor => accessor.validate());
+  async validate(options?: ValidateOptions): Promise<boolean> {
+    const promises = this.accessors.map(accessor => accessor.validate(options));
     const values = await Promise.all(promises);
     values.push(this.errorValue === undefined);
     return values.every(value => value);

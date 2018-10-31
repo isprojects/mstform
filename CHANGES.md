@@ -1,3 +1,11 @@
+# 0.25.0
+
+-   You can now pass options into `save()` as an optional argument. Introduced
+    the `ignoreRequired` option which will let save proceed ignoring the
+    `required` setting. Note that this could result in errors if the underlying
+    MST object does not allow you to set null; it only makes sense if you
+    use `types.maybe()` on it and `converters.maybe()` for the field.
+
 # 0.24.1
 
 -   Fix a bug where `converters.maybe(converters.decimal())` wasn't doing the

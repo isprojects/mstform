@@ -11,6 +11,7 @@ import { FieldAccessor } from "./field-accessor";
 import { SubFormAccessor } from "./sub-form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
+import { ValidateOptions } from "./validate-options";
 
 export class FormAccessor<M, D extends FormDefinition<M>> {
   private keys: string[];
@@ -42,8 +43,8 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     this.initialize();
   }
 
-  async validate(): Promise<boolean> {
-    const promises = this.accessors.map(accessor => accessor.validate());
+  async validate(options?: ValidateOptions): Promise<boolean> {
+    const promises = this.accessors.map(accessor => accessor.validate(options));
     const values = await Promise.all(promises);
     values.push(this.errorValue === undefined); // add possible error of the form itself
     return values.every(value => value);

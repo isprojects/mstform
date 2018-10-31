@@ -15,6 +15,7 @@ import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
+import { ValidateOptions } from "./validate-options";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any, any>): boolean;
@@ -267,8 +268,8 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
   }
 
   @action
-  async save(): Promise<boolean> {
-    const isValid = await this.validate();
+  async save(options?: ValidateOptions): Promise<boolean> {
+    const isValid = await this.validate(options);
     this.setSaveStatus("rightAfter");
     if (!isValid) {
       return false;

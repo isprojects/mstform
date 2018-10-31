@@ -8,11 +8,12 @@ import {
   comparer,
   IReactionDisposer
 } from "mobx";
-import { Field, ProcessValue, ValidationMessage } from "./form";
+import { Field, ProcessValue, ValidationMessage, ProcessOptions } from "./form";
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
+import { ValidateOptions } from "./validate-options";
 
 export class FieldAccessor<M, R, V> {
   name: string;
@@ -215,8 +216,9 @@ export class FieldAccessor<M, R, V> {
     );
   }
 
-  async validate(): Promise<boolean> {
-    await this.setRaw(this.raw);
+  async validate(options?: ValidateOptions): Promise<boolean> {
+    const ignoreRequired = options != null ? options.ignoreRequired : false;
+    await this.setRaw(this.raw, { ignoreRequired });
     return this.isValid;
   }
 
@@ -226,7 +228,7 @@ export class FieldAccessor<M, R, V> {
   }
 
   @action
-  async setRaw(raw: R) {
+  async setRaw(raw: R, options?: ProcessOptions) {
     if (this.state.saveStatus === "rightAfter") {
       this.state.setSaveStatus("after");
     }
@@ -240,7 +242,7 @@ export class FieldAccessor<M, R, V> {
     try {
       // XXX is await correct here? we should await the result
       // later
-      processResult = await this.field.process(raw, this.required);
+      processResult = await this.field.process(raw, this.required, options);
     } catch (e) {
       this.setError("Something went wrong");
       this.setValidating(false);
