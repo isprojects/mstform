@@ -1,10 +1,17 @@
 # 0.25.0
 
--   You can now pass options into `save()` as an optional argument. Introduced
-    the `ignoreRequired` option which will let save proceed ignoring the
+-   You can now pass options into `save()` as an optional argument to ignore
+    certain validation behavior. This way you can allow intermediate saves that
+    ignore aspects of validation while retaining full validation before the
+    "final" save.
+
+-   Introduced the `ignoreRequired` save option which make save ignore the
     `required` setting. Note that this could result in errors if the underlying
-    MST object does not allow you to set null; it only makes sense if you
-    use `types.maybe()` on it and `converters.maybe()` for the field.
+    MST object does not allow you to set null; it only makes sense if you use
+    `types.maybe()` on it and `converters.maybe()` for the field.
+
+-   Introduced the `ignoreGetError` save option which makes save ignore any
+    external errors introduced by the `getError` hook.
 
 # 0.24.1
 

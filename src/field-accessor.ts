@@ -218,8 +218,18 @@ export class FieldAccessor<M, R, V> {
 
   async validate(options?: ValidateOptions): Promise<boolean> {
     const ignoreRequired = options != null ? options.ignoreRequired : false;
+    const ignoreGetError = options != null ? options.ignoreGetError : false;
     await this.setRaw(this.raw, { ignoreRequired });
+    if (ignoreGetError) {
+      return this.isInternallyValid;
+    }
     return this.isValid;
+  }
+
+  @computed
+  get isInternallyValid(): boolean {
+    // is internally valid even if getError gives an error
+    return this._error === undefined;
   }
 
   @computed

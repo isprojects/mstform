@@ -670,10 +670,22 @@ Here's how to ignore the `required` validation:
 this.formState.save({ ignoreRequired: true });
 ```
 
-This will let `save` proceed even if fields marked as required are not filled
+This lets `save` proceed even if fields marked as required are not filled
 in. It's up to you to construct the underlying MST model to allow empty values
 (typically with `types.maybe()`) and to let the form accept them too (typically
 with `converters.maybe()`).
+
+### Ignoring the `getError` hook
+
+You can also ignore the `getError` validation during save:
+
+```js
+this.formState.save({ ignoreGetError: true });
+```
+
+This lets `save` proceed even though there are still external validation
+errors. `save` still is blocked when you have an internal validation error -- a
+raw value that cannot be successfully converted.
 
 ## Controlling validation messages
 
