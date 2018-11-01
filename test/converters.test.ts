@@ -77,7 +77,7 @@ test("maybe number converter", async () => {
   await check(converters.maybe(converters.number), "", null);
 });
 
-test.only("maybe decimal converter", async () => {
+test("maybe decimal converter", async () => {
   await check(converters.maybe(converters.decimal()), "3.14", "3.14");
   await check(converters.maybe(converters.decimal()), "", null);
   const c = converters.maybe(converters.decimal());
