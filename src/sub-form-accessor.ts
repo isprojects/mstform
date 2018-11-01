@@ -13,7 +13,7 @@ export class SubFormAccessor<
 
   constructor(
     public state: FormState<any, any>,
-    public definition: any,
+    public definition: D,
     public parent: FormAccessor<any, any>,
     public name: string
   ) {

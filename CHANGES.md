@@ -1,3 +1,9 @@
+# 0.26.0
+
+-   Better specified a few types in `SubFormAccessor`, `RepeatingFormAccessor`
+    and `RepeatingFormIndexedAccessor`. This should help with Typescript
+    support for those cases.
+
 # 0.25.1
 
 -   `ignoreGetError` wasn't ignoring non-field errors properly. Fixed now.

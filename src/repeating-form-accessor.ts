@@ -13,7 +13,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   @observable
   repeatingFormIndexedAccessors: Map<
     number,
-    RepeatingFormIndexedAccessor<any, any>
+    RepeatingFormIndexedAccessor<M, D>
   > = observable.map();
 
   constructor(
