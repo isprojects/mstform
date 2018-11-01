@@ -19,8 +19,8 @@ export class RepeatingFormIndexedAccessor<
 
   constructor(
     public state: FormState<any, any>,
-    public definition: any,
-    public parent: RepeatingFormAccessor<any, any>,
+    public definition: D,
+    public parent: RepeatingFormAccessor<M, D>,
     index: number
   ) {
     super();
