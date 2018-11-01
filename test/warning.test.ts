@@ -8,7 +8,6 @@ import {
   RepeatingForm,
   RepeatingFormAccessor,
   SubForm,
-  SubFormAccessor,
   converters
 } from "../src";
 
