@@ -28,13 +28,13 @@ export class FormAccessor<
   G extends GroupDefinition<M, D>
 > {
   private keys: string[];
-  fieldAccessors: Map<keyof M, FieldAccessor<any, any, any>> = observable.map();
+  fieldAccessors: Map<keyof D, FieldAccessor<any, any, any>> = observable.map();
   repeatingFormAccessors: Map<
-    keyof M,
+    keyof D,
     RepeatingFormAccessor<any, any, any>
   > = observable.map();
   subFormAccessors: Map<
-    keyof M,
+    keyof D,
     SubFormAccessor<any, any, any>
   > = observable.map();
   groupAccessors: Map<keyof G, GroupAccessor<any, any>> = observable.map();
@@ -140,13 +140,13 @@ export class FormAccessor<
 
     // XXX catching errors isn't ideal
     try {
-      return this.field(name as keyof M);
+      return this.field(name as keyof D);
     } catch {
       try {
-        return this.repeatingForm(name as keyof M);
+        return this.repeatingForm(name as keyof D);
       } catch {
         try {
-          return this.subForm(name as keyof M);
+          return this.subForm(name as keyof D);
         } catch {
           return undefined;
         }
@@ -173,11 +173,11 @@ export class FormAccessor<
     this.keys.forEach(key => {
       const entry = this.definition[key];
       if (entry instanceof Field) {
-        this.createField(key as keyof M, entry);
+        this.createField(key as keyof D, entry);
       } else if (entry instanceof RepeatingForm) {
-        this.createRepeatingForm(key as keyof M, entry);
+        this.createRepeatingForm(key as keyof D, entry);
       } else if (entry instanceof SubForm) {
-        this.createSubForm(key as keyof M, entry);
+        this.createSubForm(key as keyof D, entry);
       }
     });
     if (this.groupDefinition != null) {
@@ -189,12 +189,12 @@ export class FormAccessor<
     }
   }
 
-  createField<K extends keyof M>(name: K, field: Field<any, any>) {
+  createField<K extends keyof D>(name: K, field: Field<any, any>) {
     const result = new FieldAccessor(this.state, field, this, name as string);
     this.fieldAccessors.set(name, result);
   }
 
-  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
+  field<K extends keyof D>(name: K): FieldAccess<M, D, K> {
     const accessor = this.fieldAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a Field`);
@@ -202,7 +202,7 @@ export class FormAccessor<
     return accessor;
   }
 
-  createRepeatingForm<K extends keyof M>(
+  createRepeatingForm<K extends keyof D>(
     name: K,
     repeatingForm: RepeatingForm<any, any, any>
   ) {
@@ -216,7 +216,7 @@ export class FormAccessor<
     result.initialize();
   }
 
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
+  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<M, D, K> {
     const accessor = this.repeatingFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a RepeatingForm`);
@@ -224,7 +224,7 @@ export class FormAccessor<
     return accessor;
   }
 
-  createSubForm<K extends keyof M>(name: K, subForm: SubForm<any, any, any>) {
+  createSubForm<K extends keyof D>(name: K, subForm: SubForm<any, any, any>) {
     const result = new SubFormAccessor(
       this.state,
       subForm.definition,
@@ -236,7 +236,7 @@ export class FormAccessor<
     result.initialize();
   }
 
-  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
+  subForm<K extends keyof D>(name: K): SubFormAccess<M, D, K> {
     const accessor = this.subFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a SubForm`);

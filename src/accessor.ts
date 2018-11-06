@@ -25,15 +25,15 @@ export type Accessor =
 export type FieldAccess<
   M,
   D extends FormDefinition<M>,
-  K extends keyof M
-> = FieldAccessor<M, RawType<D[K]>, M[K]>;
+  K extends keyof D
+> = FieldAccessor<M, RawType<D[K]>, D[K]>;
 
 export type RepeatingFormAccess<
   M,
   D extends FormDefinition<M>,
-  K extends keyof M
+  K extends keyof D
 > = RepeatingFormAccessor<
-  ArrayEntryType<M[K]>,
+  ArrayEntryType<D[K]>,
   RepeatingFormDefinitionType<D[K]>,
   any
 >;
@@ -41,7 +41,7 @@ export type RepeatingFormAccess<
 export type SubFormAccess<
   M,
   D extends FormDefinition<M>,
-  K extends keyof M
-> = SubFormAccessor<M[K], SubFormDefinitionType<D[K]>, any>;
+  K extends keyof D
+> = SubFormAccessor<D[K], SubFormDefinitionType<D[K]>, any>;
 
 export type GroupAccess<M, D extends FormDefinition<M>> = GroupAccessor<M, D>;
