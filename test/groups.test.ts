@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, Group, RepeatingForm, converters } from "../src";
+import { Field, Form, Group, SubForm, RepeatingForm, converters } from "../src";
 
 // "strict" leads to trouble during initialization.
 configure({ enforceActions: true });
@@ -52,73 +52,73 @@ test("groups basic", async () => {
   expect(two.isValid).toBeTruthy();
 });
 
-// test("groups sub form", async () => {
-//   const N = types.model("N", {
-//     a: types.number,
-//     b: types.number,
-//     c: types.number,
-//     d: types.number
-//   });
+test("groups sub form", async () => {
+  const N = types.model("N", {
+    a: types.number,
+    b: types.number,
+    c: types.number,
+    d: types.number
+  });
 
-//   const M = types.model("M", {
-//     field: types.number,
-//     item: N
-//   });
+  const M = types.model("M", {
+    field: types.number,
+    item: N
+  });
 
-//   const form = new Form(
-//     M,
-//     {
-//       field: new Field(converters.number),
-//       item: new SubForm(
-//         {
-//           a: new Field(converters.number),
-//           b: new Field(converters.number),
-//           c: new Field(converters.number),
-//           d: new Field(converters.number)
-//         },
-//         {
-//           one: new Group(["a", "b"]),
-//           two: new Group(["c", "d"])
-//         }
-//       )
-//     },
-//     { whole: new Group(["item"]) }
-//   );
+  const form = new Form(
+    M,
+    {
+      field: new Field(converters.number),
+      item: new SubForm(
+        {
+          a: new Field(converters.number),
+          b: new Field(converters.number),
+          c: new Field(converters.number),
+          d: new Field(converters.number)
+        },
+        {
+          one: new Group({ include: ["a", "b"] }),
+          two: new Group({ include: ["c", "d"] })
+        }
+      )
+    },
+    { whole: new Group({ include: ["item"] }) }
+  );
 
-//   const o = M.create({ field: 0, item: { a: 1, b: 2, c: 3, d: 4 } });
+  const o = M.create({ field: 0, item: { a: 1, b: 2, c: 3, d: 4 } });
 
-//   const state = form.state(o);
-//   const field = state.field("field");
-//   const item = state.subForm("item");
-//   const whole = state.group("whole");
-//   const a = item.field("a");
-//   const b = item.field("b");
-//   const c = item.field("c");
-//   const d = item.field("d");
-//   const one = item.group("one");
-//   const two = item.group("two");
+  const state = form.state(o);
+  const field = state.field("field");
+  const item = state.subForm("item");
+  const whole = state.group("whole");
+  const a = item.field("a");
+  const b = item.field("b");
+  const c = item.field("c");
+  const d = item.field("d");
+  const one = item.group("one");
+  const two = item.group("two");
 
-//   await a.setRaw("wrong");
-//   expect(one.isValid).toBeFalsy();
-//   expect(two.isValid).toBeTruthy();
-//   expect(whole).toBeFalsy();
+  await a.setRaw("wrong");
+  expect(one.isValid).toBeFalsy();
+  expect(two.isValid).toBeTruthy();
+  expect(whole.isValid).toBeFalsy();
 
-//   await c.setRaw("wrong too");
-//   expect(one.isValid).toBeFalsy();
-//   expect(two.isValid).toBeFalsy();
-//   expect(whole).toBeFalsy();
+  await c.setRaw("wrong too");
+  expect(one.isValid).toBeFalsy();
+  expect(two.isValid).toBeFalsy();
+  expect(whole.isValid).toBeFalsy();
 
-//   await a.setRaw(10);
-//   await c.setRaw(30);
+  await a.setRaw("10");
+  await c.setRaw("30");
 
-//   expect(one.isValid).toBeTruthy();
-//   expect(two.isValid).toBeTruthy();
-//   expect(whole).toBeTruthy();
+  expect(one.isValid).toBeTruthy();
+  expect(two.isValid).toBeTruthy();
+  expect(whole.isValid).toBeTruthy();
 
-//   await field.setRaw("wrong");
-//   // whole is not affected as it only is affected by the sub form
-//   expect(whole).toBeTruthy();
-// });
+  await field.setRaw("wrong");
+  // whole is not affected as it only is affected by the sub form
+  expect(whole.isValid).toBeTruthy();
+});
 
 // test("groups repeating form", async () => {
 //   const N = types.model("N", {
