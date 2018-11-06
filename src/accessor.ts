@@ -17,7 +17,7 @@ import { GroupAccessor } from "./group-accessor";
 // whether a form is valid
 export type Accessor =
   | FormAccessor<any, any, any>
-  | FieldAccessor<any, any, any>
+  | FieldAccessor<any, any>
   | RepeatingFormAccessor<any, any, any>
   | RepeatingFormIndexedAccessor<any, any, any>
   | SubFormAccessor<any, any, any>;
@@ -26,7 +26,7 @@ export type FieldAccess<
   M,
   D extends FormDefinition<M>,
   K extends keyof D
-> = FieldAccessor<M, RawType<D[K]>, D[K]>;
+> = FieldAccessor<RawType<D[K]>, D[K]>;
 
 export type RepeatingFormAccess<
   M,

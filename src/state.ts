@@ -23,7 +23,7 @@ import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
 
 export interface FieldAccessorAllows {
-  (fieldAccessor: FieldAccessor<any, any, any>): boolean;
+  (fieldAccessor: FieldAccessor<any, any>): boolean;
 }
 
 export interface ErrorOrWarning {
@@ -31,7 +31,7 @@ export interface ErrorOrWarning {
 }
 
 export interface ExtraValidation {
-  (fieldAccessor: FieldAccessor<any, any, any>, value: any): ValidationResponse;
+  (fieldAccessor: FieldAccessor<any, any>, value: any): ValidationResponse;
 }
 
 export interface RepeatingFormAccessorAllows {
@@ -42,12 +42,12 @@ export interface SaveFunc<M> {
   (node: M): any;
 }
 
-export interface EventFunc<M, R, V> {
-  (event: any, accessor: FieldAccessor<M, R, V>): void;
+export interface EventFunc<R, V> {
+  (event: any, accessor: FieldAccessor<R, V>): void;
 }
 
-export interface UpdateFunc<M, R, V> {
-  (accessor: FieldAccessor<M, R, V>): void;
+export interface UpdateFunc<R, V> {
+  (accessor: FieldAccessor<R, V>): void;
 }
 
 // TODO: implement blur and pause validation
@@ -73,9 +73,9 @@ export interface FormStateOptions<M> {
   getWarning?: ErrorOrWarning;
 
   extraValidation?: ExtraValidation;
-  focus?: EventFunc<M, any, any>;
-  blur?: EventFunc<M, any, any>;
-  update?: UpdateFunc<M, any, any>;
+  focus?: EventFunc<any, any>;
+  blur?: EventFunc<any, any>;
+  update?: UpdateFunc<any, any>;
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -105,9 +105,9 @@ export class FormState<
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
-  focusFunc: EventFunc<M, any, any> | null;
-  blurFunc: EventFunc<M, any, any> | null;
-  updateFunc: UpdateFunc<M, any, any> | null;
+  focusFunc: EventFunc<any, any> | null;
+  blurFunc: EventFunc<any, any> | null;
+  updateFunc: UpdateFunc<any, any> | null;
 
   constructor(
     public form: Form<M, D, G>,

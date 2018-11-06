@@ -28,7 +28,7 @@ export class FormAccessor<
   G extends GroupDefinition<M, D>
 > {
   private keys: string[];
-  fieldAccessors: Map<keyof D, FieldAccessor<any, any, any>> = observable.map();
+  fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
     keyof D,
     RepeatingFormAccessor<any, any, any>

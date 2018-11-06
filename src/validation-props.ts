@@ -1,7 +1,7 @@
 import { FieldAccessor } from "./field-accessor";
 
 export interface ValidationProps {
-  (accessor: FieldAccessor<any, any, any>): object;
+  (accessor: FieldAccessor<any, any>): object;
 }
 
 export let currentValidationProps: ValidationProps = () => {
