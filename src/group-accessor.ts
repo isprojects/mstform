@@ -14,10 +14,26 @@ export class GroupAccessor<M, D extends FormDefinition<M>> {
   @computed
   get isValid(): boolean {
     const include = this.group.options.include;
-    if (include == null) {
-      return true;
+    const exclude = this.group.options.exclude;
+    if (include != null && exclude != null) {
+      throw new Error("Cannot include and exclude fields at the same time.");
     }
-    return include.every(key => {
+    if (include != null) {
+      return this.isValidForNames(include);
+    }
+    if (exclude != null) {
+      return this.isValidForNames(this.notExcluded(exclude));
+    }
+    throw new Error("Must include or exclude some fields");
+  }
+
+  notExcluded(names: (keyof D)[]): (keyof D)[] {
+    const keys = this.parent.keys as (keyof D)[];
+    return keys.filter(name => !names.includes(name));
+  }
+
+  isValidForNames(names: (keyof D)[]): boolean {
+    return names.every(key => {
       const accessor = this.parent.access(key as string);
       if (accessor == null) {
         return true;

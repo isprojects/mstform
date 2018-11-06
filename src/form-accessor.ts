@@ -26,7 +26,7 @@ export class FormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
 > {
-  private keys: string[];
+  public keys: (keyof D)[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
     keyof D,
@@ -48,11 +48,9 @@ export class FormAccessor<
       | RepeatingFormAccessor<any, any>
       | RepeatingFormIndexedAccessor<any, any>
       | null,
-    addMode: boolean,
-    public allowedKeys?: string[]
+    addMode: boolean
   ) {
-    this.keys =
-      allowedKeys != null ? allowedKeys : Object.keys(this.definition);
+    this.keys = Object.keys(this.definition);
     this._addMode = addMode;
     this.initialize();
   }
