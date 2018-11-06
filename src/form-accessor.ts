@@ -220,7 +220,7 @@ export class FormAccessor<
     return accessor;
   }
 
-  createSubForm<K extends keyof D>(name: K, subForm: SubForm<any, any, any>) {
+  createSubForm<K extends keyof D>(name: K, subForm: SubForm<any, any>) {
     const result = new SubFormAccessor(
       this.state,
       subForm.definition,

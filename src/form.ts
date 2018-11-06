@@ -16,14 +16,14 @@ export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
   ? D
   : never;
 
-export type SubFormDefinitionType<T> = T extends SubForm<any, infer D, any>
+export type SubFormDefinitionType<T> = T extends SubForm<infer D, any>
   ? D
   : never;
 
 export type FormDefinitionEntry<M, K extends keyof M> =
   | Field<any, M[K]>
   | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any>
-  | SubForm<M[K], FormDefinition<M[K]>, GroupDefinition<any>>;
+  | SubForm<FormDefinition<M[K]>, GroupDefinition<any>>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
 
@@ -83,8 +83,7 @@ export class Form<
 }
 
 export class SubForm<
-  M,
-  D extends FormDefinition<M>,
+  D extends FormDefinition<any>,
   G extends GroupDefinition<D>
 > {
   constructor(public definition: D, public groupDefinition?: G) {}
