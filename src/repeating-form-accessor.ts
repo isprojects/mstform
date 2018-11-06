@@ -18,7 +18,7 @@ export class RepeatingFormAccessor<
 
   constructor(
     public state: FormState<any, any, any>,
-    public repeatingForm: RepeatingForm<any, D, G>,
+    public repeatingForm: RepeatingForm<D, G>,
     public parent: FormAccessor<any, any>,
     name: string
   ) {

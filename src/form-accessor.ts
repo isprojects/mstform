@@ -200,7 +200,7 @@ export class FormAccessor<
 
   createRepeatingForm<K extends keyof D>(
     name: K,
-    repeatingForm: RepeatingForm<any, any, any>
+    repeatingForm: RepeatingForm<any, any>
   ) {
     const result = new RepeatingFormAccessor(
       this.state,

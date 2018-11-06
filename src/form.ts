@@ -10,7 +10,6 @@ export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
 export type RawType<F> = F extends Field<infer R, any> ? R : never;
 
 export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
-  any,
   infer D,
   any
 >
@@ -23,11 +22,7 @@ export type SubFormDefinitionType<T> = T extends SubForm<any, infer D, any>
 
 export type FormDefinitionEntry<M, K extends keyof M> =
   | Field<any, M[K]>
-  | RepeatingForm<
-      ArrayEntryType<M[K]>,
-      FormDefinition<ArrayEntryType<M[K]>>,
-      any
-    >
+  | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any>
   | SubForm<M[K], FormDefinition<M[K]>, GroupDefinition<any>>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
@@ -220,8 +215,7 @@ export class Field<R, V> {
 }
 
 export class RepeatingForm<
-  M,
-  D extends FormDefinition<M>,
+  D extends FormDefinition<any>,
   G extends GroupDefinition<D>
 > {
   constructor(public definition: D, public groupDefinition?: G) {}
