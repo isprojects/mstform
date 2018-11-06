@@ -30,7 +30,7 @@ export class FormAccessor<
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
     keyof D,
-    RepeatingFormAccessor<any, any, any>
+    RepeatingFormAccessor<any, any>
   > = observable.map();
   subFormAccessors: Map<
     keyof D,
@@ -48,7 +48,7 @@ export class FormAccessor<
     public parent:
       | FormAccessor<any, any>
       | SubFormAccessor<any, any, any>
-      | RepeatingFormAccessor<any, any, any>
+      | RepeatingFormAccessor<any, any>
       | RepeatingFormIndexedAccessor<any, any, any>
       | null,
     addMode: boolean,

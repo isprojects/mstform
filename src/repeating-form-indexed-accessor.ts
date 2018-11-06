@@ -22,7 +22,7 @@ export class RepeatingFormIndexedAccessor<
     public state: FormState<any, any, any>,
     public definition: D,
     public groupDefinition: G | undefined,
-    public parent: RepeatingFormAccessor<M, D, G>,
+    public parent: RepeatingFormAccessor<D, G>,
     index: number
   ) {
     super();

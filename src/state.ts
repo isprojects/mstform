@@ -35,7 +35,7 @@ export interface ExtraValidation {
 }
 
 export interface RepeatingFormAccessorAllows {
-  (repeatingFormAccessor: RepeatingFormAccessor<any, any, any>): boolean;
+  (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
 }
 
 export interface SaveFunc<M> {

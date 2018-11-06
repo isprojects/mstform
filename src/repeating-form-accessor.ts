@@ -8,9 +8,8 @@ import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 
 export class RepeatingFormAccessor<
-  M,
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<M, D>
+  D extends FormDefinition<any>,
+  G extends GroupDefinition<any, D>
 > {
   name: string;
 
@@ -19,7 +18,7 @@ export class RepeatingFormAccessor<
 
   constructor(
     public state: FormState<any, any, any>,
-    public repeatingForm: RepeatingForm<M, D, G>,
+    public repeatingForm: RepeatingForm<any, D, G>,
     public parent: FormAccessor<any, any>,
     name: string
   ) {
@@ -80,7 +79,7 @@ export class RepeatingFormAccessor<
     result.initialize();
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<M, D, G> {
+  index(index: number): RepeatingFormIndexedAccessor<any, D, G> {
     const accessor = this.repeatingFormIndexedAccessors.get(index);
     if (accessor == null) {
       throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
@@ -94,7 +93,7 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get accessors(): RepeatingFormIndexedAccessor<M, D, G>[] {
+  get accessors(): RepeatingFormIndexedAccessor<any, D, G>[] {
     const result = [];
     for (let index = 0; index < this.length; index++) {
       result.push(this.index(index));

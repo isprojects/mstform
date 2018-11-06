@@ -18,7 +18,7 @@ import { GroupAccessor } from "./group-accessor";
 export type Accessor =
   | FormAccessor<any, any>
   | FieldAccessor<any, any>
-  | RepeatingFormAccessor<any, any, any>
+  | RepeatingFormAccessor<any, any>
   | RepeatingFormIndexedAccessor<any, any, any>
   | SubFormAccessor<any, any, any>;
 
@@ -30,11 +30,7 @@ export type FieldAccess<
 export type RepeatingFormAccess<
   D extends FormDefinition<any>,
   K extends keyof D
-> = RepeatingFormAccessor<
-  ArrayEntryType<D[K]>,
-  RepeatingFormDefinitionType<D[K]>,
-  any
->;
+> = RepeatingFormAccessor<RepeatingFormDefinitionType<D[K]>, any>;
 
 export type SubFormAccess<
   D extends FormDefinition<any>,
