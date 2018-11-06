@@ -83,6 +83,8 @@ export class FieldAccessor<R, V> {
     this._disposer = disposer;
   }
 
+  // XXX I think this should become private (_node), unless I
+  // guarantee the type without a lot of complication
   @computed
   get node(): any {
     // XXX it's possible for this to be called for a node that has since
