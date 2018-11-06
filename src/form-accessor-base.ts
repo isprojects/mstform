@@ -65,15 +65,15 @@ export abstract class FormAccessorBase<
     return this.formAccessor.accessBySteps(steps);
   }
 
-  field<K extends keyof D>(name: K): FieldAccess<M, D, K> {
+  field<K extends keyof D>(name: K): FieldAccess<D, K> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<M, D, K> {
+  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K> {
     return this.formAccessor.repeatingForm(name);
   }
 
-  subForm<K extends keyof D>(name: K): SubFormAccess<M, D, K> {
+  subForm<K extends keyof D>(name: K): SubFormAccess<D, K> {
     return this.formAccessor.subForm(name);
   }
 

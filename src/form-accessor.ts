@@ -194,7 +194,7 @@ export class FormAccessor<
     this.fieldAccessors.set(name, result);
   }
 
-  field<K extends keyof D>(name: K): FieldAccess<M, D, K> {
+  field<K extends keyof D>(name: K): FieldAccess<D, K> {
     const accessor = this.fieldAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a Field`);
@@ -216,7 +216,7 @@ export class FormAccessor<
     result.initialize();
   }
 
-  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<M, D, K> {
+  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K> {
     const accessor = this.repeatingFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a RepeatingForm`);
@@ -236,7 +236,7 @@ export class FormAccessor<
     result.initialize();
   }
 
-  subForm<K extends keyof D>(name: K): SubFormAccess<M, D, K> {
+  subForm<K extends keyof D>(name: K): SubFormAccess<D, K> {
     const accessor = this.subFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a SubForm`);
