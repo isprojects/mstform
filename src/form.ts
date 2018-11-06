@@ -33,7 +33,7 @@ export type SubFormGroupDefinitionType<T> = T extends SubForm<any, infer G>
 
 export type FormDefinitionEntry<M, K extends keyof M> =
   | Field<any, M[K]>
-  | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any>
+  | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, GroupDefinition<any>>
   | SubForm<FormDefinition<M[K]>, GroupDefinition<any>>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
