@@ -19,7 +19,7 @@ export type Accessor =
   | FormAccessor<any, any>
   | FieldAccessor<any, any>
   | RepeatingFormAccessor<any, any>
-  | RepeatingFormIndexedAccessor<any, any, any>
+  | RepeatingFormIndexedAccessor<any, any>
   | SubFormAccessor<any, any, any>;
 
 export type FieldAccess<

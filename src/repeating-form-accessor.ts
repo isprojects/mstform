@@ -79,7 +79,7 @@ export class RepeatingFormAccessor<
     result.initialize();
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<any, D, G> {
+  index(index: number): RepeatingFormIndexedAccessor<D, G> {
     const accessor = this.repeatingFormIndexedAccessors.get(index);
     if (accessor == null) {
       throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
@@ -93,7 +93,7 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get accessors(): RepeatingFormIndexedAccessor<any, D, G>[] {
+  get accessors(): RepeatingFormIndexedAccessor<D, G>[] {
     const result = [];
     for (let index = 0; index < this.length; index++) {
       result.push(this.index(index));
@@ -153,7 +153,7 @@ export class RepeatingFormAccessor<
       return;
     }
     const toDelete: number[] = [];
-    const toInsert: RepeatingFormIndexedAccessor<any, any, any>[] = [];
+    const toInsert: RepeatingFormIndexedAccessor<any, any>[] = [];
 
     accessors.forEach((accessor, i) => {
       if (i <= index) {
@@ -170,7 +170,7 @@ export class RepeatingFormAccessor<
     const accessors = this.repeatingFormIndexedAccessors;
 
     const toDelete: number[] = [];
-    const toInsert: RepeatingFormIndexedAccessor<any, any, any>[] = [];
+    const toInsert: RepeatingFormIndexedAccessor<any, any>[] = [];
     accessors.forEach((accessor, i) => {
       if (i < index) {
         return;
@@ -185,7 +185,7 @@ export class RepeatingFormAccessor<
 
   private executeRenumber(
     toDelete: number[],
-    toInsert: RepeatingFormIndexedAccessor<any, any, any>[]
+    toInsert: RepeatingFormIndexedAccessor<any, any>[]
   ) {
     const accessors = this.repeatingFormIndexedAccessors;
 

@@ -49,7 +49,7 @@ export class FormAccessor<
       | FormAccessor<any, any>
       | SubFormAccessor<any, any, any>
       | RepeatingFormAccessor<any, any>
-      | RepeatingFormIndexedAccessor<any, any, any>
+      | RepeatingFormIndexedAccessor<any, any>
       | null,
     addMode: boolean,
     public allowedKeys?: string[]
