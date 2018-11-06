@@ -32,10 +32,7 @@ export class FormAccessor<
     keyof D,
     RepeatingFormAccessor<any, any>
   > = observable.map();
-  subFormAccessors: Map<
-    keyof D,
-    SubFormAccessor<any, any, any>
-  > = observable.map();
+  subFormAccessors: Map<keyof D, SubFormAccessor<any, any>> = observable.map();
   groupAccessors: Map<keyof G, GroupAccessor<any, any>> = observable.map();
 
   @observable
@@ -47,7 +44,7 @@ export class FormAccessor<
     public groupDefinition: any,
     public parent:
       | FormAccessor<any, any>
-      | SubFormAccessor<any, any, any>
+      | SubFormAccessor<any, any>
       | RepeatingFormAccessor<any, any>
       | RepeatingFormIndexedAccessor<any, any>
       | null,

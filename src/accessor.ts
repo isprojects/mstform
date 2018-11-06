@@ -20,7 +20,7 @@ export type Accessor =
   | FieldAccessor<any, any>
   | RepeatingFormAccessor<any, any>
   | RepeatingFormIndexedAccessor<any, any>
-  | SubFormAccessor<any, any, any>;
+  | SubFormAccessor<any, any>;
 
 export type FieldAccess<
   D extends FormDefinition<any>,
@@ -35,6 +35,6 @@ export type RepeatingFormAccess<
 export type SubFormAccess<
   D extends FormDefinition<any>,
   K extends keyof D
-> = SubFormAccessor<D[K], SubFormDefinitionType<D[K]>, any>;
+> = SubFormAccessor<SubFormDefinitionType<D[K]>, any>;
 
 export type GroupAccess<M, D extends FormDefinition<M>> = GroupAccessor<M, D>;
