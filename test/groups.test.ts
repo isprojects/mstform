@@ -22,8 +22,8 @@ test("groups basic", async () => {
       d: new Field(converters.number)
     },
     {
-      one: new Group(["a", "b"]),
-      two: new Group(["c", "d"])
+      one: new Group({ include: ["a", "b"] }),
+      two: new Group({ include: ["c", "d"] })
     }
   );
 
@@ -45,8 +45,8 @@ test("groups basic", async () => {
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeFalsy();
 
-  await a.setRaw(10);
-  await c.setRaw(30);
+  await a.setRaw("10");
+  await c.setRaw("30");
 
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();

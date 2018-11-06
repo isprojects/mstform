@@ -1,17 +1,22 @@
 import { computed } from "mobx";
-import { FormDefinition } from "./form";
+import { FormDefinition, GroupDefinition } from "./form";
 import {
   Accessor,
   FieldAccess,
   RepeatingFormAccess,
-  SubFormAccess
+  SubFormAccess,
+  GroupAccess
 } from "./accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 
 // a base class that delegates to a form accessor
-export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
-  abstract formAccessor: FormAccessor<M, D>;
+export abstract class FormAccessorBase<
+  M,
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<M, D>
+> {
+  abstract formAccessor: FormAccessor<M, D, G>;
 
   initialize() {
     this.formAccessor.initialize();
@@ -70,6 +75,10 @@ export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
 
   subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
     return this.formAccessor.subForm(name);
+  }
+
+  group<K extends keyof G>(name: K): GroupAccess<M, D> {
+    return this.formAccessor.group(name);
   }
 
   @computed

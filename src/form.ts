@@ -11,19 +11,24 @@ export type RawType<F> = F extends Field<infer R, any> ? R : never;
 
 export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
   any,
-  infer D
+  infer D,
+  any
 >
   ? D
   : never;
 
-export type SubFormDefinitionType<T> = T extends SubForm<any, infer D>
+export type SubFormDefinitionType<T> = T extends SubForm<any, infer D, any>
   ? D
   : never;
 
 export type FormDefinitionEntry<M, K extends keyof M> =
   | Field<any, M[K]>
-  | RepeatingForm<ArrayEntryType<M[K]>, FormDefinition<ArrayEntryType<M[K]>>>
-  | SubForm<M[K], FormDefinition<M[K]>>;
+  | RepeatingForm<
+      ArrayEntryType<M[K]>,
+      FormDefinition<ArrayEntryType<M[K]>>,
+      any
+    >
+  | SubForm<M[K], FormDefinition<M[K]>, GroupDefinition<M[K], any>>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
 
@@ -58,20 +63,36 @@ export interface FieldOptions<R, V> {
   controlled?: Controlled;
 }
 
-export class Form<M, D extends FormDefinition<M>> {
-  constructor(public model: IModelType<any, M>, public definition: D) {}
+export type GroupDefinition<M, D extends FormDefinition<M>> = {
+  [key: string]: Group<M, D>;
+};
 
-  get FormStateType(): FormState<M, D> {
+export class Form<
+  M,
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<M, D>
+> {
+  constructor(
+    public model: IModelType<any, M>,
+    public definition: D,
+    public groupDefinition?: G
+  ) {}
+
+  get FormStateType(): FormState<M, D, G> {
     throw new Error("For introspection");
   }
 
-  state(node: M, options?: FormStateOptions<M>): FormState<M, D> {
+  state(node: M, options?: FormStateOptions<M>): FormState<M, D, G> {
     return new FormState(this, node, options);
   }
 }
 
-export class SubForm<M, D extends FormDefinition<M>> {
-  constructor(public definition: D) {}
+export class SubForm<
+  M,
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<M, D>
+> {
+  constructor(public definition: D, public groupDefinition?: G) {}
 }
 
 export class ValidationMessage {
@@ -198,6 +219,19 @@ export class Field<R, V> {
   }
 }
 
-export class RepeatingForm<M, D extends FormDefinition<M>> {
-  constructor(public definition: D) {}
+export class RepeatingForm<
+  M,
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<M, D>
+> {
+  constructor(public definition: D, public groupDefinition?: G) {}
+}
+
+export interface GroupOptions<M, D extends FormDefinition<M>> {
+  include?: (keyof D)[];
+  exclude?: (keyof D)[];
+}
+
+export class Group<M, D extends FormDefinition<M>> {
+  constructor(public options: GroupOptions<M, D>) {}
 }

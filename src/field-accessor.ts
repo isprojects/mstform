@@ -33,9 +33,9 @@ export class FieldAccessor<M, R, V> {
   _disposer: IReactionDisposer | undefined;
 
   constructor(
-    public state: FormState<any, any>,
+    public state: FormState<any, any, any>,
     public field: Field<R, V>,
-    public parent: FormAccessor<any, any>,
+    public parent: FormAccessor<any, any, any>,
     name: string
   ) {
     this.name = name;

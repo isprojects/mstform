@@ -1,5 +1,5 @@
 import { computed } from "mobx";
-import { FormDefinition } from "./form";
+import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
@@ -7,19 +7,27 @@ import { ValidateOptions } from "./validate-options";
 
 export class SubFormAccessor<
   M,
-  D extends FormDefinition<M>
-> extends FormAccessorBase<M, D> {
-  formAccessor: FormAccessor<M, D>;
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<M, D>
+> extends FormAccessorBase<M, D, G> {
+  formAccessor: FormAccessor<M, D, G>;
 
   constructor(
-    public state: FormState<any, any>,
+    public state: FormState<any, any, any>,
     public definition: D,
-    public parent: FormAccessor<any, any>,
+    public groupDefinition: G | undefined,
+    public parent: FormAccessor<any, any, any>,
     public name: string
   ) {
     super();
     this.name = name;
-    this.formAccessor = new FormAccessor(state, definition, this, false);
+    this.formAccessor = new FormAccessor(
+      state,
+      definition,
+      groupDefinition,
+      this,
+      false
+    );
   }
 
   clear() {

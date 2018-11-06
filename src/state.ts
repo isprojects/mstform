@@ -1,7 +1,12 @@
 import { action, computed, observable } from "mobx";
 import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
 import { Accessor } from "./accessor";
-import { Form, FormDefinition, ValidationResponse } from "./form";
+import {
+  Form,
+  FormDefinition,
+  ValidationResponse,
+  GroupDefinition
+} from "./form";
 import {
   deepCopy,
   deleteByPath,
@@ -30,7 +35,7 @@ export interface ExtraValidation {
 }
 
 export interface RepeatingFormAccessorAllows {
-  (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
+  (repeatingFormAccessor: RepeatingFormAccessor<any, any, any>): boolean;
 }
 
 export interface SaveFunc<M> {
@@ -75,17 +80,18 @@ export interface FormStateOptions<M> {
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
-export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
+export class FormState<
   M,
-  D
-> {
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<M, D>
+> extends FormAccessorBase<M, D, G> {
   @observable
   additionalErrorTree: any;
 
   @observable
   saveStatus: SaveStatusOptions = "before";
 
-  formAccessor: FormAccessor<M, D>;
+  formAccessor: FormAccessor<M, D, G>;
   saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
@@ -104,7 +110,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
   updateFunc: UpdateFunc<M, any, any> | null;
 
   constructor(
-    public form: Form<M, D>,
+    public form: Form<M, D, G>,
     public node: M,
     options?: FormStateOptions<M>
   ) {
@@ -127,6 +133,7 @@ export class FormState<M, D extends FormDefinition<M>> extends FormAccessorBase<
     this.formAccessor = new FormAccessor(
       this,
       this.form.definition,
+      this.form.groupDefinition,
       null,
       addMode
     );
