@@ -1,8 +1,9 @@
 import {
-  ArrayEntryType,
   FormDefinition,
   RepeatingFormDefinitionType,
+  RepeatingFormGroupDefinitionType,
   SubFormDefinitionType,
+  SubFormGroupDefinitionType,
   RawType
 } from "./form";
 import { FieldAccessor } from "./field-accessor";
@@ -30,11 +31,17 @@ export type FieldAccess<
 export type RepeatingFormAccess<
   D extends FormDefinition<any>,
   K extends keyof D
-> = RepeatingFormAccessor<RepeatingFormDefinitionType<D[K]>, any>;
+> = RepeatingFormAccessor<
+  RepeatingFormDefinitionType<D[K]>,
+  RepeatingFormGroupDefinitionType<D[K]>
+>;
 
 export type SubFormAccess<
   D extends FormDefinition<any>,
   K extends keyof D
-> = SubFormAccessor<SubFormDefinitionType<D[K]>, any>;
+> = SubFormAccessor<
+  SubFormDefinitionType<D[K]>,
+  SubFormGroupDefinitionType<D[K]>
+>;
 
 export type GroupAccess<M, D extends FormDefinition<M>> = GroupAccessor<M, D>;

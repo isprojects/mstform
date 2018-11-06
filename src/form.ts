@@ -16,8 +16,19 @@ export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
   ? D
   : never;
 
+export type RepeatingFormGroupDefinitionType<T> = T extends RepeatingForm<
+  any,
+  infer G
+>
+  ? G
+  : never;
+
 export type SubFormDefinitionType<T> = T extends SubForm<infer D, any>
   ? D
+  : never;
+
+export type SubFormGroupDefinitionType<T> = T extends SubForm<any, infer G>
+  ? G
   : never;
 
 export type FormDefinitionEntry<M, K extends keyof M> =
