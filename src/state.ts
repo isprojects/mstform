@@ -83,7 +83,7 @@ export type SaveStatusOptions = "before" | "rightAfter" | "after";
 export class FormState<
   M,
   D extends FormDefinition<M>,
-  G extends GroupDefinition<M, D>
+  G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   @observable
   additionalErrorTree: any;

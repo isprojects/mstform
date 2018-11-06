@@ -8,7 +8,7 @@ export class GroupAccessor<M, D extends FormDefinition<M>> {
     public state: FormState<any, any, any>,
     public definition: D,
     public parent: FormAccessor<any, any>,
-    public group: Group<M, D>
+    public group: Group<D>
   ) {}
 
   @computed

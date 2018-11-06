@@ -24,7 +24,7 @@ import { ValidateOptions } from "./validate-options";
 
 export class FormAccessor<
   D extends FormDefinition<any>,
-  G extends GroupDefinition<any, D>
+  G extends GroupDefinition<D>
 > {
   private keys: string[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
@@ -240,7 +240,7 @@ export class FormAccessor<
     return accessor;
   }
 
-  createGroup<K extends keyof G>(name: K, group: Group<any, any>) {
+  createGroup<K extends keyof G>(name: K, group: Group<any>) {
     const result = new GroupAccessor(this.state, this.definition, this, group);
     this.groupAccessors.set(name, result);
   }

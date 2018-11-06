@@ -7,7 +7,7 @@ import { FormAccessor } from "./form-accessor";
 
 export class RepeatingFormIndexedAccessor<
   D extends FormDefinition<any>,
-  G extends GroupDefinition<any, D>
+  G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   formAccessor: FormAccessor<D, G>;
 

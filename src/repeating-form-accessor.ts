@@ -9,7 +9,7 @@ import { ValidateOptions } from "./validate-options";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
-  G extends GroupDefinition<any, D>
+  G extends GroupDefinition<D>
 > {
   name: string;
 

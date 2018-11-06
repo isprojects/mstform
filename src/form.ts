@@ -28,7 +28,7 @@ export type FormDefinitionEntry<M, K extends keyof M> =
       FormDefinition<ArrayEntryType<M[K]>>,
       any
     >
-  | SubForm<M[K], FormDefinition<M[K]>, GroupDefinition<M[K], any>>;
+  | SubForm<M[K], FormDefinition<M[K]>, GroupDefinition<any>>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
 
@@ -63,14 +63,14 @@ export interface FieldOptions<R, V> {
   controlled?: Controlled;
 }
 
-export type GroupDefinition<M, D extends FormDefinition<M>> = {
-  [key: string]: Group<M, D>;
+export type GroupDefinition<D extends FormDefinition<any>> = {
+  [key: string]: Group<D>;
 };
 
 export class Form<
   M,
   D extends FormDefinition<M>,
-  G extends GroupDefinition<M, D>
+  G extends GroupDefinition<D>
 > {
   constructor(
     public model: IModelType<any, M>,
@@ -90,7 +90,7 @@ export class Form<
 export class SubForm<
   M,
   D extends FormDefinition<M>,
-  G extends GroupDefinition<M, D>
+  G extends GroupDefinition<D>
 > {
   constructor(public definition: D, public groupDefinition?: G) {}
 }
@@ -222,16 +222,16 @@ export class Field<R, V> {
 export class RepeatingForm<
   M,
   D extends FormDefinition<M>,
-  G extends GroupDefinition<M, D>
+  G extends GroupDefinition<D>
 > {
   constructor(public definition: D, public groupDefinition?: G) {}
 }
 
-export interface GroupOptions<M, D extends FormDefinition<M>> {
+export interface GroupOptions<D extends FormDefinition<any>> {
   include?: (keyof D)[];
   exclude?: (keyof D)[];
 }
 
-export class Group<M, D extends FormDefinition<M>> {
-  constructor(public options: GroupOptions<M, D>) {}
+export class Group<D extends FormDefinition<any>> {
+  constructor(public options: GroupOptions<D>) {}
 }

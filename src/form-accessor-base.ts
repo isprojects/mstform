@@ -13,7 +13,7 @@ import { ValidateOptions } from "./validate-options";
 // a base class that delegates to a form accessor
 export abstract class FormAccessorBase<
   D extends FormDefinition<any>,
-  G extends GroupDefinition<any, D>
+  G extends GroupDefinition<D>
 > {
   abstract formAccessor: FormAccessor<D, G>;
 

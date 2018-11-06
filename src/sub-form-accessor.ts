@@ -7,7 +7,7 @@ import { ValidateOptions } from "./validate-options";
 
 export class SubFormAccessor<
   D extends FormDefinition<any>,
-  G extends GroupDefinition<any, D>
+  G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   formAccessor: FormAccessor<D, G>;
 
