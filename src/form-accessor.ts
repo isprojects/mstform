@@ -95,11 +95,11 @@ export class FormAccessor<
     this.keys.forEach(key => {
       const entry = this.definition[key];
       if (entry instanceof Field) {
-        result.push(this.field(key as keyof M));
+        result.push(this.field(key as keyof D));
       } else if (entry instanceof RepeatingForm) {
-        result.push(this.repeatingForm(key as keyof M));
+        result.push(this.repeatingForm(key as keyof D));
       } else if (entry instanceof SubForm) {
-        result.push(this.subForm(key as keyof M));
+        result.push(this.subForm(key as keyof D));
       }
     });
     return result;
