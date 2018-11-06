@@ -84,14 +84,14 @@ export class FormState<
   M,
   D extends FormDefinition<M>,
   G extends GroupDefinition<M, D>
-> extends FormAccessorBase<M, D, G> {
+> extends FormAccessorBase<D, G> {
   @observable
   additionalErrorTree: any;
 
   @observable
   saveStatus: SaveStatusOptions = "before";
 
-  formAccessor: FormAccessor<M, D, G>;
+  formAccessor: FormAccessor<D, G>;
   saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;

@@ -12,11 +12,10 @@ import { ValidateOptions } from "./validate-options";
 
 // a base class that delegates to a form accessor
 export abstract class FormAccessorBase<
-  M,
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<M, D>
+  D extends FormDefinition<any>,
+  G extends GroupDefinition<any, D>
 > {
-  abstract formAccessor: FormAccessor<M, D, G>;
+  abstract formAccessor: FormAccessor<D, G>;
 
   initialize() {
     this.formAccessor.initialize();
@@ -77,7 +76,7 @@ export abstract class FormAccessorBase<
     return this.formAccessor.subForm(name);
   }
 
-  group<K extends keyof G>(name: K): GroupAccess<M, D> {
+  group<K extends keyof G>(name: K): GroupAccess<any, D> {
     return this.formAccessor.group(name);
   }
 

@@ -20,7 +20,7 @@ export class RepeatingFormAccessor<
   constructor(
     public state: FormState<any, any, any>,
     public repeatingForm: RepeatingForm<M, D, G>,
-    public parent: FormAccessor<any, any, any>,
+    public parent: FormAccessor<any, any>,
     name: string
   ) {
     this.name = name;

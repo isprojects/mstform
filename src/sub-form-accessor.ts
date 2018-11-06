@@ -9,14 +9,14 @@ export class SubFormAccessor<
   M,
   D extends FormDefinition<M>,
   G extends GroupDefinition<M, D>
-> extends FormAccessorBase<M, D, G> {
-  formAccessor: FormAccessor<M, D, G>;
+> extends FormAccessorBase<D, G> {
+  formAccessor: FormAccessor<D, G>;
 
   constructor(
     public state: FormState<any, any, any>,
     public definition: D,
     public groupDefinition: G | undefined,
-    public parent: FormAccessor<any, any, any>,
+    public parent: FormAccessor<any, any>,
     public name: string
   ) {
     super();

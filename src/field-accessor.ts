@@ -35,7 +35,7 @@ export class FieldAccessor<R, V> {
   constructor(
     public state: FormState<any, any, any>,
     public field: Field<R, V>,
-    public parent: FormAccessor<any, any, any>,
+    public parent: FormAccessor<any, any>,
     name: string
   ) {
     this.name = name;

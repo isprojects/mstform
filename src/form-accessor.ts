@@ -23,9 +23,8 @@ import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
 
 export class FormAccessor<
-  M,
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<M, D>
+  D extends FormDefinition<any>,
+  G extends GroupDefinition<any, D>
 > {
   private keys: string[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
@@ -43,11 +42,11 @@ export class FormAccessor<
   _addMode: boolean;
 
   constructor(
-    public state: FormState<M, D, G>,
+    public state: FormState<any, D, G>,
     public definition: any,
     public groupDefinition: any,
     public parent:
-      | FormAccessor<any, any, any>
+      | FormAccessor<any, any>
       | SubFormAccessor<any, any, any>
       | RepeatingFormAccessor<any, any, any>
       | RepeatingFormIndexedAccessor<any, any, any>
@@ -249,7 +248,7 @@ export class FormAccessor<
     this.groupAccessors.set(name, result);
   }
 
-  group<K extends keyof G>(name: K): GroupAccess<M, D> {
+  group<K extends keyof G>(name: K): GroupAccess<any, D> {
     const accessor = this.groupAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a Group`);

@@ -9,8 +9,8 @@ export class RepeatingFormIndexedAccessor<
   M,
   D extends FormDefinition<M>,
   G extends GroupDefinition<M, D>
-> extends FormAccessorBase<M, D, G> {
-  formAccessor: FormAccessor<M, D, G>;
+> extends FormAccessorBase<D, G> {
+  formAccessor: FormAccessor<D, G>;
 
   @observable
   index: number;

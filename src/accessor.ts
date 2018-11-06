@@ -16,7 +16,7 @@ import { GroupAccessor } from "./group-accessor";
 // as we never need to walk the group accessors to see
 // whether a form is valid
 export type Accessor =
-  | FormAccessor<any, any, any>
+  | FormAccessor<any, any>
   | FieldAccessor<any, any>
   | RepeatingFormAccessor<any, any, any>
   | RepeatingFormIndexedAccessor<any, any, any>
