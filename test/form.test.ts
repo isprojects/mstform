@@ -2,8 +2,8 @@ import { configure } from "mobx";
 import { getSnapshot, types, applySnapshot, onPatch } from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
-// "strict" leads to trouble during initialization.
-configure({ enforceActions: true });
+// "always" leads to trouble during initialization.
+configure({ enforceActions: "observed" });
 
 test("a simple form", async () => {
   const M = types.model("M", {
@@ -877,7 +877,7 @@ test("save argument can be snapshotted", async () => {
 
   let snapshot;
 
-  async function save(node: typeof M.Type) {
+  async function save(node: any) {
     snapshot = getSnapshot(node);
     return null;
   }
@@ -916,7 +916,7 @@ test("inline save argument can be snapshotted", async () => {
 
 test("not required", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.number)
+    foo: types.maybeNull(types.number)
   });
 
   const form = new Form(M, {
@@ -1130,7 +1130,7 @@ test("required with boolean has no effect", async () => {
 
 test("required with maybe", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.number)
+    foo: types.maybeNull(types.number)
   });
 
   const form = new Form(M, {
@@ -1293,7 +1293,7 @@ test("no validation after save either", async () => {
 
 test("model converter", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
@@ -1331,7 +1331,7 @@ test("model converter", async () => {
 
 test("model converter with validate does not throw", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
@@ -1358,7 +1358,7 @@ test("model converter with validate does not throw", async () => {
 
 test("model converter maybe", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
@@ -1450,7 +1450,7 @@ test("add mode for flat form, string and required", async () => {
 
 test("add mode for flat form, maybe string", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.string)
+    foo: types.maybeNull(types.string)
   });
 
   const form = new Form(M, {
@@ -1499,7 +1499,7 @@ test("add mode for flat form, number", async () => {
 
 test("add mode for flat form, maybe number", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.number)
+    foo: types.maybeNull(types.number)
   });
 
   const form = new Form(M, {
@@ -1525,7 +1525,7 @@ test("add mode for flat form, maybe number", async () => {
 
 test("model converter in add mode", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
@@ -1994,11 +1994,11 @@ test("raw update and errors", async () => {
 });
 
 test("raw update and references", async () => {
-  const N = types.model("N", { id: types.identifier(), bar: types.number });
+  const N = types.model("N", { id: types.identifier, bar: types.number });
 
   const M = types
     .model("M", {
-      foo: types.maybe(types.reference(N))
+      foo: types.maybeNull(types.reference(N))
     })
     .actions(self => ({
       update(value: typeof N.Type) {

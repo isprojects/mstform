@@ -321,20 +321,6 @@ export class FormState<
     return resolvePath(this.node, path);
   }
 
-  // XXX we can remove this from the API?
-  getMstType(path: string): IType<any, any> {
-    const steps = pathToSteps(path);
-    let subType: IType<any, any> = this.form.model;
-    for (const step of steps) {
-      if (isInt(step)) {
-        subType = subType.getChildType(step);
-        continue;
-      }
-      subType = subType.getChildType(step);
-    }
-    return subType;
-  }
-
   @computed
   get isValidating(): boolean {
     return this.flatAccessors.some(

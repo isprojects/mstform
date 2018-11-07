@@ -2,8 +2,8 @@ import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { Field, Form, SubForm, converters } from "../src";
 
-// "strict" leads to trouble during initialization.
-configure({ enforceActions: true });
+// "always" leads to trouble during initialization.
+configure({ enforceActions: "observed" });
 
 test("a sub form", async () => {
   const N = types.model("N", {
