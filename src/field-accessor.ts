@@ -15,7 +15,7 @@ import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
 
-export class FieldAccessor<M, R, V> {
+export class FieldAccessor<R, V> {
   name: string;
 
   @observable
@@ -33,7 +33,7 @@ export class FieldAccessor<M, R, V> {
   _disposer: IReactionDisposer | undefined;
 
   constructor(
-    public state: FormState<any, any>,
+    public state: FormState<any, any, any>,
     public field: Field<R, V>,
     public parent: FormAccessor<any, any>,
     name: string
@@ -83,8 +83,10 @@ export class FieldAccessor<M, R, V> {
     this._disposer = disposer;
   }
 
+  // XXX I think this should become private (_node), unless I
+  // guarantee the type without a lot of complication
   @computed
-  get node(): M | undefined {
+  get node(): any {
     // XXX it's possible for this to be called for a node that has since
     // been removed. It's not ideal but we return undefined in such a case.
     try {

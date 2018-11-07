@@ -1,18 +1,9 @@
 import {
-  action,
-  observable,
-  computed,
-  isObservable,
-  toJS,
-  reaction,
-  comparer,
-  IReactionDisposer
-} from "mobx";
-import {
-  ArrayEntryType,
   FormDefinition,
   RepeatingFormDefinitionType,
+  RepeatingFormGroupDefinitionType,
   SubFormDefinitionType,
+  SubFormGroupDefinitionType,
   RawType
 } from "./form";
 import { FieldAccessor } from "./field-accessor";
@@ -20,31 +11,37 @@ import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { SubFormAccessor } from "./sub-form-accessor";
+import { GroupAccessor } from "./group-accessor";
 
+// group access is deliberately not in Accessor
+// as we never need to walk the group accessors to see
+// whether a form is valid
 export type Accessor =
   | FormAccessor<any, any>
-  | FieldAccessor<any, any, any>
+  | FieldAccessor<any, any>
   | RepeatingFormAccessor<any, any>
   | RepeatingFormIndexedAccessor<any, any>
   | SubFormAccessor<any, any>;
 
 export type FieldAccess<
-  M,
-  D extends FormDefinition<M>,
-  K extends keyof M
-> = FieldAccessor<M, RawType<D[K]>, M[K]>;
+  D extends FormDefinition<any>,
+  K extends keyof D
+> = FieldAccessor<RawType<D[K]>, D[K]>;
 
 export type RepeatingFormAccess<
-  M,
-  D extends FormDefinition<M>,
-  K extends keyof M
+  D extends FormDefinition<any>,
+  K extends keyof D
 > = RepeatingFormAccessor<
-  ArrayEntryType<M[K]>,
-  RepeatingFormDefinitionType<D[K]>
+  RepeatingFormDefinitionType<D[K]>,
+  RepeatingFormGroupDefinitionType<D[K]>
 >;
 
 export type SubFormAccess<
-  M,
-  D extends FormDefinition<M>,
-  K extends keyof M
-> = SubFormAccessor<M[K], SubFormDefinitionType<D[K]>>;
+  D extends FormDefinition<any>,
+  K extends keyof D
+> = SubFormAccessor<
+  SubFormDefinitionType<D[K]>,
+  SubFormGroupDefinitionType<D[K]>
+>;
+
+export type GroupAccess<M, D extends FormDefinition<M>> = GroupAccessor<M, D>;

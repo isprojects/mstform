@@ -1,17 +1,21 @@
 import { computed } from "mobx";
-import { FormDefinition } from "./form";
+import { FormDefinition, GroupDefinition } from "./form";
 import {
   Accessor,
   FieldAccess,
   RepeatingFormAccess,
-  SubFormAccess
+  SubFormAccess,
+  GroupAccess
 } from "./accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 
 // a base class that delegates to a form accessor
-export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
-  abstract formAccessor: FormAccessor<M, D>;
+export abstract class FormAccessorBase<
+  D extends FormDefinition<any>,
+  G extends GroupDefinition<D>
+> {
+  abstract formAccessor: FormAccessor<D, G>;
 
   initialize() {
     this.formAccessor.initialize();
@@ -60,16 +64,20 @@ export abstract class FormAccessorBase<M, D extends FormDefinition<M>> {
     return this.formAccessor.accessBySteps(steps);
   }
 
-  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
+  field<K extends keyof D>(name: K): FieldAccess<D, K> {
     return this.formAccessor.field(name);
   }
 
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
+  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K> {
     return this.formAccessor.repeatingForm(name);
   }
 
-  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
+  subForm<K extends keyof D>(name: K): SubFormAccess<D, K> {
     return this.formAccessor.subForm(name);
+  }
+
+  group<K extends keyof G>(name: K): GroupAccess<any, D> {
+    return this.formAccessor.group(name);
   }
 
   @computed

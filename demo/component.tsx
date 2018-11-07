@@ -37,7 +37,7 @@ const form = new Form(M, {
 });
 
 type InlineErrorProps = {
-  field?: FieldAccessor<any, any, any>;
+  field?: FieldAccessor<any, any>;
 };
 
 @observer
@@ -56,7 +56,7 @@ class InlineError extends Component<InlineErrorProps> {
 @observer
 export class MyInput extends Component<{
   type: string;
-  field: FieldAccessor<any, any, any>;
+  field: FieldAccessor<any, any>;
 }> {
   render() {
     const { type, field } = this.props;

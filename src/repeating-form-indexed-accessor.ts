@@ -1,15 +1,15 @@
 import { action, observable, computed } from "mobx";
-import { FormDefinition } from "./form";
+import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 import { FormAccessor } from "./form-accessor";
 
 export class RepeatingFormIndexedAccessor<
-  M,
-  D extends FormDefinition<M>
-> extends FormAccessorBase<M, D> {
-  formAccessor: FormAccessor<M, D>;
+  D extends FormDefinition<any>,
+  G extends GroupDefinition<D>
+> extends FormAccessorBase<D, G> {
+  formAccessor: FormAccessor<D, G>;
 
   @observable
   index: number;
@@ -18,14 +18,21 @@ export class RepeatingFormIndexedAccessor<
   _addMode: boolean = false;
 
   constructor(
-    public state: FormState<any, any>,
+    public state: FormState<any, any, any>,
     public definition: D,
-    public parent: RepeatingFormAccessor<M, D>,
+    public groupDefinition: G | undefined,
+    public parent: RepeatingFormAccessor<D, G>,
     index: number
   ) {
     super();
     this.index = index;
-    this.formAccessor = new FormAccessor(state, definition, this, false);
+    this.formAccessor = new FormAccessor(
+      state,
+      definition,
+      groupDefinition,
+      this,
+      false
+    );
   }
 
   clear() {

@@ -1,24 +1,24 @@
 import { observable, computed } from "mobx";
 import { applyPatch, resolvePath } from "mobx-state-tree";
-import { FormDefinition, RepeatingForm } from "./form";
+import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { Accessor } from "./accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 
-export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
+export class RepeatingFormAccessor<
+  D extends FormDefinition<any>,
+  G extends GroupDefinition<D>
+> {
   name: string;
 
   @observable
-  repeatingFormIndexedAccessors: Map<
-    number,
-    RepeatingFormIndexedAccessor<M, D>
-  > = observable.map();
+  repeatingFormIndexedAccessors: Map<number, any> = observable.map();
 
   constructor(
-    public state: FormState<any, any>,
-    public repeatingForm: RepeatingForm<M, D>,
+    public state: FormState<any, any, any>,
+    public repeatingForm: RepeatingForm<D, G>,
     public parent: FormAccessor<any, any>,
     name: string
   ) {
@@ -71,6 +71,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     const result = new RepeatingFormIndexedAccessor(
       this.state,
       this.repeatingForm.definition,
+      this.repeatingForm.groupDefinition,
       this,
       index
     );
@@ -78,7 +79,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
     result.initialize();
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<M, D> {
+  index(index: number): RepeatingFormIndexedAccessor<D, G> {
     const accessor = this.repeatingFormIndexedAccessors.get(index);
     if (accessor == null) {
       throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
@@ -92,7 +93,7 @@ export class RepeatingFormAccessor<M, D extends FormDefinition<M>> {
   }
 
   @computed
-  get accessors(): RepeatingFormIndexedAccessor<M, D>[] {
+  get accessors(): RepeatingFormIndexedAccessor<D, G>[] {
     const result = [];
     for (let index = 0; index < this.length; index++) {
       result.push(this.index(index));

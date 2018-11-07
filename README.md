@@ -822,6 +822,70 @@ const state = form.state(o, {
 Note that you have to use the second `value` argument to get the value to use
 to validate, as `accessor.value` still has the old value.
 
+## Validation groups
+
+It can be useful to consider the validation status of a whole set of related
+fields, without considering the validation status of the whole form. In a UI
+you can then indicate that part of the form is invalid, which is especially
+useful if the form is not visible in its entirety, for instance if is spread
+out across tabs or a menu.
+
+You can define validation groups with a second parameter you pass into `Form`,
+`SubForm` or `RepeatingForm`:
+
+```js
+const M = types.model("M", {
+    a: types.string,
+    b: types.string,
+    c: types.string
+});
+
+const form = new Form(
+    M,
+    {
+        a: new Field(converters.string),
+        b: new Field(converters.string),
+        c: new Field(converters.string)
+    },
+    {
+        one: new Group({ include: ["a", "b"] }),
+        two: new Group({ include: ["c"] })
+    }
+);
+```
+
+Here we define two groups, `one` and `two`. Group `one` is valid only if `a`
+and `b` are valid. Group `two` is valid only if `c` is valid.
+
+You can access a group on the state or form accessor and check its `isValid`
+property:
+
+```js
+const first = state.group("first");
+if (first.isValid) {
+    // only executed if a and b are valid
+}
+```
+
+When you define a group you can pass `exclude` instead of `include`:
+
+```js
+const form = new Form(
+    M,
+    {
+        a: new Field(converters.string),
+        b: new Field(converters.string),
+        c: new Field(converters.string)
+    },
+    {
+        one: new Group({ exclude: ["c"] })
+    }
+);
+```
+
+Group `one` now includes all accessors except `c`, and therefore `a` and `b` as
+well.
+
 ## Derived values
 
 The value of some fields depends on the value of other fields; you can express

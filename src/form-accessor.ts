@@ -1,44 +1,56 @@
 import { observable, computed, action } from "mobx";
-import { SubForm, Field, FormDefinition, RepeatingForm } from "./form";
+import {
+  SubForm,
+  Field,
+  FormDefinition,
+  RepeatingForm,
+  GroupDefinition,
+  Group
+} from "./form";
 import { FormState } from "./state";
 import {
   Accessor,
   FieldAccess,
   RepeatingFormAccess,
-  SubFormAccess
+  SubFormAccess,
+  GroupAccess
 } from "./accessor";
 import { FieldAccessor } from "./field-accessor";
 import { SubFormAccessor } from "./sub-form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
+import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
 
-export class FormAccessor<M, D extends FormDefinition<M>> {
-  private keys: string[];
-  fieldAccessors: Map<keyof M, FieldAccessor<any, any, any>> = observable.map();
+export class FormAccessor<
+  D extends FormDefinition<any>,
+  G extends GroupDefinition<D>
+> {
+  public keys: (keyof D)[];
+  fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
-    keyof M,
+    keyof D,
     RepeatingFormAccessor<any, any>
   > = observable.map();
-  subFormAccessors: Map<keyof M, SubFormAccessor<any, any>> = observable.map();
+  subFormAccessors: Map<keyof D, SubFormAccessor<any, any>> = observable.map();
+  groupAccessors: Map<keyof G, GroupAccessor<any, any>> = observable.map();
 
   @observable
   _addMode: boolean;
 
   constructor(
-    public state: FormState<M, D>,
+    public state: FormState<any, D, G>,
     public definition: any,
+    public groupDefinition: any,
     public parent:
       | FormAccessor<any, any>
       | SubFormAccessor<any, any>
       | RepeatingFormAccessor<any, any>
       | RepeatingFormIndexedAccessor<any, any>
       | null,
-    addMode: boolean,
-    public allowedKeys?: string[]
+    addMode: boolean
   ) {
-    this.keys =
-      allowedKeys != null ? allowedKeys : Object.keys(this.definition);
+    this.keys = Object.keys(this.definition);
     this._addMode = addMode;
     this.initialize();
   }
@@ -77,11 +89,11 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     this.keys.forEach(key => {
       const entry = this.definition[key];
       if (entry instanceof Field) {
-        result.push(this.field(key as keyof M));
+        result.push(this.field(key as keyof D));
       } else if (entry instanceof RepeatingForm) {
-        result.push(this.repeatingForm(key as keyof M));
+        result.push(this.repeatingForm(key as keyof D));
       } else if (entry instanceof SubForm) {
-        result.push(this.subForm(key as keyof M));
+        result.push(this.subForm(key as keyof D));
       }
     });
     return result;
@@ -122,13 +134,13 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
 
     // XXX catching errors isn't ideal
     try {
-      return this.field(name as keyof M);
+      return this.field(name as keyof D);
     } catch {
       try {
-        return this.repeatingForm(name as keyof M);
+        return this.repeatingForm(name as keyof D);
       } catch {
         try {
-          return this.subForm(name as keyof M);
+          return this.subForm(name as keyof D);
         } catch {
           return undefined;
         }
@@ -155,21 +167,28 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     this.keys.forEach(key => {
       const entry = this.definition[key];
       if (entry instanceof Field) {
-        this.createField(key as keyof M, entry);
+        this.createField(key as keyof D, entry);
       } else if (entry instanceof RepeatingForm) {
-        this.createRepeatingForm(key as keyof M, entry);
+        this.createRepeatingForm(key as keyof D, entry);
       } else if (entry instanceof SubForm) {
-        this.createSubForm(key as keyof M, entry);
+        this.createSubForm(key as keyof D, entry);
       }
     });
+    if (this.groupDefinition != null) {
+      // we don't have access to the group definition here yet
+      Object.keys(this.groupDefinition).forEach(key => {
+        const entry = this.groupDefinition[key];
+        this.createGroup(key, entry);
+      });
+    }
   }
 
-  createField<K extends keyof M>(name: K, field: Field<any, any>) {
+  createField<K extends keyof D>(name: K, field: Field<any, any>) {
     const result = new FieldAccessor(this.state, field, this, name as string);
     this.fieldAccessors.set(name, result);
   }
 
-  field<K extends keyof M>(name: K): FieldAccess<M, D, K> {
+  field<K extends keyof D>(name: K): FieldAccess<D, K> {
     const accessor = this.fieldAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a Field`);
@@ -177,7 +196,7 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     return accessor;
   }
 
-  createRepeatingForm<K extends keyof M>(
+  createRepeatingForm<K extends keyof D>(
     name: K,
     repeatingForm: RepeatingForm<any, any>
   ) {
@@ -191,7 +210,7 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     result.initialize();
   }
 
-  repeatingForm<K extends keyof M>(name: K): RepeatingFormAccess<M, D, K> {
+  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K> {
     const accessor = this.repeatingFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a RepeatingForm`);
@@ -199,10 +218,11 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     return accessor;
   }
 
-  createSubForm<K extends keyof M>(name: K, subForm: SubForm<any, any>) {
+  createSubForm<K extends keyof D>(name: K, subForm: SubForm<any, any>) {
     const result = new SubFormAccessor(
       this.state,
       subForm.definition,
+      subForm.groupDefinition,
       this,
       name as string
     );
@@ -210,10 +230,23 @@ export class FormAccessor<M, D extends FormDefinition<M>> {
     result.initialize();
   }
 
-  subForm<K extends keyof M>(name: K): SubFormAccess<M, D, K> {
+  subForm<K extends keyof D>(name: K): SubFormAccess<D, K> {
     const accessor = this.subFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a SubForm`);
+    }
+    return accessor;
+  }
+
+  createGroup<K extends keyof G>(name: K, group: Group<any>) {
+    const result = new GroupAccessor(this.state, this.definition, this, group);
+    this.groupAccessors.set(name, result);
+  }
+
+  group<K extends keyof G>(name: K): GroupAccess<any, D> {
+    const accessor = this.groupAccessors.get(name);
+    if (accessor == null) {
+      throw new Error(`${name} is not a Group`);
     }
     return accessor;
   }
