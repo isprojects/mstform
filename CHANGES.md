@@ -1,4 +1,4 @@
-# 0.27.0
+# 0.26.0
 
 -   Streamlined the internal typing. Should not affect (or improve) the typing
     of the various access functions (`.field()`, `.repeatingForm`, etc)
@@ -15,12 +15,6 @@
     messages are unaffected. These error messages can exist if you pass
     `ignoreRequired` as a save option, and we don't want to clear them.
     Additional (non-field) errors are still cleared.
-
-# 0.26.0
-
--   Better specified a few types in `SubFormAccessor`, `RepeatingFormAccessor`
-    and `RepeatingFormIndexedAccessor`. This should help with Typescript
-    support for those cases.
 
 # 0.25.1
 
