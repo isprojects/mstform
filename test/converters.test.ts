@@ -72,19 +72,19 @@ test("boolean converter", async () => {
   await check(converters.boolean, true, true);
 });
 
-test("maybe number converter", async () => {
+test("maybeNull number converter", async () => {
   await check(converters.maybeNull(converters.number), "3", 3);
   await check(converters.maybeNull(converters.number), "", null);
 });
 
-test("maybe decimal converter", async () => {
+test("maybeNull decimal converter", async () => {
   await check(converters.maybeNull(converters.decimal()), "3.14", "3.14");
   await check(converters.maybeNull(converters.decimal()), "", null);
   const c = converters.maybeNull(converters.decimal());
   expect(c.render(null)).toEqual("");
 });
 
-test("maybe string converter", async () => {
+test("maybeNull string converter", async () => {
   await check(converters.maybeNull(converters.string), "foo", "foo");
   await check(converters.maybeNull(converters.string), "", null);
 });
@@ -103,7 +103,7 @@ test("model converter", async () => {
   expect(r2).toEqual({ value: o });
 });
 
-test("maybe model converter", async () => {
+test("maybeNull model converter", async () => {
   const M = types.model("M", {
     foo: types.string
   });

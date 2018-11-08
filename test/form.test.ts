@@ -1134,7 +1134,7 @@ test("required with boolean has no effect", async () => {
   expect(field.error).toBeUndefined();
 });
 
-test("required with maybe", async () => {
+test("required with maybeNull", async () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.number)
   });
@@ -1381,7 +1381,7 @@ test("model converter with validate does not throw", async () => {
   await state.validate();
 });
 
-test("model converter maybe", async () => {
+test("model converter maybeNull", async () => {
   const R = types.model("R", {
     id: types.identifier,
     bar: types.string
@@ -1483,7 +1483,7 @@ test("add mode for flat form, string and required", async () => {
   expect(field.raw).toEqual("FOO");
 });
 
-test("add mode for flat form, maybe string", async () => {
+test("add mode for flat form, maybeNull string", async () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -1532,7 +1532,7 @@ test("add mode for flat form, number", async () => {
   expect(field.addMode).toBeFalsy();
 });
 
-test("add mode for flat form, maybe number", async () => {
+test("add mode for flat form, maybeNull number", async () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.number)
   });
