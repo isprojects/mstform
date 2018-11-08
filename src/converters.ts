@@ -1,5 +1,5 @@
 import { IObservableArray, observable } from "mobx";
-import { IModelType } from "mobx-state-tree";
+import { IModelType, IAnyModelType, Instance } from "mobx-state-tree";
 import {
   CONVERSION_ERROR,
   ConversionResponse,
@@ -156,14 +156,16 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
 function maybe<R, V>(
   converter: StringConverter<V>
 ): IConverter<string, V | null>;
-function maybe<R>(converter: IConverter<R, R>): IConverter<R | null, R | null>;
+function maybe<R extends IAnyModelType>(
+  converter: IConverter<Instance<R>, Instance<R>>
+): IConverter<Instance<R> | null, Instance<R> | null>;
 function maybe<R, V>(
   converter: Converter<string, V> | IConverter<R, R>
 ): IConverter<string, V | null> | IConverter<R | null, R | null> {
   if (converter instanceof StringConverter || converter instanceof Decimal) {
     return new StringMaybe(converter);
   }
-  return maybeModel(converter as IConverter<R, R>);
+  return maybeModel(converter as IConverter<any, any>);
 }
 
 class StringMaybe<V> implements IConverter<string, V | null> {
@@ -194,32 +196,36 @@ class StringMaybe<V> implements IConverter<string, V | null> {
   }
 }
 
-class Model<M> implements IConverter<M | null, M> {
-  emptyRaw: M | null;
+class Model<M> implements IConverter<Instance<M> | null, Instance<M>> {
+  emptyRaw: Instance<M> | null;
   defaultControlled: Controlled;
   neverRequired = false;
 
-  constructor(model: IModelType<any, M>) {
+  constructor(model: M) {
     this.emptyRaw = null;
     this.defaultControlled = controlled.object;
   }
-  preprocessRaw(raw: M): M {
+  preprocessRaw(raw: Instance<M>): Instance<M> {
     return raw;
   }
 
-  async convert(raw: M | null): Promise<ConversionResponse<M>> {
+  async convert(
+    raw: Instance<M> | null
+  ): Promise<ConversionResponse<Instance<M>>> {
     if (raw === null) {
       return CONVERSION_ERROR;
     }
     return new ConversionValue(raw);
   }
 
-  render(value: M): M {
+  render(value: Instance<M>): Instance<M> {
     return value;
   }
 }
 
-function model<M>(model: IModelType<any, M>): IConverter<M | null, M> {
+function model<M>(
+  model: IAnyModelType
+): IConverter<Instance<M> | null, Instance<M>> {
   return new Model(model);
 }
 

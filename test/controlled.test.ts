@@ -111,7 +111,7 @@ test("default value controlled for string converter", async () => {
 
 test("default value controlled for maybe string converter", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.string)
+    foo: types.maybeNull(types.string)
   });
 
   const form = new Form(M, {
@@ -190,7 +190,7 @@ test("default object controlled for stringArray converter", async () => {
 
 test("default object controlled for maybe converter", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.string)
+    foo: types.maybeNull(types.string)
   });
 
   const form = new Form(M, {

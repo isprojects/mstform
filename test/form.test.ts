@@ -1363,7 +1363,7 @@ test("model converter maybe", async () => {
   });
 
   const M = types.model("M", {
-    foo: types.maybe(types.reference(R))
+    foo: types.maybeNull(types.reference(R))
   });
 
   const form = new Form(M, {

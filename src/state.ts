@@ -1,14 +1,16 @@
 import { action, computed, observable } from "mobx";
 import {
-  ModelProperties,
   onPatch,
   resolvePath,
-  applyPatch
+  applyPatch,
+  IAnyModelType,
+  Instance
 } from "mobx-state-tree";
 import { Accessor } from "./accessor";
 import {
   Form,
   FormDefinition,
+  FormDefinitionForModel,
   ValidationResponse,
   GroupDefinition
 } from "./form";
@@ -44,7 +46,7 @@ export interface RepeatingFormAccessorAllows {
 }
 
 export interface SaveFunc<M> {
-  (node: M): any;
+  (node: Instance<M>): any;
 }
 
 export interface EventFunc<R, V> {
@@ -86,8 +88,8 @@ export interface FormStateOptions<M> {
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<
-  M extends ModelProperties,
-  D extends FormDefinition<M>,
+  M extends IAnyModelType,
+  D extends FormDefinitionForModel<M>,
   G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   @observable
@@ -116,7 +118,7 @@ export class FormState<
 
   constructor(
     public form: Form<M, D, G>,
-    public node: M,
+    public node: Instance<M>,
     options?: FormStateOptions<M>
   ) {
     super();
