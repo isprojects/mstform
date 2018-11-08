@@ -1,5 +1,5 @@
 import { configure, IReactionDisposer } from "mobx";
-import { types } from "mobx-state-tree";
+import { types, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -29,7 +29,7 @@ test("calculated", async () => {
 
   const form = new Form(M, {
     calculated: new Field(converters.number, {
-      derived: (node: typeof M.Type) => node.sum()
+      derived: (node: Instance<typeof M>) => node.sum()
     }),
     a: new Field(converters.number),
     b: new Field(converters.number)

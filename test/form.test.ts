@@ -1,5 +1,11 @@
 import { configure } from "mobx";
-import { getSnapshot, types, applySnapshot, onPatch } from "mobx-state-tree";
+import {
+  getSnapshot,
+  types,
+  applySnapshot,
+  onPatch,
+  Instance
+} from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -2040,7 +2046,7 @@ test("raw update and references", async () => {
       foo: types.maybeNull(types.reference(N))
     })
     .actions(self => ({
-      update(value: typeof N.Type) {
+      update(value: Instance<typeof N>) {
         self.foo = value;
       }
     }));
