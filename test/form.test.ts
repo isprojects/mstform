@@ -1301,16 +1301,26 @@ test("model converter", async () => {
     foo: types.reference(R)
   });
 
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
+  });
+
   const form = new Form(M, {
     foo: new Field(converters.model(R), {
       validators: [value => value.bar !== "correct" && "Wrong"]
     })
   });
 
-  const r1 = R.create({ id: "1", bar: "correct" });
-  const r2 = R.create({ id: "2", bar: "incorrect" });
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
 
   const state = form.state(o);
   const field = state.field("foo");
@@ -1339,14 +1349,23 @@ test("model converter with validate does not throw", async () => {
     foo: types.reference(R)
   });
 
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
+  });
+
   const form = new Form(M, {
     foo: new Field(converters.model(R))
   });
 
-  const r1 = R.create({ id: "1", bar: "One" });
-  const r2 = R.create({ id: "2", bar: "Two" });
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
 
   const state = form.state(o);
   const field = state.field("foo");
@@ -1366,6 +1385,16 @@ test("model converter maybe", async () => {
     foo: types.maybeNull(types.reference(R))
   });
 
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
+  });
+
   const form = new Form(M, {
     foo: new Field(converters.maybe(converters.model(R)), {
       validators: [
@@ -1379,10 +1408,10 @@ test("model converter maybe", async () => {
     })
   });
 
-  const r1 = R.create({ id: "1", bar: "correct" });
-  const r2 = R.create({ id: "2", bar: "incorrect" });
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
 
   const state = form.state(o);
   const field = state.field("foo");
@@ -1533,6 +1562,16 @@ test("model converter in add mode", async () => {
     foo: types.reference(R)
   });
 
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
+  });
+
   const form = new Form(M, {
     foo: new Field(converters.model(R), {
       required: true,
@@ -1540,10 +1579,10 @@ test("model converter in add mode", async () => {
     })
   });
 
-  const r1 = R.create({ id: "1", bar: "correct" });
-  const r2 = R.create({ id: "2", bar: "incorrect" });
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
 
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
