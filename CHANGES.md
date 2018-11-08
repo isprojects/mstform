@@ -1,3 +1,8 @@
+# 0.26.1
+
+-   Now really retain `required` message when doing a save with
+    `ignoreRequired` option.
+
 # 0.26.0
 
 -   Streamlined the internal typing. Should not affect (or improve) the typing
