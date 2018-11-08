@@ -2,7 +2,7 @@
 
 -   Upgrade to mobx-state-tree 3. This drops support for mobx-state-tree 3.
 
--   Similar to in MST 3, renamed `converters.maybe` to `converters.maybeNull`.
+-   Similar to MST 3, renamed `converters.maybe` to `converters.maybeNull`.
     This should be combined with `types.maybeNull`. Introduced a new
     `converters.maybe` which can be paired with `types.maybe` and converters to
     `undefined`.

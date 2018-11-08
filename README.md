@@ -322,17 +322,20 @@ as a raw value and is the value. Typescript will be happy. This can be used to
 support an input component such as a drop-down selection that generate a
 reference to an object. This fits MST's `types.reference`.
 
-### Maybe
+### Maybe and MaybeNull
 
-`converters.maybe(converter)`: This works on converters that convert raw
-string values as well as converters that deal with MST nodes.
+`converters.maybe(converter)`: This works on string converters as well as model
+converters.
 
 When you wrap it around any converter that takes a raw string value, the empty
-value (such as the empty string) is accepted and converted into `null`. This
-allows you to model empty values.
+value (such as the empty string) is accepted and converted into `undefined`.
+This allows you to model empty values.
 
 It can also be wrapped around a `model` converter, in which case it now accepts
 empty. This is handy when you have a `types.maybe(types.reference())` in MST.
+
+`converters.maybeNull(converter)` is like `converters.maybe` but is designed to
+work with `types.maybeNull`, so the empty value is `null`.
 
 ### Object
 
