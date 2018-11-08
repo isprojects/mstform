@@ -277,16 +277,30 @@ export class FormState<
   @action
   async save(options?: ValidateOptions): Promise<boolean> {
     const isValid = await this.validate(options);
+
+    // if we ignored required, we need to re-validate to restore
+    // the required messages (if any)
+    // XXX does this make sense to move this to validate itself?
+    if (options != null && options.ignoreRequired) {
+      // we don't care about the answer, only about updating the messages
+      // in the UI
+      await this.validate();
+    }
+
     this.setSaveStatus("rightAfter");
+
     if (!isValid) {
       return false;
     }
+
     const errors = await this.saveFunc(this.node);
+
     if (errors != null) {
       this.setErrors(errors);
       return false;
     }
     this.clearAdditionalErrors();
+
     return true;
   }
 
