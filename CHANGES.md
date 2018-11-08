@@ -1,7 +1,7 @@
 # 0.27.0
 
--   Made the internal typing more complex. Should not affect (or improve) the
-    typing of the various access functions (`.field()`, `.repeatingForm`, etc)
+-   Streamlined the internal typing. Should not affect (or improve) the typing
+    of the various access functions (`.field()`, `.repeatingForm`, etc)
 
 -   Introduced the groups system. This is a reintroduction of the groups
     concept originally added to 0.12 and removed again in 0.15 as it was
@@ -10,6 +10,11 @@
     You can now pass a second argument to `Form`, `RepeatingForm` and `SubForm`
     with a group definition. You can access these with `.group` accessor
     that exists on form accessors.
+
+-   When doing a `save`, only additional errors are cleared. Other error
+    messages are unaffected. These error messages can exist if you pass
+    `ignoreRequired` as a save option, and we don't want to clear them.
+    Additional (non-field) errors are still cleared.
 
 # 0.26.0
 

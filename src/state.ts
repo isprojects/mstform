@@ -286,7 +286,7 @@ export class FormState<
       this.setErrors(errors);
       return false;
     }
-    this.clearErrors();
+    this.clearAdditionalErrors();
     return true;
   }
 
@@ -315,6 +315,11 @@ export class FormState<
         accessor.clearError();
       }
     });
+  }
+
+  @action
+  clearAdditionalErrors() {
+    this.additionalErrorTree = {};
   }
 
   getValue(path: string): any {
