@@ -1,7 +1,12 @@
-# 0.27.0
+# 0.26.1
 
--   Made the internal typing more complex. Should not affect (or improve) the
-    typing of the various access functions (`.field()`, `.repeatingForm`, etc)
+-   Now really retain `required` message when doing a save with
+    `ignoreRequired` option.
+
+# 0.26.0
+
+-   Streamlined the internal typing. Should not affect (or improve) the typing
+    of the various access functions (`.field()`, `.repeatingForm`, etc)
 
 -   Introduced the groups system. This is a reintroduction of the groups
     concept originally added to 0.12 and removed again in 0.15 as it was
@@ -11,11 +16,10 @@
     with a group definition. You can access these with `.group` accessor
     that exists on form accessors.
 
-# 0.26.0
-
--   Better specified a few types in `SubFormAccessor`, `RepeatingFormAccessor`
-    and `RepeatingFormIndexedAccessor`. This should help with Typescript
-    support for those cases.
+-   When doing a `save`, only additional errors are cleared. Other error
+    messages are unaffected. These error messages can exist if you pass
+    `ignoreRequired` as a save option, and we don't want to clear them.
+    Additional (non-field) errors are still cleared.
 
 # 0.25.1
 

@@ -58,12 +58,14 @@ test("FormState can be saved ignoring required", async () => {
 
   // now we save, ignoring required
   const saveResult = await state.save({ ignoreRequired: true });
-  expect(field.error).toBeUndefined();
+  // we still see the message, even though save succeeded
+  expect(field.error).toEqual("Required");
+  // but saving actually succeeded
   expect(o.foo).toEqual("");
   expect(saveResult).toBeTruthy();
   expect(saved).toBeTruthy();
 
-  // but saving again without ignoreRequired will be an error
+  // saving again without ignoreRequired will be an error
   const saveResult1 = await state.save();
   expect(saveResult1).toBeFalsy();
   expect(field.error).toEqual("Required");
