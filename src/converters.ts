@@ -152,28 +152,45 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
   }
 });
 
-// this works with string converters and also with models
+function maybe<R, V>(
+  converter: StringConverter<V>
+): IConverter<string, V | undefined>;
+function maybe<M>(
+  converter: IConverter<M | null, M | undefined>
+): IConverter<M | null, M | undefined>;
+function maybe<R, V>(
+  converter: IConverter<R, V>
+): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
+  if (converter instanceof StringConverter || converter instanceof Decimal) {
+    return new StringMaybe(converter, undefined);
+  }
+  return maybeModel(converter, null, undefined) as IConverter<
+    R | null,
+    V | undefined
+  >;
+}
+
 function maybeNull<R, V>(
   converter: StringConverter<V>
 ): IConverter<string, V | null>;
 function maybeNull<M>(
-  converter: IConverter<M, M>
+  converter: IConverter<M | null, M | null>
 ): IConverter<M | null, M | null>;
 function maybeNull<R, V>(
-  converter: Converter<string, V> | IConverter<R, R>
-): IConverter<string, V | null> | IConverter<R | null, R | null> {
+  converter: IConverter<R, V>
+): IConverter<string, V | null> | IConverter<R | null, V | null> {
   if (converter instanceof StringConverter || converter instanceof Decimal) {
-    return new StringMaybeNull(converter);
+    return new StringMaybe(converter, null);
   }
-  return maybeNullModel(converter as IConverter<any, any>);
+  return maybeModel(converter, null, null) as IConverter<R | null, V | null>;
 }
 
-class StringMaybeNull<V> implements IConverter<string, V | null> {
+class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
   emptyRaw: string;
   defaultControlled = controlled.value;
   neverRequired = false;
 
-  constructor(public converter: IConverter<string, V>) {
+  constructor(public converter: IConverter<string, V>, public emptyValue: VE) {
     this.emptyRaw = "";
   }
 
@@ -181,28 +198,28 @@ class StringMaybeNull<V> implements IConverter<string, V | null> {
     return raw.trim();
   }
 
-  async convert(raw: string): Promise<ConversionResponse<V | null>> {
+  async convert(raw: string): Promise<ConversionResponse<V | VE>> {
     if (raw.trim() === "") {
-      return new ConversionValue(null);
+      return new ConversionValue(this.emptyValue);
     }
     return this.converter.convert(raw);
   }
 
-  render(value: V | null): string {
-    if (value === null) {
+  render(value: V | VE): string {
+    if (value === this.emptyValue) {
       return "";
     }
-    return this.converter.render(value);
+    return this.converter.render(value as V);
   }
 }
 
-class Model<M> implements IConverter<Instance<M> | null, Instance<M>> {
-  emptyRaw: Instance<M> | null;
+class Model<M, RE> implements IConverter<Instance<M> | RE, Instance<M>> {
+  emptyRaw: Instance<M> | RE;
   defaultControlled: Controlled;
   neverRequired = false;
 
-  constructor(model: M) {
-    this.emptyRaw = null;
+  constructor(model: M, emptyRaw: RE) {
+    this.emptyRaw = emptyRaw;
     this.defaultControlled = controlled.object;
   }
   preprocessRaw(raw: Instance<M>): Instance<M> {
@@ -210,12 +227,12 @@ class Model<M> implements IConverter<Instance<M> | null, Instance<M>> {
   }
 
   async convert(
-    raw: Instance<M> | null
+    raw: Instance<M> | RE
   ): Promise<ConversionResponse<Instance<M>>> {
-    if (raw === null) {
+    if (raw === this.emptyRaw) {
       return CONVERSION_ERROR;
     }
-    return new ConversionValue(raw);
+    return new ConversionValue(raw as Instance<M>);
   }
 
   render(value: Instance<M>): Instance<M> {
@@ -226,16 +243,18 @@ class Model<M> implements IConverter<Instance<M> | null, Instance<M>> {
 function model<M extends IAnyModelType>(
   model: M
 ): IConverter<Instance<M> | null, Instance<M>> {
-  return new Model(model);
+  return new Model(model, null);
 }
 
-function maybeNullModel<M>(
-  converter: IConverter<M, M>
-): IConverter<M | null, M | null> {
+function maybeModel<M, RE, VE>(
+  converter: IConverter<M | RE, M | VE>,
+  emptyRaw: RE,
+  emptyValue: VE
+): IConverter<M | RE, M | VE> {
   return new Converter({
-    emptyRaw: null,
-    convert: identity,
-    render: identity,
+    emptyRaw: emptyRaw,
+    convert: (r: M | RE) => (r !== emptyRaw ? (r as M) : emptyValue),
+    render: (v: M | VE) => (v !== emptyValue ? (v as M) : emptyRaw),
     defaultControlled: controlled.object
   });
 }
@@ -253,6 +272,7 @@ export const converters = {
   decimal,
   boolean,
   stringArray,
+  maybe,
   maybeNull,
   model,
   object

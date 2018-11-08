@@ -920,7 +920,34 @@ test("inline save argument can be snapshotted", async () => {
   expect(snapshot).toEqual({ foo: "FOO" });
 });
 
-test("not required", async () => {
+test("not required with maybe", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.number)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.number), {
+      required: false
+    })
+  });
+
+  const o = M.create({ foo: undefined });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.value).toBeUndefined();
+  await field.setRaw("3");
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toBeUndefined();
+});
+
+test("not required with maybeNull", async () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.number)
   });
@@ -1132,6 +1159,33 @@ test("required with boolean has no effect", async () => {
 
   await state.save();
   expect(field.error).toBeUndefined();
+});
+
+test("required with maybe", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.number)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.number), {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: undefined });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.value).toBeUndefined();
+  await field.setRaw("3");
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(3);
 });
 
 test("required with maybeNull", async () => {
@@ -1381,6 +1435,60 @@ test("model converter with validate does not throw", async () => {
   await state.validate();
 });
 
+test("model converter maybe", async () => {
+  const R = types.model("R", {
+    id: types.identifier,
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.maybe(types.reference(R))
+  });
+
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.model(R)), {
+      validators: [
+        value => {
+          if (value == null) {
+            return false;
+          }
+          return value.bar !== "correct" && "Wrong";
+        }
+      ]
+    })
+  });
+
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
+
+  const o = root.instance;
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual(r1);
+  await field.setRaw(r2);
+  expect(field.raw).toEqual(r2);
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toEqual(r1);
+  await field.setRaw(r1);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual(r1);
+  await field.setRaw(null);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toBeUndefined();
+});
+
 test("model converter maybeNull", async () => {
   const R = types.model("R", {
     id: types.identifier,
@@ -1481,6 +1589,32 @@ test("add mode for flat form, string and required", async () => {
   expect(field.addMode).toBeFalsy();
   expect(field.value).toEqual("FOO");
   expect(field.raw).toEqual("FOO");
+});
+
+test("add mode for flat form, maybe string", async () => {
+  const M = types.model("M", {
+    foo: types.maybe(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybe(converters.string))
+  });
+
+  const o = M.create({ foo: undefined });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(() => field.value).toThrow();
+  expect(field.addMode).toBeTruthy();
+  expect(field.raw).toEqual("");
+  await field.setRaw("FOO");
+  expect(field.value).toEqual("FOO");
+  expect(field.raw).toEqual("FOO");
+  expect(field.addMode).toBeFalsy();
+  await field.setRaw("");
+  expect(field.value).toBeUndefined();
+  expect(field.addMode).toBeFalsy();
 });
 
 test("add mode for flat form, maybeNull string", async () => {
