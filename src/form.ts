@@ -1,5 +1,5 @@
 import { IObservableArray } from "mobx";
-import { IModelType } from "mobx-state-tree";
+import { IModelType, ISimpleType, ModelProperties } from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
@@ -8,6 +8,8 @@ import { identity } from "./utils";
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
 
 export type RawType<F> = F extends Field<infer R, any> ? R : never;
+
+export type InferSimpleType<T> = T extends ISimpleType<infer A> ? A : never;
 
 export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
   infer D,
@@ -31,12 +33,14 @@ export type SubFormGroupDefinitionType<T> = T extends SubForm<any, infer G>
   ? G
   : never;
 
-export type FormDefinitionEntry<M, K extends keyof M> =
-  | Field<any, M[K]>
+export type FormDefinitionEntry<M extends ModelProperties, K extends keyof M> =
+  | Field<any, InferSimpleType<M[K]>>
   | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, GroupDefinition<any>>
   | SubForm<FormDefinition<M[K]>, GroupDefinition<any>>;
 
-export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
+export type FormDefinition<M extends ModelProperties> = {
+  [K in keyof M]?: FormDefinitionEntry<M, K>
+};
 
 export type ValidationResponse = string | null | undefined | false;
 
@@ -74,12 +78,12 @@ export type GroupDefinition<D extends FormDefinition<any>> = {
 };
 
 export class Form<
-  M,
+  M extends ModelProperties,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
 > {
   constructor(
-    public model: IModelType<any, M>,
+    public model: IModelType<M, any>,
     public definition: D,
     public groupDefinition?: G
   ) {}

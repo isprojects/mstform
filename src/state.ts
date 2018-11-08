@@ -1,5 +1,10 @@
 import { action, computed, observable } from "mobx";
-import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
+import {
+  ModelProperties,
+  onPatch,
+  resolvePath,
+  applyPatch
+} from "mobx-state-tree";
 import { Accessor } from "./accessor";
 import {
   Form,
@@ -81,7 +86,7 @@ export interface FormStateOptions<M> {
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<
-  M,
+  M extends ModelProperties,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
