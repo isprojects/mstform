@@ -153,20 +153,22 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
 });
 
 // this works with string converters and also with models
-function maybe<R, V>(
+function maybeNull<R, V>(
   converter: StringConverter<V>
 ): IConverter<string, V | null>;
-function maybe<M>(converter: IConverter<M, M>): IConverter<M | null, M | null>;
-function maybe<R, V>(
+function maybeNull<M>(
+  converter: IConverter<M, M>
+): IConverter<M | null, M | null>;
+function maybeNull<R, V>(
   converter: Converter<string, V> | IConverter<R, R>
 ): IConverter<string, V | null> | IConverter<R | null, R | null> {
   if (converter instanceof StringConverter || converter instanceof Decimal) {
-    return new StringMaybe(converter);
+    return new StringMaybeNull(converter);
   }
-  return maybeModel(converter as IConverter<any, any>);
+  return maybeNullModel(converter as IConverter<any, any>);
 }
 
-class StringMaybe<V> implements IConverter<string, V | null> {
+class StringMaybeNull<V> implements IConverter<string, V | null> {
   emptyRaw: string;
   defaultControlled = controlled.value;
   neverRequired = false;
@@ -227,7 +229,7 @@ function model<M extends IAnyModelType>(
   return new Model(model);
 }
 
-function maybeModel<M>(
+function maybeNullModel<M>(
   converter: IConverter<M, M>
 ): IConverter<M | null, M | null> {
   return new Converter({
@@ -251,7 +253,7 @@ export const converters = {
   decimal,
   boolean,
   stringArray,
-  maybe,
+  maybeNull,
   model,
   object
 };

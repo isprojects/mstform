@@ -115,7 +115,7 @@ test("default value controlled for maybe string converter", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.string))
+    foo: new Field(converters.maybeNull(converters.string))
   });
 
   const o = M.create({ foo: "FOO" });

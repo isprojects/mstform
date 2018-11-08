@@ -926,7 +926,7 @@ test("not required", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.number), {
+    foo: new Field(converters.maybeNull(converters.number), {
       required: false
     })
   });
@@ -1140,7 +1140,7 @@ test("required with maybe", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.number), {
+    foo: new Field(converters.maybeNull(converters.number), {
       required: true
     })
   });
@@ -1402,7 +1402,7 @@ test("model converter maybe", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.model(R)), {
+    foo: new Field(converters.maybeNull(converters.model(R)), {
       validators: [
         value => {
           if (value == null) {
@@ -1489,7 +1489,7 @@ test("add mode for flat form, maybe string", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.string))
+    foo: new Field(converters.maybeNull(converters.string))
   });
 
   const o = M.create({ foo: null });
@@ -1538,7 +1538,7 @@ test("add mode for flat form, maybe number", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.number))
+    foo: new Field(converters.maybeNull(converters.number))
   });
 
   const o = M.create({ foo: null });
