@@ -156,9 +156,7 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
 function maybe<R, V>(
   converter: StringConverter<V>
 ): IConverter<string, V | null>;
-function maybe<R extends IAnyModelType>(
-  converter: IConverter<Instance<R>, Instance<R>>
-): IConverter<Instance<R> | null, Instance<R> | null>;
+function maybe<M>(converter: IConverter<M, M>): IConverter<M | null, M | null>;
 function maybe<R, V>(
   converter: Converter<string, V> | IConverter<R, R>
 ): IConverter<string, V | null> | IConverter<R | null, R | null> {
@@ -223,8 +221,8 @@ class Model<M> implements IConverter<Instance<M> | null, Instance<M>> {
   }
 }
 
-function model<M>(
-  model: IAnyModelType
+function model<M extends IAnyModelType>(
+  model: M
 ): IConverter<Instance<M> | null, Instance<M>> {
   return new Model(model);
 }
