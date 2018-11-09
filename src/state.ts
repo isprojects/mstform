@@ -1,9 +1,16 @@
 import { action, computed, observable } from "mobx";
-import { IType, onPatch, resolvePath, applyPatch } from "mobx-state-tree";
+import {
+  onPatch,
+  resolvePath,
+  applyPatch,
+  IAnyModelType,
+  Instance
+} from "mobx-state-tree";
 import { Accessor } from "./accessor";
 import {
   Form,
   FormDefinition,
+  FormDefinitionForModel,
   ValidationResponse,
   GroupDefinition
 } from "./form";
@@ -39,7 +46,7 @@ export interface RepeatingFormAccessorAllows {
 }
 
 export interface SaveFunc<M> {
-  (node: M): any;
+  (node: Instance<M>): any;
 }
 
 export interface EventFunc<R, V> {
@@ -81,8 +88,8 @@ export interface FormStateOptions<M> {
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<
-  M,
-  D extends FormDefinition<M>,
+  M extends IAnyModelType,
+  D extends FormDefinitionForModel<M>,
   G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   @observable
@@ -111,7 +118,7 @@ export class FormState<
 
   constructor(
     public form: Form<M, D, G>,
-    public node: M,
+    public node: Instance<M>,
     options?: FormStateOptions<M>
   ) {
     super();
@@ -338,20 +345,6 @@ export class FormState<
 
   getValue(path: string): any {
     return resolvePath(this.node, path);
-  }
-
-  // XXX we can remove this from the API?
-  getMstType(path: string): IType<any, any> {
-    const steps = pathToSteps(path);
-    let subType: IType<any, any> = this.form.model;
-    for (const step of steps) {
-      if (isInt(step)) {
-        subType = subType.getChildType(step);
-        continue;
-      }
-      subType = subType.getChildType(step);
-    }
-    return subType;
   }
 
   @computed

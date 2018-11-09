@@ -1,7 +1,7 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { converters, controlled, Form, Field } from "../src";
-configure({ enforceActions: true });
+configure({ enforceActions: "observed" });
 
 test("object controlled", async () => {
   const M = types.model("M", {
@@ -111,11 +111,11 @@ test("default value controlled for string converter", async () => {
 
 test("default value controlled for maybe string converter", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.string)
+    foo: types.maybeNull(types.string)
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.string))
+    foo: new Field(converters.maybeNull(converters.string))
   });
 
   const o = M.create({ foo: "FOO" });
@@ -190,7 +190,7 @@ test("default object controlled for stringArray converter", async () => {
 
 test("default object controlled for maybe converter", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.string)
+    foo: types.maybeNull(types.string)
   });
 
   const form = new Form(M, {

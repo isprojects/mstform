@@ -1,9 +1,24 @@
 import { IObservableArray } from "mobx";
-import { IModelType } from "mobx-state-tree";
+import {
+  IModelType,
+  IAnyModelType,
+  ModelInstanceTypeProps,
+  Instance
+} from "mobx-state-tree";
 import { CONVERSION_ERROR, IConverter } from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
 import { identity } from "./utils";
+
+// XXX copied from MST as it doesn't export it
+export type ExtractProps<T extends IAnyModelType> = T extends IModelType<
+  infer P,
+  any,
+  any,
+  any
+>
+  ? P
+  : never;
 
 export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
 
@@ -37,6 +52,10 @@ export type FormDefinitionEntry<M, K extends keyof M> =
   | SubForm<FormDefinition<M[K]>, GroupDefinition<any>>;
 
 export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
+
+export type FormDefinitionForModel<P extends IAnyModelType> = FormDefinition<
+  ModelInstanceTypeProps<ExtractProps<P>>
+>;
 
 export type ValidationResponse = string | null | undefined | false;
 
@@ -74,12 +93,12 @@ export type GroupDefinition<D extends FormDefinition<any>> = {
 };
 
 export class Form<
-  M,
-  D extends FormDefinition<M>,
+  M extends IAnyModelType,
+  D extends FormDefinitionForModel<M>,
   G extends GroupDefinition<D>
 > {
   constructor(
-    public model: IModelType<any, M>,
+    public model: M,
     public definition: D,
     public groupDefinition?: G
   ) {}
@@ -88,7 +107,7 @@ export class Form<
     throw new Error("For introspection");
   }
 
-  state(node: M, options?: FormStateOptions<M>): FormState<M, D, G> {
+  state(node: Instance<M>, options?: FormStateOptions<M>): FormState<M, D, G> {
     return new FormState(this, node, options);
   }
 }

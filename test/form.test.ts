@@ -1,9 +1,15 @@
 import { configure } from "mobx";
-import { getSnapshot, types, applySnapshot, onPatch } from "mobx-state-tree";
+import {
+  getSnapshot,
+  types,
+  applySnapshot,
+  onPatch,
+  Instance
+} from "mobx-state-tree";
 import { Converter, Field, Form, RepeatingForm, converters } from "../src";
 
-// "strict" leads to trouble during initialization.
-configure({ enforceActions: true });
+// "always" leads to trouble during initialization.
+configure({ enforceActions: "observed" });
 
 test("a simple form", async () => {
   const M = types.model("M", {
@@ -877,7 +883,7 @@ test("save argument can be snapshotted", async () => {
 
   let snapshot;
 
-  async function save(node: typeof M.Type) {
+  async function save(node: any) {
     snapshot = getSnapshot(node);
     return null;
   }
@@ -914,13 +920,40 @@ test("inline save argument can be snapshotted", async () => {
   expect(snapshot).toEqual({ foo: "FOO" });
 });
 
-test("not required", async () => {
+test("not required with maybe", async () => {
   const M = types.model("M", {
     foo: types.maybe(types.number)
   });
 
   const form = new Form(M, {
     foo: new Field(converters.maybe(converters.number), {
+      required: false
+    })
+  });
+
+  const o = M.create({ foo: undefined });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.value).toBeUndefined();
+  await field.setRaw("3");
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toBeUndefined();
+});
+
+test("not required with maybeNull", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.number)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybeNull(converters.number), {
       required: false
     })
   });
@@ -1139,6 +1172,33 @@ test("required with maybe", async () => {
     })
   });
 
+  const o = M.create({ foo: undefined });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.value).toBeUndefined();
+  await field.setRaw("3");
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(3);
+});
+
+test("required with maybeNull", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.number)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybeNull(converters.number), {
+      required: true
+    })
+  });
+
   const o = M.create({ foo: null });
 
   const state = form.state(o);
@@ -1293,12 +1353,22 @@ test("no validation after save either", async () => {
 
 test("model converter", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
   const M = types.model("M", {
     foo: types.reference(R)
+  });
+
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
   });
 
   const form = new Form(M, {
@@ -1307,10 +1377,10 @@ test("model converter", async () => {
     })
   });
 
-  const r1 = R.create({ id: "1", bar: "correct" });
-  const r2 = R.create({ id: "2", bar: "incorrect" });
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
 
   const state = form.state(o);
   const field = state.field("foo");
@@ -1331,7 +1401,7 @@ test("model converter", async () => {
 
 test("model converter with validate does not throw", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
@@ -1339,14 +1409,23 @@ test("model converter with validate does not throw", async () => {
     foo: types.reference(R)
   });
 
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
+  });
+
   const form = new Form(M, {
     foo: new Field(converters.model(R))
   });
 
-  const r1 = R.create({ id: "1", bar: "One" });
-  const r2 = R.create({ id: "2", bar: "Two" });
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
 
   const state = form.state(o);
   const field = state.field("foo");
@@ -1358,12 +1437,22 @@ test("model converter with validate does not throw", async () => {
 
 test("model converter maybe", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
   const M = types.model("M", {
     foo: types.maybe(types.reference(R))
+  });
+
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
   });
 
   const form = new Form(M, {
@@ -1379,10 +1468,64 @@ test("model converter maybe", async () => {
     })
   });
 
-  const r1 = R.create({ id: "1", bar: "correct" });
-  const r2 = R.create({ id: "2", bar: "incorrect" });
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual(r1);
+  await field.setRaw(r2);
+  expect(field.raw).toEqual(r2);
+  expect(field.error).toEqual("Wrong");
+  expect(field.value).toEqual(r1);
+  await field.setRaw(r1);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual(r1);
+  await field.setRaw(null);
+  expect(field.error).toBeUndefined();
+  expect(field.value).toBeUndefined();
+});
+
+test("model converter maybeNull", async () => {
+  const R = types.model("R", {
+    id: types.identifier,
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.maybeNull(types.reference(R))
+  });
+
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybeNull(converters.model(R)), {
+      validators: [
+        value => {
+          if (value == null) {
+            return false;
+          }
+          return value.bar !== "correct" && "Wrong";
+        }
+      ]
+    })
+  });
+
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
+
+  const o = root.instance;
 
   const state = form.state(o);
   const field = state.field("foo");
@@ -1457,6 +1600,32 @@ test("add mode for flat form, maybe string", async () => {
     foo: new Field(converters.maybe(converters.string))
   });
 
+  const o = M.create({ foo: undefined });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(() => field.value).toThrow();
+  expect(field.addMode).toBeTruthy();
+  expect(field.raw).toEqual("");
+  await field.setRaw("FOO");
+  expect(field.value).toEqual("FOO");
+  expect(field.raw).toEqual("FOO");
+  expect(field.addMode).toBeFalsy();
+  await field.setRaw("");
+  expect(field.value).toBeUndefined();
+  expect(field.addMode).toBeFalsy();
+});
+
+test("add mode for flat form, maybeNull string", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybeNull(converters.string))
+  });
+
   const o = M.create({ foo: null });
 
   const state = form.state(o, { addMode: true });
@@ -1497,13 +1666,13 @@ test("add mode for flat form, number", async () => {
   expect(field.addMode).toBeFalsy();
 });
 
-test("add mode for flat form, maybe number", async () => {
+test("add mode for flat form, maybeNull number", async () => {
   const M = types.model("M", {
-    foo: types.maybe(types.number)
+    foo: types.maybeNull(types.number)
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.number))
+    foo: new Field(converters.maybeNull(converters.number))
   });
 
   const o = M.create({ foo: null });
@@ -1525,12 +1694,22 @@ test("add mode for flat form, maybe number", async () => {
 
 test("model converter in add mode", async () => {
   const R = types.model("R", {
-    id: types.identifier(),
+    id: types.identifier,
     bar: types.string
   });
 
   const M = types.model("M", {
     foo: types.reference(R)
+  });
+
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M
+  });
+
+  const root = Root.create({
+    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
+    instance: { foo: "1" }
   });
 
   const form = new Form(M, {
@@ -1540,10 +1719,10 @@ test("model converter in add mode", async () => {
     })
   });
 
-  const r1 = R.create({ id: "1", bar: "correct" });
-  const r2 = R.create({ id: "2", bar: "incorrect" });
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
 
-  const o = M.create({ foo: r1 });
+  const o = root.instance;
 
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
@@ -1994,14 +2173,14 @@ test("raw update and errors", async () => {
 });
 
 test("raw update and references", async () => {
-  const N = types.model("N", { id: types.identifier(), bar: types.number });
+  const N = types.model("N", { id: types.identifier, bar: types.number });
 
   const M = types
     .model("M", {
-      foo: types.maybe(types.reference(N))
+      foo: types.maybeNull(types.reference(N))
     })
     .actions(self => ({
-      update(value: typeof N.Type) {
+      update(value: Instance<typeof N>) {
         self.foo = value;
       }
     }));

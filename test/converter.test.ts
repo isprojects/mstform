@@ -1,7 +1,7 @@
 import { configure } from "mobx";
 import { CONVERSION_ERROR, ConversionValue, Converter } from "../src/converter";
 
-configure({ enforceActions: true });
+configure({ enforceActions: "observed" });
 
 test("simple converter", async () => {
   const converter = new Converter<string, string>({

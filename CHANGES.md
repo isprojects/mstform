@@ -1,3 +1,12 @@
+# 1.0.0
+
+-   Upgrade to mobx-state-tree 3. This drops support for mobx-state-tree 3.
+
+-   Similar to MST 3, renamed `converters.maybe` to `converters.maybeNull`.
+    This should be combined with `types.maybeNull`. Introduced a new
+    `converters.maybe` which can be paired with `types.maybe` and converters to
+    `undefined`.
+
 # 0.26.1
 
 -   Now really retain `required` message when doing a save with

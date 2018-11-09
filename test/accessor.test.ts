@@ -2,8 +2,8 @@ import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters, FieldAccessor } from "../src";
 
-// "strict" leads to trouble during initialization.
-configure({ enforceActions: true });
+// "always" leads to trouble during initialization.
+configure({ enforceActions: "observed" });
 
 test("accessByPath simple field", async () => {
   const M = types.model("M", {

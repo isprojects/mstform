@@ -11,8 +11,8 @@ import {
   converters
 } from "../src";
 
-// "strict" leads to trouble during initialization.
-configure({ enforceActions: true });
+// "always" leads to trouble during initialization.
+configure({ enforceActions: "observed" });
 
 test("a simple warning", async () => {
   const M = types.model("M", {
