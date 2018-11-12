@@ -1,3 +1,9 @@
+# 1.1.0
+
+-   Added `context` to accessors. The validator functions get `context`
+    as a second argument. Converters get the context too with convert and
+    render.
+
 # 1.0.1
 
 -   Updated peerDependency for mobx-state-tree as well.

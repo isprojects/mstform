@@ -345,6 +345,53 @@ raw value is `null` and using this with basic data types (string, boolean,
 number and such) won't make the type checker happy as they don't accept "null".
 Use more specific converters instead.
 
+### Defining a new converter
+
+You can define a new converter. For instance this is a converter which
+takes a text in the UI and considers `"t"` as `true` and the rest as
+`false`:
+
+```ts
+const boolean = new Converter<string, boolean>({
+    emptyRaw: "f",
+    convert(raw) {
+        return raw === "t";
+    },
+    render(value) {
+        return value ? "t" : "f";
+    }
+});
+```
+
+Converter is a generic type, with `<R, V>`. `R` is the type of the raw value
+(as you have to render in a React component), and `V` is the type of the
+converted value (as you have in the MST model).
+
+A converter needs to define a `convert` and a `render` method. `convert` takes
+a raw value and converts it to the MST value. `render` takes the MST value and
+converts it to the raw value. `rawValidate` is an optional function that checks
+whether the raw value is valid. `validate` is an optional function that checks
+whether the value is valid.
+
+`emptyRaw` is the raw value that should be shown if the field is empty in the
+UI.
+
+You can optionally set `defaultControlled`, the controlled props to be used by
+default for this converter. You can also optionally set `neverRequired`; this
+is handy for fields where the `required` status makes no sense -- a checkbox is
+an example.
+
+`convert`, `render`, `rawValidate` and `validate` all take a optional
+second argument, `context`. This is an arbitrary value you can pass
+as a `form.state()` option:
+
+```js
+const formState = form.state(o, { context: { something: "FOO" } });
+```
+
+This is useful when you want to make a converter that depends on
+an application-specific context.
+
 ## Controlled props
 
 A [controlled component](https://reactjs.org/docs/forms.html) is a React
