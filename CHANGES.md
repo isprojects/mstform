@@ -1,3 +1,7 @@
+# 1.0.1
+
+-   Updated peerDependency for mobx-state-tree as well.
+
 # 1.0.0
 
 -   Upgrade to mobx-state-tree 3. This drops support for mobx-state-tree 2.
