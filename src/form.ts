@@ -75,12 +75,16 @@ export interface RawGetter<R> {
   (...args: any[]): R;
 }
 
+export interface ErrorFunc {
+  (context: any): string;
+}
+
 export interface FieldOptions<R, V> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
-  conversionError?: string;
-  requiredError?: string;
+  conversionError?: string | ErrorFunc;
+  requiredError?: string | ErrorFunc;
   required?: boolean;
   fromEvent?: boolean;
   derived?: Derived<V>;
@@ -136,8 +140,8 @@ export interface ProcessOptions {
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
-  conversionError: string;
-  requiredError: string;
+  conversionError: string | ErrorFunc;
+  requiredError: string | ErrorFunc;
   required: boolean;
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
@@ -198,6 +202,20 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
+  getRequiredError(context: any): string {
+    if (typeof this.requiredError === "string") {
+      return this.requiredError;
+    }
+    return this.requiredError(context);
+  }
+
+  getConversionError(context: any): string {
+    if (typeof this.conversionError === "string") {
+      return this.conversionError;
+    }
+    return this.conversionError(context);
+  }
+
   async process(
     raw: R,
     required: boolean,
@@ -212,7 +230,7 @@ export class Field<R, V> {
       raw === this.converter.emptyRaw &&
       required
     ) {
-      return new ValidationMessage(this.requiredError);
+      return new ValidationMessage(this.getRequiredError(context));
     }
 
     for (const validator of this.rawValidators) {
@@ -226,9 +244,9 @@ export class Field<R, V> {
       // if we get a conversion error for the empty raw, the field
       // is implied to be required
       if (raw === this.converter.emptyRaw) {
-        return new ValidationMessage(this.requiredError);
+        return new ValidationMessage(this.getRequiredError(context));
       }
-      return new ValidationMessage(this.conversionError);
+      return new ValidationMessage(this.getConversionError(context));
     }
     for (const validator of this.validators) {
       const validationResponse = await validator(result.value, context);
