@@ -26,6 +26,11 @@ export abstract class FormAccessorBase<
   }
 
   @computed
+  get context(): any {
+    return this.formAccessor.context;
+  }
+
+  @computed
   get warningValue(): string | undefined {
     return this.warning;
   }

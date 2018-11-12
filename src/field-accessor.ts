@@ -54,6 +54,11 @@ export class FieldAccessor<R, V> {
     return this.parent.path + "/" + this.name;
   }
 
+  @computed
+  get context(): any {
+    return this.state.context;
+  }
+
   @action
   setDisposer(disposer: IReactionDisposer) {
     this._disposer = disposer;

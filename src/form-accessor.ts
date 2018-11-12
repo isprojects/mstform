@@ -78,6 +78,11 @@ export class FormAccessor<
   }
 
   @computed
+  get context(): any {
+    return this.state.context;
+  }
+
+  @computed
   get isValid(): boolean {
     return this.accessors.every(accessor => accessor.isValid);
   }
