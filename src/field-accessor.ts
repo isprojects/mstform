@@ -82,7 +82,7 @@ export class FieldAccessor<R, V> {
         if (derivedValue === undefined) {
           return;
         }
-        this.setRaw(this.field.render(derivedValue));
+        this.setRaw(this.field.render(derivedValue, this.state.context));
       }
     );
     this._disposer = disposer;
@@ -125,7 +125,7 @@ export class FieldAccessor<R, V> {
     if (this.addMode) {
       return this.field.converter.emptyRaw;
     }
-    return this.field.render(this.value);
+    return this.field.render(this.value, this.state.context);
   }
 
   @computed
@@ -259,7 +259,12 @@ export class FieldAccessor<R, V> {
     try {
       // XXX is await correct here? we should await the result
       // later
-      processResult = await this.field.process(raw, this.required, options);
+      processResult = await this.field.process(
+        raw,
+        this.required,
+        this.state.context,
+        options
+      );
     } catch (e) {
       this.setError("Something went wrong");
       this.setValidating(false);
@@ -321,7 +326,7 @@ export class FieldAccessor<R, V> {
     // we don't use setRaw on the field as the value is already
     // correct. setting raw causes addMode for the field
     // to be disabled
-    this._raw = this.field.render(value);
+    this._raw = this.field.render(value, this.state.context);
     // trigger validation
     this.validate();
   }

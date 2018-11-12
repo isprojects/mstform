@@ -1,10 +1,10 @@
 import { Controlled, controlled } from "./controlled";
 
 export interface ConverterOptions<R, V> {
-  convert(raw: R): V;
-  render(value: V): R;
-  rawValidate?(value: R): boolean | Promise<boolean>;
-  validate?(value: V): boolean | Promise<boolean>;
+  convert(raw: R, context?: any): V;
+  render(value: V, context?: any): R;
+  rawValidate?(value: R, context?: any): boolean | Promise<boolean>;
+  validate?(value: V, context?: any): boolean | Promise<boolean>;
   emptyRaw: R;
   defaultControlled?: Controlled;
   neverRequired?: boolean;
@@ -12,8 +12,8 @@ export interface ConverterOptions<R, V> {
 
 export interface IConverter<R, V> {
   emptyRaw: R;
-  convert(raw: R): Promise<ConversionResponse<V>>;
-  render(value: V): R;
+  convert(raw: R, context?: any): Promise<ConversionResponse<V>>;
+  render(value: V, context?: any): R;
   defaultControlled: Controlled;
   neverRequired: boolean;
   preprocessRaw(raw: R): R;
@@ -46,18 +46,24 @@ export class Converter<R, V> implements IConverter<R, V> {
     return raw;
   }
 
-  async convert(raw: R): Promise<ConversionResponse<V>> {
+  async convert(raw: R, context?: any): Promise<ConversionResponse<V>> {
     if (this.definition.rawValidate) {
-      const rawValidationSuccess = await this.definition.rawValidate(raw);
+      const rawValidationSuccess = await this.definition.rawValidate(
+        raw,
+        context
+      );
       if (!rawValidationSuccess) {
         return CONVERSION_ERROR;
       }
     }
 
-    const value = this.definition.convert(raw);
+    const value = this.definition.convert(raw, context);
 
     if (this.definition.validate) {
-      const rawValidationSuccess = await this.definition.validate(value);
+      const rawValidationSuccess = await this.definition.validate(
+        value,
+        context
+      );
       if (!rawValidationSuccess) {
         return CONVERSION_ERROR;
       }
@@ -65,7 +71,7 @@ export class Converter<R, V> implements IConverter<R, V> {
     return new ConversionValue<V>(value);
   }
 
-  render(value: V): R {
-    return this.definition.render(value);
+  render(value: V, context?: any): R {
+    return this.definition.render(value, context);
   }
 }

@@ -60,7 +60,7 @@ export type FormDefinitionForModel<P extends IAnyModelType> = FormDefinition<
 export type ValidationResponse = string | null | undefined | false;
 
 export interface Validator<V> {
-  (value: V): ValidationResponse | Promise<ValidationResponse>;
+  (value: V, context?: any): ValidationResponse | Promise<ValidationResponse>;
 }
 
 export interface Derived<V> {
@@ -201,6 +201,7 @@ export class Field<R, V> {
   async process(
     raw: R,
     required: boolean,
+    context: any,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw);
@@ -215,12 +216,12 @@ export class Field<R, V> {
     }
 
     for (const validator of this.rawValidators) {
-      const validationResponse = await validator(raw);
+      const validationResponse = await validator(raw, context);
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }
     }
-    const result = await this.converter.convert(raw);
+    const result = await this.converter.convert(raw, context);
     if (result === CONVERSION_ERROR) {
       // if we get a conversion error for the empty raw, the field
       // is implied to be required
@@ -230,7 +231,7 @@ export class Field<R, V> {
       return new ValidationMessage(this.conversionError);
     }
     for (const validator of this.validators) {
-      const validationResponse = await validator(result.value);
+      const validationResponse = await validator(result.value, context);
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }
@@ -238,8 +239,8 @@ export class Field<R, V> {
     return new ProcessValue(result.value);
   }
 
-  render(value: V): R {
-    return this.converter.render(value);
+  render(value: V, context: any): R {
+    return this.converter.render(value, context);
   }
 }
 
