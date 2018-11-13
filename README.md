@@ -345,6 +345,35 @@ raw value is `null` and using this with basic data types (string, boolean,
 number and such) won't make the type checker happy as they don't accept "null".
 Use more specific converters instead.
 
+### Controlling the conversion error message
+
+A converter may fail to convert a raw value into a value if the raw value
+doesn't pass its `rawValidate` function or the converted value doesn't pass its
+`validate` function. In this case, the UI displays a conversion error. You can
+control this conversion error with the `conversionError` property for a field.
+
+```js
+const form = new Form(M, {
+    nr: new Field(converters.number, {
+        conversionError: "This conversion failed"
+    })
+});
+```
+
+You can also make `conversionError` a function. It takes a `context`
+as its first argument. Context is an arbitrary object you can pass into the `state` method from your application:
+
+```js
+const form = new Form(M, {
+    nr: new Field(converters.number, {
+        conversionError: context =>
+            context.language === "en"
+                ? "This conversion failed"
+                : "De conversie faalde"
+    })
+});
+```
+
 ### Defining a new converter
 
 You can define a new converter. For instance this is a converter which
@@ -383,7 +412,7 @@ an example.
 
 `convert`, `render`, `rawValidate` and `validate` all take a optional
 second argument, `context`. This is an arbitrary value you can pass
-as a `form.state()` option:
+in as a `form.state()` option from your application:
 
 ```js
 const formState = form.state(o, { context: { something: "FOO" } });
@@ -789,6 +818,21 @@ const form = new Form(M, {
     nr: new Field(converters.number, {
         required: true,
         requiredError: "This is required!"
+    })
+});
+```
+
+You can also set `requiredError` to a function, in which cases it receives a
+`context` argument (which you can pass in as an option to `state()`).
+
+```js
+const form = new Form(M, {
+    nr: new Field(converters.number, {
+        required: true,
+        requiredError: context =>
+            context.language === "en"
+                ? "This is required!"
+                : "Dit is verplicht!"
     })
 });
 ```
