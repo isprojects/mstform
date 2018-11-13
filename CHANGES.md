@@ -1,3 +1,14 @@
+# 1.1.0
+
+-   Added `context` to accessors. The validator functions get `context` as a
+    second argument. Converters get the context too with convert and render.
+    This allows you to implement convertors and validation functions with
+    application-dependent behavior; for instance depend on an i18n context.
+
+-   Extended behavior of `requiredError` and `conversionError`. You can now
+    configure them with a function too. This function receives a context
+    argument as well.
+
 # 1.0.1
 
 -   Updated peerDependency for mobx-state-tree as well.

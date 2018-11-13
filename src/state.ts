@@ -9,7 +9,6 @@ import {
 import { Accessor } from "./accessor";
 import {
   Form,
-  FormDefinition,
   FormDefinitionForModel,
   ValidationResponse,
   GroupDefinition
@@ -18,7 +17,6 @@ import {
   deepCopy,
   deleteByPath,
   getByPath,
-  isInt,
   pathToSteps,
   stepsToPath
 } from "./utils";
@@ -83,6 +81,8 @@ export interface FormStateOptions<M> {
   focus?: EventFunc<any, any>;
   blur?: EventFunc<any, any>;
   update?: UpdateFunc<any, any>;
+
+  context?: any;
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -115,6 +115,8 @@ export class FormState<
   focusFunc: EventFunc<any, any> | null;
   blurFunc: EventFunc<any, any> | null;
   updateFunc: UpdateFunc<any, any> | null;
+
+  _context: any;
 
   constructor(
     public form: Form<M, D, G>,
@@ -163,6 +165,7 @@ export class FormState<
       this.focusFunc = null;
       this.blurFunc = null;
       this.updateFunc = null;
+      this._context = undefined;
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
       this.isDisabledFunc = options.isDisabled
@@ -192,7 +195,13 @@ export class FormState<
       this.focusFunc = options.focus ? options.focus : null;
       this.blurFunc = options.blur ? options.blur : null;
       this.updateFunc = options.update ? options.update : null;
+      this._context = options.context;
     }
+  }
+
+  @computed
+  get context(): any {
+    return this._context;
   }
 
   @action

@@ -126,11 +126,11 @@ class Decimal implements IConverter<string, string> {
     return raw.trim();
   }
 
-  convert(raw: string) {
-    return this.converter.convert(raw);
+  convert(raw: string, context: any) {
+    return this.converter.convert(raw, context);
   }
-  render(value: string) {
-    return this.converter.render(value);
+  render(value: string, context: any) {
+    return this.converter.render(value, context);
   }
   getRaw(value: any) {
     return value;
@@ -198,18 +198,21 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
     return raw.trim();
   }
 
-  async convert(raw: string): Promise<ConversionResponse<V | VE>> {
+  async convert(
+    raw: string,
+    context: any
+  ): Promise<ConversionResponse<V | VE>> {
     if (raw.trim() === "") {
       return new ConversionValue(this.emptyValue);
     }
-    return this.converter.convert(raw);
+    return this.converter.convert(raw, context);
   }
 
-  render(value: V | VE): string {
+  render(value: V | VE, context: any): string {
     if (value === this.emptyValue) {
       return "";
     }
-    return this.converter.render(value as V);
+    return this.converter.render(value as V, context);
   }
 }
 

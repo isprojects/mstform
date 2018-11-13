@@ -60,7 +60,7 @@ export type FormDefinitionForModel<P extends IAnyModelType> = FormDefinition<
 export type ValidationResponse = string | null | undefined | false;
 
 export interface Validator<V> {
-  (value: V): ValidationResponse | Promise<ValidationResponse>;
+  (value: V, context?: any): ValidationResponse | Promise<ValidationResponse>;
 }
 
 export interface Derived<V> {
@@ -75,12 +75,16 @@ export interface RawGetter<R> {
   (...args: any[]): R;
 }
 
+export interface ErrorFunc {
+  (context: any): string;
+}
+
 export interface FieldOptions<R, V> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
-  conversionError?: string;
-  requiredError?: string;
+  conversionError?: string | ErrorFunc;
+  requiredError?: string | ErrorFunc;
   required?: boolean;
   fromEvent?: boolean;
   derived?: Derived<V>;
@@ -136,8 +140,8 @@ export interface ProcessOptions {
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
-  conversionError: string;
-  requiredError: string;
+  conversionError: string | ErrorFunc;
+  requiredError: string | ErrorFunc;
   required: boolean;
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
@@ -198,9 +202,24 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
+  getRequiredError(context: any): string {
+    if (typeof this.requiredError === "string") {
+      return this.requiredError;
+    }
+    return this.requiredError(context);
+  }
+
+  getConversionError(context: any): string {
+    if (typeof this.conversionError === "string") {
+      return this.conversionError;
+    }
+    return this.conversionError(context);
+  }
+
   async process(
     raw: R,
     required: boolean,
+    context: any,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw);
@@ -211,26 +230,26 @@ export class Field<R, V> {
       raw === this.converter.emptyRaw &&
       required
     ) {
-      return new ValidationMessage(this.requiredError);
+      return new ValidationMessage(this.getRequiredError(context));
     }
 
     for (const validator of this.rawValidators) {
-      const validationResponse = await validator(raw);
+      const validationResponse = await validator(raw, context);
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }
     }
-    const result = await this.converter.convert(raw);
+    const result = await this.converter.convert(raw, context);
     if (result === CONVERSION_ERROR) {
       // if we get a conversion error for the empty raw, the field
       // is implied to be required
       if (raw === this.converter.emptyRaw) {
-        return new ValidationMessage(this.requiredError);
+        return new ValidationMessage(this.getRequiredError(context));
       }
-      return new ValidationMessage(this.conversionError);
+      return new ValidationMessage(this.getConversionError(context));
     }
     for (const validator of this.validators) {
-      const validationResponse = await validator(result.value);
+      const validationResponse = await validator(result.value, context);
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }
@@ -238,8 +257,8 @@ export class Field<R, V> {
     return new ProcessValue(result.value);
   }
 
-  render(value: V): R {
-    return this.converter.render(value);
+  render(value: V, context: any): R {
+    return this.converter.render(value, context);
   }
 }
 

@@ -34,6 +34,11 @@ export class RepeatingFormAccessor<
     return this.parent.path + "/" + this.name;
   }
 
+  @computed
+  get context(): any {
+    return this.state.context;
+  }
+
   async validate(options?: ValidateOptions): Promise<boolean> {
     const promises: Promise<any>[] = [];
     for (const accessor of this.accessors) {
