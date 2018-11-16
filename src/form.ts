@@ -5,7 +5,11 @@ import {
   ModelInstanceTypeProps,
   Instance
 } from "mobx-state-tree";
-import { CONVERSION_ERROR, IConverter } from "./converter";
+import {
+  CONVERSION_ERROR,
+  IConverter,
+  StateConverterOptionsWithContext
+} from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
 import { identity } from "./utils";
@@ -219,7 +223,7 @@ export class Field<R, V> {
   async process(
     raw: R,
     required: boolean,
-    context: any,
+    stateConverterOptions: StateConverterOptionsWithContext,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw);
@@ -230,26 +234,38 @@ export class Field<R, V> {
       raw === this.converter.emptyRaw &&
       required
     ) {
-      return new ValidationMessage(this.getRequiredError(context));
+      return new ValidationMessage(
+        this.getRequiredError(stateConverterOptions.context)
+      );
     }
 
     for (const validator of this.rawValidators) {
-      const validationResponse = await validator(raw, context);
+      const validationResponse = await validator(
+        raw,
+        stateConverterOptions.context
+      );
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }
     }
-    const result = await this.converter.convert(raw, context);
+    const result = await this.converter.convert(raw, stateConverterOptions);
     if (result === CONVERSION_ERROR) {
       // if we get a conversion error for the empty raw, the field
       // is implied to be required
       if (raw === this.converter.emptyRaw) {
-        return new ValidationMessage(this.getRequiredError(context));
+        return new ValidationMessage(
+          this.getRequiredError(stateConverterOptions.context)
+        );
       }
-      return new ValidationMessage(this.getConversionError(context));
+      return new ValidationMessage(
+        this.getConversionError(stateConverterOptions.context)
+      );
     }
     for (const validator of this.validators) {
-      const validationResponse = await validator(result.value, context);
+      const validationResponse = await validator(
+        result.value,
+        stateConverterOptions.context
+      );
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }

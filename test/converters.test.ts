@@ -11,13 +11,13 @@ async function check(
   value: any,
   expected: any
 ) {
-  const r = await converter.convert(value);
+  const r = await converter.convert(value, {});
   expect(r).toBeInstanceOf(ConversionValue);
   expect((r as ConversionValue<any>).value).toEqual(expected);
 }
 
 async function fails(converter: IConverter<any, any>, value: any) {
-  const r = await converter.convert(value);
+  const r = await converter.convert(value, {});
   expect(r).toBe(CONVERSION_ERROR);
 }
 
@@ -86,14 +86,14 @@ test("maybe decimal converter", async () => {
   await check(converters.maybe(converters.decimal()), "3.14", "3.14");
   await check(converters.maybe(converters.decimal()), "", undefined);
   const c = converters.maybe(converters.decimal());
-  expect(c.render(undefined)).toEqual("");
+  expect(c.render(undefined, {})).toEqual("");
 });
 
 test("maybeNull decimal converter", async () => {
   await check(converters.maybeNull(converters.decimal()), "3.14", "3.14");
   await check(converters.maybeNull(converters.decimal()), "", null);
   const c = converters.maybeNull(converters.decimal());
-  expect(c.render(null)).toEqual("");
+  expect(c.render(null, {})).toEqual("");
 });
 
 test("maybe string converter", async () => {
@@ -114,9 +114,9 @@ test("model converter", async () => {
     foo: "FOO"
   });
   const converter = converters.model(M);
-  const r = await converter.convert({ foo: "value" });
+  const r = await converter.convert({ foo: "value" }, {});
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o);
+  const r2 = await converter.convert(o, {});
   expect(r2).toEqual({ value: o });
 });
 
@@ -128,12 +128,12 @@ test("maybe model converter", async () => {
     foo: "FOO"
   });
   const converter = converters.maybe(converters.model(M));
-  const r = await converter.convert({ foo: "value" });
+  const r = await converter.convert({ foo: "value" }, {});
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o);
+  const r2 = await converter.convert(o, {});
   expect(r2).toEqual({ value: o });
   // we use null as the sentinel value for raw
-  const r3 = await converter.convert(null);
+  const r3 = await converter.convert(null, {});
   expect(r3).toEqual({ value: undefined });
 });
 
@@ -145,11 +145,11 @@ test("maybeNull model converter", async () => {
     foo: "FOO"
   });
   const converter = converters.maybeNull(converters.model(M));
-  const r = await converter.convert({ foo: "value" });
+  const r = await converter.convert({ foo: "value" }, {});
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o);
+  const r2 = await converter.convert(o, {});
   expect(r2).toEqual({ value: o });
-  const r3 = await converter.convert(null);
+  const r3 = await converter.convert(null, {});
   expect(r3).toEqual({ value: null });
 });
 
@@ -161,10 +161,10 @@ test("object converter", async () => {
     foo: "FOO"
   });
   const converter = converters.object;
-  const r = await converter.convert({ foo: "value" });
+  const r = await converter.convert({ foo: "value" }, {});
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o);
+  const r2 = await converter.convert(o, {});
   expect(r2).toEqual({ value: o });
-  const r3 = await converter.convert(null);
+  const r3 = await converter.convert(null, {});
   expect(r3).toEqual({ value: null });
 });

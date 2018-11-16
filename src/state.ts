@@ -26,6 +26,10 @@ import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
+import {
+  StateConverterOptions,
+  StateConverterOptionsWithContext
+} from "./converter";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any>): boolean;
@@ -83,6 +87,7 @@ export interface FormStateOptions<M> {
   update?: UpdateFunc<any, any>;
 
   context?: any;
+  converterOptions?: StateConverterOptions;
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -202,6 +207,11 @@ export class FormState<
   @computed
   get context(): any {
     return this._context;
+  }
+
+  @computed
+  get stateConverterOptionsWithContext(): StateConverterOptionsWithContext {
+    return { context: this.context };
   }
 
   @action

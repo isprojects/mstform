@@ -5,7 +5,8 @@ import {
   ConversionResponse,
   ConversionValue,
   Converter,
-  IConverter
+  IConverter,
+  StateConverterOptionsWithContext
 } from "./converter";
 import { Controlled, controlled } from "./controlled";
 import { identity } from "./utils";
@@ -126,11 +127,11 @@ class Decimal implements IConverter<string, string> {
     return raw.trim();
   }
 
-  convert(raw: string, context: any) {
-    return this.converter.convert(raw, context);
+  convert(raw: string, options: StateConverterOptionsWithContext) {
+    return this.converter.convert(raw, options);
   }
-  render(value: string, context: any) {
-    return this.converter.render(value, context);
+  render(value: string, options: StateConverterOptionsWithContext) {
+    return this.converter.render(value, options);
   }
   getRaw(value: any) {
     return value;
@@ -200,19 +201,19 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
 
   async convert(
     raw: string,
-    context: any
+    options: StateConverterOptionsWithContext
   ): Promise<ConversionResponse<V | VE>> {
     if (raw.trim() === "") {
       return new ConversionValue(this.emptyValue);
     }
-    return this.converter.convert(raw, context);
+    return this.converter.convert(raw, options);
   }
 
-  render(value: V | VE, context: any): string {
+  render(value: V | VE, options: StateConverterOptionsWithContext): string {
     if (value === this.emptyValue) {
       return "";
     }
-    return this.converter.render(value as V, context);
+    return this.converter.render(value as V, options);
   }
 }
 

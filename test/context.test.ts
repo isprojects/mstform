@@ -8,6 +8,7 @@ import {
   converters,
   Converter
 } from "../src";
+import { type } from "os";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -131,8 +132,8 @@ test("context in converter", async () => {
 
   const myConverter = new Converter<string, string>({
     emptyRaw: "",
-    rawValidate(raw, context) {
-      return raw.startsWith(context.prefix);
+    rawValidate(raw, options) {
+      return raw.startsWith(options.context.prefix);
     },
     convert(raw) {
       return raw;
@@ -167,8 +168,8 @@ test("context in converter in convert", async () => {
 
   const myConverter = new Converter<string, string>({
     emptyRaw: "",
-    convert(raw: string, context: any) {
-      return context.prefix + raw;
+    convert(raw: string, options) {
+      return options.context.prefix + raw;
     },
     render(value) {
       return value;
@@ -200,8 +201,8 @@ test("context in converter in render", async () => {
     convert(raw: string) {
       return raw;
     },
-    render(value, context) {
-      return context.prefix + value;
+    render(value, options) {
+      return options.context.prefix + value;
     }
   });
 
@@ -297,4 +298,26 @@ test("conversionError dynamic with context", async () => {
   await field.setRaw("not a number");
   expect(field.value).toEqual(4);
   expect(field.error).toEqual("Not a number!!");
+});
+
+test("converter options in converter in convert", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal())
+  });
+
+  const o = M.create({ foo: "4300.20" });
+
+  const state = form.state(o, {
+    converterOptions: { decimalSeparator: ",", thousandSeparator: "." }
+  });
+  const field = state.field("foo");
+
+  await field.setRaw("5.300,20");
+  expect(field.error).toBeUndefined();
+  expect(field.raw).toEqual("5.300,20");
+  expect(field.value).toEqual("5300.20");
 });
