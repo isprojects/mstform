@@ -14,42 +14,35 @@ import { identity } from "./utils";
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
-function processSeparators(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  return removeThousandSeparators(
-    replaceDecimalSeparator(raw, options),
-    options
-  );
-}
-
 function replaceDecimalSeparator(
   raw: string,
   options: StateConverterOptionsWithContext
 ) {
-  if (options.decimalSeparator != null) {
-    raw = raw.replace(options.decimalSeparator, ".");
+  if (options.decimalSeparator == null) {
+    return raw;
+  } else {
+    return raw.replace(options.decimalSeparator, ".");
   }
-  return raw;
 }
 
 function replaceWithDecimalSeparator(
   value: string,
   options: StateConverterOptionsWithContext
 ) {
-  if (options.decimalSeparator != null) {
-    value.split(".").join(options.decimalSeparator);
+  if (options.decimalSeparator == null) {
+    return value;
+  } else {
+    return value.split(".").join(options.decimalSeparator);
   }
-  return value;
 }
 
 function removeThousandSeparators(
   raw: string,
   options: StateConverterOptionsWithContext
 ) {
-  //remove thousand separators
-  if (options.thousandSeparator != null) {
+  if (options.thousandSeparator == null) {
+    return raw;
+  } else {
     const splitRaw = raw.split(options.thousandSeparator);
     //value before the first thousand separator has to be of length 1, 2 or 3
     if (splitRaw[0].length < 1 || splitRaw[0].length > 3) {
@@ -62,21 +55,29 @@ function removeThousandSeparators(
       }
     }
     //turn split string back into full string without thousand separators
-    raw = splitRaw.join("");
+    return splitRaw.join("");
   }
-  return raw;
 }
 
 function addThousandSeparators(
   value: string,
   options: StateConverterOptionsWithContext
 ) {
-  if (options.thousandSeparator != null) {
-    //add thousand separators
-    return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
-  } else {
+  if (options.thousandSeparator == null) {
     return value;
+  } else {
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
   }
+}
+
+function processSeparators(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
+  return removeThousandSeparators(
+    replaceDecimalSeparator(raw, options),
+    options
+  );
 }
 
 export class StringConverter<V> extends Converter<string, V> {
@@ -113,13 +114,13 @@ const number = new StringConverter<number>({
     return +raw;
   },
   render(value, options) {
-    if (options != null) {
+    if (options == null) {
+      return value.toString();
+    } else {
       return addThousandSeparators(
         replaceWithDecimalSeparator(value.toString(), options),
         options
       );
-    } else {
-      return value.toString();
     }
   }
 });
