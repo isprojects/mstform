@@ -18,9 +18,36 @@ function processSeparators(
   raw: string,
   options: StateConverterOptionsWithContext
 ) {
+  return removeThousandSeparators(
+    replaceDecimalSeparator(raw, options),
+    options
+  );
+}
+
+function replaceDecimalSeparator(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
   if (options.decimalSeparator != null) {
     raw = raw.replace(options.decimalSeparator, ".");
   }
+  return raw;
+}
+
+function replaceWithDecimalSeparator(
+  value: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.decimalSeparator != null) {
+    value.split(".").join(options.decimalSeparator);
+  }
+  return value;
+}
+
+function removeThousandSeparators(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
   //remove thousand separators
   if (options.thousandSeparator != null) {
     const splitRaw = raw.split(options.thousandSeparator);
@@ -38,16 +65,6 @@ function processSeparators(
     raw = splitRaw.join("");
   }
   return raw;
-}
-
-function replaceDecimalSeparator(
-  value: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.decimalSeparator != null) {
-    value.split(".").join(options.decimalSeparator);
-  }
-  return value;
 }
 
 function addThousandSeparators(
@@ -98,7 +115,7 @@ const number = new StringConverter<number>({
   render(value, options) {
     if (options != null) {
       return addThousandSeparators(
-        replaceDecimalSeparator(value.toString(), options),
+        replaceWithDecimalSeparator(value.toString(), options),
         options
       );
     } else {
@@ -178,7 +195,7 @@ class Decimal implements IConverter<string, string> {
       },
       render(value, options) {
         return addThousandSeparators(
-          replaceDecimalSeparator(value.toString(), options),
+          replaceWithDecimalSeparator(value.toString(), options),
           options
         );
       }
