@@ -99,11 +99,7 @@ export class RepeatingFormAccessor<
 
   @computed
   get accessors(): RepeatingFormIndexedAccessor<D, G>[] {
-    const result = [];
-    for (let index = 0; index < this.length; index++) {
-      result.push(this.index(index));
-    }
-    return result;
+    return Array.from(this.repeatingFormIndexedAccessors.values());
   }
 
   @computed
