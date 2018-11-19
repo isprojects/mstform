@@ -226,7 +226,7 @@ export class Field<R, V> {
     stateConverterOptions: StateConverterOptionsWithContext,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
-    raw = this.converter.preprocessRaw(raw);
+    raw = this.converter.preprocessRaw(raw, stateConverterOptions);
     const ignoreRequired = options != null ? options.ignoreRequired : false;
     if (
       !this.converter.neverRequired &&

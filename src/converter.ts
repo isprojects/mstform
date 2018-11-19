@@ -35,7 +35,7 @@ export interface IConverter<R, V> {
   render(value: V, options: StateConverterOptionsWithContext): R;
   defaultControlled: Controlled;
   neverRequired: boolean;
-  preprocessRaw(raw: R): R;
+  preprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
 }
 
 export class ConversionValue<V> {

@@ -3,7 +3,8 @@ import {
   CONVERSION_ERROR,
   ConversionValue,
   IConverter,
-  converters
+  converters,
+  StateConverterOptionsWithContext
 } from "../src";
 
 async function check(
@@ -16,8 +17,30 @@ async function check(
   expect((r as ConversionValue<any>).value).toEqual(expected);
 }
 
+async function checkWithOptions(
+  converter: IConverter<any, any>,
+  value: any,
+  expected: any,
+  options: StateConverterOptionsWithContext
+) {
+  const processedValue = converter.preprocessRaw(value, options);
+  const r = await converter.convert(processedValue, options);
+  expect(r).toBeInstanceOf(ConversionValue);
+  expect((r as ConversionValue<any>).value).toEqual(expected);
+}
+
 async function fails(converter: IConverter<any, any>, value: any) {
   const r = await converter.convert(value, {});
+  expect(r).toBe(CONVERSION_ERROR);
+}
+
+async function failsWithOptions(
+  converter: IConverter<any, any>,
+  value: any,
+  options: StateConverterOptionsWithContext
+) {
+  const processedValue = converter.preprocessRaw(value, options);
+  const r = await converter.convert(processedValue, options);
   expect(r).toBe(CONVERSION_ERROR);
 }
 
@@ -58,6 +81,12 @@ test("decimal converter", async () => {
   await check(converters.decimal({}), "0", "0");
   await check(converters.decimal({}), ".14", ".14");
   await check(converters.decimal({}), "14.", "14.");
+  await checkWithOptions(converters.decimal({}), "43,14", "43.14", {
+    decimalSeparator: ","
+  });
+  await checkWithOptions(converters.decimal({}), "4.314.314", "4314314", {
+    thousandSeparator: "."
+  });
   await fails(converters.decimal({}), "foo");
   await fails(converters.decimal({}), "1foo");
   await fails(converters.decimal({}), "");
@@ -65,6 +94,10 @@ test("decimal converter", async () => {
   await fails(converters.decimal({ maxWholeDigits: 4 }), "12345.34");
   await fails(converters.decimal({ decimalPlaces: 2 }), "12.444");
   await fails(converters.decimal({ allowNegative: false }), "-45.34");
+  await failsWithOptions(converters.decimal({}), "1,23.45", {
+    decimalSeparator: ".",
+    thousandSeparator: ","
+  });
 });
 
 test("boolean converter", async () => {

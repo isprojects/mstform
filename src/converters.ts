@@ -117,14 +117,45 @@ class Decimal implements IConverter<string, string> {
       convert(raw) {
         return raw;
       },
-      render(value) {
-        return value;
+      render(value, options) {
+        if (options.thousandSeparator != null) {
+          //add thousand separators
+          return value.replace(
+            /\B(?=(\d{3})+(?!\d))/g,
+            options.thousandSeparator
+          );
+        } else {
+          return value;
+        }
       }
     });
   }
 
-  preprocessRaw(raw: string): string {
-    return raw.trim();
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    raw = raw.trim();
+    //replace decimal separator with .
+    if (options.decimalSeparator != null) {
+      raw = raw.replace(options.decimalSeparator, ".");
+    }
+    //remove thousand separators
+    if (options.thousandSeparator != null) {
+      const splitRaw = raw.split(options.thousandSeparator);
+      //value before the first thousand separator has to be of length 1, 2 or 3
+      if (splitRaw[0].length < 1 || splitRaw[0].length > 3) {
+        return raw;
+      }
+      //all other separated values should have length 3
+      for (let i = 1; i < splitRaw.length; i++) {
+        if (splitRaw[i].length !== 3) {
+          return raw;
+        }
+      }
+      raw = splitRaw.join("");
+    }
+    return raw;
   }
 
   convert(raw: string, options: StateConverterOptionsWithContext) {

@@ -312,12 +312,36 @@ test("converter options in converter in convert", async () => {
   const o = M.create({ foo: "4300.20" });
 
   const state = form.state(o, {
-    converterOptions: { decimalSeparator: ",", thousandSeparator: "." }
+    converterOptions: { decimalSeparator: "," }
   });
   const field = state.field("foo");
 
-  await field.setRaw("5.300,20");
+  await field.setRaw("5300,20");
   expect(field.error).toBeUndefined();
-  expect(field.raw).toEqual("5.300,20");
+  expect(field.raw).toEqual("5300,20");
   expect(field.value).toEqual("5300.20");
+});
+
+test("converter options in converter in render", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal())
+  });
+
+  const o = M.create({ foo: "1234567" });
+
+  const state = form.state(o, {
+    converterOptions: { thousandSeparator: "." }
+  });
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("1.234.567");
+
+  await field.setRaw("1234568");
+  expect(field.error).toBeUndefined();
+  expect(field.raw).toEqual("1234568");
+  expect(field.value).toEqual("1234568");
 });

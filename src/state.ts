@@ -122,6 +122,7 @@ export class FormState<
   updateFunc: UpdateFunc<any, any> | null;
 
   _context: any;
+  _converterOptions: StateConverterOptions;
 
   constructor(
     public form: Form<M, D, G>,
@@ -171,6 +172,7 @@ export class FormState<
       this.blurFunc = null;
       this.updateFunc = null;
       this._context = undefined;
+      this._converterOptions = {};
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
       this.isDisabledFunc = options.isDisabled
@@ -201,6 +203,7 @@ export class FormState<
       this.blurFunc = options.blur ? options.blur : null;
       this.updateFunc = options.update ? options.update : null;
       this._context = options.context;
+      this._converterOptions = options.converterOptions || {};
     }
   }
 
@@ -211,7 +214,7 @@ export class FormState<
 
   @computed
   get stateConverterOptionsWithContext(): StateConverterOptionsWithContext {
-    return { context: this.context };
+    return { context: this.context, ...this._converterOptions };
   }
 
   @action
