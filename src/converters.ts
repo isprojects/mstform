@@ -39,6 +39,16 @@ function processSeparators(
   return raw;
 }
 
+function replaceDecimalSeparator(
+  value: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.decimalSeparator != null) {
+    value.split(".").join(options.decimalSeparator);
+  }
+  return value;
+}
+
 function addThousandSeparators(
   value: string,
   options: StateConverterOptionsWithContext
@@ -86,7 +96,10 @@ const number = new StringConverter<number>({
   },
   render(value, options) {
     if (options != null) {
-      return addThousandSeparators(value.toString(), options);
+      return addThousandSeparators(
+        replaceDecimalSeparator(value.toString(), options),
+        options
+      );
     } else {
       return value.toString();
     }
@@ -163,7 +176,10 @@ class Decimal implements IConverter<string, string> {
         return raw;
       },
       render(value, options) {
-        return addThousandSeparators(value, options);
+        return addThousandSeparators(
+          replaceDecimalSeparator(value.toString(), options),
+          options
+        );
       }
     });
   }
