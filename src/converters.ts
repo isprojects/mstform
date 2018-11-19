@@ -14,10 +14,51 @@ import { identity } from "./utils";
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
+function processSeparators(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.decimalSeparator != null) {
+    raw = raw.replace(options.decimalSeparator, ".");
+  }
+  //remove thousand separators
+  if (options.thousandSeparator != null) {
+    const splitRaw = raw.split(options.thousandSeparator);
+    //value before the first thousand separator has to be of length 1, 2 or 3
+    if (splitRaw[0].length < 1 || splitRaw[0].length > 3) {
+      return raw;
+    }
+    //all other separated values should have length 3
+    for (let i = 1; i < splitRaw.length; i++) {
+      if (splitRaw[i].length !== 3) {
+        return raw;
+      }
+    }
+    raw = splitRaw.join("");
+  }
+  return raw;
+}
+
+function addThousandSeparators(
+  value: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.thousandSeparator != null) {
+    //add thousand separators
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
+  } else {
+    return value;
+  }
+}
+
 export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
-  preprocessRaw(raw: string): string {
-    return raw.trim();
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    raw = raw.trim();
+    return processSeparators(raw, options);
   }
 }
 
@@ -43,8 +84,12 @@ const number = new StringConverter<number>({
   convert(raw) {
     return +raw;
   },
-  render(value) {
-    return value.toString();
+  render(value, options) {
+    if (options != null) {
+      return addThousandSeparators(value.toString(), options);
+    } else {
+      return value.toString();
+    }
   }
 });
 
@@ -118,15 +163,7 @@ class Decimal implements IConverter<string, string> {
         return raw;
       },
       render(value, options) {
-        if (options.thousandSeparator != null) {
-          //add thousand separators
-          return value.replace(
-            /\B(?=(\d{3})+(?!\d))/g,
-            options.thousandSeparator
-          );
-        } else {
-          return value;
-        }
+        return addThousandSeparators(value, options);
       }
     });
   }
@@ -136,26 +173,7 @@ class Decimal implements IConverter<string, string> {
     options: StateConverterOptionsWithContext
   ): string {
     raw = raw.trim();
-    //replace decimal separator with .
-    if (options.decimalSeparator != null) {
-      raw = raw.replace(options.decimalSeparator, ".");
-    }
-    //remove thousand separators
-    if (options.thousandSeparator != null) {
-      const splitRaw = raw.split(options.thousandSeparator);
-      //value before the first thousand separator has to be of length 1, 2 or 3
-      if (splitRaw[0].length < 1 || splitRaw[0].length > 3) {
-        return raw;
-      }
-      //all other separated values should have length 3
-      for (let i = 1; i < splitRaw.length; i++) {
-        if (splitRaw[i].length !== 3) {
-          return raw;
-        }
-      }
-      raw = splitRaw.join("");
-    }
-    return raw;
+    return processSeparators(raw, options);
   }
 
   convert(raw: string, options: StateConverterOptionsWithContext) {

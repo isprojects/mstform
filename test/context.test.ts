@@ -300,7 +300,7 @@ test("conversionError dynamic with context", async () => {
   expect(field.error).toEqual("Not a number!!");
 });
 
-test("converter options in converter in convert", async () => {
+test("converter options in decimal converter in convert", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -322,7 +322,7 @@ test("converter options in converter in convert", async () => {
   expect(field.value).toEqual("5300.20");
 });
 
-test("converter options in converter in render", async () => {
+test("converter options in decimal converter in render", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -344,4 +344,50 @@ test("converter options in converter in render", async () => {
   expect(field.error).toBeUndefined();
   expect(field.raw).toEqual("1234568");
   expect(field.value).toEqual("1234568");
+});
+
+test("converter options in number converter in convert", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 4300.2 });
+
+  const state = form.state(o, {
+    converterOptions: { decimalSeparator: "," }
+  });
+  const field = state.field("foo");
+
+  await field.setRaw("5300,20");
+  expect(field.error).toBeUndefined();
+  expect(field.raw).toEqual("5300,20");
+  expect(field.value).toEqual(5300.2);
+});
+
+test("converter options in number converter in render", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 1234567 });
+
+  const state = form.state(o, {
+    converterOptions: { thousandSeparator: "." }
+  });
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("1.234.567");
+
+  await field.setRaw("1234568");
+  expect(field.error).toBeUndefined();
+  expect(field.raw).toEqual("1234568");
+  expect(field.value).toEqual(1234568);
 });

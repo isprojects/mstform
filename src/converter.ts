@@ -61,7 +61,7 @@ export class Converter<R, V> implements IConverter<R, V> {
     this.neverRequired = !!definition.neverRequired;
   }
 
-  preprocessRaw(raw: R): R {
+  preprocessRaw(raw: R, options?: StateConverterOptionsWithContext): R {
     return raw;
   }
 

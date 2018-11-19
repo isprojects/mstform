@@ -56,9 +56,19 @@ test("number converter", async () => {
   await check(converters.number, "19.14", 19.14);
   await check(converters.number, "19.", 19);
   await check(converters.number, "-3.14", -3.14);
+  await checkWithOptions(converters.number, "43,14", 43.14, {
+    decimalSeparator: ","
+  });
+  await checkWithOptions(converters.number, "4.314.314", 4314314, {
+    thousandSeparator: "."
+  });
   await fails(converters.number, "foo");
   await fails(converters.number, "1foo");
   await fails(converters.number, "");
+  await failsWithOptions(converters.number, "1,23.45", {
+    decimalSeparator: ".",
+    thousandSeparator: ","
+  });
 });
 
 test("integer converter", async () => {
