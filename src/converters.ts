@@ -34,6 +34,7 @@ function processSeparators(
         return raw;
       }
     }
+    //turn split string back into full string without thousand separators
     raw = splitRaw.join("");
   }
   return raw;

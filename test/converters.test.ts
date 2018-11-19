@@ -69,6 +69,9 @@ test("number converter", async () => {
     decimalSeparator: ".",
     thousandSeparator: ","
   });
+  await failsWithOptions(converters.number, ",12345", {
+    thousandSeparator: ","
+  });
 });
 
 test("integer converter", async () => {
@@ -106,6 +109,9 @@ test("decimal converter", async () => {
   await fails(converters.decimal({ allowNegative: false }), "-45.34");
   await failsWithOptions(converters.decimal({}), "1,23.45", {
     decimalSeparator: ".",
+    thousandSeparator: ","
+  });
+  await failsWithOptions(converters.decimal({}), ",12345", {
     thousandSeparator: ","
   });
 });
