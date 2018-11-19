@@ -437,6 +437,33 @@ test("repeating form nested remove", async () => {
   expect(mForms.length).toBe(0);
 });
 
+test("accessors should retain index order after insert", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "A" }, { bar: "B" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  forms.insert(0, N.create({ bar: "inserted" }));
+  expect(forms.accessors.map(accessor => accessor.path)).toEqual([
+    "/foo/0",
+    "/foo/1",
+    "/foo/2"
+  ]);
+});
+
 test("async validation in converter", async () => {
   const M = types.model("M", {
     foo: types.string
