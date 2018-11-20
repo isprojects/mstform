@@ -433,9 +433,10 @@ default for this converter. You can also optionally set `neverRequired`; this
 is handy for fields where the `required` status makes no sense -- a checkbox is
 an example.
 
-`convert`, `render`, `rawValidate` and `validate` all take a optional
-second argument, `context`. This is an arbitrary value you can pass
-in as a `form.state()` option from your application:
+`convert`, `render`, `rawValidate` and `validate` all take an optional
+second argument, `options`. With `options`, you can pass `converterOptions` and
+a `context`. `context` is an arbitrary value you can pass in as a `form.state()`
+option from your application:
 
 ```js
 const formState = form.state(o, { context: { something: "FOO" } });
