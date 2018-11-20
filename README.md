@@ -301,6 +301,13 @@ other object:
     `decimalPlaces` (default 2) after the period. With `allowNegative`
     (boolean, default true) you can specify if negatives are allowed
 
+Number and decimal converters also respond to a handful of options through the
+use of `converterOptions`. `decimalSeparator` specifies the character used to
+separate the integral and fractional part of a number or decimal.
+`thousandSeparator` specifies the character used to group thousands together.
+`renderThousands` determines whether or not the thousand separators should be
+rendered.
+
 ### Boolean
 
 `converters.boolean`: raw value is a boolean, value is also a boolean. The
@@ -344,6 +351,22 @@ including `null`. Prefer `converters.model` if you can. Warning: the default
 raw value is `null` and using this with basic data types (string, boolean,
 number and such) won't make the type checker happy as they don't accept "null".
 Use more specific converters instead.
+
+### Converter options
+
+Converters can be passed various options. Number and decimal converters respond
+to `decimalSeparator`, `thousandSeparator` and `renderThousands`. These can be
+set in a `converterOptions` argument on the state:
+
+```js
+const formState = form.state(o, {
+    converterOptions: {
+        decimalSeparator: ".",
+        thousandSeparator: ",",
+        renderThousands: false
+    }
+});
+```
 
 ### Controlling the conversion error message
 
@@ -410,9 +433,10 @@ default for this converter. You can also optionally set `neverRequired`; this
 is handy for fields where the `required` status makes no sense -- a checkbox is
 an example.
 
-`convert`, `render`, `rawValidate` and `validate` all take a optional
-second argument, `context`. This is an arbitrary value you can pass
-in as a `form.state()` option from your application:
+`convert`, `render`, `rawValidate` and `validate` all take an optional
+second argument, `options`. With `options`, you can pass `converterOptions` and
+a `context`. `context` is an arbitrary value you can pass in as a `form.state()`
+option from your application:
 
 ```js
 const formState = form.state(o, { context: { something: "FOO" } });

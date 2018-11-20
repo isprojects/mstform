@@ -5,7 +5,8 @@ import {
   ConversionResponse,
   ConversionValue,
   Converter,
-  IConverter
+  IConverter,
+  StateConverterOptionsWithContext
 } from "./converter";
 import { Controlled, controlled } from "./controlled";
 import { identity } from "./utils";
@@ -13,10 +14,105 @@ import { identity } from "./utils";
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
+function normalizeLastElement(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.decimalSeparator == null) {
+    return raw;
+  }
+  return raw.split(options.decimalSeparator)[0];
+}
+
+function convertDecimalSeparator(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.decimalSeparator == null) {
+    return raw;
+  }
+  return raw.replace(options.decimalSeparator, ".");
+}
+
+function renderDecimalSeparator(
+  value: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.decimalSeparator == null) {
+    return value;
+  }
+  return value.replace(".", options.decimalSeparator);
+}
+
+function convertThousandSeparators(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.thousandSeparator == null) {
+    return raw;
+  }
+  const splitRaw = raw.split(options.thousandSeparator);
+  const firstElement = splitRaw[0];
+  const lastElement = normalizeLastElement(
+    splitRaw[splitRaw.length - 1],
+    options
+  );
+  //value before the first thousand separator has to be of length 1, 2 or 3
+  if (firstElement.length < 1 || firstElement.length > 3) {
+    return raw;
+  }
+  if (lastElement.length !== 3) {
+    return raw;
+  }
+  //all remaining elements of the split string should have length 3
+  if (!splitRaw.slice(1, -1).every(raw => raw.length === 3)) {
+    return raw;
+  }
+  //turn split string back into full string without thousand separators
+  return splitRaw.join("");
+}
+
+function renderThousandSeparators(
+  value: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options.thousandSeparator == null || !options.renderThousands) {
+    return value;
+  }
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
+}
+
+function convertSeparators(
+  raw: string,
+  options: StateConverterOptionsWithContext
+) {
+  return convertDecimalSeparator(
+    convertThousandSeparators(raw, options),
+    options
+  );
+}
+
+function renderSeparators(
+  value: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options == null) {
+    return value;
+  }
+  return renderThousandSeparators(
+    renderDecimalSeparator(value, options),
+    options
+  );
+}
+
 export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
-  preprocessRaw(raw: string): string {
-    return raw.trim();
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    raw = raw.trim();
+    return convertSeparators(raw, options);
   }
 }
 
@@ -42,8 +138,8 @@ const number = new StringConverter<number>({
   convert(raw) {
     return +raw;
   },
-  render(value) {
-    return value.toString();
+  render(value, options) {
+    return renderSeparators(value.toString(), options);
   }
 });
 
@@ -116,21 +212,25 @@ class Decimal implements IConverter<string, string> {
       convert(raw) {
         return raw;
       },
-      render(value) {
-        return value;
+      render(value, options) {
+        return renderSeparators(value, options);
       }
     });
   }
 
-  preprocessRaw(raw: string): string {
-    return raw.trim();
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    raw = raw.trim();
+    return convertSeparators(raw, options);
   }
 
-  convert(raw: string, context: any) {
-    return this.converter.convert(raw, context);
+  convert(raw: string, options: StateConverterOptionsWithContext) {
+    return this.converter.convert(raw, options);
   }
-  render(value: string, context: any) {
-    return this.converter.render(value, context);
+  render(value: string, options: StateConverterOptionsWithContext) {
+    return this.converter.render(value, options);
   }
   getRaw(value: any) {
     return value;
@@ -200,19 +300,19 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
 
   async convert(
     raw: string,
-    context: any
+    options: StateConverterOptionsWithContext
   ): Promise<ConversionResponse<V | VE>> {
     if (raw.trim() === "") {
       return new ConversionValue(this.emptyValue);
     }
-    return this.converter.convert(raw, context);
+    return this.converter.convert(raw, options);
   }
 
-  render(value: V | VE, context: any): string {
+  render(value: V | VE, options: StateConverterOptionsWithContext): string {
     if (value === this.emptyValue) {
       return "";
     }
-    return this.converter.render(value as V, context);
+    return this.converter.render(value as V, options);
   }
 }
 

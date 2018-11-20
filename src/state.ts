@@ -26,6 +26,10 @@ import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
+import {
+  StateConverterOptions,
+  StateConverterOptionsWithContext
+} from "./converter";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any>): boolean;
@@ -83,6 +87,7 @@ export interface FormStateOptions<M> {
   update?: UpdateFunc<any, any>;
 
   context?: any;
+  converterOptions?: StateConverterOptions;
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -117,6 +122,7 @@ export class FormState<
   updateFunc: UpdateFunc<any, any> | null;
 
   _context: any;
+  _converterOptions: StateConverterOptions;
 
   constructor(
     public form: Form<M, D, G>,
@@ -166,6 +172,7 @@ export class FormState<
       this.blurFunc = null;
       this.updateFunc = null;
       this._context = undefined;
+      this._converterOptions = {};
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
       this.isDisabledFunc = options.isDisabled
@@ -196,12 +203,18 @@ export class FormState<
       this.blurFunc = options.blur ? options.blur : null;
       this.updateFunc = options.update ? options.update : null;
       this._context = options.context;
+      this._converterOptions = options.converterOptions || {};
     }
   }
 
   @computed
   get context(): any {
     return this._context;
+  }
+
+  @computed
+  get stateConverterOptionsWithContext(): StateConverterOptionsWithContext {
+    return { context: this.context, ...this._converterOptions };
   }
 
   @action
