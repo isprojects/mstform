@@ -56,7 +56,7 @@ test("number converter", async () => {
   await check(converters.number, "19.14", 19.14);
   await check(converters.number, "19.", 19);
   await check(converters.number, "-3.14", -3.14);
-  await checkWithOptions(converters.number, "43,14", 43.14, {
+  await checkWithOptions(converters.number, "1234,56", 1234.56, {
     decimalSeparator: ","
   });
   await checkWithOptions(converters.number, "4.314.314", 4314314, {
@@ -142,6 +142,23 @@ test("decimal converter with both options", async () => {
     decimalSeparator: ",",
     thousandSeparator: "."
   });
+});
+
+test("decimal converter render with renderThousands false", async () => {
+  const converter = converters.decimal({});
+  const options = {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    renderThousands: false
+  };
+  const value = "4.314.314,31";
+  const processedValue = converter.preprocessRaw(value, options);
+  const converted = await converter.convert(processedValue, options);
+  const rendered = await converter.render(
+    (converted as ConversionValue<any>).value,
+    options
+  );
+  expect(rendered).toEqual("4314314,31");
 });
 
 test("boolean converter", async () => {

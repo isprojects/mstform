@@ -75,7 +75,7 @@ function renderThousandSeparators(
   value: string,
   options: StateConverterOptionsWithContext
 ) {
-  if (options.thousandSeparator == null) {
+  if (options.thousandSeparator == null || !options.renderThousands) {
     return value;
   }
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);

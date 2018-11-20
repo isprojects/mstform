@@ -3,6 +3,7 @@ import { Controlled, controlled } from "./controlled";
 export interface StateConverterOptions {
   decimalSeparator?: string;
   thousandSeparator?: string;
+  renderThousands?: boolean;
 }
 
 export interface StateConverterOptionsWithContext
