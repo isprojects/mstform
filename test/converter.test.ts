@@ -1,4 +1,6 @@
 import { configure } from "mobx";
+import { types } from "mobx-state-tree";
+import { Field, Form, converters } from "../src";
 import { CONVERSION_ERROR, ConversionValue, Converter } from "../src/converter";
 
 configure({ enforceActions: "observed" });
@@ -71,4 +73,29 @@ test("converter with async validate", async () => {
   done[0]();
   const v = await result;
   expect((v as ConversionValue<string>).value).toEqual("foo");
+});
+
+test("converter maybeNull with converter options", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.maybeNull(converters.decimal()))
+  });
+
+  const o = M.create({ foo: "36365.21" });
+
+  const state = form.state(o, {
+    converterOptions: {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true
+    }
+  });
+  const field = state.field("foo");
+  await field.setRaw("36.365,20");
+  expect(field.error).toBeUndefined();
+  expect(field.raw).toEqual("36.365,20");
+  expect(field.value).toEqual("36365.20");
 });

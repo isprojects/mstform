@@ -117,10 +117,7 @@ const string = new StringConverter<string>({
   render(value) {
     return value;
   },
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
+  preprocessRaw(raw: string): string {
     return raw.trim();
   }
 });
@@ -160,10 +157,7 @@ const integer = new StringConverter<number>({
   render(value) {
     return value.toString();
   },
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
+  preprocessRaw(raw: string): string {
     return raw.trim();
   }
 });
@@ -306,8 +300,12 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
     this.emptyRaw = "";
   }
 
-  preprocessRaw(raw: string): string {
-    return raw.trim();
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    raw = raw.trim();
+    return this.converter.preprocessRaw(raw, options);
   }
 
   async convert(
