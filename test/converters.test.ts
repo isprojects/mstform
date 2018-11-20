@@ -12,7 +12,8 @@ async function check(
   value: any,
   expected: any
 ) {
-  const r = await converter.convert(value, {});
+  const processedValue = converter.preprocessRaw(value, {});
+  const r = await converter.convert(processedValue, {});
   expect(r).toBeInstanceOf(ConversionValue);
   expect((r as ConversionValue<any>).value).toEqual(expected);
 }
@@ -175,6 +176,12 @@ test("decimal converter render with renderThousands false", async () => {
     options
   );
   expect(rendered).toEqual("4314314,31");
+});
+
+test("do not convert a normal string with decimal options", async () => {
+  await checkWithOptions(converters.string, "43,14", "43,14", {
+    decimalSeparator: ","
+  });
 });
 
 test("boolean converter", async () => {
