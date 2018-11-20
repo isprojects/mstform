@@ -72,6 +72,20 @@ test("number converter", async () => {
   await failsWithOptions(converters.number, ",12345", {
     thousandSeparator: ","
   });
+  await failsWithOptions(converters.number, "1234,567", {
+    thousandSeparator: ","
+  });
+  await failsWithOptions(converters.number, "12.3,456", {
+    decimalSeparator: ".",
+    thousandSeparator: ","
+  });
+});
+
+test("number converter with both options", async () => {
+  await checkWithOptions(converters.number, "4.314.314,31", 4314314.31, {
+    decimalSeparator: ",",
+    thousandSeparator: "."
+  });
 });
 
 test("integer converter", async () => {
@@ -113,6 +127,20 @@ test("decimal converter", async () => {
   });
   await failsWithOptions(converters.decimal({}), ",12345", {
     thousandSeparator: ","
+  });
+  await failsWithOptions(converters.decimal({}), "1234,567", {
+    thousandSeparator: ","
+  });
+  await failsWithOptions(converters.decimal({}), "12.3,456", {
+    decimalSeparator: ".",
+    thousandSeparator: ","
+  });
+});
+
+test("decimal converter with both options", async () => {
+  await checkWithOptions(converters.decimal({}), "4.314.314,31", "4314314.31", {
+    decimalSeparator: ",",
+    thousandSeparator: "."
   });
 });
 
