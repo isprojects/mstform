@@ -7,6 +7,8 @@
     `renderThousands` determines whether or not the thousand separators are
     rendered.
 
+-   Fixed a bug where a nested RepeatingForm couldn't be removed anymore.
+
 # 1.1.0
 
 -   Added `context` to accessors. The validator functions get `context` as a
