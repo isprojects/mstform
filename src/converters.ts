@@ -14,14 +14,14 @@ import { identity } from "./utils";
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
-function getLastElement(
-  splitRaw: string[],
+function normalizeLastElement(
+  raw: string,
   options: StateConverterOptionsWithContext
 ) {
   if (options.decimalSeparator == null) {
-    return splitRaw[splitRaw.length - 1];
+    return raw;
   }
-  return splitRaw[splitRaw.length - 1].split(options.decimalSeparator)[0];
+  return raw.split(options.decimalSeparator)[0];
 }
 
 function convertDecimalSeparator(
@@ -53,18 +53,19 @@ function convertThousandSeparators(
   }
   const splitRaw = raw.split(options.thousandSeparator);
   const firstElement = splitRaw[0];
-  const lastElement = getLastElement(splitRaw, options);
+  const lastElement = normalizeLastElement(
+    splitRaw[splitRaw.length - 1],
+    options
+  );
   //value before the first thousand separator has to be of length 1, 2 or 3
   if (firstElement.length < 1 || firstElement.length > 3) {
     return raw;
   }
-  //all other separated values should have length 3
-  for (let i = 1; i < splitRaw.length - 1; i++) {
-    if (splitRaw[i].length !== 3) {
-      return raw;
-    }
-  }
   if (lastElement.length !== 3) {
+    return raw;
+  }
+  //all remaining elements of the split string should have length 3
+  if (!splitRaw.slice(1, -1).every(raw => raw.length === 3)) {
     return raw;
   }
   //turn split string back into full string without thousand separators
@@ -81,12 +82,25 @@ function renderThousandSeparators(
   return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
 }
 
-function processSeparators(
+function convertSeparators(
   raw: string,
   options: StateConverterOptionsWithContext
 ) {
   return convertDecimalSeparator(
     convertThousandSeparators(raw, options),
+    options
+  );
+}
+
+function renderSeparators(
+  value: string,
+  options: StateConverterOptionsWithContext
+) {
+  if (options == null) {
+    return value;
+  }
+  return renderThousandSeparators(
+    renderDecimalSeparator(value, options),
     options
   );
 }
@@ -98,7 +112,7 @@ export class StringConverter<V> extends Converter<string, V> {
     options: StateConverterOptionsWithContext
   ): string {
     raw = raw.trim();
-    return processSeparators(raw, options);
+    return convertSeparators(raw, options);
   }
 }
 
@@ -125,14 +139,7 @@ const number = new StringConverter<number>({
     return +raw;
   },
   render(value, options) {
-    if (options == null) {
-      return value.toString();
-    } else {
-      return renderThousandSeparators(
-        renderDecimalSeparator(value.toString(), options),
-        options
-      );
-    }
+    return renderSeparators(value.toString(), options);
   }
 });
 
@@ -206,10 +213,7 @@ class Decimal implements IConverter<string, string> {
         return raw;
       },
       render(value, options) {
-        return renderThousandSeparators(
-          renderDecimalSeparator(value.toString(), options),
-          options
-        );
+        return renderSeparators(value, options);
       }
     });
   }
@@ -219,7 +223,7 @@ class Decimal implements IConverter<string, string> {
     options: StateConverterOptionsWithContext
   ): string {
     raw = raw.trim();
-    return processSeparators(raw, options);
+    return convertSeparators(raw, options);
   }
 
   convert(raw: string, options: StateConverterOptionsWithContext) {
