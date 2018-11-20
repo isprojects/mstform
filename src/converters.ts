@@ -57,18 +57,18 @@ function convertThousandSeparators(
     splitRaw[splitRaw.length - 1],
     options
   );
-  // value before the first thousand separator has to be of length 1, 2 or 3
+  //value before the first thousand separator has to be of length 1, 2 or 3
   if (firstElement.length < 1 || firstElement.length > 3) {
     return raw;
   }
   if (lastElement.length !== 3) {
     return raw;
   }
-  // all remaining elements of the split string should have length 3
+  //all remaining elements of the split string should have length 3
   if (!splitRaw.slice(1, -1).every(raw => raw.length === 3)) {
     return raw;
   }
-  // turn split string back into full string without thousand separators
+  //turn split string back into full string without thousand separators
   return splitRaw.join("");
 }
 
