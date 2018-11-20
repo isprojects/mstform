@@ -79,6 +79,10 @@ test("number converter", async () => {
     decimalSeparator: ".",
     thousandSeparator: ","
   });
+  await failsWithOptions(converters.number, "1.1,1", {
+    decimalSeparator: ",",
+    thousandSeparator: "."
+  });
   await failsWithOptions(converters.number, "1,1.1", {
     decimalSeparator: ",",
     thousandSeparator: "."
@@ -138,6 +142,10 @@ test("decimal converter", async () => {
   await failsWithOptions(converters.decimal({}), "12.3,456", {
     decimalSeparator: ".",
     thousandSeparator: ","
+  });
+  await failsWithOptions(converters.decimal({}), "1.1,1", {
+    decimalSeparator: ",",
+    thousandSeparator: "."
   });
   await failsWithOptions(converters.decimal({}), "1,1.1", {
     decimalSeparator: ",",
