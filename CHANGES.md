@@ -1,3 +1,12 @@
+# 1.2.0
+
+-   Added `converterOptions` to converters. `converterOptions` consists of three
+    options: `decimalSeparator` allows you to specify the character used to separate
+    the integer part of a number from the fractional part. `thousandSeparator`
+    allows you to specify the character used to group the thousands together.
+    `renderThousands` determines whether or not the thousand separators are
+    rendered.
+
 # 1.1.0
 
 -   Added `context` to accessors. The validator functions get `context` as a

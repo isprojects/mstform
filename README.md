@@ -301,6 +301,13 @@ other object:
     `decimalPlaces` (default 2) after the period. With `allowNegative`
     (boolean, default true) you can specify if negatives are allowed
 
+Number and decimal converters also respond to a handful of options through the
+use of `converterOptions`. `decimalSeparator` specifies the character used to
+separate the integral and fractional part of a number or decimal.
+`thousandSeparator` specifies the character used to group thousands together.
+`renderThousands` determines whether or not the thousand separators should be
+rendered.
+
 ### Boolean
 
 `converters.boolean`: raw value is a boolean, value is also a boolean. The
@@ -344,6 +351,22 @@ including `null`. Prefer `converters.model` if you can. Warning: the default
 raw value is `null` and using this with basic data types (string, boolean,
 number and such) won't make the type checker happy as they don't accept "null".
 Use more specific converters instead.
+
+### Converter options
+
+Converters can be passed various options. Number and decimal converters respond
+to `decimalSeparator`, `thousandSeparator` and `renderThousands`. These can be
+set in a `converterOptions` argument on the state:
+
+```js
+const formState = form.state(o, {
+    converterOptions: {
+        decimalSeparator: ".",
+        thousandSeparator: ",",
+        renderThousands: false
+    }
+});
+```
 
 ### Controlling the conversion error message
 
