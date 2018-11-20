@@ -408,6 +408,62 @@ test("repeating form insert should retain raw too", async () => {
   expect(field2again.raw).toEqual("B*");
 });
 
+test("repeating form nested remove", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    n_entries: types.array(N)
+  });
+  const L = types.model("L", {
+    m_entries: types.array(M)
+  });
+
+  const form = new Form(L, {
+    m_entries: new RepeatingForm({
+      n_entries: new RepeatingForm({
+        bar: new Field(converters.string)
+      })
+    })
+  });
+
+  const o = L.create({ m_entries: [{ n_entries: [{ bar: "BAR" }] }] });
+
+  const state = form.state(o);
+
+  const mForms = state.repeatingForm("m_entries");
+  expect(mForms.length).toBe(1);
+  mForms.remove(o.m_entries[0]);
+  expect(mForms.length).toBe(0);
+});
+
+test("accessors should retain index order after insert", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "A" }, { bar: "B" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  forms.insert(0, N.create({ bar: "inserted" }));
+  expect(forms.accessors.map(accessor => accessor.path)).toEqual([
+    "/foo/0",
+    "/foo/1",
+    "/foo/2"
+  ]);
+});
+
 test("async validation in converter", async () => {
   const M = types.model("M", {
     foo: types.string

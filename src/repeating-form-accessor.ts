@@ -99,9 +99,12 @@ export class RepeatingFormAccessor<
 
   @computed
   get accessors(): RepeatingFormIndexedAccessor<D, G>[] {
+    // we get the entries in this map, in order of index
+    const length = Array.from(this.repeatingFormIndexedAccessors.values())
+      .length;
     const result = [];
-    for (let index = 0; index < this.length; index++) {
-      result.push(this.index(index));
+    for (let i = 0; i < length; i++) {
+      result.push(this.repeatingFormIndexedAccessors.get(i));
     }
     return result;
   }
