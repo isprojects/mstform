@@ -107,13 +107,6 @@ function renderSeparators(
 
 export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    raw = raw.trim();
-    return convertSeparators(raw, options);
-  }
 }
 
 const string = new StringConverter<string>({
@@ -123,6 +116,12 @@ const string = new StringConverter<string>({
   },
   render(value) {
     return value;
+  },
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    return raw.trim();
   }
 });
 
@@ -140,6 +139,13 @@ const number = new StringConverter<number>({
   },
   render(value, options) {
     return renderSeparators(value.toString(), options);
+  },
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    raw = raw.trim();
+    return convertSeparators(raw, options);
   }
 });
 
@@ -153,6 +159,12 @@ const integer = new StringConverter<number>({
   },
   render(value) {
     return value.toString();
+  },
+  preprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    return raw.trim();
   }
 });
 

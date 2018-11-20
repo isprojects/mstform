@@ -25,6 +25,7 @@ export interface ConverterOptions<R, V> {
   emptyRaw: R;
   defaultControlled?: Controlled;
   neverRequired?: boolean;
+  preprocessRaw?(raw: R, options?: StateConverterOptionsWithContext): R;
 }
 
 export interface IConverter<R, V> {
@@ -63,7 +64,10 @@ export class Converter<R, V> implements IConverter<R, V> {
   }
 
   preprocessRaw(raw: R, options?: StateConverterOptionsWithContext): R {
-    return raw;
+    if (this.definition.preprocessRaw == null) {
+      return raw;
+    }
+    return this.definition.preprocessRaw(raw, options);
   }
 
   async convert(
