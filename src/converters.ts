@@ -14,68 +14,79 @@ import { identity } from "./utils";
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
-function replaceDecimalSeparator(
+function getLastElement(
+  splitRaw: string[],
+  options: StateConverterOptionsWithContext
+) {
+  if (options.decimalSeparator == null) {
+    return splitRaw[splitRaw.length - 1];
+  }
+  return splitRaw[splitRaw.length - 1].split(options.decimalSeparator)[0];
+}
+
+function convertDecimalSeparator(
   raw: string,
   options: StateConverterOptionsWithContext
 ) {
   if (options.decimalSeparator == null) {
     return raw;
-  } else {
-    return raw.replace(options.decimalSeparator, ".");
   }
+  return raw.replace(options.decimalSeparator, ".");
 }
 
-function replaceWithDecimalSeparator(
+function renderDecimalSeparator(
   value: string,
   options: StateConverterOptionsWithContext
 ) {
   if (options.decimalSeparator == null) {
     return value;
-  } else {
-    return value.split(".").join(options.decimalSeparator);
   }
+  return value.replace(".", options.decimalSeparator);
 }
 
-function removeThousandSeparators(
+function convertThousandSeparators(
   raw: string,
   options: StateConverterOptionsWithContext
 ) {
   if (options.thousandSeparator == null) {
     return raw;
-  } else {
-    const splitRaw = raw.split(options.thousandSeparator);
-    //value before the first thousand separator has to be of length 1, 2 or 3
-    if (splitRaw[0].length < 1 || splitRaw[0].length > 3) {
+  }
+  const splitRaw = raw.split(options.thousandSeparator);
+  const firstElement = splitRaw[0];
+  const lastElement = getLastElement(splitRaw, options);
+  //value before the first thousand separator has to be of length 1, 2 or 3
+  if (firstElement.length < 1 || firstElement.length > 3) {
+    return raw;
+  }
+  //all other separated values should have length 3
+  for (let i = 1; i < splitRaw.length - 1; i++) {
+    if (splitRaw[i].length !== 3) {
       return raw;
     }
-    //all other separated values should have length 3
-    for (let i = 1; i < splitRaw.length; i++) {
-      if (splitRaw[i].length !== 3) {
-        return raw;
-      }
-    }
-    //turn split string back into full string without thousand separators
-    return splitRaw.join("");
   }
+  if (lastElement.length !== 3) {
+    return raw;
+  }
+  //turn split string back into full string without thousand separators
+  return splitRaw.join("");
 }
 
-function addThousandSeparators(
+function renderThousandSeparators(
   value: string,
   options: StateConverterOptionsWithContext
 ) {
   if (options.thousandSeparator == null) {
     return value;
-  } else {
-    return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
   }
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
 }
 
 function processSeparators(
   raw: string,
   options: StateConverterOptionsWithContext
 ) {
-  return removeThousandSeparators(
-    replaceDecimalSeparator(raw, options),
+  return convertDecimalSeparator(
+    convertThousandSeparators(raw, options),
     options
   );
 }
@@ -117,8 +128,8 @@ const number = new StringConverter<number>({
     if (options == null) {
       return value.toString();
     } else {
-      return addThousandSeparators(
-        replaceWithDecimalSeparator(value.toString(), options),
+      return renderThousandSeparators(
+        renderDecimalSeparator(value.toString(), options),
         options
       );
     }
@@ -195,8 +206,8 @@ class Decimal implements IConverter<string, string> {
         return raw;
       },
       render(value, options) {
-        return addThousandSeparators(
-          replaceWithDecimalSeparator(value.toString(), options),
+        return renderThousandSeparators(
+          renderDecimalSeparator(value.toString(), options),
           options
         );
       }
