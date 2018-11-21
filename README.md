@@ -861,6 +861,16 @@ const form = new Form(M, {
 });
 ```
 
+`requiredError` can also be set on the state, where it will be applied to every
+field on the form unless you control the required error message on the field, in
+which case it will ignore the state's general configuration:
+
+```js
+this.formState = form.state(o, {
+    requiredError: "This is required!"
+});
+```
+
 ## Dynamic disabled, hidden, required and readOnly fields
 
 mstform has hooks that let you calculate `hidden`, `disabled`, `required` and

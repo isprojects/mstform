@@ -1,3 +1,9 @@
+# 1.3.0
+
+-   Added `requiredError` behaviour to the form state. You can now set an error
+    message directly on the state. This will be applied to every field, unless
+    you specify `requiredError` on a field itself.
+
 # 1.2.1
 
 -   Fixed a bug where `converterOptions` were too aggressive and applied to
