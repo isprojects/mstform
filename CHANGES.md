@@ -1,15 +1,27 @@
+# 1.2.1
+
+-   Fixed a bug where `converterOptions` were too aggressive and applied to
+    all string converters -- now they apply to just number converter and
+    decimal converter.
+
+-   `converter.maybe`/`converter.maybeNull` was not properly calling
+    `preprocessRaw` on the underlying converter, which broke the behavior
+    of the new `converterOptions` when it was used.
+
+-   There was a release bug: 1.1.0 and 1.2.0 were a single release, not a
+    separate one. The changelog has been updated to reflect this, eliminating
+    the existence of any 1.1.0.
+
 # 1.2.0
 
--   Added `converterOptions` to converters. `converterOptions` consists of three
-    options: `decimalSeparator` allows you to specify the character used to separate
-    the integer part of a number from the fractional part. `thousandSeparator`
-    allows you to specify the character used to group the thousands together.
-    `renderThousands` determines whether or not the thousand separators are
-    rendered.
+-   Added `converterOptions` to converters. `converterOptions` consists of
+    three options: `decimalSeparator` allows you to specify the character used
+    to separate the integer part of a number from the fractional part.
+    `thousandSeparator` allows you to specify the character used to group the
+    thousands together. `renderThousands` determines whether or not the
+    thousand separators are rendered.
 
 -   Fixed a bug where a nested RepeatingForm couldn't be removed anymore.
-
-# 1.1.0
 
 -   Added `context` to accessors. The validator functions get `context` as a
     second argument. Converters get the context too with convert and render.
