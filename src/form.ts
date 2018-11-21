@@ -206,17 +206,18 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  getRequiredError(context: any, requiredError: string | ErrorFunc): string {
-    if (this.requiredError != null) {
-      if (typeof this.requiredError === "string") {
-        return this.requiredError;
-      }
-      return this.requiredError(context);
-    }
+  requiredErrorType(context: any, requiredError: string | ErrorFunc): string {
     if (typeof requiredError === "string") {
       return requiredError;
     }
     return requiredError(context);
+  }
+
+  getRequiredError(context: any, requiredError: string | ErrorFunc): string {
+    if (this.requiredError != null) {
+      return this.requiredErrorType(context, this.requiredError);
+    }
+    return this.requiredErrorType(context, requiredError);
   }
 
   getConversionError(context: any): string {
