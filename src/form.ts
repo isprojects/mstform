@@ -141,6 +141,16 @@ export interface ProcessOptions {
   ignoreRequired?: boolean;
 }
 
+function getRequiredError(
+  context: any,
+  requiredError: string | ErrorFunc
+): string {
+  if (typeof requiredError === "string") {
+    return requiredError;
+  }
+  return requiredError(context);
+}
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
@@ -206,18 +216,14 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  requiredErrorType(context: any, requiredError: string | ErrorFunc): string {
-    if (typeof requiredError === "string") {
-      return requiredError;
-    }
-    return requiredError(context);
-  }
-
-  getRequiredError(context: any, requiredError: string | ErrorFunc): string {
+  getRequiredError(
+    context: any,
+    stateRequiredError: string | ErrorFunc
+  ): string {
     if (this.requiredError != null) {
-      return this.requiredErrorType(context, this.requiredError);
+      return getRequiredError(context, this.requiredError);
     }
-    return this.requiredErrorType(context, requiredError);
+    return getRequiredError(context, stateRequiredError);
   }
 
   getConversionError(context: any): string {
@@ -231,7 +237,7 @@ export class Field<R, V> {
     raw: R,
     required: boolean,
     stateConverterOptions: StateConverterOptionsWithContext,
-    requiredError: string | ErrorFunc,
+    stateRequiredError: string | ErrorFunc,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw, stateConverterOptions);
@@ -243,7 +249,7 @@ export class Field<R, V> {
       required
     ) {
       return new ValidationMessage(
-        this.getRequiredError(stateConverterOptions.context, requiredError)
+        this.getRequiredError(stateConverterOptions.context, stateRequiredError)
       );
     }
 
@@ -262,7 +268,10 @@ export class Field<R, V> {
       // is implied to be required
       if (raw === this.converter.emptyRaw) {
         return new ValidationMessage(
-          this.getRequiredError(stateConverterOptions.context, requiredError)
+          this.getRequiredError(
+            stateConverterOptions.context,
+            stateRequiredError
+          )
         );
       }
       return new ValidationMessage(
