@@ -123,6 +123,16 @@ test("decimal converter", async () => {
   await checkWithOptions(converters.decimal({}), "4.314.314", "4314314", {
     thousandSeparator: "."
   });
+  await checkWithOptions(
+    converters.decimal({ decimalPlaces: 2 }),
+    "36.365,21",
+    "36365.21",
+    {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true
+    }
+  );
   await fails(converters.decimal({}), "foo");
   await fails(converters.decimal({}), "1foo");
   await fails(converters.decimal({}), "");
