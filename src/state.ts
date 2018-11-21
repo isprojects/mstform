@@ -125,7 +125,7 @@ export class FormState<
 
   _context: any;
   _converterOptions: StateConverterOptions;
-  _requiredError?: string | ErrorFunc;
+  _requiredError: string | ErrorFunc;
 
   constructor(
     public form: Form<M, D, G>,
@@ -176,7 +176,7 @@ export class FormState<
       this.updateFunc = null;
       this._context = undefined;
       this._converterOptions = {};
-      this._requiredError = undefined;
+      this._requiredError = "Required";
     } else {
       this.saveFunc = options.save ? options.save : defaultSaveFunc;
       this.isDisabledFunc = options.isDisabled
@@ -208,7 +208,7 @@ export class FormState<
       this.updateFunc = options.update ? options.update : null;
       this._context = options.context;
       this._converterOptions = options.converterOptions || {};
-      this._requiredError = options.requiredError || undefined;
+      this._requiredError = options.requiredError || "Required";
     }
   }
 
