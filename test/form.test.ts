@@ -1130,6 +1130,34 @@ test("required with context in requiredError", async () => {
   expect(field.value).toEqual(3);
 });
 
+test("required with requiredError on state and on field", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number, {
+      required: true,
+      requiredError: "This is required"
+    })
+  });
+
+  const o = M.create({ foo: 3 });
+
+  const state = form.state(o, {
+    context: "!",
+    requiredError: "This is not required"
+  });
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("This is required");
+  expect(field.value).toEqual(3);
+});
+
 test("dynamic required with save", async () => {
   const M = types.model("M", {
     foo: types.string,
