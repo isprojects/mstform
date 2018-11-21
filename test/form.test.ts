@@ -1079,6 +1079,57 @@ test("required with save", async () => {
   expect(field.error).toEqual("Required");
 });
 
+test("required with requiredError", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: 3 });
+
+  const state = form.state(o, { requiredError: "Verplicht" });
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("Verplicht");
+  expect(field.value).toEqual(3);
+});
+
+test("required with context in requiredError", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number, {
+      required: true
+    })
+  });
+
+  const o = M.create({ foo: 3 });
+
+  const state = form.state(o, {
+    context: "!",
+    requiredError: context => "Verplicht" + context
+  });
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3");
+  expect(field.value).toEqual(3);
+  await field.setRaw("");
+  expect(field.error).toEqual("Verplicht!");
+  expect(field.value).toEqual(3);
+});
+
 test("dynamic required with save", async () => {
   const M = types.model("M", {
     foo: types.string,
