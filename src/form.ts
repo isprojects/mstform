@@ -206,7 +206,13 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  getRequiredError(context: any): string {
+  getRequiredError(context: any, requiredError?: string | ErrorFunc): string {
+    if (requiredError != null) {
+      if (typeof requiredError === "string") {
+        return requiredError;
+      }
+      return requiredError(context);
+    }
     if (typeof this.requiredError === "string") {
       return this.requiredError;
     }
@@ -224,6 +230,7 @@ export class Field<R, V> {
     raw: R,
     required: boolean,
     stateConverterOptions: StateConverterOptionsWithContext,
+    requiredError?: string | ErrorFunc,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw, stateConverterOptions);
@@ -235,7 +242,7 @@ export class Field<R, V> {
       required
     ) {
       return new ValidationMessage(
-        this.getRequiredError(stateConverterOptions.context)
+        this.getRequiredError(stateConverterOptions.context, requiredError)
       );
     }
 
@@ -254,7 +261,7 @@ export class Field<R, V> {
       // is implied to be required
       if (raw === this.converter.emptyRaw) {
         return new ValidationMessage(
-          this.getRequiredError(stateConverterOptions.context)
+          this.getRequiredError(stateConverterOptions.context, requiredError)
         );
       }
       return new ValidationMessage(
