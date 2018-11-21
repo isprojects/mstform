@@ -141,11 +141,21 @@ export interface ProcessOptions {
   ignoreRequired?: boolean;
 }
 
+function getRequiredError(
+  context: any,
+  requiredError: string | ErrorFunc
+): string {
+  if (typeof requiredError === "string") {
+    return requiredError;
+  }
+  return requiredError(context);
+}
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
   conversionError: string | ErrorFunc;
-  requiredError: string | ErrorFunc;
+  requiredError?: string | ErrorFunc;
   required: boolean;
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
@@ -160,7 +170,7 @@ export class Field<R, V> {
       this.rawValidators = [];
       this.validators = [];
       this.conversionError = "Could not convert";
-      this.requiredError = "Required";
+      this.requiredError = undefined;
       this.required = false;
       this.getRaw = identity;
       this.controlled = this.createDefaultControlled();
@@ -168,7 +178,7 @@ export class Field<R, V> {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
       this.conversionError = options.conversionError || "Could not convert";
-      this.requiredError = options.requiredError || "Required";
+      this.requiredError = options.requiredError || undefined;
       this.required = options.required || false;
       if (options.fromEvent) {
         if (options.getRaw) {
@@ -206,11 +216,14 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  getRequiredError(context: any): string {
-    if (typeof this.requiredError === "string") {
-      return this.requiredError;
+  getRequiredError(
+    context: any,
+    stateRequiredError: string | ErrorFunc
+  ): string {
+    if (this.requiredError != null) {
+      return getRequiredError(context, this.requiredError);
     }
-    return this.requiredError(context);
+    return getRequiredError(context, stateRequiredError);
   }
 
   getConversionError(context: any): string {
@@ -224,6 +237,7 @@ export class Field<R, V> {
     raw: R,
     required: boolean,
     stateConverterOptions: StateConverterOptionsWithContext,
+    stateRequiredError: string | ErrorFunc,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw, stateConverterOptions);
@@ -235,7 +249,7 @@ export class Field<R, V> {
       required
     ) {
       return new ValidationMessage(
-        this.getRequiredError(stateConverterOptions.context)
+        this.getRequiredError(stateConverterOptions.context, stateRequiredError)
       );
     }
 
@@ -254,7 +268,10 @@ export class Field<R, V> {
       // is implied to be required
       if (raw === this.converter.emptyRaw) {
         return new ValidationMessage(
-          this.getRequiredError(stateConverterOptions.context)
+          this.getRequiredError(
+            stateConverterOptions.context,
+            stateRequiredError
+          )
         );
       }
       return new ValidationMessage(

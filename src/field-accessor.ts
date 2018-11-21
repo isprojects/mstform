@@ -266,6 +266,7 @@ export class FieldAccessor<R, V> {
         raw,
         this.required,
         this.state.stateConverterOptionsWithContext,
+        this.state._requiredError,
         options
       );
     } catch (e) {
