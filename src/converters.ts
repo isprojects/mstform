@@ -110,6 +110,7 @@ export class StringConverter<V> extends Converter<string, V> {
 
 const string = new StringConverter<string>({
   emptyRaw: "",
+  emptyValue: "",
   emptyImpossible: false,
   convert(raw) {
     return raw;
@@ -125,6 +126,7 @@ const string = new StringConverter<string>({
 const number = new StringConverter<number>({
   emptyRaw: "",
   emptyImpossible: true,
+  emptyValue: 1, // arbitrary as impossible
   rawValidate(raw) {
     // deal with case when string starts with .
     if (raw.startsWith(".")) {
@@ -150,6 +152,7 @@ const number = new StringConverter<number>({
 const integer = new StringConverter<number>({
   emptyRaw: "",
   emptyImpossible: true,
+  emptyValue: 1, // arbitrary as impossible
   rawValidate(raw) {
     return INTEGER_REGEX.test(raw);
   },
@@ -167,6 +170,7 @@ const integer = new StringConverter<number>({
 const boolean = new Converter<boolean, boolean>({
   emptyRaw: false,
   emptyImpossible: true,
+  emptyValue: false, // arbitrary as impossible
   convert(raw) {
     return raw;
   },
@@ -201,6 +205,7 @@ function decimal(options?: DecimalOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyImpossible: true,
+    emptyValue: "", // arbitrary as impossible
     defaultControlled: controlled.value,
     neverRequired: false,
     preprocessRaw(
@@ -232,6 +237,7 @@ function decimal(options?: DecimalOptions) {
 // XXX create a way to create arrays with mobx state tree types
 const stringArray = new Converter<string[], IObservableArray<string>>({
   emptyRaw: [],
+  emptyValue: observable.array([]),
   convert(raw) {
     return observable.array(raw);
   },
@@ -318,6 +324,7 @@ function model<M extends IAnyModelType>(model: M) {
   return new Converter<Instance<M> | null, Instance<M>>({
     emptyRaw: null,
     emptyImpossible: true,
+    emptyValue: null as any, // arbitrary as impossible
     defaultControlled: controlled.object,
     neverRequired: false,
     convert(raw) {
@@ -340,6 +347,7 @@ function maybeModel<M, RE, VE>(
   return new Converter({
     emptyRaw: emptyRaw,
     emptyImpossible: false,
+    emptyValue: emptyValue,
     convert: (r: M | RE) => (r !== emptyRaw ? (r as M) : emptyValue),
     render: (v: M | VE) => (v !== emptyValue ? (v as M) : emptyRaw),
     defaultControlled: controlled.object
@@ -348,6 +356,7 @@ function maybeModel<M, RE, VE>(
 
 const object = new Converter<any, any>({
   emptyRaw: null,
+  emptyValue: undefined,
   convert: identity,
   render: identity
 });

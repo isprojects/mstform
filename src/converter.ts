@@ -23,6 +23,7 @@ export interface ConverterOptions<R, V> {
     options: StateConverterOptionsWithContext
   ): boolean | Promise<boolean>;
   emptyRaw: R;
+  emptyValue: V;
   emptyImpossible?: boolean;
   defaultControlled?: Controlled;
   neverRequired?: boolean;
@@ -31,6 +32,7 @@ export interface ConverterOptions<R, V> {
 
 export interface IConverter<R, V> {
   emptyRaw: R;
+  emptyValue: V;
   emptyImpossible: boolean;
   convert(
     raw: R,
@@ -54,12 +56,14 @@ export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
 export class Converter<R, V> implements IConverter<R, V> {
   emptyRaw: R;
+  emptyValue: V;
   emptyImpossible: boolean;
   defaultControlled: Controlled;
   neverRequired: boolean = false;
 
   constructor(public definition: ConverterOptions<R, V>) {
     this.emptyRaw = definition.emptyRaw;
+    this.emptyValue = definition.emptyValue;
     this.defaultControlled = definition.defaultControlled
       ? definition.defaultControlled
       : controlled.object;

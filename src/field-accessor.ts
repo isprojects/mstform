@@ -276,16 +276,10 @@ export class FieldAccessor<R, V> {
 
     if (this.field.isRequired(raw, this.required, options)) {
       if (!this.field.converter.emptyImpossible) {
-        const response = await this.field.converter.convert(
-          this.field.converter.emptyRaw,
-          stateConverterOptions
+        this.state.setValueWithoutRawUpdate(
+          this.path,
+          this.field.converter.emptyValue
         );
-        if (response === CONVERSION_ERROR) {
-          // we shouldn't get a conversion error as it's possible
-          // to have an empty value
-          throw new Error("Cannot convert empty raw: shouldn't happen");
-        }
-        this.state.setValueWithoutRawUpdate(this.path, response.value);
       }
       this.setError(this.requiredError);
       return;
