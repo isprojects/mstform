@@ -260,10 +260,7 @@ export class Field<R, V> {
 
   async process(
     raw: R,
-    required: boolean,
-    stateConverterOptions: StateConverterOptionsWithContext,
-    stateRequiredError: string | ErrorFunc,
-    options?: ProcessOptions
+    stateConverterOptions: StateConverterOptionsWithContext
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw, stateConverterOptions);
 

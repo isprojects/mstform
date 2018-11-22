@@ -281,10 +281,7 @@ export class FieldAccessor<R, V> {
       // later
       processResult = await this.field.process(
         raw,
-        this.required,
-        this.state.stateConverterOptionsWithContext,
-        this.state._requiredError,
-        options
+        this.state.stateConverterOptionsWithContext
       );
     } catch (e) {
       this.setError("Something went wrong");
