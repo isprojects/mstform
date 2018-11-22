@@ -460,6 +460,7 @@ takes a text in the UI and considers `"t"` as `true` and the rest as
 ```ts
 const boolean = new Converter<string, boolean>({
     emptyRaw: "f",
+    emptyImpossible: true,
     convert(raw) {
         return raw === "t";
     },
@@ -480,7 +481,13 @@ whether the raw value is valid. `validate` is an optional function that checks
 whether the value is valid.
 
 `emptyRaw` is the raw value that should be shown if the field is empty in the
-UI.
+UI. We also set `emptyImpossible` -- it's impossible for the result of this
+conversion to be empty (it's either `true` or `false`). In other cases,
+an empty value can exist: for instance a converter to a string could produce
+the empty string, or a maybe converter can produce `undefined`. In this
+case you need to set the `emptyValue` property to what the value is when
+it's not filled in. It's not allowed to set `emptyValue` when you
+also define `emptyImpossible` to be `true`.
 
 You can optionally set `defaultControlled`, the controlled props to be used by
 default for this converter. You can also optionally set `neverRequired`; this

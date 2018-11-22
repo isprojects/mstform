@@ -8,7 +8,6 @@ import {
   converters,
   Converter
 } from "../src";
-import { type } from "os";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -132,7 +131,6 @@ test("context in converter", async () => {
 
   const myConverter = new Converter<string, string>({
     emptyRaw: "",
-    emptyValue: "",
     rawValidate(raw, options) {
       return raw.startsWith(options.context.prefix);
     },
@@ -169,7 +167,6 @@ test("context in converter in convert", async () => {
 
   const myConverter = new Converter<string, string>({
     emptyRaw: "",
-    emptyValue: "",
     convert(raw: string, options) {
       return options.context.prefix + raw;
     },
@@ -200,7 +197,6 @@ test("context in converter in render", async () => {
 
   const myConverter = new Converter<string, string>({
     emptyRaw: "",
-    emptyValue: "",
     convert(raw: string) {
       return raw;
     },
