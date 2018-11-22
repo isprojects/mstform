@@ -254,7 +254,13 @@ export class FieldAccessor<R, V> {
     }
 
     // we can still set raw directly before the await
+    const originalRaw = raw;
     this._raw = raw;
+
+    raw = this.field.converter.preprocessRaw(
+      raw,
+      this.state.stateConverterOptionsWithContext || {}
+    );
 
     if (
       this.field.isRequired(
@@ -292,7 +298,7 @@ export class FieldAccessor<R, V> {
     const currentRaw = this._raw;
 
     // if the raw changed in the mean time, bail out
-    if (!comparer.structural(currentRaw, raw)) {
+    if (!comparer.structural(currentRaw, originalRaw)) {
       return;
     }
     // validation only is complete if the currentRaw has been validated

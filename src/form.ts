@@ -250,8 +250,6 @@ export class Field<R, V> {
     options: ProcessOptions | undefined,
     stateConverterOptions: StateConverterOptionsWithContext | undefined
   ): boolean {
-    raw = this.converter.preprocessRaw(raw, stateConverterOptions || {});
-
     return (
       !this.isRequiredIgnored(options) &&
       (this.isRequiredAndMissing(raw, required) || this.isImpossibleEmpty(raw))
@@ -262,8 +260,6 @@ export class Field<R, V> {
     raw: R,
     stateConverterOptions: StateConverterOptionsWithContext
   ): Promise<ProcessResponse<V>> {
-    raw = this.converter.preprocessRaw(raw, stateConverterOptions);
-
     for (const validator of this.rawValidators) {
       const validationResponse = await validator(
         raw,
