@@ -14,6 +14,7 @@ import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
+import { stat } from "fs";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -257,15 +258,14 @@ export class FieldAccessor<R, V> {
     const originalRaw = raw;
     this._raw = raw;
 
-    raw = this.field.converter.preprocessRaw(
-      raw,
-      this.state.stateConverterOptionsWithContext || {}
-    );
+    const stateConverterOptions = this.state.stateConverterOptionsWithContext;
+
+    raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
 
     if (this.field.isRequired(raw, this.required, options)) {
       this.setError(
         this.field.getRequiredError(
-          this.state.stateConverterOptionsWithContext.context,
+          stateConverterOptions.context,
           this.state._requiredError
         )
       );
@@ -278,10 +278,7 @@ export class FieldAccessor<R, V> {
     try {
       // XXX is await correct here? we should await the result
       // later
-      processResult = await this.field.process(
-        raw,
-        this.state.stateConverterOptionsWithContext
-      );
+      processResult = await this.field.process(raw, stateConverterOptions);
     } catch (e) {
       this.setError("Something went wrong");
       this.setValidating(false);
