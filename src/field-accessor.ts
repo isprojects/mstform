@@ -8,7 +8,13 @@ import {
   comparer,
   IReactionDisposer
 } from "mobx";
-import { Field, ProcessValue, ValidationMessage, ProcessOptions } from "./form";
+import {
+  Field,
+  ProcessValue,
+  ValidationMessage,
+  ProcessOptions,
+  errorMessage
+} from "./form";
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
@@ -248,6 +254,14 @@ export class FieldAccessor<R, V> {
     return this.errorValue === undefined;
   }
 
+  @computed
+  get requiredError(): string {
+    if (this.field.requiredError != null) {
+      return errorMessage(this.field.requiredError, this.state.context);
+    }
+    return errorMessage(this.state._requiredError, this.state.context);
+  }
+
   @action
   async setRaw(raw: R, options?: ProcessOptions) {
     if (this.state.saveStatus === "rightAfter") {
@@ -263,12 +277,7 @@ export class FieldAccessor<R, V> {
     raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
 
     if (this.field.isRequired(raw, this.required, options)) {
-      this.setError(
-        this.field.getRequiredError(
-          stateConverterOptions.context,
-          this.state._requiredError
-        )
-      );
+      this.setError(this.requiredError);
       return;
     }
 

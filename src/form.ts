@@ -134,16 +134,6 @@ export interface ProcessOptions {
   ignoreRequired?: boolean;
 }
 
-function getRequiredError(
-  context: any,
-  requiredError: string | ErrorFunc
-): string {
-  if (typeof requiredError === "string") {
-    return requiredError;
-  }
-  return requiredError(context);
-}
-
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
@@ -209,21 +199,8 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  getRequiredError(
-    context: any,
-    stateRequiredError: string | ErrorFunc
-  ): string {
-    if (this.requiredError != null) {
-      return getRequiredError(context, this.requiredError);
-    }
-    return getRequiredError(context, stateRequiredError);
-  }
-
   getConversionError(context: any): string {
-    if (typeof this.conversionError === "string") {
-      return this.conversionError;
-    }
-    return this.conversionError(context);
+    return errorMessage(this.conversionError, context);
   }
 
   isRequiredIgnored(options: ProcessOptions | undefined): boolean {
@@ -296,4 +273,11 @@ export interface GroupOptions<D extends FormDefinition<any>> {
 
 export class Group<D extends FormDefinition<any>> {
   constructor(public options: GroupOptions<D>) {}
+}
+
+export function errorMessage(message: string | ErrorFunc, context: any) {
+  if (typeof message === "string") {
+    return message;
+  }
+  return message(context);
 }
