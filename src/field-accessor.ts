@@ -256,10 +256,8 @@ export class FieldAccessor<R, V> {
 
   @computed
   get requiredError(): string {
-    if (this.field.requiredError != null) {
-      return errorMessage(this.field.requiredError, this.state.context);
-    }
-    return errorMessage(this.state._requiredError, this.state.context);
+    const requiredError = this.field.requiredError || this.state._requiredError;
+    return errorMessage(requiredError, this.state.context);
   }
 
   @action
