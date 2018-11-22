@@ -4,7 +4,11 @@ import {
   ModelInstanceType,
   Instance
 } from "mobx-state-tree";
-import { CONVERSION_ERROR, IConverter } from "./converter";
+import {
+  CONVERSION_ERROR,
+  IConverter,
+  StateConverterOptionsWithContext
+} from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
 import { identity } from "./utils";
@@ -130,11 +134,21 @@ export interface ProcessOptions {
   ignoreRequired?: boolean;
 }
 
+function getRequiredError(
+  context: any,
+  requiredError: string | ErrorFunc
+): string {
+  if (typeof requiredError === "string") {
+    return requiredError;
+  }
+  return requiredError(context);
+}
+
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
   conversionError: string | ErrorFunc;
-  requiredError: string | ErrorFunc;
+  requiredError?: string | ErrorFunc;
   required: boolean;
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
@@ -149,7 +163,7 @@ export class Field<R, V> {
       this.rawValidators = [];
       this.validators = [];
       this.conversionError = "Could not convert";
-      this.requiredError = "Required";
+      this.requiredError = undefined;
       this.required = false;
       this.getRaw = identity;
       this.controlled = this.createDefaultControlled();
@@ -157,7 +171,7 @@ export class Field<R, V> {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
       this.conversionError = options.conversionError || "Could not convert";
-      this.requiredError = options.requiredError || "Required";
+      this.requiredError = options.requiredError || undefined;
       this.required = options.required || false;
       if (options.fromEvent) {
         if (options.getRaw) {
@@ -195,11 +209,14 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  getRequiredError(context: any): string {
-    if (typeof this.requiredError === "string") {
-      return this.requiredError;
+  getRequiredError(
+    context: any,
+    stateRequiredError: string | ErrorFunc
+  ): string {
+    if (this.requiredError != null) {
+      return getRequiredError(context, this.requiredError);
     }
-    return this.requiredError(context);
+    return getRequiredError(context, stateRequiredError);
   }
 
   getConversionError(context: any): string {
@@ -212,10 +229,11 @@ export class Field<R, V> {
   async process(
     raw: R,
     required: boolean,
-    context: any,
+    stateConverterOptions: StateConverterOptionsWithContext,
+    stateRequiredError: string | ErrorFunc,
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
-    raw = this.converter.preprocessRaw(raw);
+    raw = this.converter.preprocessRaw(raw, stateConverterOptions);
     const ignoreRequired = options != null ? options.ignoreRequired : false;
     if (
       !this.converter.neverRequired &&
@@ -223,26 +241,41 @@ export class Field<R, V> {
       raw === this.converter.emptyRaw &&
       required
     ) {
-      return new ValidationMessage(this.getRequiredError(context));
+      return new ValidationMessage(
+        this.getRequiredError(stateConverterOptions.context, stateRequiredError)
+      );
     }
 
     for (const validator of this.rawValidators) {
-      const validationResponse = await validator(raw, context);
+      const validationResponse = await validator(
+        raw,
+        stateConverterOptions.context
+      );
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }
     }
-    const result = await this.converter.convert(raw, context);
+    const result = await this.converter.convert(raw, stateConverterOptions);
     if (result === CONVERSION_ERROR) {
       // if we get a conversion error for the empty raw, the field
       // is implied to be required
       if (raw === this.converter.emptyRaw) {
-        return new ValidationMessage(this.getRequiredError(context));
+        return new ValidationMessage(
+          this.getRequiredError(
+            stateConverterOptions.context,
+            stateRequiredError
+          )
+        );
       }
-      return new ValidationMessage(this.getConversionError(context));
+      return new ValidationMessage(
+        this.getConversionError(stateConverterOptions.context)
+      );
     }
     for (const validator of this.validators) {
-      const validationResponse = await validator(result.value, context);
+      const validationResponse = await validator(
+        result.value,
+        stateConverterOptions.context
+      );
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }

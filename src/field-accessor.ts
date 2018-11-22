@@ -125,7 +125,10 @@ export class FieldAccessor<R, V> {
     if (this.addMode) {
       return this.field.converter.emptyRaw;
     }
-    return this.field.render(this.value, this.state.context);
+    return this.field.render(
+      this.value,
+      this.state.stateConverterOptionsWithContext
+    );
   }
 
   @computed
@@ -262,7 +265,8 @@ export class FieldAccessor<R, V> {
       processResult = await this.field.process(
         raw,
         this.required,
-        this.state.context,
+        this.state.stateConverterOptionsWithContext,
+        this.state._requiredError,
         options
       );
     } catch (e) {
