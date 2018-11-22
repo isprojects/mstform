@@ -247,8 +247,7 @@ export class Field<R, V> {
   isRequired(
     raw: R,
     required: boolean,
-    options: ProcessOptions | undefined,
-    stateConverterOptions: StateConverterOptionsWithContext | undefined
+    options: ProcessOptions | undefined
   ): boolean {
     return (
       !this.isRequiredIgnored(options) &&

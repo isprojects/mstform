@@ -262,14 +262,7 @@ export class FieldAccessor<R, V> {
       this.state.stateConverterOptionsWithContext || {}
     );
 
-    if (
-      this.field.isRequired(
-        raw,
-        this.required,
-        options,
-        this.state.stateConverterOptionsWithContext
-      )
-    ) {
+    if (this.field.isRequired(raw, this.required, options)) {
       this.setError(
         this.field.getRequiredError(
           this.state.stateConverterOptionsWithContext.context,
