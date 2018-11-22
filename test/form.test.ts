@@ -894,7 +894,7 @@ test("FormState can be saved", async () => {
 
   async function save(data: any) {
     if (data.foo === "") {
-      return { foo: "Required" };
+      return { foo: "Wrong" };
     }
     return null;
   }
@@ -912,7 +912,7 @@ test("FormState can be saved", async () => {
   // now communicate with the server by doing the save
   const saveResult0 = await state.save();
   expect(saveResult0).toBe(false);
-  expect(field.error).toEqual("Required");
+  expect(field.error).toEqual("Wrong");
 
   // correct things
   await field.setRaw("BAR");
