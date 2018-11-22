@@ -226,6 +226,20 @@ export class Field<R, V> {
     return this.conversionError(context);
   }
 
+  isRequiredAndMissing(
+    raw: R,
+    required: boolean,
+    options?: ProcessOptions
+  ): boolean {
+    const ignoreRequired = options != null ? options.ignoreRequired : false;
+    return (
+      !this.converter.neverRequired &&
+      !ignoreRequired &&
+      raw === this.converter.emptyRaw &&
+      required
+    );
+  }
+
   async process(
     raw: R,
     required: boolean,
@@ -234,13 +248,8 @@ export class Field<R, V> {
     options?: ProcessOptions
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw, stateConverterOptions);
-    const ignoreRequired = options != null ? options.ignoreRequired : false;
-    if (
-      !this.converter.neverRequired &&
-      !ignoreRequired &&
-      raw === this.converter.emptyRaw &&
-      required
-    ) {
+
+    if (this.isRequiredAndMissing(raw, required, options)) {
       return new ValidationMessage(
         this.getRequiredError(stateConverterOptions.context, stateRequiredError)
       );
