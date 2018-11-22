@@ -20,7 +20,7 @@ import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
-import { stat } from "fs";
+import { CONVERSION_ERROR } from "./converter";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -275,6 +275,16 @@ export class FieldAccessor<R, V> {
     raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
 
     if (this.field.isRequired(raw, this.required, options)) {
+      if (!this.field.converter.emptyImpossible) {
+        const response = await this.field.converter.convert(
+          this.field.converter.emptyRaw,
+          stateConverterOptions
+        );
+        if (response === CONVERSION_ERROR) {
+          throw new Error("Cannot convert raw value");
+        }
+        this.state.setValueWithoutRawUpdate(this.path, response.value);
+      }
       this.setError(this.requiredError);
       return;
     }

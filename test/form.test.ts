@@ -1225,8 +1225,11 @@ test("required with string", async () => {
 
   const field = state.field("foo");
 
+  expect(field.value).toEqual("FOO");
+
   await field.setRaw("");
   expect(field.error).toEqual("Required");
+  expect(field.value).toEqual("");
 });
 
 test("required with string and whitespace", async () => {
@@ -1320,7 +1323,7 @@ test("required with maybe", async () => {
   expect(field.value).toEqual(3);
   await field.setRaw("");
   expect(field.error).toEqual("Required");
-  expect(field.value).toEqual(3);
+  expect(field.value).toBeUndefined();
 });
 
 test("required with maybeNull", async () => {
@@ -1347,7 +1350,7 @@ test("required with maybeNull", async () => {
   expect(field.value).toEqual(3);
   await field.setRaw("");
   expect(field.error).toEqual("Required");
-  expect(field.value).toEqual(3);
+  expect(field.value).toBeNull();
 });
 
 test("setting value on model will update form", async () => {
