@@ -1,5 +1,5 @@
 import { IObservableArray, observable } from "mobx";
-import { IModelType, IAnyModelType, Instance } from "mobx-state-tree";
+import { IAnyModelType, Instance } from "mobx-state-tree";
 import {
   CONVERSION_ERROR,
   ConversionResponse,
@@ -111,6 +111,7 @@ export class StringConverter<V> extends Converter<string, V> {
 
 const string = new StringConverter<string>({
   emptyRaw: "",
+  emptyImpossible: false,
   convert(raw) {
     return raw;
   },
@@ -124,6 +125,7 @@ const string = new StringConverter<string>({
 
 const number = new StringConverter<number>({
   emptyRaw: "",
+  emptyImpossible: true,
   rawValidate(raw) {
     // deal with case when string starts with .
     if (raw.startsWith(".")) {
@@ -148,6 +150,7 @@ const number = new StringConverter<number>({
 
 const integer = new StringConverter<number>({
   emptyRaw: "",
+  emptyImpossible: true,
   rawValidate(raw) {
     return INTEGER_REGEX.test(raw);
   },
@@ -164,6 +167,7 @@ const integer = new StringConverter<number>({
 
 const boolean = new Converter<boolean, boolean>({
   emptyRaw: false,
+  emptyImpossible: true,
   convert(raw) {
     return raw;
   },
@@ -184,6 +188,7 @@ class Decimal implements IConverter<string, string> {
   public converter: StringConverter<string>;
 
   emptyRaw: string;
+  emptyImpossible: boolean;
   defaultControlled = controlled.value;
   neverRequired = false;
 
@@ -198,6 +203,7 @@ class Decimal implements IConverter<string, string> {
         : options.allowNegative;
 
     this.emptyRaw = "";
+    this.emptyImpossible = true;
     const regex = new RegExp(
       `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
         1}})(\\.\\d{0,${decimalPlaces}})?$`
@@ -295,9 +301,11 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
   emptyRaw: string;
   defaultControlled = controlled.value;
   neverRequired = false;
+  emptyImpossible: boolean;
 
   constructor(public converter: IConverter<string, V>, public emptyValue: VE) {
     this.emptyRaw = "";
+    this.emptyImpossible = false;
   }
 
   preprocessRaw(
@@ -328,11 +336,13 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
 
 class Model<M, RE> implements IConverter<Instance<M> | RE, Instance<M>> {
   emptyRaw: Instance<M> | RE;
+  emptyImpossible: boolean;
   defaultControlled: Controlled;
   neverRequired = false;
 
   constructor(model: M, emptyRaw: RE) {
     this.emptyRaw = emptyRaw;
+    this.emptyImpossible = true;
     this.defaultControlled = controlled.object;
   }
   preprocessRaw(raw: Instance<M>): Instance<M> {
@@ -366,6 +376,7 @@ function maybeModel<M, RE, VE>(
 ): IConverter<M | RE, M | VE> {
   return new Converter({
     emptyRaw: emptyRaw,
+    emptyImpossible: false,
     convert: (r: M | RE) => (r !== emptyRaw ? (r as M) : emptyValue),
     render: (v: M | VE) => (v !== emptyValue ? (v as M) : emptyRaw),
     defaultControlled: controlled.object

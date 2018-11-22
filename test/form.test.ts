@@ -907,8 +907,8 @@ test("FormState can be saved", async () => {
   await field.setRaw("");
 
   // we don't see any client-side validation errors
-  expect(o.foo).toEqual("");
   expect(field.error).toBeUndefined();
+  expect(o.foo).toEqual("");
   // now communicate with the server by doing the save
   const saveResult0 = await state.save();
   expect(saveResult0).toBe(false);

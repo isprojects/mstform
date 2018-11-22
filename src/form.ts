@@ -226,18 +226,22 @@ export class Field<R, V> {
     return this.conversionError(context);
   }
 
-  isRequiredAndMissing(
-    raw: R,
-    required: boolean,
-    options?: ProcessOptions
-  ): boolean {
-    const ignoreRequired = options != null ? options.ignoreRequired : false;
+  isRequiredAndMissing(raw: R, required: boolean): boolean {
+    return raw === this.converter.emptyRaw && required;
+  }
+
+  isImpossibleEmpty(raw: R): boolean {
     return (
-      !this.converter.neverRequired &&
-      !ignoreRequired &&
       raw === this.converter.emptyRaw &&
-      required
+      !this.converter.neverRequired &&
+      this.converter.emptyImpossible
     );
+  }
+
+  isRequiredIgnored(options?: ProcessOptions): boolean {
+    const ignoreRequired: boolean =
+      options != null ? !!options.ignoreRequired : false;
+    return this.converter.neverRequired || ignoreRequired;
   }
 
   async process(
@@ -249,7 +253,10 @@ export class Field<R, V> {
   ): Promise<ProcessResponse<V>> {
     raw = this.converter.preprocessRaw(raw, stateConverterOptions);
 
-    if (this.isRequiredAndMissing(raw, required, options)) {
+    if (
+      !this.isRequiredIgnored(options) &&
+      (this.isRequiredAndMissing(raw, required) || this.isImpossibleEmpty(raw))
+    ) {
       return new ValidationMessage(
         this.getRequiredError(stateConverterOptions.context, stateRequiredError)
       );
@@ -266,16 +273,6 @@ export class Field<R, V> {
     }
     const result = await this.converter.convert(raw, stateConverterOptions);
     if (result === CONVERSION_ERROR) {
-      // if we get a conversion error for the empty raw, the field
-      // is implied to be required
-      if (raw === this.converter.emptyRaw) {
-        return new ValidationMessage(
-          this.getRequiredError(
-            stateConverterOptions.context,
-            stateRequiredError
-          )
-        );
-      }
       return new ValidationMessage(
         this.getConversionError(stateConverterOptions.context)
       );
