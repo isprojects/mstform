@@ -226,18 +226,6 @@ export class Field<R, V> {
     return this.conversionError(context);
   }
 
-  isRequiredAndMissing(raw: R, required: boolean): boolean {
-    return raw === this.converter.emptyRaw && required;
-  }
-
-  isImpossibleEmpty(raw: R): boolean {
-    return (
-      raw === this.converter.emptyRaw &&
-      !this.converter.neverRequired &&
-      this.converter.emptyImpossible
-    );
-  }
-
   isRequiredIgnored(options: ProcessOptions | undefined): boolean {
     const ignoreRequired: boolean =
       options != null ? !!options.ignoreRequired : false;
@@ -249,10 +237,13 @@ export class Field<R, V> {
     required: boolean,
     options: ProcessOptions | undefined
   ): boolean {
-    return (
-      !this.isRequiredIgnored(options) &&
-      (this.isRequiredAndMissing(raw, required) || this.isImpossibleEmpty(raw))
-    );
+    if (this.isRequiredIgnored(options)) {
+      return false;
+    }
+    if (raw !== this.converter.emptyRaw) {
+      return false;
+    }
+    return required || this.converter.emptyImpossible;
   }
 
   async process(
