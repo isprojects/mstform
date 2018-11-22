@@ -1190,7 +1190,3 @@ const state = form.state(o, {
 
 -   Don't name your form state `this.state` on a React component as this has a
     special meaning to React and can lead to odd bugs.
-
-```
-
-```
