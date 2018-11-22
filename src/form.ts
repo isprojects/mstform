@@ -203,12 +203,6 @@ export class Field<R, V> {
     return errorMessage(this.conversionError, context);
   }
 
-  isRequiredIgnored(options: ProcessOptions | undefined): boolean {
-    const ignoreRequired: boolean =
-      options != null ? !!options.ignoreRequired : false;
-    return this.converter.neverRequired || ignoreRequired;
-  }
-
   isRequired(
     raw: R,
     required: boolean,
@@ -220,7 +214,9 @@ export class Field<R, V> {
     if (!this.converter.neverRequired && this.converter.emptyImpossible) {
       return true;
     }
-    if (this.isRequiredIgnored(options)) {
+    const ignoreRequired: boolean =
+      options != null ? !!options.ignoreRequired : false;
+    if (this.converter.neverRequired || ignoreRequired) {
       return false;
     }
     return required;
