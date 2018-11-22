@@ -1,14 +1,13 @@
 import { IObservableArray, observable } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 import {
-  CONVERSION_ERROR,
   ConversionResponse,
   ConversionValue,
   Converter,
   IConverter,
   StateConverterOptionsWithContext
 } from "./converter";
-import { Controlled, controlled } from "./controlled";
+import { controlled } from "./controlled";
 import { identity } from "./utils";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
@@ -243,9 +242,6 @@ class Decimal implements IConverter<string, string> {
   }
   render(value: string, options: StateConverterOptionsWithContext) {
     return this.converter.render(value, options);
-  }
-  getRaw(value: any) {
-    return value;
   }
 }
 
