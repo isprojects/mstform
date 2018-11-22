@@ -273,6 +273,10 @@ function maybeNull<R, V>(
   return maybeModel(converter, null, null) as IConverter<R | null, V | null>;
 }
 
+// XXX it would be nice if this could be a simple converter instead
+// of a reimplementation. unfortunately the delegation to the
+// underlying converter makes this impossible as it has a different
+// and asynchronous API. We need to refactor this further in the future.
 class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
   emptyRaw: string;
   defaultControlled = controlled.value;
