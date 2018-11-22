@@ -275,6 +275,60 @@ const description = state.field("description");
 const name = state.subForm("pet").field("name");
 ```
 
+## Accessors
+
+mstform defines a bunch of accessors:
+
+-   `FieldAccessor`, which you define with `Field` and get with `field()`. This
+    represents a field in the form that you can actually fill in and interact
+    with.
+
+-   `SubFormAccessor` which you define with `SubForm` and get with `subForm()`.
+    This represents a sub-object in the underlying model instance.
+
+-   `RepeatingFormAccessor` which you define with `RepeatingForm` and get with
+    `repeatingForm()`. This represents an array of objects in the underlying
+    model instance.
+
+-   `RepeatingFormIndexedAccessor` which you define along with
+    `RepeatingFormAccessor` using `RepeatingForm`. You access it via the
+    `index()` method on a `RepeatingFormAccessor`. This represents a sub-object
+    in the underlying array instance.
+
+-   `GroupAccessor`. You define this in a second argument on forms. You can
+    access it via the `group()` method on any form accessor. This is a special
+    kind of accessor that only implements an `isValid` method. It's a way to
+    aggregate validation results from other accessors.
+
+-   Finally there is the `FormState` itself, which is the accessor at the root of
+    all things. You get it with `form.state()`.
+
+Accessors can contain other accessors. In particular, `FormState`,
+`SubFormAccessor` and `RepeatingFormIndexedAccessor` allow you to access all
+varieties of sub-accessor on it (except for `FormState` itself).
+`RepeatingFormAccessor` allows only a single kind of sub-accessor, namely
+`RepeatingFormIndexedAccessor`, which you access via `index()`. You cannot
+access any sub-accessors on `FieldAccessor`. `GroupAccessor` doesn't allow
+you access sub-accessors either.
+
+All these accessors, except for `GroupAccessor` which is truly the odd one out,
+have some properties in common:
+
+-   `value`: the underlying MST value that this accessor represents.
+
+-   `path`: The JSON path to the underlying MST value (see mobx-state-tree).
+
+-   `context`: The context object such as passed into `form.state()`.
+
+-   `isValid`: Is true if the accessor (and all its sub-accessors) is valid.
+
+-   `error`: An error message (or `undefined`). Note that errors on non-field
+    accessors can only be set by external means such as with the `getERror`
+    hook.
+
+-   `warning`: A warning message (or `undefined`). Warning messages can only
+    be set using the `getWarning` hook.
+
 ## Supported converters
 
 A converter specifies how to convert a raw value as it is entered in the form
