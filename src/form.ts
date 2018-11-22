@@ -1,8 +1,7 @@
-import { IObservableArray } from "mobx";
 import {
-  IModelType,
+  IMSTArray,
   IAnyModelType,
-  ModelInstanceTypeProps,
+  ModelInstanceType,
   Instance
 } from "mobx-state-tree";
 import {
@@ -14,19 +13,11 @@ import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
 import { identity } from "./utils";
 
-// XXX copied from MST as it doesn't export it
-export type ExtractProps<T extends IAnyModelType> = T extends IModelType<
-  infer P,
-  any,
-  any,
-  any
->
-  ? P
-  : never;
-
-export type ArrayEntryType<T> = T extends IObservableArray<infer A> ? A : never;
+export type ArrayEntryType<T> = T extends IMSTArray<infer A> ? A : never;
 
 export type RawType<F> = F extends Field<infer R, any> ? R : never;
+
+export type ValueType<F> = F extends Field<any, infer V> ? V : never;
 
 export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
   infer D,
@@ -50,16 +41,18 @@ export type SubFormGroupDefinitionType<T> = T extends SubForm<any, infer G>
   ? G
   : never;
 
-export type FormDefinitionEntry<M, K extends keyof M> =
-  | Field<any, M[K]>
-  | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, GroupDefinition<any>>
-  | SubForm<FormDefinition<M[K]>, GroupDefinition<any>>;
-
-export type FormDefinition<M> = { [K in keyof M]?: FormDefinitionEntry<M, K> };
-
-export type FormDefinitionForModel<P extends IAnyModelType> = FormDefinition<
-  ModelInstanceTypeProps<ExtractProps<P>>
+export type FormDefinition<M extends IAnyModelType> = InstanceFormDefinition<
+  Instance<M>
 >;
+
+export type InstanceFormDefinition<
+  M extends ModelInstanceType<any, any, any, any>
+> = {
+  [K in keyof M]?:
+    | Field<any, M[K]>
+    | RepeatingForm<InstanceFormDefinition<ArrayEntryType<M[K]>>, any>
+    | SubForm<FormDefinition<M[K]>, any>
+};
 
 export type ValidationResponse = string | null | undefined | false;
 
@@ -102,7 +95,7 @@ export type GroupDefinition<D extends FormDefinition<any>> = {
 
 export class Form<
   M extends IAnyModelType,
-  D extends FormDefinitionForModel<M>,
+  D extends FormDefinition<M>,
   G extends GroupDefinition<D>
 > {
   constructor(

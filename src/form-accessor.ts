@@ -1,4 +1,5 @@
-import { observable, computed, action } from "mobx";
+import { observable, computed } from "mobx";
+
 import {
   SubForm,
   Field,
@@ -33,7 +34,7 @@ export class FormAccessor<
     RepeatingFormAccessor<any, any>
   > = observable.map();
   subFormAccessors: Map<keyof D, SubFormAccessor<any, any>> = observable.map();
-  groupAccessors: Map<keyof G, GroupAccessor<any, any>> = observable.map();
+  groupAccessors: Map<keyof G, GroupAccessor<any>> = observable.map();
 
   @observable
   _addMode: boolean;
@@ -75,6 +76,11 @@ export class FormAccessor<
       return "";
     }
     return this.parent.path;
+  }
+
+  @computed
+  get value(): any {
+    return this.state.getValue(this.path);
   }
 
   @computed
@@ -248,7 +254,7 @@ export class FormAccessor<
     this.groupAccessors.set(name, result);
   }
 
-  group<K extends keyof G>(name: K): GroupAccess<any, D> {
+  group<K extends keyof G>(name: K): GroupAccess<D> {
     const accessor = this.groupAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a Group`);

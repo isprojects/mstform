@@ -3,7 +3,7 @@ import { FormDefinition, Group } from "./form";
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 
-export class GroupAccessor<M, D extends FormDefinition<M>> {
+export class GroupAccessor<D extends FormDefinition<any>> {
   constructor(
     public state: FormState<any, any, any>,
     public definition: D,

@@ -49,6 +49,11 @@ export class SubFormAccessor<
   }
 
   @computed
+  get value(): any {
+    return this.state.getValue(this.path);
+  }
+
+  @computed
   get addMode(): boolean {
     return this.parent.addMode;
   }

@@ -1,5 +1,5 @@
 import { observable, computed } from "mobx";
-import { applyPatch, resolvePath } from "mobx-state-tree";
+import { applyPatch } from "mobx-state-tree";
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { Accessor } from "./accessor";
@@ -32,6 +32,11 @@ export class RepeatingFormAccessor<
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
+  }
+
+  @computed
+  get value(): any {
+    return this.state.getValue(this.path);
   }
 
   @computed
@@ -136,7 +141,7 @@ export class RepeatingFormAccessor<
   }
 
   push(node: any) {
-    const a = resolvePath(this.state.node, this.path) as any[];
+    const a = this.value;
     const index = a.length;
     const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
@@ -144,7 +149,7 @@ export class RepeatingFormAccessor<
   }
 
   remove(node: any) {
-    const a = resolvePath(this.state.node, this.path) as any[];
+    const a = this.value;
     const index = a.indexOf(node);
     if (index === -1) {
       throw new Error("Cannot find node to remove.");
@@ -207,9 +212,9 @@ export class RepeatingFormAccessor<
     });
   }
 
+  @computed
   get length(): number {
-    const a = resolvePath(this.state.node, this.path) as any[];
-    return a.length;
+    return this.value.length;
   }
 
   @computed

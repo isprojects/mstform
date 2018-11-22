@@ -1,6 +1,14 @@
+# 1.4.0
+
+-   Added 'value' to all the accessors. This is the underlying value that the
+    accessor is working on (a MST node for `SubForm` and
+    `RepeatingFormIndexAccessor` and a MST array in case of
+    `RepeatingFormAccessor`). This allows you hooks (such as `isRequired`) that
+    takes the value into account.
+
 # 1.3.0
 
--   Added `requiredError` behaviour to the form state. You can now set an error
+-   Added `requiredError` behavior to the form state. You can now set an error
     message directly on the state. This will be applied to every field, unless
     you specify `requiredError` on a field itself.
 

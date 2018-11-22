@@ -9,7 +9,7 @@ import {
 import { Accessor } from "./accessor";
 import {
   Form,
-  FormDefinitionForModel,
+  FormDefinition,
   ValidationResponse,
   GroupDefinition,
   ErrorFunc
@@ -96,7 +96,7 @@ export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<
   M extends IAnyModelType,
-  D extends FormDefinitionForModel<M>,
+  D extends FormDefinition<M>,
   G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   @observable
@@ -218,6 +218,15 @@ export class FormState<
   }
 
   @computed
+  get path(): string {
+    return "/";
+  }
+
+  @computed
+  get value(): Instance<M> {
+    return this.node;
+  }
+
   get stateConverterOptionsWithContext(): StateConverterOptionsWithContext {
     return { context: this.context, ...this._converterOptions };
   }
