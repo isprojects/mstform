@@ -473,6 +473,7 @@ test("async validation in converter", async () => {
 
   const converter = new Converter<string, string>({
     emptyRaw: "",
+    emptyValue: "",
     convert: raw => raw,
     validate: async value => {
       await new Promise(resolve => {
