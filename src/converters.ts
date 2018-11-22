@@ -334,39 +334,22 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
   }
 }
 
-class Model<M, RE> implements IConverter<Instance<M> | RE, Instance<M>> {
-  emptyRaw: Instance<M> | RE;
-  emptyImpossible: boolean;
-  defaultControlled: Controlled;
-  neverRequired = false;
-
-  constructor(model: M, emptyRaw: RE) {
-    this.emptyRaw = emptyRaw;
-    this.emptyImpossible = true;
-    this.defaultControlled = controlled.object;
-  }
-  preprocessRaw(raw: Instance<M>): Instance<M> {
-    return raw;
-  }
-
-  async convert(
-    raw: Instance<M> | RE
-  ): Promise<ConversionResponse<Instance<M>>> {
-    if (raw === this.emptyRaw) {
-      return CONVERSION_ERROR;
+function model<M extends IAnyModelType>(model: M) {
+  return new Converter<Instance<M> | null, Instance<M>>({
+    emptyRaw: null,
+    emptyImpossible: true,
+    defaultControlled: controlled.object,
+    neverRequired: false,
+    convert(raw) {
+      if (raw == null) {
+        throw new Error("Raw should never be null at this point");
+      }
+      return raw;
+    },
+    render(value) {
+      return value;
     }
-    return new ConversionValue(raw as Instance<M>);
-  }
-
-  render(value: Instance<M>): Instance<M> {
-    return value;
-  }
-}
-
-function model<M extends IAnyModelType>(
-  model: M
-): IConverter<Instance<M> | null, Instance<M>> {
-  return new Model(model, null);
+  });
 }
 
 function maybeModel<M, RE, VE>(
