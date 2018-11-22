@@ -9,7 +9,7 @@ import {
 import { Accessor } from "./accessor";
 import {
   Form,
-  FormDefinitionForModel,
+  FormDefinition,
   ValidationResponse,
   GroupDefinition
 } from "./form";
@@ -89,7 +89,7 @@ export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<
   M extends IAnyModelType,
-  D extends FormDefinitionForModel<M>,
+  D extends FormDefinition<M>,
   G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   @observable
@@ -202,6 +202,11 @@ export class FormState<
   @computed
   get context(): any {
     return this._context;
+  }
+
+  @computed
+  get value(): Instance<M> {
+    return this.node;
   }
 
   @action

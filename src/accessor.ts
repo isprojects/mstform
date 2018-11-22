@@ -4,7 +4,8 @@ import {
   RepeatingFormGroupDefinitionType,
   SubFormDefinitionType,
   SubFormGroupDefinitionType,
-  RawType
+  RawType,
+  ValueType
 } from "./form";
 import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
@@ -26,7 +27,7 @@ export type Accessor =
 export type FieldAccess<
   D extends FormDefinition<any>,
   K extends keyof D
-> = FieldAccessor<RawType<D[K]>, D[K]>;
+> = FieldAccessor<RawType<D[K]>, ValueType<D[K]>>;
 
 export type RepeatingFormAccess<
   D extends FormDefinition<any>,
@@ -44,4 +45,4 @@ export type SubFormAccess<
   SubFormGroupDefinitionType<D[K]>
 >;
 
-export type GroupAccess<M, D extends FormDefinition<M>> = GroupAccessor<M, D>;
+export type GroupAccess<D extends FormDefinition<any>> = GroupAccessor<D>;

@@ -81,7 +81,7 @@ export abstract class FormAccessorBase<
     return this.formAccessor.subForm(name);
   }
 
-  group<K extends keyof G>(name: K): GroupAccess<any, D> {
+  group<K extends keyof G>(name: K): GroupAccess<D> {
     return this.formAccessor.group(name);
   }
 

@@ -1,4 +1,5 @@
 import { action, observable, computed } from "mobx";
+
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
@@ -45,6 +46,11 @@ export class RepeatingFormIndexedAccessor<
   @computed
   get path(): string {
     return this.parent.path + "/" + this.index;
+  }
+
+  @computed
+  get value(): any {
+    return this.state.getValue(this.path);
   }
 
   @action
