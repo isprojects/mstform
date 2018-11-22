@@ -6,6 +6,16 @@
     `RepeatingFormAccessor`). This allows you hooks (such as `isRequired`) that
     takes the value into account.
 
+-   When you have a field that has an possible empty value (i.e. a MST
+    `types.string`, or one that uses `types.maybe` or `types.maybeNull`), and
+    you require this field (either statically or dynamically), and you then
+    make the raw value empty, the underlying value is set to its empty value as
+    well, even though you get a `required` error at the same time.
+
+-   You can mark a custom converter `emptyImpossible`, or supply an
+    `emptyValue`. This way mstform can deduce whether a field can be emptied at
+    all, and what the empty value is.
+
 # 1.3.0
 
 -   Added `requiredError` behavior to the form state. You can now set an error

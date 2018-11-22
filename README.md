@@ -889,18 +889,35 @@ field definition:
 
 ```js
 const form = new Form(M, {
-    nr: new Field(converters.number, { required: true })
+    name: new Field(converters.string, { required: true })
 });
 ```
 
-This causes the field accessor's `required` property to be `true`, which you
-can use during form rendering. It also causes it to be a validation error
-if the field isn't filled in. You can control the required error message
-by setting `requiredError`:
+This causes `required` property of the field accessor to be `true`, which you
+can use during form rendering. It also causes it to be a validation error if
+the field isn't filled in.
+
+When the user enters an empty value (for instance the empty string), mstform
+empties the underlying value if possible, changing the underlying object. This
+is possible for the form defined above, as it uses a string converter (which can
+be empty). A number converter cannot be empty however:
 
 ```js
 const form = new Form(M, {
-    nr: new Field(converters.number, {
+    nr: new Field(converters.number)
+});
+```
+
+In this case, the user _has_ to fill in a raw value that can be converted to a
+number, otherwise the user gets the required error message and the underlying
+value is not updated. Note that the `required` configuration in this case is
+optional as it's implied by `converters.number`.
+
+You can control the required error message by setting `requiredError`:
+
+```js
+const form = new Form(M, {
+    name: new Field(converters.string, {
         required: true,
         requiredError: "This is required!"
     })
@@ -912,7 +929,7 @@ You can also set `requiredError` to a function, in which cases it receives a
 
 ```js
 const form = new Form(M, {
-    nr: new Field(converters.number, {
+    name: new Field(converters.string, {
         required: true,
         requiredError: context =>
             context.language === "en"
@@ -922,9 +939,9 @@ const form = new Form(M, {
 });
 ```
 
-`requiredError` can also be set on the state, where it will be applied to every
-field on the form unless you control the required error message on the field, in
-which case it will ignore the state's general configuration:
+`requiredError` (as a message or a function) can also be set on the state,
+where it will be applied to every field on the form unless you override the
+required error message on the field:
 
 ```js
 this.formState = form.state(o, {
