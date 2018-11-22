@@ -183,70 +183,50 @@ export interface DecimalOptions {
   allowNegative?: boolean;
 }
 
-class Decimal implements IConverter<string, string> {
-  public converter: StringConverter<string>;
+function decimal(options?: DecimalOptions) {
+  const maxWholeDigits: number =
+    options == null || !options.maxWholeDigits ? 10 : options.maxWholeDigits;
+  const decimalPlaces: number =
+    options == null || !options.decimalPlaces ? 2 : options.decimalPlaces;
+  const allowNegative: boolean =
+    options == null || options.allowNegative == null
+      ? true
+      : options.allowNegative;
 
-  emptyRaw: string;
-  emptyImpossible: boolean;
-  defaultControlled = controlled.value;
-  neverRequired = false;
+  const regex = new RegExp(
+    `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
+      1}})(\\.\\d{0,${decimalPlaces}})?$`
+  );
 
-  constructor(options?: DecimalOptions) {
-    const maxWholeDigits: number =
-      options == null || !options.maxWholeDigits ? 10 : options.maxWholeDigits;
-    const decimalPlaces: number =
-      options == null || !options.decimalPlaces ? 2 : options.decimalPlaces;
-    const allowNegative: boolean =
-      options == null || options.allowNegative == null
-        ? true
-        : options.allowNegative;
-
-    this.emptyRaw = "";
-    this.emptyImpossible = true;
-    const regex = new RegExp(
-      `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
-        1}})(\\.\\d{0,${decimalPlaces}})?$`
-    );
-
-    this.converter = new StringConverter<string>({
-      emptyRaw: "",
-      rawValidate(raw) {
-        if (raw === "" || raw === ".") {
-          return false;
-        }
-        // deal with case when string starts with .
-        if (raw.startsWith(".")) {
-          raw = "0" + raw;
-        }
-        return regex.test(raw);
-      },
-      convert(raw) {
-        return raw;
-      },
-      render(value, options) {
-        return renderSeparators(value, options);
+  return new StringConverter<string>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    defaultControlled: controlled.value,
+    neverRequired: false,
+    preprocessRaw(
+      raw: string,
+      options: StateConverterOptionsWithContext
+    ): string {
+      raw = raw.trim();
+      return convertSeparators(raw, options);
+    },
+    rawValidate(raw) {
+      if (raw === "" || raw === ".") {
+        return false;
       }
-    });
-  }
-
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    raw = raw.trim();
-    return convertSeparators(raw, options);
-  }
-
-  convert(raw: string, options: StateConverterOptionsWithContext) {
-    return this.converter.convert(raw, options);
-  }
-  render(value: string, options: StateConverterOptionsWithContext) {
-    return this.converter.render(value, options);
-  }
-}
-
-function decimal(options?: DecimalOptions): IConverter<string, string> {
-  return new Decimal(options);
+      // deal with case when string starts with .
+      if (raw.startsWith(".")) {
+        raw = "0" + raw;
+      }
+      return regex.test(raw);
+    },
+    convert(raw) {
+      return raw;
+    },
+    render(value, options) {
+      return renderSeparators(value, options);
+    }
+  });
 }
 
 // XXX create a way to create arrays with mobx state tree types
@@ -269,7 +249,7 @@ function maybe<M>(
 function maybe<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
-  if (converter instanceof StringConverter || converter instanceof Decimal) {
+  if (converter instanceof StringConverter) {
     return new StringMaybe(converter, undefined);
   }
   return maybeModel(converter, null, undefined) as IConverter<
@@ -287,7 +267,7 @@ function maybeNull<M>(
 function maybeNull<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | null> | IConverter<R | null, V | null> {
-  if (converter instanceof StringConverter || converter instanceof Decimal) {
+  if (converter instanceof StringConverter) {
     return new StringMaybe(converter, null);
   }
   return maybeModel(converter, null, null) as IConverter<R | null, V | null>;
