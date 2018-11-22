@@ -256,6 +256,23 @@ export class FieldAccessor<R, V> {
     // we can still set raw directly before the await
     this._raw = raw;
 
+    if (
+      this.field.isRequired(
+        raw,
+        this.required,
+        options,
+        this.state.stateConverterOptionsWithContext
+      )
+    ) {
+      this.setError(
+        this.field.getRequiredError(
+          this.state.stateConverterOptionsWithContext.context,
+          this.state._requiredError
+        )
+      );
+      return;
+    }
+
     this.setValidating(true);
 
     let processResult;
