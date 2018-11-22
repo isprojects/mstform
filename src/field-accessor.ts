@@ -281,7 +281,9 @@ export class FieldAccessor<R, V> {
           stateConverterOptions
         );
         if (response === CONVERSION_ERROR) {
-          throw new Error("Cannot convert raw value");
+          // we shouldn't get a conversion error as it's possible
+          // to have an empty value
+          throw new Error("Cannot convert empty raw: shouldn't happen");
         }
         this.state.setValueWithoutRawUpdate(this.path, response.value);
       }
