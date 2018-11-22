@@ -214,13 +214,16 @@ export class Field<R, V> {
     required: boolean,
     options: ProcessOptions | undefined
   ): boolean {
-    if (this.isRequiredIgnored(options)) {
-      return false;
-    }
     if (raw !== this.converter.emptyRaw) {
       return false;
     }
-    return required || this.converter.emptyImpossible;
+    if (!this.converter.neverRequired && this.converter.emptyImpossible) {
+      return true;
+    }
+    if (this.isRequiredIgnored(options)) {
+      return false;
+    }
+    return required;
   }
 
   async process(

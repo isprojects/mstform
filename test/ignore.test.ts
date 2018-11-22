@@ -29,6 +29,32 @@ test("setRaw with required ignore", async () => {
   expect(o.foo).toEqual("");
 });
 
+test("setRaw with required ignore with automatically required", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 1 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(1);
+
+  // we can set ignoreRequired, but it has no impact
+  // if the field *has* to be required by definition
+  await field.setRaw("", { ignoreRequired: true });
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(1);
+  expect(o.foo).toEqual(1);
+});
+
 test("FormState can be saved ignoring required", async () => {
   const M = types.model("M", {
     foo: types.string
