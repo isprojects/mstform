@@ -218,6 +218,11 @@ export class FormState<
   }
 
   @computed
+  get path(): string {
+    return "/";
+  }
+
+  @computed
   get value(): Instance<M> {
     return this.node;
   }
