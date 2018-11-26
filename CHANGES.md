@@ -6,7 +6,7 @@
     `RepeatingFormAccessor`). This allows you hooks (such as `isRequired`) that
     takes the value into account.
 
--   When you have a field that has an possible empty value (i.e. a MST
+-   When you have a field that has a possible empty value (i.e. a MST
     `types.string`, or one that uses `types.maybe` or `types.maybeNull`), and
     you require this field (either statically or dynamically), and you then
     make the raw value empty, the underlying value is set to its empty value as
