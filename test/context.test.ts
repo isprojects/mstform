@@ -8,7 +8,6 @@ import {
   converters,
   Converter
 } from "../src";
-import { type } from "os";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });

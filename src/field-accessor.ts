@@ -8,12 +8,19 @@ import {
   comparer,
   IReactionDisposer
 } from "mobx";
-import { Field, ProcessValue, ValidationMessage, ProcessOptions } from "./form";
+import {
+  Field,
+  ProcessValue,
+  ValidationMessage,
+  ProcessOptions,
+  errorMessage
+} from "./form";
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
+import { CONVERSION_ERROR } from "./converter";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -247,6 +254,12 @@ export class FieldAccessor<R, V> {
     return this.errorValue === undefined;
   }
 
+  @computed
+  get requiredError(): string {
+    const requiredError = this.field.requiredError || this.state._requiredError;
+    return errorMessage(requiredError, this.state.context);
+  }
+
   @action
   async setRaw(raw: R, options?: ProcessOptions) {
     if (this.state.saveStatus === "rightAfter") {
@@ -254,7 +267,23 @@ export class FieldAccessor<R, V> {
     }
 
     // we can still set raw directly before the await
+    const originalRaw = raw;
     this._raw = raw;
+
+    const stateConverterOptions = this.state.stateConverterOptionsWithContext;
+
+    raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
+
+    if (this.field.isRequired(raw, this.required, options)) {
+      if (!this.field.converter.emptyImpossible) {
+        this.state.setValueWithoutRawUpdate(
+          this.path,
+          this.field.converter.emptyValue
+        );
+      }
+      this.setError(this.requiredError);
+      return;
+    }
 
     this.setValidating(true);
 
@@ -262,13 +291,7 @@ export class FieldAccessor<R, V> {
     try {
       // XXX is await correct here? we should await the result
       // later
-      processResult = await this.field.process(
-        raw,
-        this.required,
-        this.state.stateConverterOptionsWithContext,
-        this.state._requiredError,
-        options
-      );
+      processResult = await this.field.process(raw, stateConverterOptions);
     } catch (e) {
       this.setError("Something went wrong");
       this.setValidating(false);
@@ -278,7 +301,7 @@ export class FieldAccessor<R, V> {
     const currentRaw = this._raw;
 
     // if the raw changed in the mean time, bail out
-    if (!comparer.structural(currentRaw, raw)) {
+    if (!comparer.structural(currentRaw, originalRaw)) {
       return;
     }
     // validation only is complete if the currentRaw has been validated

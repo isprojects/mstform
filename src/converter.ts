@@ -23,6 +23,8 @@ export interface ConverterOptions<R, V> {
     options: StateConverterOptionsWithContext
   ): boolean | Promise<boolean>;
   emptyRaw: R;
+  emptyValue?: V;
+  emptyImpossible?: boolean;
   defaultControlled?: Controlled;
   neverRequired?: boolean;
   preprocessRaw?(raw: R, options?: StateConverterOptionsWithContext): R;
@@ -30,6 +32,8 @@ export interface ConverterOptions<R, V> {
 
 export interface IConverter<R, V> {
   emptyRaw: R;
+  emptyValue: V;
+  emptyImpossible: boolean;
   convert(
     raw: R,
     options: StateConverterOptionsWithContext
@@ -52,11 +56,25 @@ export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
 export class Converter<R, V> implements IConverter<R, V> {
   emptyRaw: R;
+  emptyValue: V;
+  emptyImpossible: boolean;
   defaultControlled: Controlled;
   neverRequired: boolean = false;
 
   constructor(public definition: ConverterOptions<R, V>) {
     this.emptyRaw = definition.emptyRaw;
+    this.emptyImpossible = !!definition.emptyImpossible;
+    const emptyValue = definition.emptyValue;
+    if (this.emptyImpossible) {
+      if (emptyValue !== undefined) {
+        throw new Error(
+          "If you set emptyImpossible for a converter, emptyValue cannot be set"
+        );
+      }
+      this.emptyValue = undefined as any;
+    } else {
+      this.emptyValue = emptyValue as any;
+    }
     this.defaultControlled = definition.defaultControlled
       ? definition.defaultControlled
       : controlled.object;

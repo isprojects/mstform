@@ -1,14 +1,13 @@
 import { IObservableArray, observable } from "mobx";
-import { IModelType, IAnyModelType, Instance } from "mobx-state-tree";
+import { IAnyModelType, Instance } from "mobx-state-tree";
 import {
-  CONVERSION_ERROR,
   ConversionResponse,
   ConversionValue,
   Converter,
   IConverter,
   StateConverterOptionsWithContext
 } from "./converter";
-import { Controlled, controlled } from "./controlled";
+import { controlled } from "./controlled";
 import { identity } from "./utils";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
@@ -111,6 +110,7 @@ export class StringConverter<V> extends Converter<string, V> {
 
 const string = new StringConverter<string>({
   emptyRaw: "",
+  emptyValue: "",
   convert(raw) {
     return raw;
   },
@@ -124,6 +124,7 @@ const string = new StringConverter<string>({
 
 const number = new StringConverter<number>({
   emptyRaw: "",
+  emptyImpossible: true,
   rawValidate(raw) {
     // deal with case when string starts with .
     if (raw.startsWith(".")) {
@@ -148,6 +149,7 @@ const number = new StringConverter<number>({
 
 const integer = new StringConverter<number>({
   emptyRaw: "",
+  emptyImpossible: true,
   rawValidate(raw) {
     return INTEGER_REGEX.test(raw);
   },
@@ -164,6 +166,7 @@ const integer = new StringConverter<number>({
 
 const boolean = new Converter<boolean, boolean>({
   emptyRaw: false,
+  emptyImpossible: true,
   convert(raw) {
     return raw;
   },
@@ -180,76 +183,56 @@ export interface DecimalOptions {
   allowNegative?: boolean;
 }
 
-class Decimal implements IConverter<string, string> {
-  public converter: StringConverter<string>;
+function decimal(options?: DecimalOptions) {
+  const maxWholeDigits: number =
+    options == null || !options.maxWholeDigits ? 10 : options.maxWholeDigits;
+  const decimalPlaces: number =
+    options == null || !options.decimalPlaces ? 2 : options.decimalPlaces;
+  const allowNegative: boolean =
+    options == null || options.allowNegative == null
+      ? true
+      : options.allowNegative;
 
-  emptyRaw: string;
-  defaultControlled = controlled.value;
-  neverRequired = false;
+  const regex = new RegExp(
+    `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
+      1}})(\\.\\d{0,${decimalPlaces}})?$`
+  );
 
-  constructor(options?: DecimalOptions) {
-    const maxWholeDigits: number =
-      options == null || !options.maxWholeDigits ? 10 : options.maxWholeDigits;
-    const decimalPlaces: number =
-      options == null || !options.decimalPlaces ? 2 : options.decimalPlaces;
-    const allowNegative: boolean =
-      options == null || options.allowNegative == null
-        ? true
-        : options.allowNegative;
-
-    this.emptyRaw = "";
-    const regex = new RegExp(
-      `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
-        1}})(\\.\\d{0,${decimalPlaces}})?$`
-    );
-
-    this.converter = new StringConverter<string>({
-      emptyRaw: "",
-      rawValidate(raw) {
-        if (raw === "" || raw === ".") {
-          return false;
-        }
-        // deal with case when string starts with .
-        if (raw.startsWith(".")) {
-          raw = "0" + raw;
-        }
-        return regex.test(raw);
-      },
-      convert(raw) {
-        return raw;
-      },
-      render(value, options) {
-        return renderSeparators(value, options);
+  return new StringConverter<string>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    defaultControlled: controlled.value,
+    neverRequired: false,
+    preprocessRaw(
+      raw: string,
+      options: StateConverterOptionsWithContext
+    ): string {
+      raw = raw.trim();
+      return convertSeparators(raw, options);
+    },
+    rawValidate(raw) {
+      if (raw === "" || raw === ".") {
+        return false;
       }
-    });
-  }
-
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    raw = raw.trim();
-    return convertSeparators(raw, options);
-  }
-
-  convert(raw: string, options: StateConverterOptionsWithContext) {
-    return this.converter.convert(raw, options);
-  }
-  render(value: string, options: StateConverterOptionsWithContext) {
-    return this.converter.render(value, options);
-  }
-  getRaw(value: any) {
-    return value;
-  }
-}
-
-function decimal(options?: DecimalOptions): IConverter<string, string> {
-  return new Decimal(options);
+      // deal with case when string starts with .
+      if (raw.startsWith(".")) {
+        raw = "0" + raw;
+      }
+      return regex.test(raw);
+    },
+    convert(raw) {
+      return raw;
+    },
+    render(value, options) {
+      return renderSeparators(value, options);
+    }
+  });
 }
 
 // XXX create a way to create arrays with mobx state tree types
 const stringArray = new Converter<string[], IObservableArray<string>>({
   emptyRaw: [],
+  emptyValue: observable.array([]),
   convert(raw) {
     return observable.array(raw);
   },
@@ -267,7 +250,7 @@ function maybe<M>(
 function maybe<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
-  if (converter instanceof StringConverter || converter instanceof Decimal) {
+  if (converter instanceof StringConverter) {
     return new StringMaybe(converter, undefined);
   }
   return maybeModel(converter, null, undefined) as IConverter<
@@ -285,19 +268,25 @@ function maybeNull<M>(
 function maybeNull<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | null> | IConverter<R | null, V | null> {
-  if (converter instanceof StringConverter || converter instanceof Decimal) {
+  if (converter instanceof StringConverter) {
     return new StringMaybe(converter, null);
   }
   return maybeModel(converter, null, null) as IConverter<R | null, V | null>;
 }
 
+// XXX it would be nice if this could be a simple converter instead
+// of a reimplementation. unfortunately the delegation to the
+// underlying converter makes this impossible as it has a different
+// and asynchronous API. We need to refactor this further in the future.
 class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
   emptyRaw: string;
   defaultControlled = controlled.value;
   neverRequired = false;
+  emptyImpossible: boolean;
 
   constructor(public converter: IConverter<string, V>, public emptyValue: VE) {
     this.emptyRaw = "";
+    this.emptyImpossible = false;
   }
 
   preprocessRaw(
@@ -326,37 +315,22 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
   }
 }
 
-class Model<M, RE> implements IConverter<Instance<M> | RE, Instance<M>> {
-  emptyRaw: Instance<M> | RE;
-  defaultControlled: Controlled;
-  neverRequired = false;
-
-  constructor(model: M, emptyRaw: RE) {
-    this.emptyRaw = emptyRaw;
-    this.defaultControlled = controlled.object;
-  }
-  preprocessRaw(raw: Instance<M>): Instance<M> {
-    return raw;
-  }
-
-  async convert(
-    raw: Instance<M> | RE
-  ): Promise<ConversionResponse<Instance<M>>> {
-    if (raw === this.emptyRaw) {
-      return CONVERSION_ERROR;
+function model<M extends IAnyModelType>(model: M) {
+  return new Converter<Instance<M> | null, Instance<M>>({
+    emptyRaw: null,
+    emptyImpossible: true,
+    defaultControlled: controlled.object,
+    neverRequired: false,
+    convert(raw) {
+      if (raw == null) {
+        throw new Error("Raw should never be null at this point");
+      }
+      return raw;
+    },
+    render(value) {
+      return value;
     }
-    return new ConversionValue(raw as Instance<M>);
-  }
-
-  render(value: Instance<M>): Instance<M> {
-    return value;
-  }
-}
-
-function model<M extends IAnyModelType>(
-  model: M
-): IConverter<Instance<M> | null, Instance<M>> {
-  return new Model(model, null);
+  });
 }
 
 function maybeModel<M, RE, VE>(
@@ -366,6 +340,7 @@ function maybeModel<M, RE, VE>(
 ): IConverter<M | RE, M | VE> {
   return new Converter({
     emptyRaw: emptyRaw,
+    emptyValue: emptyValue,
     convert: (r: M | RE) => (r !== emptyRaw ? (r as M) : emptyValue),
     render: (v: M | VE) => (v !== emptyValue ? (v as M) : emptyRaw),
     defaultControlled: controlled.object
@@ -374,6 +349,7 @@ function maybeModel<M, RE, VE>(
 
 const object = new Converter<any, any>({
   emptyRaw: null,
+  emptyValue: undefined,
   convert: identity,
   render: identity
 });

@@ -22,11 +22,39 @@ test("setRaw with required ignore", async () => {
   const field = state.field("foo");
 
   await field.setRaw("");
-  expect(field.value).toEqual("FOO");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual("");
 
   await field.setRaw("", { ignoreRequired: true });
+  expect(field.error).toBeUndefined();
   expect(field.value).toEqual("");
   expect(o.foo).toEqual("");
+});
+
+test("setRaw with required ignore with automatically required", async () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 1 });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  await field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(1);
+
+  // we can set ignoreRequired, but it has no impact
+  // if the field *has* to be required by definition
+  await field.setRaw("", { ignoreRequired: true });
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual(1);
+  expect(o.foo).toEqual(1);
 });
 
 test("FormState can be saved ignoring required", async () => {
@@ -54,11 +82,13 @@ test("FormState can be saved ignoring required", async () => {
   // we set the raw to the empty string even though it's required
   await field.setRaw("");
   expect(field.error).toEqual("Required");
-  expect(o.foo).toEqual("FOO");
+  expect(o.foo).toEqual("");
 
   // now we save, ignoring required
   const saveResult = await state.save({ ignoreRequired: true });
   // we still see the message, even though save succeeded
+  // XXX is this really the desired behavior? don't we want
+  // the required error until we save without ignoreRequired?
   expect(field.error).toEqual("Required");
   // but saving actually succeeded
   expect(o.foo).toEqual("");

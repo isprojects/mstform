@@ -8,6 +8,7 @@ configure({ enforceActions: "observed" });
 test("simple converter", async () => {
   const converter = new Converter<string, string>({
     emptyRaw: "",
+    emptyValue: "",
     convert: raw => raw,
     render: value => value
   });
@@ -22,9 +23,23 @@ test("simple converter", async () => {
   expect((result2 as ConversionValue<string>).value).toEqual("ConversionError");
 });
 
+test("converter emptyImpossible and emptyValue", async () => {
+  expect(
+    () =>
+      new Converter<string, string>({
+        emptyRaw: "",
+        emptyValue: "",
+        emptyImpossible: true,
+        convert: raw => raw,
+        render: value => value
+      })
+  ).toThrow();
+});
+
 test("converter to integer", async () => {
   const converter = new Converter<string, number>({
     emptyRaw: "",
+    emptyImpossible: true,
     rawValidate: raw => /^\d+$/.test(raw),
     convert: raw => parseInt(raw, 10),
     render: value => value.toString()
@@ -41,6 +56,7 @@ test("converter to integer", async () => {
 test("converter with validate", async () => {
   const converter = new Converter<string, number>({
     emptyRaw: "",
+    emptyImpossible: true,
     convert: raw => parseInt(raw, 10),
     render: value => value.toString(),
     validate: value => value <= 10
@@ -59,6 +75,7 @@ test("converter with async validate", async () => {
 
   const converter = new Converter<string, string>({
     emptyRaw: "",
+    emptyValue: "",
     convert: raw => raw,
     validate: async value => {
       await new Promise(resolve => {

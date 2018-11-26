@@ -134,16 +134,6 @@ export interface ProcessOptions {
   ignoreRequired?: boolean;
 }
 
-function getRequiredError(
-  context: any,
-  requiredError: string | ErrorFunc
-): string {
-  if (typeof requiredError === "string") {
-    return requiredError;
-  }
-  return requiredError(context);
-}
-
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
@@ -209,43 +199,33 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  getRequiredError(
-    context: any,
-    stateRequiredError: string | ErrorFunc
-  ): string {
-    if (this.requiredError != null) {
-      return getRequiredError(context, this.requiredError);
-    }
-    return getRequiredError(context, stateRequiredError);
+  getConversionError(context: any): string {
+    return errorMessage(this.conversionError, context);
   }
 
-  getConversionError(context: any): string {
-    if (typeof this.conversionError === "string") {
-      return this.conversionError;
+  isRequired(
+    raw: R,
+    required: boolean,
+    options: ProcessOptions | undefined
+  ): boolean {
+    if (raw !== this.converter.emptyRaw) {
+      return false;
     }
-    return this.conversionError(context);
+    if (!this.converter.neverRequired && this.converter.emptyImpossible) {
+      return true;
+    }
+    const ignoreRequired: boolean =
+      options != null ? !!options.ignoreRequired : false;
+    if (this.converter.neverRequired || ignoreRequired) {
+      return false;
+    }
+    return required;
   }
 
   async process(
     raw: R,
-    required: boolean,
-    stateConverterOptions: StateConverterOptionsWithContext,
-    stateRequiredError: string | ErrorFunc,
-    options?: ProcessOptions
+    stateConverterOptions: StateConverterOptionsWithContext
   ): Promise<ProcessResponse<V>> {
-    raw = this.converter.preprocessRaw(raw, stateConverterOptions);
-    const ignoreRequired = options != null ? options.ignoreRequired : false;
-    if (
-      !this.converter.neverRequired &&
-      !ignoreRequired &&
-      raw === this.converter.emptyRaw &&
-      required
-    ) {
-      return new ValidationMessage(
-        this.getRequiredError(stateConverterOptions.context, stateRequiredError)
-      );
-    }
-
     for (const validator of this.rawValidators) {
       const validationResponse = await validator(
         raw,
@@ -257,16 +237,6 @@ export class Field<R, V> {
     }
     const result = await this.converter.convert(raw, stateConverterOptions);
     if (result === CONVERSION_ERROR) {
-      // if we get a conversion error for the empty raw, the field
-      // is implied to be required
-      if (raw === this.converter.emptyRaw) {
-        return new ValidationMessage(
-          this.getRequiredError(
-            stateConverterOptions.context,
-            stateRequiredError
-          )
-        );
-      }
       return new ValidationMessage(
         this.getConversionError(stateConverterOptions.context)
       );
@@ -302,4 +272,11 @@ export interface GroupOptions<D extends FormDefinition<any>> {
 
 export class Group<D extends FormDefinition<any>> {
   constructor(public options: GroupOptions<D>) {}
+}
+
+export function errorMessage(message: string | ErrorFunc, context: any) {
+  if (typeof message === "string") {
+    return message;
+  }
+  return message(context);
 }

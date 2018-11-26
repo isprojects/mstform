@@ -473,6 +473,7 @@ test("async validation in converter", async () => {
 
   const converter = new Converter<string, string>({
     emptyRaw: "",
+    emptyValue: "",
     convert: raw => raw,
     validate: async value => {
       await new Promise(resolve => {
@@ -894,7 +895,7 @@ test("FormState can be saved", async () => {
 
   async function save(data: any) {
     if (data.foo === "") {
-      return { foo: "Required" };
+      return { foo: "Wrong" };
     }
     return null;
   }
@@ -907,12 +908,12 @@ test("FormState can be saved", async () => {
   await field.setRaw("");
 
   // we don't see any client-side validation errors
-  expect(o.foo).toEqual("");
   expect(field.error).toBeUndefined();
+  expect(o.foo).toEqual("");
   // now communicate with the server by doing the save
   const saveResult0 = await state.save();
   expect(saveResult0).toBe(false);
-  expect(field.error).toEqual("Required");
+  expect(field.error).toEqual("Wrong");
 
   // correct things
   await field.setRaw("BAR");
@@ -1225,8 +1226,11 @@ test("required with string", async () => {
 
   const field = state.field("foo");
 
+  expect(field.value).toEqual("FOO");
+
   await field.setRaw("");
   expect(field.error).toEqual("Required");
+  expect(field.value).toEqual("");
 });
 
 test("required with string and whitespace", async () => {
@@ -1320,7 +1324,7 @@ test("required with maybe", async () => {
   expect(field.value).toEqual(3);
   await field.setRaw("");
   expect(field.error).toEqual("Required");
-  expect(field.value).toEqual(3);
+  expect(field.value).toBeUndefined();
 });
 
 test("required with maybeNull", async () => {
@@ -1347,7 +1351,7 @@ test("required with maybeNull", async () => {
   expect(field.value).toEqual(3);
   await field.setRaw("");
   expect(field.error).toEqual("Required");
-  expect(field.value).toEqual(3);
+  expect(field.value).toBeNull();
 });
 
 test("setting value on model will update form", async () => {
