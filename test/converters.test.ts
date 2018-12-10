@@ -218,6 +218,23 @@ test("decimal converter render with six decimals", async () => {
   expect(rendered).toEqual("4,000000");
 });
 
+test("decimal converter render with six decimals and thousand separators", async () => {
+  const converter = converters.decimal({ decimalPlaces: 6 });
+  const options = {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    renderThousands: true
+  };
+  const value = "4000000.000000";
+  const processedValue = converter.preprocessRaw(value, options);
+  const converted = await converter.convert(processedValue, options);
+  const rendered = await converter.render(
+    (converted as ConversionValue<any>).value,
+    options
+  );
+  expect(rendered).toEqual("4.000.000,000000");
+});
+
 test("decimal converter render, six decimals, no decimalSeparator", async () => {
   const converter = converters.decimal({ decimalPlaces: 6 });
   const options = {
