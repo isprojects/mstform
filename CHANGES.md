@@ -1,3 +1,12 @@
+# 1.4.1
+
+-   `value` on `FieldAccessor` was in obscure circumstances (that did of course
+    happen in practice) inappropriately cached, which created bugs. Changed
+    `FieldAccessor` so that value can be properly cached.
+
+-   The `change` and `update` hooks weren't called properly when you set a raw
+    value to empty, and now they are.
+
 # 1.4.0
 
 -   Added 'value' to all the accessors. This is the underlying value that the
