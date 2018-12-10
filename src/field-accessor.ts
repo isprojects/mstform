@@ -20,7 +20,6 @@ import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
-import { CONVERSION_ERROR } from "./converter";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -37,6 +36,9 @@ export class FieldAccessor<R, V> {
   @observable
   _addMode: boolean = false;
 
+  @observable
+  _value: V;
+
   _disposer: IReactionDisposer | undefined;
 
   constructor(
@@ -47,6 +49,7 @@ export class FieldAccessor<R, V> {
   ) {
     this.name = name;
     this.createDerivedReaction();
+    this._value = state.getValue(this.path);
   }
 
   clear() {
@@ -138,6 +141,23 @@ export class FieldAccessor<R, V> {
     );
   }
 
+  @action
+  setValue(value: V) {
+    this._value = value;
+    this.state.setValueWithoutRawUpdate(this.path, value);
+    // XXX maybe rename this to 'update' as change might imply onChange
+    // this is why I named 'updateFunc' on state that way instead of
+    // 'changeFunc'
+    const changeFunc = this.field.changeFunc;
+    if (changeFunc != null) {
+      changeFunc(this.node, value);
+    }
+    const updateFunc = this.state.updateFunc;
+    if (updateFunc != null) {
+      updateFunc(this);
+    }
+  }
+
   @computed
   get value(): V {
     if (this.addMode) {
@@ -145,7 +165,7 @@ export class FieldAccessor<R, V> {
         "Cannot access field in add mode until it has been set once"
       );
     }
-    return this.state.getValue(this.path);
+    return this._value;
   }
 
   @computed
@@ -276,10 +296,7 @@ export class FieldAccessor<R, V> {
 
     if (this.field.isRequired(raw, this.required, options)) {
       if (!this.field.converter.emptyImpossible) {
-        this.state.setValueWithoutRawUpdate(
-          this.path,
-          this.field.converter.emptyValue
-        );
+        this.setValue(this.field.converter.emptyValue);
       }
       this.setError(this.requiredError);
       return;
@@ -330,25 +347,14 @@ export class FieldAccessor<R, V> {
       return;
     }
 
-    this.state.setValueWithoutRawUpdate(this.path, processResult.value);
-
-    // XXX maybe rename this to 'update' as change might imply onChange
-    // this is why I named 'updateFunc' on state that way instead of
-    // 'changeFunc'
-    const changeFunc = this.field.changeFunc;
-    if (changeFunc != null) {
-      changeFunc(this.node, processResult.value);
-    }
-    const updateFunc = this.state.updateFunc;
-    if (updateFunc != null) {
-      updateFunc(this);
-    }
+    this.setValue(processResult.value);
   }
 
   setRawFromValue() {
     // we get the value ignoring add mode
     // this is why we can't use this.value
     const value = this.state.getValue(this.path);
+    this._value = value;
 
     // we don't use setRaw on the field as the value is already
     // correct. setting raw causes addMode for the field
