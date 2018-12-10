@@ -1,3 +1,7 @@
+# 1.4.2
+
+-   Fixed wrongful rendering of thousand separators after decimal separators.
+
 # 1.4.1
 
 -   `value` on `FieldAccessor` was in obscure circumstances (that did of course
