@@ -108,3 +108,50 @@ test("change hook with raw value", async () => {
   expect(b.raw).toEqual("4");
   expect(b.value).toEqual(4);
 });
+
+test("changehook with null", async () => {
+  const M = types
+    .model("M", {
+      c: types.maybeNull(types.number),
+      b: types.maybeNull(types.number)
+    })
+    .actions(self => ({
+      setB(value: number) {
+        self.b = value;
+      }
+    }));
+
+  const touched: boolean[] = [];
+
+  const form = new Form(M, {
+    c: new Field(converters.maybeNull(converters.number), {
+      change: (node, value) => {
+        touched.push(true);
+        node.setB(value);
+      }
+    }),
+    b: new Field(converters.maybeNull(converters.number))
+  });
+
+  const o = M.create({ c: 1, b: 2 });
+
+  const state = form.state(o);
+  const c = state.field("c");
+  const b = state.field("b");
+
+  // we set it to 4 explicitly
+  await c.setRaw("4");
+  expect(b.raw).toEqual("4");
+  // this immediately affects the underlying value
+  expect(b.value).toEqual(4);
+
+  // when we change it to something unvalid, change hook doesn't fire
+  await c.setRaw("invalid");
+  expect(b.raw).toEqual("4");
+  expect(b.value).toEqual(4);
+
+  // now we set it to null, change hook fires
+  await c.setRaw("");
+  expect(b.raw).toEqual("");
+  expect(b.value).toEqual(null);
+});

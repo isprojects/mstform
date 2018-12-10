@@ -1,4 +1,4 @@
-import { configure } from "mobx";
+import { configure, autorun } from "mobx";
 import {
   getSnapshot,
   types,
@@ -2129,6 +2129,43 @@ test("a form with a dynamic required field", async () => {
   expect(fooField.error).toBeUndefined();
   expect(saved2).toBeTruthy();
   expect(touched).toBeTruthy();
+});
+
+test("a form with a dynamic required that touches value", async () => {
+  // there was a very weird bug:
+  // the value of foo stays empty even though we update the raw
+  // this is triggered by a combination of three things:
+  // * isRequired touches acccessor.value
+  // * accessor.required is touched
+  // * this happens *within an autorun*
+
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o, {
+    isRequired: accessor => {
+      // all we do is touch accessor.value
+      const touched = accessor.value;
+      return false;
+    }
+  });
+  const fooField = state.field("foo");
+  const disposer = autorun(() => {
+    const required = fooField.required;
+  });
+  await fooField.setRaw("BLAH");
+
+  expect(fooField.value).toEqual("BLAH");
+  expect(o.foo).toEqual("BLAH");
+
+  disposer();
 });
 
 test("a hard required trumps dynamic required", async () => {
