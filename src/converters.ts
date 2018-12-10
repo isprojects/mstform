@@ -78,7 +78,13 @@ function renderThousandSeparators(
   if (options.thousandSeparator == null || !options.renderThousands) {
     return value;
   }
-  return value.replace(/\B(?=(\d{3})+(?!\d))/g, options.thousandSeparator);
+  const decimalSeparator = options.decimalSeparator || ".";
+  const splitValue = value.split(decimalSeparator);
+  splitValue[0] = splitValue[0].replace(
+    /\B(?=(\d{3})+(?!\d))/g,
+    options.thousandSeparator
+  );
+  return splitValue.join(decimalSeparator);
 }
 
 function convertSeparators(
