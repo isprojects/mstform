@@ -184,25 +184,65 @@ const boolean = new Converter<boolean, boolean>({
 });
 
 export interface DecimalOptions {
-  maxWholeDigits?: number;
-  decimalPlaces?: number;
-  allowNegative?: boolean;
+  maxWholeDigits: number;
+  decimalPlaces: number;
+  allowNegative: boolean;
 }
 
-function decimal(options?: DecimalOptions) {
-  const maxWholeDigits: number =
-    options == null || !options.maxWholeDigits ? 10 : options.maxWholeDigits;
-  const decimalPlaces: number =
-    options == null || !options.decimalPlaces ? 2 : options.decimalPlaces;
-  const allowNegative: boolean =
-    options == null || options.allowNegative == null
-      ? true
-      : options.allowNegative;
+function decimal(
+  options?:
+    | Partial<DecimalOptions>
+    | ((context: any) => Partial<DecimalOptions>)
+) {
+  function getOptions(context: any): DecimalOptions {
+    if (typeof options === "function") {
+      return getDecimalOptions(options(context));
+    }
+    if (options == null) {
+      return { maxWholeDigits: 10, decimalPlaces: 2, allowNegative: true };
+    }
+    return getDecimalOptions(options);
+  }
 
-  const regex = new RegExp(
-    `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
-      1}})(\\.\\d{0,${decimalPlaces}})?$`
-  );
+  function getDecimalOptions(options: Partial<DecimalOptions>) {
+    const maxWholeDigits: number = options.maxWholeDigits || 10;
+    const decimalPlaces: number =
+      options.decimalPlaces == null ? 2 : options.decimalPlaces;
+    const allowNegative: boolean =
+      options.allowNegative == null ? true : options.allowNegative;
+    return { maxWholeDigits, decimalPlaces, allowNegative };
+  }
+
+  function getRegex(context: any): RegExp {
+    const options = getOptions(context);
+    return new RegExp(
+      `^${
+        options.allowNegative ? `-?` : ``
+      }(0|[1-9]\\d{0,${options.maxWholeDigits - 1}})(\\.\\d{0,${
+        options.decimalPlaces
+      }})?$`
+    );
+  }
+
+  function trimDecimals(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ) {
+    const splitRaw = raw.split(".");
+    if (typeof splitRaw[1] === "undefined") {
+      return raw;
+    }
+    splitRaw[1] = splitRaw[1].substring(
+      0,
+      getOptions(options.context).decimalPlaces
+    );
+    if (splitRaw[1].length === 0) {
+      raw = splitRaw.join("");
+    } else {
+      raw = splitRaw.join(".");
+    }
+    return raw;
+  }
 
   return new StringConverter<string>({
     emptyRaw: "",
@@ -216,21 +256,27 @@ function decimal(options?: DecimalOptions) {
       raw = raw.trim();
       return convertSeparators(raw, options);
     },
-    rawValidate(raw) {
+    rawValidate(raw, options) {
       if (raw === "" || raw === ".") {
+        return false;
+      }
+      if (
+        options.thousandSeparator === "." &&
+        options.decimalSeparator == null
+      ) {
         return false;
       }
       // deal with case when string starts with .
       if (raw.startsWith(".")) {
         raw = "0" + raw;
       }
-      return regex.test(raw);
+      return getRegex(options.context).test(raw);
     },
-    convert(raw) {
-      return raw;
+    convert(raw, options) {
+      return trimDecimals(raw, options);
     },
     render(value, options) {
-      return renderSeparators(value, options);
+      return renderSeparators(trimDecimals(value, options), options);
     }
   });
 }
