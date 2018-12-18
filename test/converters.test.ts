@@ -8,8 +8,6 @@ import {
   converters,
   StateConverterOptionsWithContext
 } from "../src";
-import { create } from "domain";
-import { isContext } from "vm";
 
 async function check(
   converter: IConverter<any, any>,
