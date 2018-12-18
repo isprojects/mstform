@@ -225,23 +225,23 @@ function decimal(
   }
 
   function trimDecimals(
-    raw: string,
+    decimalString: string,
     options: StateConverterOptionsWithContext
   ) {
-    const splitRaw = raw.split(".");
-    if (typeof splitRaw[1] === "undefined") {
-      return raw;
+    const splitDecimal = decimalString.split(".");
+    if (typeof splitDecimal[1] === "undefined") {
+      return decimalString;
     }
-    splitRaw[1] = splitRaw[1].substring(
+    splitDecimal[1] = splitDecimal[1].substring(
       0,
       getOptions(options.context).decimalPlaces
     );
-    if (splitRaw[1].length === 0) {
-      raw = splitRaw.join("");
+    if (splitDecimal[1].length === 0) {
+      decimalString = splitDecimal.join("");
     } else {
-      raw = splitRaw.join(".");
+      decimalString = splitDecimal.join(".");
     }
-    return raw;
+    return decimalString;
   }
 
   return new StringConverter<string>({
