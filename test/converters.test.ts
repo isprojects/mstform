@@ -249,6 +249,18 @@ test("decimal converter render, six decimals, no decimalSeparator", async () => 
   expect(converted).toBe(CONVERSION_ERROR);
 });
 
+test("decimal converter render with six decimals, only showing three", async () => {
+  const converter = converters.decimal({ decimalPlaces: 3 });
+  const options = {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    renderThousands: true
+  };
+  const value = "4000.000000";
+  const rendered = await converter.render(value, options);
+  expect(rendered).toEqual("4.000,000");
+});
+
 test("do not convert a normal string with decimal options", async () => {
   await checkWithOptions(converters.string, "43,14", "43,14", {
     decimalSeparator: ","
