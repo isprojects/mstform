@@ -272,8 +272,8 @@ function decimal(
       }
       return getRegex(options.context).test(raw);
     },
-    convert(raw, options) {
-      return trimDecimals(raw, options);
+    convert(raw) {
+      return raw;
     },
     render(value, options) {
       return renderSeparators(trimDecimals(value, options), options);

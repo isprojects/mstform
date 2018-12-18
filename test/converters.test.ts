@@ -122,7 +122,7 @@ test("decimal converter", async () => {
   await check(converters.decimal({}), "-3.14", "-3.14");
   await check(converters.decimal({}), "0", "0");
   await check(converters.decimal({}), ".14", ".14");
-  await check(converters.decimal({}), "14.", "14");
+  await check(converters.decimal({}), "14.", "14.");
   await checkWithOptions(converters.decimal({}), "43,14", "43.14", {
     decimalSeparator: ","
   });
