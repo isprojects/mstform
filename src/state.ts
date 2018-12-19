@@ -208,6 +208,14 @@ export class FormState<
       this.updateFunc = options.update ? options.update : null;
       this._context = options.context;
       this._converterOptions = options.converterOptions || {};
+      if (
+        this._converterOptions.thousandSeparator === "." &&
+        this._converterOptions.decimalSeparator == null
+      ) {
+        throw Error(
+          "Can't set thousandSeparator to . without setting decimalSeparator."
+        );
+      }
       this._requiredError = options.requiredError || "Required";
     }
   }

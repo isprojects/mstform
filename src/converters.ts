@@ -124,7 +124,9 @@ function decimal(
         converterOptions.thousandSeparator === "." &&
         converterOptions.decimalSeparator == null
       ) {
-        return false;
+        throw new Error(
+          "thousandSeparator is . while decimalSeparator isn't set. This shouldn't be possible."
+        );
       }
       // deal with case when string starts with .
       if (raw.startsWith(".")) {
