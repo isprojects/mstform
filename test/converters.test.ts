@@ -62,9 +62,6 @@ test("number converter", async () => {
   await checkWithOptions(converters.number, "1234,56", 1234.56, {
     decimalSeparator: ","
   });
-  await checkWithOptions(converters.number, "4.314.314", 4314314, {
-    thousandSeparator: "."
-  });
   await checkWithOptions(converters.number, "4.000,000000", 4000, {
     decimalSeparator: ",",
     thousandSeparator: "."
@@ -125,9 +122,6 @@ test("decimal converter", async () => {
   await check(converters.decimal({}), "14.", "14.");
   await checkWithOptions(converters.decimal({}), "43,14", "43.14", {
     decimalSeparator: ","
-  });
-  await failsWithOptions(converters.decimal({}), "4.314.314", {
-    thousandSeparator: "."
   });
   await checkWithOptions(
     converters.decimal({ decimalPlaces: 6 }),
@@ -237,18 +231,6 @@ test("decimal converter render with six decimals and thousand separators", async
   expect(rendered).toEqual("4.000.000,000000");
 });
 
-test("decimal converter render, six decimals, no decimalSeparator", async () => {
-  const converter = converters.decimal({ decimalPlaces: 6 });
-  const options = {
-    thousandSeparator: ".",
-    renderThousands: true
-  };
-  const value = "4.000000";
-  const processedValue = converter.preprocessRaw(value, options);
-  const converted = await converter.convert(processedValue, options);
-  expect(converted).toBe(CONVERSION_ERROR);
-});
-
 test("decimal converter render with six decimals, only showing three", async () => {
   const converter = converters.decimal({ decimalPlaces: 3 });
   const options = {
@@ -259,6 +241,23 @@ test("decimal converter render with six decimals, only showing three", async () 
   const value = "4000.000000";
   const rendered = await converter.render(value, options);
   expect(rendered).toEqual("4.000,000");
+});
+
+test("decimal converter with can't convert thousandSeparator . and no decimalSeparator", async () => {
+  let message = false;
+  const converter = converters.decimal();
+  const options = {
+    thousandSeparator: ".",
+    renderThousands: true
+  };
+  const value = "4.000";
+  const processedValue = converter.preprocessRaw(value, options);
+  try {
+    await converter.convert(processedValue, options);
+  } catch (e) {
+    message = e.message;
+  }
+  expect(message).toBeTruthy();
 });
 
 test("do not convert a normal string with decimal options", async () => {
@@ -384,16 +383,26 @@ test("dynamic decimal converter", async () => {
     foo: new Field(currency())
   });
 
-  const o = M.create({ foo: "3" });
+  const o = M.create({ foo: "4" });
 
   const state = form.state(o, { context: context });
   const field = state.field("foo");
 
   await field.setRaw("3.141");
   expect(field.raw).toEqual("3.141");
-  expect(field.value).toEqual("3"); // conversion error
+  expect(field.value).toEqual("4"); // conversion error
+  expect(field.error).toEqual("Could not convert");
   context.options = { decimalPlaces: 3 };
   await field.setRaw("3.141");
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141"); // conversion succeeds
+  expect(field.error).toBeUndefined();
+  context.options = { decimalPlaces: 2 };
+  expect(field.raw).toEqual("3.141");
+  expect(field.value).toEqual("3.141"); //nothing happens until field is touched
+  expect(field.error).toBeUndefined();
+  await field.setRaw("3.141"); //touch field again
+  expect(field.raw).toEqual("3.141");
+  expect(field.value).toEqual("3.141");
+  expect(field.error).toEqual("Could not convert");
 });
