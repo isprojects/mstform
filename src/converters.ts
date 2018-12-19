@@ -9,106 +9,16 @@ import {
 } from "./converter";
 import { controlled } from "./controlled";
 import { identity } from "./utils";
+import {
+  convertSeparators,
+  renderSeparators,
+  getOptions,
+  getRegex,
+  trimDecimals
+} from "./decimal";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
-
-function normalizeLastElement(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.decimalSeparator == null) {
-    return raw;
-  }
-  return raw.split(options.decimalSeparator)[0];
-}
-
-function convertDecimalSeparator(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.decimalSeparator == null) {
-    return raw;
-  }
-  return raw.replace(options.decimalSeparator, ".");
-}
-
-function renderDecimalSeparator(
-  value: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.decimalSeparator == null) {
-    return value;
-  }
-  return value.replace(".", options.decimalSeparator);
-}
-
-function convertThousandSeparators(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.thousandSeparator == null) {
-    return raw;
-  }
-  const splitRaw = raw.split(options.thousandSeparator);
-  const firstElement = splitRaw[0];
-  const lastElement = normalizeLastElement(
-    splitRaw[splitRaw.length - 1],
-    options
-  );
-  // value before the first thousand separator has to be of length 1, 2 or 3
-  if (firstElement.length < 1 || firstElement.length > 3) {
-    return raw;
-  }
-  if (lastElement.length !== 3) {
-    return raw;
-  }
-  // all remaining elements of the split string should have length 3
-  if (!splitRaw.slice(1, -1).every(raw => raw.length === 3)) {
-    return raw;
-  }
-  // turn split string back into full string without thousand separators
-  return splitRaw.join("");
-}
-
-function renderThousandSeparators(
-  value: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.thousandSeparator == null || !options.renderThousands) {
-    return value;
-  }
-  const decimalSeparator = options.decimalSeparator || ".";
-  const splitValue = value.split(decimalSeparator);
-  splitValue[0] = splitValue[0].replace(
-    /\B(?=(\d{3})+(?!\d))/g,
-    options.thousandSeparator
-  );
-  return splitValue.join(decimalSeparator);
-}
-
-function convertSeparators(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  return convertDecimalSeparator(
-    convertThousandSeparators(raw, options),
-    options
-  );
-}
-
-function renderSeparators(
-  value: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options == null) {
-    return value;
-  }
-  return renderThousandSeparators(
-    renderDecimalSeparator(value, options),
-    options
-  );
-}
 
 export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
@@ -190,60 +100,10 @@ export interface DecimalOptions {
 }
 
 function decimal(
-  options?:
+  decimalOptions?:
     | Partial<DecimalOptions>
     | ((context: any) => Partial<DecimalOptions>)
 ) {
-  function getOptions(context: any): DecimalOptions {
-    if (typeof options === "function") {
-      return getDecimalOptions(options(context));
-    }
-    if (options == null) {
-      return { maxWholeDigits: 10, decimalPlaces: 2, allowNegative: true };
-    }
-    return getDecimalOptions(options);
-  }
-
-  function getDecimalOptions(options: Partial<DecimalOptions>) {
-    const maxWholeDigits: number = options.maxWholeDigits || 10;
-    const decimalPlaces: number =
-      options.decimalPlaces == null ? 2 : options.decimalPlaces;
-    const allowNegative: boolean =
-      options.allowNegative == null ? true : options.allowNegative;
-    return { maxWholeDigits, decimalPlaces, allowNegative };
-  }
-
-  function getRegex(context: any): RegExp {
-    const options = getOptions(context);
-    return new RegExp(
-      `^${
-        options.allowNegative ? `-?` : ``
-      }(0|[1-9]\\d{0,${options.maxWholeDigits - 1}})(\\.\\d{0,${
-        options.decimalPlaces
-      }})?$`
-    );
-  }
-
-  function trimDecimals(
-    value: string,
-    options: StateConverterOptionsWithContext
-  ) {
-    const splitValue = value.split(".");
-    if (typeof splitValue[1] === "undefined") {
-      return value;
-    }
-    splitValue[1] = splitValue[1].substring(
-      0,
-      getOptions(options.context).decimalPlaces
-    );
-    if (splitValue[1].length === 0) {
-      value = splitValue.join("");
-    } else {
-      value = splitValue.join(".");
-    }
-    return value;
-  }
-
   return new StringConverter<string>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -251,18 +111,18 @@ function decimal(
     neverRequired: false,
     preprocessRaw(
       raw: string,
-      options: StateConverterOptionsWithContext
+      converterOptions: StateConverterOptionsWithContext
     ): string {
       raw = raw.trim();
-      return convertSeparators(raw, options);
+      return convertSeparators(raw, converterOptions);
     },
-    rawValidate(raw, options) {
+    rawValidate(raw, converterOptions) {
       if (raw === "" || raw === ".") {
         return false;
       }
       if (
-        options.thousandSeparator === "." &&
-        options.decimalSeparator == null
+        converterOptions.thousandSeparator === "." &&
+        converterOptions.decimalSeparator == null
       ) {
         return false;
       }
@@ -270,13 +130,16 @@ function decimal(
       if (raw.startsWith(".")) {
         raw = "0" + raw;
       }
-      return getRegex(options.context).test(raw);
+      return getRegex(converterOptions.context, decimalOptions).test(raw);
     },
     convert(raw) {
       return raw;
     },
-    render(value, options) {
-      return renderSeparators(trimDecimals(value, options), options);
+    render(value, converterOptions) {
+      return renderSeparators(
+        trimDecimals(value, converterOptions, decimalOptions),
+        converterOptions
+      );
     }
   });
 }
