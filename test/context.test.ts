@@ -374,9 +374,9 @@ test("converter options in number converter in render", async () => {
   const o = M.create({ foo: 1234567 });
 
   const state = form.state(o, {
-    converterOptions: { thousandSeparator: ".", renderThousands: true }
+    converterOptions: { thousandSeparator: ",", renderThousands: true }
   });
   const field = state.field("foo");
 
-  expect(field.raw).toEqual("1.234.567");
+  expect(field.raw).toEqual("1,234,567");
 });
