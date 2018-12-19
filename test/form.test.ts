@@ -2693,3 +2693,21 @@ test("string is trimmed and save", async () => {
   expect(field.value).toEqual("FOO");
   expect(saved).toEqual({ foo: "FOO" });
 });
+
+test("form with thousandSeparator . and empty decimalSeparator invalid", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "3000" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal())
+  });
+
+  expect(() => {
+    form.state(o, {
+      converterOptions: { thousandSeparator: ".", renderThousands: true }
+    });
+  }).toThrow();
+});
