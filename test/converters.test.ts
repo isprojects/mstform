@@ -399,9 +399,9 @@ test("dynamic decimal converter", async () => {
   expect(field.error).toBeUndefined();
   context.options = { decimalPlaces: 2 };
   expect(field.raw).toEqual("3.141");
-  expect(field.value).toEqual("3.141"); //nothing happens until field is touched
+  expect(field.value).toEqual("3.141"); // nothing happens until field is touched
   expect(field.error).toBeUndefined();
-  await field.setRaw("3.141"); //touch field again
+  await field.setRaw("3.141"); // touch field again
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141");
   expect(field.error).toEqual("Could not convert");
