@@ -1,3 +1,12 @@
+# 1.5.0
+
+-   Made the decimal converter dynamic. A decimal converter can now take either
+    a set of decimal options or a function that sets decimal options based on
+    context.
+-   When rendering decimal numbers in forms, decimals are now trimmed to the
+    number of decimal places specified in decimal options with the
+    `DecimalPlaces` option.
+
 # 1.4.2
 
 -   Fixed wrongful rendering of thousand separators after decimal separators.
