@@ -31,6 +31,7 @@ import {
   StateConverterOptions,
   StateConverterOptionsWithContext
 } from "./converter";
+import { checkConverterOptions } from "./decimal";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any>): boolean;
@@ -208,6 +209,7 @@ export class FormState<
       this.updateFunc = options.update ? options.update : null;
       this._context = options.context;
       this._converterOptions = options.converterOptions || {};
+      checkConverterOptions(this._converterOptions);
       this._requiredError = options.requiredError || "Required";
     }
   }

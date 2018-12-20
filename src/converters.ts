@@ -9,106 +9,17 @@ import {
 } from "./converter";
 import { controlled } from "./controlled";
 import { identity } from "./utils";
+import {
+  checkConverterOptions,
+  convertSeparators,
+  DecimalOptions,
+  getRegex,
+  renderSeparators,
+  trimDecimals
+} from "./decimal";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
-
-function normalizeLastElement(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.decimalSeparator == null) {
-    return raw;
-  }
-  return raw.split(options.decimalSeparator)[0];
-}
-
-function convertDecimalSeparator(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.decimalSeparator == null) {
-    return raw;
-  }
-  return raw.replace(options.decimalSeparator, ".");
-}
-
-function renderDecimalSeparator(
-  value: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.decimalSeparator == null) {
-    return value;
-  }
-  return value.replace(".", options.decimalSeparator);
-}
-
-function convertThousandSeparators(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.thousandSeparator == null) {
-    return raw;
-  }
-  const splitRaw = raw.split(options.thousandSeparator);
-  const firstElement = splitRaw[0];
-  const lastElement = normalizeLastElement(
-    splitRaw[splitRaw.length - 1],
-    options
-  );
-  // value before the first thousand separator has to be of length 1, 2 or 3
-  if (firstElement.length < 1 || firstElement.length > 3) {
-    return raw;
-  }
-  if (lastElement.length !== 3) {
-    return raw;
-  }
-  // all remaining elements of the split string should have length 3
-  if (!splitRaw.slice(1, -1).every(raw => raw.length === 3)) {
-    return raw;
-  }
-  // turn split string back into full string without thousand separators
-  return splitRaw.join("");
-}
-
-function renderThousandSeparators(
-  value: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options.thousandSeparator == null || !options.renderThousands) {
-    return value;
-  }
-  const decimalSeparator = options.decimalSeparator || ".";
-  const splitValue = value.split(decimalSeparator);
-  splitValue[0] = splitValue[0].replace(
-    /\B(?=(\d{3})+(?!\d))/g,
-    options.thousandSeparator
-  );
-  return splitValue.join(decimalSeparator);
-}
-
-function convertSeparators(
-  raw: string,
-  options: StateConverterOptionsWithContext
-) {
-  return convertDecimalSeparator(
-    convertThousandSeparators(raw, options),
-    options
-  );
-}
-
-function renderSeparators(
-  value: string,
-  options: StateConverterOptionsWithContext
-) {
-  if (options == null) {
-    return value;
-  }
-  return renderThousandSeparators(
-    renderDecimalSeparator(value, options),
-    options
-  );
-}
 
 export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
@@ -183,27 +94,11 @@ const boolean = new Converter<boolean, boolean>({
   neverRequired: true
 });
 
-export interface DecimalOptions {
-  maxWholeDigits?: number;
-  decimalPlaces?: number;
-  allowNegative?: boolean;
-}
-
-function decimal(options?: DecimalOptions) {
-  const maxWholeDigits: number =
-    options == null || !options.maxWholeDigits ? 10 : options.maxWholeDigits;
-  const decimalPlaces: number =
-    options == null || !options.decimalPlaces ? 2 : options.decimalPlaces;
-  const allowNegative: boolean =
-    options == null || options.allowNegative == null
-      ? true
-      : options.allowNegative;
-
-  const regex = new RegExp(
-    `^${allowNegative ? `-?` : ``}(0|[1-9]\\d{0,${maxWholeDigits -
-      1}})(\\.\\d{0,${decimalPlaces}})?$`
-  );
-
+function decimal(
+  decimalOptions?:
+    | Partial<DecimalOptions>
+    | ((context: any) => Partial<DecimalOptions>)
+) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -211,26 +106,30 @@ function decimal(options?: DecimalOptions) {
     neverRequired: false,
     preprocessRaw(
       raw: string,
-      options: StateConverterOptionsWithContext
+      converterOptions: StateConverterOptionsWithContext
     ): string {
       raw = raw.trim();
-      return convertSeparators(raw, options);
+      return convertSeparators(raw, converterOptions);
     },
-    rawValidate(raw) {
+    rawValidate(raw, converterOptions) {
       if (raw === "" || raw === ".") {
         return false;
       }
+      checkConverterOptions(converterOptions);
       // deal with case when string starts with .
       if (raw.startsWith(".")) {
         raw = "0" + raw;
       }
-      return regex.test(raw);
+      return getRegex(converterOptions.context, decimalOptions).test(raw);
     },
     convert(raw) {
       return raw;
     },
-    render(value, options) {
-      return renderSeparators(value, options);
+    render(value, converterOptions) {
+      return renderSeparators(
+        trimDecimals(value, converterOptions, decimalOptions),
+        converterOptions
+      );
     }
   });
 }
