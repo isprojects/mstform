@@ -2,7 +2,7 @@
 
 -   Made the decimal converter dynamic. A decimal converter can now take either
     a set of decimal options or a function that sets decimal options based on
-    context.
+    context. This allows for dynamically changing options.
 -   When rendering decimal numbers in forms, decimals are now trimmed to the
     number of decimal places specified in decimal options with the
     `DecimalPlaces` option.

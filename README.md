@@ -352,8 +352,12 @@ other object:
 -   `converters.decimal({maxWholeDigits:x, decimalPlaces:y, allowNegative:z})`:
     value is a string (not a number) that contains a decimal number with a
     maximum `maxWholeDigits` (default 10) before the period and a maximum of
-    `decimalPlaces` (default 2) after the period. With `allowNegative`
-    (boolean, default true) you can specify if negatives are allowed
+    `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
+    the number of decimals that is initially rendered when opening the form.
+    With `allowNegative` (boolean, default true) you can specify if negatives
+    are allowed. These options can be set directly, or through the use of a
+    function that returns these options based on `context`. Using a function
+    allows these options to be dynamic.
 
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to
