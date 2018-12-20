@@ -31,6 +31,7 @@ import {
   StateConverterOptions,
   StateConverterOptionsWithContext
 } from "./converter";
+import { checkConverterOptions } from "./decimal";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any>): boolean;
@@ -208,14 +209,7 @@ export class FormState<
       this.updateFunc = options.update ? options.update : null;
       this._context = options.context;
       this._converterOptions = options.converterOptions || {};
-      if (
-        this._converterOptions.thousandSeparator === "." &&
-        this._converterOptions.decimalSeparator == null
-      ) {
-        throw Error(
-          "Can't set thousandSeparator to . without setting decimalSeparator."
-        );
-      }
+      checkConverterOptions(this._converterOptions);
       this._requiredError = options.requiredError || "Required";
     }
   }

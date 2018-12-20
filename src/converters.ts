@@ -10,10 +10,11 @@ import {
 import { controlled } from "./controlled";
 import { identity } from "./utils";
 import {
+  checkConverterOptions,
   convertSeparators,
-  renderSeparators,
-  getOptions,
+  DecimalOptions,
   getRegex,
+  renderSeparators,
   trimDecimals
 } from "./decimal";
 
@@ -93,12 +94,6 @@ const boolean = new Converter<boolean, boolean>({
   neverRequired: true
 });
 
-export interface DecimalOptions {
-  maxWholeDigits: number;
-  decimalPlaces: number;
-  allowNegative: boolean;
-}
-
 function decimal(
   decimalOptions?:
     | Partial<DecimalOptions>
@@ -120,14 +115,7 @@ function decimal(
       if (raw === "" || raw === ".") {
         return false;
       }
-      if (
-        converterOptions.thousandSeparator === "." &&
-        converterOptions.decimalSeparator == null
-      ) {
-        throw new Error(
-          "thousandSeparator is . while decimalSeparator isn't set. This shouldn't be possible."
-        );
-      }
+      checkConverterOptions(converterOptions);
       // deal with case when string starts with .
       if (raw.startsWith(".")) {
         raw = "0" + raw;

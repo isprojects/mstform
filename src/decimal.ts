@@ -1,5 +1,12 @@
-import { StateConverterOptionsWithContext } from "./converter";
-import { DecimalOptions } from "./converters";
+import {
+  StateConverterOptions,
+  StateConverterOptionsWithContext
+} from "./converter";
+export interface DecimalOptions {
+  maxWholeDigits: number;
+  decimalPlaces: number;
+  allowNegative: boolean;
+}
 
 function normalizeLastElement(
   raw: string,
@@ -157,4 +164,25 @@ export function trimDecimals(
     return before;
   }
   return [before, trimmedAfter].join(".");
+}
+
+export function checkConverterOptions(
+  converterOptions: StateConverterOptions | StateConverterOptionsWithContext
+) {
+  if (
+    converterOptions.thousandSeparator === "." &&
+    converterOptions.decimalSeparator == null
+  ) {
+    throw Error(
+      "Can't set thousandSeparator to . without setting decimalSeparator."
+    );
+  }
+  if (
+    converterOptions.thousandSeparator === converterOptions.decimalSeparator &&
+    converterOptions.thousandSeparator != null
+  ) {
+    throw Error(
+      "Can't set thousandSeparator and decimalSeparator to the same value."
+    );
+  }
 }
