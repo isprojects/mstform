@@ -11,7 +11,7 @@ export interface DecimalOptions {
 function normalizeLastElement(
   raw: string,
   options: StateConverterOptionsWithContext
-) {
+): string {
   if (options.decimalSeparator == null) {
     return raw;
   }
@@ -21,7 +21,7 @@ function normalizeLastElement(
 function convertDecimalSeparator(
   raw: string,
   options: StateConverterOptionsWithContext
-) {
+): string {
   if (options.decimalSeparator == null) {
     return raw;
   }
@@ -31,7 +31,7 @@ function convertDecimalSeparator(
 function renderDecimalSeparator(
   value: string,
   options: StateConverterOptionsWithContext
-) {
+): string {
   if (options.decimalSeparator == null) {
     return value;
   }
@@ -41,7 +41,7 @@ function renderDecimalSeparator(
 function convertThousandSeparators(
   raw: string,
   options: StateConverterOptionsWithContext
-) {
+): string {
   if (options.thousandSeparator == null) {
     return raw;
   }
@@ -69,7 +69,7 @@ function convertThousandSeparators(
 function renderThousandSeparators(
   value: string,
   options: StateConverterOptionsWithContext
-) {
+): string {
   if (options.thousandSeparator == null || !options.renderThousands) {
     return value;
   }
@@ -85,7 +85,7 @@ function renderThousandSeparators(
 export function convertSeparators(
   raw: string,
   options: StateConverterOptionsWithContext
-) {
+): string {
   return convertDecimalSeparator(
     convertThousandSeparators(raw, options),
     options
@@ -95,7 +95,7 @@ export function convertSeparators(
 export function renderSeparators(
   value: string,
   options: StateConverterOptionsWithContext
-) {
+): string {
   if (options == null) {
     return value;
   }
@@ -168,7 +168,7 @@ export function trimDecimals(
 
 export function checkConverterOptions(
   converterOptions: StateConverterOptions | StateConverterOptionsWithContext
-) {
+): void {
   if (
     converterOptions.thousandSeparator === "." &&
     converterOptions.decimalSeparator == null
