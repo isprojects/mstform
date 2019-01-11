@@ -379,6 +379,12 @@ treated a value -- a list of which checkboxes are selected, for instance. When
 you want the user to be able to add items to the array, using `RepeatingForm`
 instead.
 
+### Text Arrays
+
+`converters.textStringArray`: raw value is a string. Value is an
+observable array of strings. Note that this is for use with strings with a newline
+separator, for instance a textarea.
+
 ### Models
 
 `converters.model(Model)`: does not do any conversion (model instance goes in,

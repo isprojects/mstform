@@ -406,3 +406,30 @@ test("dynamic decimal converter", async () => {
   expect(field.value).toEqual("3.141");
   expect(field.error).toEqual("Could not convert");
 });
+
+test("text string array converter", async () => {
+  const M = types.model("M", {
+    foo: types.array(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.textStringArray)
+  });
+
+  const o = M.create({ foo: ["A", "B", "C"] });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  await field.setRaw("A\nB\nC");
+  expect(field.raw).toEqual("A\nB\nC");
+  expect(field.value).toEqual(["A", "B", "C"]);
+
+  await field.setRaw("D");
+  expect(field.raw).toEqual("D");
+  expect(field.value).toEqual(["D"]);
+
+  await field.setRaw("1\n2 \n3");
+  expect(field.raw).toEqual("1\n2 \n3");
+  expect(field.value).toEqual(["1", "2", "3"]);
+});
