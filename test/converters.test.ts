@@ -432,4 +432,16 @@ test("text string array converter", async () => {
   await field.setRaw("1\n2 \n3");
   expect(field.raw).toEqual("1\n2 \n3");
   expect(field.value).toEqual(["1", "2", "3"]);
+
+  await field.setRaw("");
+  expect(field.raw).toEqual("");
+  expect(field.value).toEqual([]);
+
+  await field.setRaw("\n");
+  expect(field.raw).toEqual("\n");
+  expect(field.value).toEqual(["", ""]);
+
+  await field.setRaw("   ");
+  expect(field.raw).toEqual("   ");
+  expect(field.value).toEqual([]);
 });

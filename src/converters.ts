@@ -150,7 +150,11 @@ const textStringArray = new Converter<string, IObservableArray<string>>({
   emptyRaw: "",
   emptyValue: observable.array([]),
   convert(raw) {
-    return observable.array(raw.split("\n").map(r => r.trim()));
+    const rawSplit = raw.split("\n").map(r => r.trim());
+    if (rawSplit.length === 1 && rawSplit[0] === "") {
+      return observable.array([]);
+    }
+    return observable.array(rawSplit);
   },
   render(value) {
     return value.join("\n");
