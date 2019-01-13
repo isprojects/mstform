@@ -1,8 +1,18 @@
-import React, { Component } from "react";
+import React, { Component, PureComponent } from "react";
 import { observer } from "mobx-react";
-import { types, getSnapshot } from "mobx-state-tree";
+import { types, getSnapshot, getParent, destroy } from "mobx-state-tree";
 import makeInspectable from "mobx-devtools-mst";
-import { Field, Form, converters, FieldAccessor } from "../src/index";
+import { Field, Form, RepeatingForm, converters, FieldAccessor } from "../src/index";
+
+const L = types
+  .model("L", {
+    c: types.string
+  })
+  .actions(self => ({
+    remove(){
+      getParent(self, 2).remove(self);
+    }
+  }));
 
 // we have a MST model with a string field foo,
 // and a few number fields
@@ -11,8 +21,19 @@ const M = types
     foo: types.string,
     a: types.number,
     b: types.number,
-    derived: types.number
+    derived: types.number,
+    l: types.optional(types.string, ""),
+    ls: types.array(L)
   })
+  .actions(self => ({
+    remove(ls) {
+      destroy(ls);
+    }
+    , addLs(){
+      const l = { c: self.l };
+      self.ls.push(l);
+    }
+  }))
   .views(self => ({
     get calculated() {
       return self.a + self.b;
@@ -20,7 +41,7 @@ const M = types
   }));
 
 // we create an instance of the model
-const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4 });
+const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4, ls: [ { c: "LSSS" }, { c: "teste" }, { c: "imprimindo" } ]});
 
 makeInspectable(o);
 
@@ -31,6 +52,10 @@ const form = new Form(M, {
   }),
   a: new Field(converters.number),
   b: new Field(converters.number),
+  l: new Field(converters.string),
+  ls: new RepeatingForm({
+    c: new Field(converters.string)
+  }),
   derived: new Field(converters.number, {
     derived: node => node.calculated
   })
@@ -87,13 +112,36 @@ export class MyForm extends Component<MyFormProps> {
     });
   };
 
+  pushLs = () => {
+    this.formState.node.addLs();
+  };
+
   render() {
     const formState = this.formState;
 
     const foo = formState.field("foo");
     const a = formState.field("a");
     const b = formState.field("b");
+    const l = formState.field("l");
+    const lsForm = formState.repeatingForm("ls");
     const derived = formState.field("derived");
+
+    const entries = o.ls.map((ls, index) => {
+      // get the sub-form we want
+      const l = lsForm.index(index);
+      // and get the fields as usual
+      const c = l.field("c");
+      return (
+          <div>
+              <InlineError field={c}>
+                  <MyInput type="text" field={c} />
+              </InlineError>
+              <button onClick={ls.remove}>X</button>
+          </div>
+      );
+    });
+
+
     return (
       <div>
         <span>Simple text field with validator (set it to "correct")</span>
@@ -108,6 +156,15 @@ export class MyForm extends Component<MyFormProps> {
         <InlineError field={b}>
           <MyInput type="text" field={b} />
         </InlineError>
+        <span>c add</span>
+        <InlineError field={l}>
+          <MyInput type="text" field={l} />
+        </InlineError>
+        <br />
+        <span>c array input strign</span>
+        <div>{entries}</div>
+        <button onClick={this.pushLs}>AddEntity</button>
+        <br />
         <span>derived from a + b with override</span>
         <InlineError field={derived}>
           <MyInput type="text" field={derived} />
