@@ -1,7 +1,7 @@
-# 1.5.1
+# 1.6.0
 
--   Added the textStringArray converter. A converter that takes a string with newlines
-    and converts it to an array of strings split by newline.
+-   Added the `textStringArray` converter. A converter that takes a string with
+    newlines and converts it to an array of strings split by newline.
 
 # 1.5.0
 
