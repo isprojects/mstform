@@ -1,13 +1,14 @@
-# 1.5.1
+# 1.6.0
 
--   Added the textStringArray converter. A converter that takes a string with newlines
-    and converts it to an array of strings split by newline.
+-   Added the `textStringArray` converter. A converter that takes a string with
+    newlines and converts it to an array of strings split by newline.
 
 # 1.5.0
 
 -   Made the decimal converter dynamic. A decimal converter can now take either
     a set of decimal options or a function that sets decimal options based on
     context. This allows for dynamically changing options.
+
 -   When rendering decimal numbers in forms, decimals are now trimmed to the
     number of decimal places specified in decimal options with the
     `DecimalPlaces` option.
