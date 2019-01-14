@@ -23,11 +23,12 @@ const M = types
     b: types.number,
     derived: types.number,
     l: types.optional(types.string, ""),
-    ls: types.array(L)
+    ls: types.array(L),
+    textarea: types.array(types.string)
   })
   .actions(self => ({
-    remove(ls) {
-      destroy(ls);
+    remove(lsItem) {
+      destroy(lsItem);
     }
     , addLs(){
       const l = { c: self.l };
@@ -40,8 +41,7 @@ const M = types
     }
   }));
 
-// we create an instance of the model
-const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4, ls: [ { c: "LSSS" }, { c: "teste" }, { c: "imprimindo" } ]});
+const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4, textarea: [], ls: [ { c: "LSSS" }, { c: "teste" }, { c: "imprimindo" } ] });
 
 makeInspectable(o);
 
@@ -58,7 +58,8 @@ const form = new Form(M, {
   }),
   derived: new Field(converters.number, {
     derived: node => node.calculated
-  })
+  }),
+  textarea: new Field(converters.textStringArray)
 });
 
 type InlineErrorProps = {
@@ -86,6 +87,16 @@ export class MyInput extends Component<{
   render() {
     const { type, field } = this.props;
     return <input type={type} {...field.inputProps} />;
+  }
+}
+
+@observer
+export class MyTextArea extends Component<{
+  field: FieldAccessor<any, any>;
+}> {
+  render() {
+    const { field } = this.props;
+    return <textarea {...field.inputProps} />;
   }
 }
 
@@ -125,6 +136,7 @@ export class MyForm extends Component<MyFormProps> {
     const l = formState.field("l");
     const lsForm = formState.repeatingForm("ls");
     const derived = formState.field("derived");
+    const textarea = formState.field("textarea");
 
     const entries = o.ls.map((ls, index) => {
       // get the sub-form we want
@@ -140,8 +152,7 @@ export class MyForm extends Component<MyFormProps> {
           </div>
       );
     });
-
-
+    
     return (
       <div>
         <span>Simple text field with validator (set it to "correct")</span>
@@ -156,19 +167,21 @@ export class MyForm extends Component<MyFormProps> {
         <InlineError field={b}>
           <MyInput type="text" field={b} />
         </InlineError>
-        <span>c add</span>
-        <InlineError field={l}>
-          <MyInput type="text" field={l} />
-        </InlineError>
-        <br />
-        <span>c array input strign</span>
-        <div>{entries}</div>
-        <button onClick={this.pushLs}>AddEntity</button>
-        <br />
         <span>derived from a + b with override</span>
         <InlineError field={derived}>
           <MyInput type="text" field={derived} />
         </InlineError>
+        <span>textarea field with list of strings</span>
+        <InlineError field={textarea}>
+          <MyTextArea field={textarea} />
+        </InlineError>
+        <span>c add</span>
+        <InlineError field={l}>
+          <MyInput type="text" field={l} />
+        </InlineError>
+        <span>c array input strign</span>
+        <div>{entries}</div>
+        <button onClick={this.pushLs}>AddEntity</button>
         <button onClick={this.handleSave}>Save</button>
       </div>
     );

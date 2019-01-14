@@ -146,6 +146,22 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
   }
 });
 
+const textStringArray = new Converter<string, IObservableArray<string>>({
+  emptyRaw: "",
+  emptyValue: observable.array([]),
+  defaultControlled: controlled.value,
+  convert(raw) {
+    const rawSplit = raw.split("\n").map(r => r.trim());
+    if (rawSplit.length === 1 && rawSplit[0] === "") {
+      return observable.array([]);
+    }
+    return observable.array(rawSplit);
+  },
+  render(value) {
+    return value.join("\n");
+  }
+});
+
 function maybe<R, V>(
   converter: StringConverter<V>
 ): IConverter<string, V | undefined>;
@@ -265,6 +281,7 @@ export const converters = {
   integer,
   decimal,
   boolean,
+  textStringArray,
   stringArray,
   maybe,
   maybeNull,
