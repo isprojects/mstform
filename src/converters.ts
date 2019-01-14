@@ -149,6 +149,7 @@ const stringArray = new Converter<string[], IObservableArray<string>>({
 const textStringArray = new Converter<string, IObservableArray<string>>({
   emptyRaw: "",
   emptyValue: observable.array([]),
+  defaultControlled: controlled.value,
   convert(raw) {
     const rawSplit = raw.split("\n").map(r => r.trim());
     if (rawSplit.length === 1 && rawSplit[0] === "") {

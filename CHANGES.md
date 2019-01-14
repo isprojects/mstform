@@ -1,3 +1,7 @@
+# 1.6.1
+
+-   Set defaultControlled for `textStringArray` converter to `controlled.value`.
+
 # 1.6.0
 
 -   Added the `textStringArray` converter. A converter that takes a string with
