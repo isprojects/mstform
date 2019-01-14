@@ -1,3 +1,8 @@
+# 1.5.1
+
+-   Added the textStringArray converter. A converter that takes a string with newlines
+    and converts it to an array of strings split by newline.
+
 # 1.5.0
 
 -   Made the decimal converter dynamic. A decimal converter can now take either

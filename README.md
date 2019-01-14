@@ -381,8 +381,8 @@ instead.
 
 ### Text Arrays
 
-`converters.textStringArray`: raw value is a string. Value is an
-observable array of strings. Note that this is for use with strings with a newline
+`converters.textStringArray`: raw value is a string with newlines. Value is an
+array of strings split by newline. Note that this is for use with strings with a newline
 separator, for instance a textarea.
 
 ### Models
