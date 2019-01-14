@@ -382,8 +382,8 @@ instead.
 ### Text Arrays
 
 `converters.textStringArray`: raw value is a string with newlines. Value is an
-array of strings split by newline. Note that this is for use with strings with a newline
-separator, for instance a textarea.
+array of strings split by newline. You can use this with a textarea to edit an array
+of strings by newline.
 
 ### Models
 
