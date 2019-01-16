@@ -1,9 +1,24 @@
 import React, { Component } from "react";
 import { observer } from "mobx-react";
-import { types, getSnapshot } from "mobx-state-tree";
+import { types, getSnapshot, getParent, destroy, TypeOrStateTreeNodeToStateTreeNode, setLivelynessChecking } from "mobx-state-tree";
 import makeInspectable from "mobx-devtools-mst";
-import { Field, Form, converters, FieldAccessor } from "../src/index";
+import { Field, Form, RepeatingForm, converters, FieldAccessor } from "../src/index";
 
+const L = types
+  .model("L", {
+    c: types.string
+  })
+  type IL = typeof L.Type;
+  interface ILStore extends IL {}
+  const LModel = L.actions((self: ILStore) => ({
+    remove(){
+      removeItem(self);
+    }
+  }));
+
+const removeItem = (self: ILStore) => {
+  getParent(self, 2).remove(self);
+}
 // we have a MST model with a string field foo,
 // and a few number fields
 const M = types
@@ -12,16 +27,32 @@ const M = types
     a: types.number,
     b: types.number,
     derived: types.number,
+    l: types.optional(types.string, ""),
+    ls: types.array(LModel),
+    selectItem: types.reference(LModel),
     textarea: types.array(types.string)
   })
+  .actions(self => ({
+    remove(lsItem : ILStore) {
+      destroy(lsItem);
+    }
+    , addLs(){
+      let l = { c: self.l, remove: () => removeItem };
+      self.ls.push(l);
+    }
+    , selectItemsLs(item: any){
+      self.selectItem = item;
+    }
+  }))
   .views(self => ({
     get calculated() {
       return self.a + self.b;
     }
   }));
-
-// we create an instance of the model
-const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4, textarea: [] });
+const l = LModel.create({ c: "LSSS"});
+const l1 = LModel.create({ c: "teste"});
+const l2 = LModel.create({ c: "imprimindo"});
+const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4, textarea: ["1", "2", "3"], ls: [ l, l1, l2 ], selectItem: "LSSS"});
 
 makeInspectable(o);
 
@@ -32,6 +63,10 @@ const form = new Form(M, {
   }),
   a: new Field(converters.number),
   b: new Field(converters.number),
+  l: new Field(converters.string),
+  ls: new RepeatingForm({
+    c: new Field(converters.string)
+  }),
   derived: new Field(converters.number, {
     derived: node => node.calculated
   }),
@@ -86,7 +121,7 @@ export class MyForm extends Component<MyFormProps> {
     super(props);
     // we create a form state for this model
     this.formState = form.state(o, {
-      save: node => {
+      save: (node: any) => {
         console.log(getSnapshot(node));
         return null;
       }
@@ -94,10 +129,18 @@ export class MyForm extends Component<MyFormProps> {
   }
 
   handleSave = () => {
-    this.formState.save().then(r => {
+    this.formState.save().then((r: any) => {
       console.log("saved success", r);
     });
   };
+
+  pushLs = () => {
+    this.formState.node.addLs();
+  };
+
+  selectItemsChange = (item: any) => {
+    this.formState.node.selectItemsLs(item.currentTarget.selectedOptions[0].value);
+  }
 
   render() {
     const formState = this.formState;
@@ -105,8 +148,32 @@ export class MyForm extends Component<MyFormProps> {
     const foo = formState.field("foo");
     const a = formState.field("a");
     const b = formState.field("b");
+    const l = formState.field("l");
+    const lsForm = formState.repeatingForm("ls");
     const derived = formState.field("derived");
     const textarea = formState.field("textarea");
+
+    const entries = o.ls.map((ls, index) => {
+      // get the sub-form we want
+      const l = lsForm.index(index);
+      // and get the fields as usual
+      const c = l.field("c");
+      return (
+          <div key={index}>
+              <InlineError field={c}>
+                  <MyInput type="text" field={c} />
+              </InlineError>
+              <button onClick={ls.remove}>X</button>
+          </div>
+      );
+    });
+
+    const selectItems = o.ls.map((ls, index) => {
+      return (
+        <option key={index} value={ls.c}>{ls.c}</option>
+      )
+    });
+    
     return (
       <div>
         <span>Simple text field with validator (set it to "correct")</span>
@@ -129,6 +196,21 @@ export class MyForm extends Component<MyFormProps> {
         <InlineError field={textarea}>
           <MyTextArea field={textarea} />
         </InlineError>
+        <div>
+          <select
+            onChange={this.selectItemsChange}>
+            {selectItems}
+          </select>
+        </div>
+        <span>c add</span>
+        <InlineError field={l}>
+          <MyInput type="text" field={l} />
+        </InlineError>
+        <button onClick={this.pushLs}>AddEntity</button>
+        <br />
+        <span>c array input strign</span>
+        <div>{entries}</div>
+        
         <button onClick={this.handleSave}>Save</button>
       </div>
     );
