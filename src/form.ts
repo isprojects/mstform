@@ -253,8 +253,8 @@ export class Field<R, V> {
     return new ProcessValue(result.value);
   }
 
-  render(value: V, context: any): R {
-    return this.converter.render(value, context);
+  render(value: V, stateConverterOptions: StateConverterOptionsWithContext): R {
+    return this.converter.render(value, stateConverterOptions);
   }
 }
 

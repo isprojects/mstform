@@ -92,7 +92,12 @@ export class FieldAccessor<R, V> {
         if (derivedValue === undefined) {
           return;
         }
-        this.setRaw(this.field.render(derivedValue, this.state.context));
+        this.setRaw(
+          this.field.render(
+            derivedValue,
+            this.state.stateConverterOptionsWithContext
+          )
+        );
       }
     );
     this._disposer = disposer;
@@ -359,7 +364,10 @@ export class FieldAccessor<R, V> {
     // we don't use setRaw on the field as the value is already
     // correct. setting raw causes addMode for the field
     // to be disabled
-    this._raw = this.field.render(value, this.state.context);
+    this._raw = this.field.render(
+      value,
+      this.state.stateConverterOptionsWithContext
+    );
     // trigger validation
     this.validate();
   }

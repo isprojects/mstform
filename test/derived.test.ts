@@ -201,3 +201,51 @@ test("calculated repeating push and remove", async () => {
   expect(calculated2.raw).toBe("10");
   expect(touched).toBeTruthy();
 });
+
+test("calculated with context", async () => {
+  const M = types
+    .model("M", {
+      calculated: types.string,
+      a: types.string,
+      b: types.string
+    })
+    .views(self => ({
+      sum() {
+        return (parseFloat(self.a) + parseFloat(self.b)).toString();
+      }
+    }));
+
+  function getDecimalPlaces(context: any) {
+    expect(context).not.toBeUndefined();
+    return { decimalPlaces: context.getNumberOfDecimals() };
+  }
+
+  const form = new Form(M, {
+    calculated: new Field(converters.decimal(getDecimalPlaces), {
+      derived: (node: Instance<typeof M>) => node.sum()
+    }),
+    a: new Field(converters.decimal(getDecimalPlaces)),
+    b: new Field(converters.decimal(getDecimalPlaces))
+  });
+
+  const o = M.create({ calculated: "0.0000", a: "1.0000", b: "2.3456" });
+
+  const state = form.state(o, {
+    context: { getNumberOfDecimals: () => 4 }
+  });
+  const calculated = state.field("calculated");
+  const a = state.field("a");
+  const b = state.field("b");
+
+  await resolveReactions();
+  // we show the set value, as no modification was made
+  expect(calculated.raw).toEqual("0.0000");
+  expect(calculated.value).toEqual("0.0000");
+
+  // we now change a, which should modify the derived value
+  await a.setRaw("1.2345");
+  await resolveReactions();
+  expect(calculated.raw).toEqual("3.5801");
+  // and also the underlying value, immediately
+  expect(calculated.value).toEqual("3.5801");
+});
