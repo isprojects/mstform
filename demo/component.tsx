@@ -1,20 +1,22 @@
 import React, { Component } from "react";
 import { observer } from "mobx-react";
-import { types, getSnapshot, getParent, destroy, TypeOrStateTreeNodeToStateTreeNode, setLivelynessChecking } from "mobx-state-tree";
+import { types, getSnapshot, getParent, destroy } from "mobx-state-tree";
 import makeInspectable from "mobx-devtools-mst";
 import { Field, Form, RepeatingForm, converters, FieldAccessor } from "../src/index";
 
 const L = types
   .model("L", {
     c: types.string
-  })
-  type IL = typeof L.Type;
-  interface ILStore extends IL {}
-  const LModel = L.actions((self: ILStore) => ({
-    remove(){
-      removeItem(self);
-    }
-  }));
+  });
+
+type IL = typeof L.Type;
+interface ILStore extends IL {}
+
+const LModel = L.actions((self: ILStore) => ({
+  remove(){
+    removeItem(self);
+  }
+}));
 
 const removeItem = (self: ILStore) => {
   getParent(self, 2).remove(self);
@@ -49,6 +51,7 @@ const M = types
       return self.a + self.b;
     }
   }));
+
 const l = LModel.create({ c: "LSSS"});
 const l1 = LModel.create({ c: "teste"});
 const l2 = LModel.create({ c: "imprimindo"});
