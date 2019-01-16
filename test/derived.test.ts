@@ -211,7 +211,6 @@ test("calculated with context", async () => {
     })
     .views(self => ({
       sum() {
-        console.log((parseFloat(self.a) + parseFloat(self.b)).toString());
         return (parseFloat(self.a) + parseFloat(self.b)).toString();
       }
     }));
