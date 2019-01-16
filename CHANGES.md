@@ -1,3 +1,8 @@
+# 1.6.2
+
+-   Fixed a bug where render functions were passed a context argument instead of
+    an options argument, with a context inside.
+
 # 1.6.1
 
 -   Set defaultControlled for `textStringArray` converter to `controlled.value`.
