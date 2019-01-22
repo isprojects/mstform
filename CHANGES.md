@@ -1,3 +1,7 @@
+# 1.6.3
+
+-   Removed decimal trimming when rendering decimals due to buggy behavior.
+
 # 1.6.2
 
 -   Fixed a bug where render functions were passed a context argument instead of
