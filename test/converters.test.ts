@@ -231,18 +231,6 @@ test("decimal converter render with six decimals and thousand separators", async
   expect(rendered).toEqual("4.000.000,000000");
 });
 
-test("decimal converter render with six decimals, only showing three", async () => {
-  const converter = converters.decimal({ decimalPlaces: 3 });
-  const options = {
-    decimalSeparator: ",",
-    thousandSeparator: ".",
-    renderThousands: true
-  };
-  const value = "4000.000000";
-  const rendered = await converter.render(value, options);
-  expect(rendered).toEqual("4.000,000");
-});
-
 test("decimal converter with thousandSeparator . and no decimalSeparator can't convert", async () => {
   let message = false;
   const converter = converters.decimal();
