@@ -110,5 +110,9 @@
         "field",
         "repeating",
         "state management"
-    ]
+    ],
+    "dependencies": {
+        "@types/lru-cache": "^4.1.1",
+        "lru-cache": "^5.1.1"
+    }
 }
