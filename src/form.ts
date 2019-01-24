@@ -12,6 +12,10 @@ import {
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
 import { identity } from "./utils";
+import { Source } from "./source";
+import { FieldAccessor } from "./field-accessor";
+import { any } from "prop-types";
+import { ServerRequest } from "http";
 
 export type ArrayEntryType<T> = T extends IMSTArray<infer A> ? A : never;
 
@@ -76,7 +80,17 @@ export interface ErrorFunc {
   (context: any): string;
 }
 
-export interface FieldOptions<R, V> {
+export interface DependentQuery<DQ> {
+  (accessor: FieldAccessor<any, any>): DQ;
+}
+
+export interface ReferenceOptions<SQ, DQ> {
+  source: Source<SQ & DQ>;
+  dependentQuery?: DependentQuery<DQ>;
+  autoLoad?: boolean;
+}
+
+export interface FieldOptions<R, V, SQ, DQ> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
@@ -87,6 +101,7 @@ export interface FieldOptions<R, V> {
   derived?: Derived<V>;
   change?: Change<V>;
   controlled?: Controlled;
+  references?: ReferenceOptions<SQ, DQ>;
 }
 
 export type GroupDefinition<D extends FormDefinition<any>> = {
@@ -147,7 +162,7 @@ export class Field<R, V> {
 
   constructor(
     public converter: IConverter<R, V>,
-    public options?: FieldOptions<R, V>
+    public options?: FieldOptions<R, V, any, any>
   ) {
     if (!options) {
       this.rawValidators = [];

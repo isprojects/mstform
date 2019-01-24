@@ -20,6 +20,7 @@ import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
+import { References } from "./references";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -41,6 +42,8 @@ export class FieldAccessor<R, V> {
 
   _disposer: IReactionDisposer | undefined;
 
+  _references?: References<any, any>;
+
   constructor(
     public state: FormState<any, any, any>,
     public field: Field<R, V>,
@@ -50,6 +53,16 @@ export class FieldAccessor<R, V> {
     this.name = name;
     this.createDerivedReaction();
     this._value = state.getValue(this.path);
+    if (field.options && field.options.references) {
+      const options = field.options.references;
+      const dependentQuery = options.dependentQuery || (() => ({}));
+      this._references = new References(
+        this,
+        options.source,
+        dependentQuery,
+        !!options.autoLoad
+      );
+    }
   }
 
   clear() {
@@ -67,6 +80,20 @@ export class FieldAccessor<R, V> {
   @computed
   get context(): any {
     return this.state.context;
+  }
+
+  async loadReferences(q?: any) {
+    if (this._references == null) {
+      return undefined;
+    }
+    return this._references.load(q);
+  }
+
+  references(q?: any) {
+    if (this._references == null) {
+      return undefined;
+    }
+    return this._references.references(q);
   }
 
   @action

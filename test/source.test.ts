@@ -1,9 +1,17 @@
 import { configure } from "mobx";
-import { types, getSnapshot, Instance } from "mobx-state-tree";
+import { types, getSnapshot, Instance, getIdentifier } from "mobx-state-tree";
 import { Source, Form, converters, Field } from "../src";
+import { resolveReactions } from "./util";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
+
+function refSnapshots(refs: any[] | undefined): any[] {
+  if (refs === undefined) {
+    throw new Error("Did not expect undefined refs");
+  }
+  return refs.map(ref => getSnapshot(ref));
+}
 
 test("source", async () => {
   const Item = types.model("Item", {
@@ -36,11 +44,7 @@ test("source", async () => {
 
   const refs = source.references({ feature: "x" });
   expect(refs).not.toBeUndefined();
-  if (refs === undefined) {
-    // please ts
-    throw new Error("Cannot reach this");
-  }
-  expect(refs.map(ref => getSnapshot(ref))).toEqual([
+  expect(refSnapshots(refs)).toEqual([
     { id: 1, text: "A" },
     { id: 2, text: "B" }
   ]);
@@ -53,118 +57,139 @@ test("source", async () => {
   // and we still get the same results
   const refs2 = source.references({ feature: "x" });
   expect(refs2).not.toBeUndefined();
-  if (refs2 === undefined) {
-    // please ts
-    throw new Error("Cannot reach this");
-  }
-  expect(refs2.map(ref => getSnapshot(ref))).toEqual([
+  expect(refSnapshots(refs2)).toEqual([
     { id: 1, text: "A" },
     { id: 2, text: "B" }
   ]);
 });
 
-// should the source actually be in the field? it contains
-// updatable data, and field is static.
-// the source data should be in the accessor itself -- the
-// source definition can be in the field
+test("source accessor in fields", async () => {
+  const ItemA = types.model("ItemA", {
+    id: types.identifierNumber,
+    text: types.string
+  });
 
-// test("source affects other source", async () => {
-//   const ItemA = types.model("ItemA", {
-//     id: types.identifier,
-//     text: types.string
-//   });
+  const ContainerA = types.model("ContainerA", {
+    items: types.map(ItemA)
+  });
 
-//   const ContainerA = types.model("ContainerA", {
-//     items: types.map(ItemA)
-//   });
+  const ItemB = types.model("ItemB", {
+    id: types.identifierNumber,
+    text: types.string
+  });
 
-//   const ItemB = types.model("ItemB", {
-//     id: types.identifier,
-//     text: types.string
-//   });
+  const ContainerB = types.model("ContainerB", {
+    items: types.map(ItemB)
+  });
 
-//   const ContainerB = types.model("ContainerB", {
-//     items: types.map(ItemB)
-//   });
+  const M = types.model("M", {
+    a: types.maybe(types.reference(ItemA)),
+    b: types.maybe(types.reference(ItemB))
+  });
 
-//   const M = types.model("M", {
-//     a: types.maybe(types.reference(ItemA)),
-//     b: types.maybe(types.reference(ItemB))
-//   });
+  const R = types.model("R", {
+    m: M,
+    containerA: ContainerA,
+    containerB: ContainerB
+  });
 
-//   const containerA = ContainerA.create({ items: {} });
-//   const containerB = ContainerB.create({ items: {} });
+  const r = R.create({
+    m: {
+      a: undefined,
+      b: undefined
+    },
+    containerA: { items: {} },
+    containerB: { items: {} }
+  });
 
-//   // pretend this is data on the server. The load functions use this
-//   // to give correct answers.
-//   const aData = [{ id: 1, text: "AOne" }, { id: 2, text: "ATwo" }];
-//   const bData = [
-//     { id: 3, text: "BThree", aId: 1 },
-//     { id: 4, text: "BFour", aId: 1 },
-//     { id: 5, text: "BFive", aId: 2 }
-//   ];
+  const o = r.m;
+  const containerA = r.containerA;
+  const containerB = r.containerB;
 
-//   async function loadA(q: any) {
-//     return aData;
-//   }
+  // pretend this is data on the server. The load functions use this
+  // to give correct answers.
+  const aData = [{ id: 1, text: "AOne" }, { id: 2, text: "ATwo" }];
+  const bData = [
+    { id: 3, text: "BThree", aId: 1 },
+    { id: 4, text: "BFour", aId: 1 },
+    { id: 5, text: "BFive", aId: 2 }
+  ];
 
-//   // we filter b based on a
-//   async function loadB(q: any) {
-//     return bData.filter(entry => entry.aId === q.aId);
-//   }
+  async function loadA(q: any) {
+    return aData;
+  }
 
-//   const form = new Form(M, {
-//     a: new Field(converters.maybe(converters.model(ItemA)), {
-//       source: new Source({ container: containerA, load: loadA })
-//     }),
-//     b: new Field(converters.maybe(converters.model(ItemB)), {
-//       source: new Source({
-//         container: containerB,
-//         load: loadB,
-//         // XXX should this also have access to the accessor so we
-//         // determine dependency in a data-driven way per field?
-//         getQuery: (node: any) => ({ a: node.a })
-//       })
-//     })
-//   });
+  // we filter b based on a
+  async function loadB(q: any) {
+    const a = q.a;
+    const aId = a != null ? a.id : undefined;
+    return bData.filter(entry => entry.aId === aId);
+  }
 
-//   const o = M.create({
-//     a: undefined,
-//     b: undefined
-//   });
+  const sourceA = new Source({ container: containerA, load: loadA });
+  const sourceB = new Source({ container: containerB, load: loadB });
 
-//   const state = form.state(o);
+  const form = new Form(M, {
+    a: new Field(converters.maybe(converters.model(ItemA)), {
+      references: {
+        source: sourceA
+      }
+    }),
+    b: new Field(converters.maybe(converters.model(ItemB)), {
+      references: {
+        source: sourceB,
+        // this source is dependent on state. This information
+        // should be sent whenever a load is issued
+        dependentQuery: accessor => {
+          return { a: accessor.node.a };
+        }
+        // this source should automatically reload if the query output
+        // changes because of a data change
+        //  autoLoad: true
+      }
+    })
+  });
 
-//   const fieldA = state.field("a");
-//   const fieldB = state.field("b");
+  const state = form.state(o);
 
-//   // we must trigger a load before we can access references
-//   // synchronously
-//   await fieldA.source.load();
+  const fieldA = state.field("a");
+  const fieldB = state.field("b");
 
-//   const refsA = fieldA.source.references();
-//   expect(getSnapshot(refsA)).toEqual([
-//     { id: 1, text: "AOne" },
-//     { id: 2, text: "ATwo" }
-//   ]);
+  // we must trigger a load before we can access references
+  // synchronously
+  await fieldA.loadReferences();
 
-//   await fieldB.source.load();
-//   // when we haven't selected A yet, this will be empty - no choices
-//   // are possible
-//   const refsB = fieldB.source.references();
-//   expect(getSnapshot(refsB)).toEqual([]);
+  const refsA = fieldA.references();
+  expect(refSnapshots(refsA)).toEqual([
+    { id: 1, text: "AOne" },
+    { id: 2, text: "ATwo" }
+  ]);
 
-//   // now we make a selection in A
-//   await fieldA.setRaw(containerA.items.get("1") as Instance<typeof ItemA>);
+  await fieldB.loadReferences();
+  // when we haven't selected A yet, this will be empty - no choices
+  // are possible
+  const refsB = fieldB.references();
+  expect(refSnapshots(refsB)).toEqual([]);
 
-//   // we reload b
-//   // await fieldB.source.load();
-//   // now the references will be adjusted to those that match with our
-//   // selection
-//   const refsB2 = fieldB.source.references();
+  // now we make a selection in A
+  const item1 = containerA.items.get("1");
+  if (item1 === undefined) {
+    throw new Error("item1 should exist");
+  }
+  await fieldA.setRaw(item1);
 
-//   expect(getSnapshot(refsB2)).toEqual([
-//     { id: 3, text: "BThree", aId: 1 },
-//     { id: 4, text: "BFour", aId: 1 }
-//   ]);
-// });
+  // now we reload B
+  await fieldB.loadReferences();
+
+  // // this will automatically trigger a reload of b, as a is dependent on b
+  // // and we turn on autoReload
+  // await resolveReactions();
+
+  // refs for B should now be a different list that fits A
+  const refsB2 = fieldB.references();
+
+  expect(refSnapshots(refsB2)).toEqual([
+    { id: 3, text: "BThree" },
+    { id: 4, text: "BFour" }
+  ]);
+});

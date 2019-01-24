@@ -1,18 +1,10 @@
 import { configure, IReactionDisposer } from "mobx";
 import { types, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
+import { resolveReactions } from "./util";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
-
-// a way to wait for all reactions to have been resolved
-function resolveReactions() {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, 0);
-  });
-}
 
 test("calculated", async () => {
   const M = types
