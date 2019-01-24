@@ -13,6 +13,7 @@ export class References<SQ extends Query, DQ extends Query> {
     public autoLoad: boolean
   ) {
     if (autoLoad) {
+      // XXX dispose?
       reaction(
         () => {
           return dependentQuery(accessor);
