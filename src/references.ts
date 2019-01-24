@@ -1,3 +1,4 @@
+import { reaction } from "mobx";
 import { FieldAccessor } from "./field-accessor";
 import { Source } from "./source";
 import { DependentQuery } from "./form";
@@ -8,9 +9,23 @@ export class References<SQ, DQ> {
     public source: Source<SQ & DQ>,
     public dependentQuery: DependentQuery<DQ>,
     public autoLoad: boolean
-  ) {}
+  ) {
+    if (autoLoad) {
+      reaction(
+        () => {
+          return dependentQuery(accessor);
+        },
+        () => {
+          this.load();
+        }
+      );
+    }
+  }
 
-  async load(searchQuery: SQ): Promise<any[]> {
+  async load(searchQuery?: SQ): Promise<any[]> {
+    if (searchQuery == null) {
+      searchQuery = {} as SQ;
+    }
     const fullQuery: SQ & DQ = {
       ...searchQuery,
       ...this.dependentQuery(this.accessor)
@@ -18,7 +33,10 @@ export class References<SQ, DQ> {
     return this.source.load(fullQuery);
   }
 
-  references(searchQuery: SQ): any[] | undefined {
+  references(searchQuery?: SQ): any[] | undefined {
+    if (searchQuery == null) {
+      searchQuery = {} as SQ;
+    }
     const fullQuery: SQ & DQ = {
       ...searchQuery,
       ...this.dependentQuery(this.accessor)

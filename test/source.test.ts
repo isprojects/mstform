@@ -63,7 +63,7 @@ test("source", async () => {
   ]);
 });
 
-test("source accessor in fields", async () => {
+describe("source accessor in fields", () => {
   const ItemA = types.model("ItemA", {
     id: types.identifierNumber,
     text: types.string
@@ -93,19 +93,6 @@ test("source accessor in fields", async () => {
     containerB: ContainerB
   });
 
-  const r = R.create({
-    m: {
-      a: undefined,
-      b: undefined
-    },
-    containerA: { items: {} },
-    containerB: { items: {} }
-  });
-
-  const o = r.m;
-  const containerA = r.containerA;
-  const containerB = r.containerB;
-
   // pretend this is data on the server. The load functions use this
   // to give correct answers.
   const aData = [{ id: 1, text: "AOne" }, { id: 2, text: "ATwo" }];
@@ -126,70 +113,164 @@ test("source accessor in fields", async () => {
     return bData.filter(entry => entry.aId === aId);
   }
 
-  const sourceA = new Source({ container: containerA, load: loadA });
-  const sourceB = new Source({ container: containerB, load: loadB });
+  test("form without autoLoad", async () => {
+    const r = R.create({
+      m: {
+        a: undefined,
+        b: undefined
+      },
+      containerA: { items: {} },
+      containerB: { items: {} }
+    });
 
-  const form = new Form(M, {
-    a: new Field(converters.maybe(converters.model(ItemA)), {
-      references: {
-        source: sourceA
-      }
-    }),
-    b: new Field(converters.maybe(converters.model(ItemB)), {
-      references: {
-        source: sourceB,
-        // this source is dependent on state. This information
-        // should be sent whenever a load is issued
-        dependentQuery: accessor => {
-          return { a: accessor.node.a };
+    const o = r.m;
+    const containerA = r.containerA;
+    const containerB = r.containerB;
+
+    const sourceA = new Source({ container: containerA, load: loadA });
+    const sourceB = new Source({ container: containerB, load: loadB });
+
+    const form = new Form(M, {
+      a: new Field(converters.maybe(converters.model(ItemA)), {
+        references: {
+          source: sourceA
         }
-        // this source should automatically reload if the query output
-        // changes because of a data change
-        //  autoLoad: true
-      }
-    })
+      }),
+      b: new Field(converters.maybe(converters.model(ItemB)), {
+        references: {
+          source: sourceB,
+          // this source is dependent on state. This information
+          // should be sent whenever a load is issued
+          dependentQuery: accessor => {
+            return { a: accessor.node.a };
+          }
+          // this source should automatically reload if the query output
+          // changes because of a data change
+          //  autoLoad: true
+        }
+      })
+    });
+
+    const state = form.state(o);
+
+    const fieldA = state.field("a");
+    const fieldB = state.field("b");
+
+    // we must trigger a load before we can access references
+    // synchronously
+    await fieldA.loadReferences();
+
+    const refsA = fieldA.references();
+    expect(refSnapshots(refsA)).toEqual([
+      { id: 1, text: "AOne" },
+      { id: 2, text: "ATwo" }
+    ]);
+
+    await fieldB.loadReferences();
+    // when we haven't selected A yet, this will be empty - no choices
+    // are possible
+    const refsB = fieldB.references();
+    expect(refSnapshots(refsB)).toEqual([]);
+
+    // now we make a selection in A
+    const item1 = containerA.items.get("1");
+    if (item1 === undefined) {
+      throw new Error("item1 should exist");
+    }
+    await fieldA.setRaw(item1);
+
+    // now we reload B
+    await fieldB.loadReferences();
+
+    // // this will automatically trigger a reload of b, as a is dependent on b
+    // // and we turn on autoReload
+    // await resolveReactions();
+
+    // refs for B should now be a different list that fits A
+    const refsB2 = fieldB.references();
+
+    expect(refSnapshots(refsB2)).toEqual([
+      { id: 3, text: "BThree" },
+      { id: 4, text: "BFour" }
+    ]);
   });
 
-  const state = form.state(o);
+  test("form with autoLoad", async () => {
+    const r = R.create({
+      m: {
+        a: undefined,
+        b: undefined
+      },
+      containerA: { items: {} },
+      containerB: { items: {} }
+    });
 
-  const fieldA = state.field("a");
-  const fieldB = state.field("b");
+    const o = r.m;
+    const containerA = r.containerA;
+    const containerB = r.containerB;
 
-  // we must trigger a load before we can access references
-  // synchronously
-  await fieldA.loadReferences();
+    const sourceA = new Source({ container: containerA, load: loadA });
+    const sourceB = new Source({ container: containerB, load: loadB });
 
-  const refsA = fieldA.references();
-  expect(refSnapshots(refsA)).toEqual([
-    { id: 1, text: "AOne" },
-    { id: 2, text: "ATwo" }
-  ]);
+    const form = new Form(M, {
+      a: new Field(converters.maybe(converters.model(ItemA)), {
+        references: {
+          source: sourceA
+        }
+      }),
+      b: new Field(converters.maybe(converters.model(ItemB)), {
+        references: {
+          source: sourceB,
+          // this source is dependent on state. This information
+          // should be sent whenever a load is issued
+          dependentQuery: accessor => {
+            return { a: accessor.node.a };
+          },
+          // this source should automatically reload if the query output
+          // changes because of a data change
+          autoLoad: true
+        }
+      })
+    });
 
-  await fieldB.loadReferences();
-  // when we haven't selected A yet, this will be empty - no choices
-  // are possible
-  const refsB = fieldB.references();
-  expect(refSnapshots(refsB)).toEqual([]);
+    const state = form.state(o);
 
-  // now we make a selection in A
-  const item1 = containerA.items.get("1");
-  if (item1 === undefined) {
-    throw new Error("item1 should exist");
-  }
-  await fieldA.setRaw(item1);
+    const fieldA = state.field("a");
+    const fieldB = state.field("b");
 
-  // now we reload B
-  await fieldB.loadReferences();
+    // we must trigger a load before we can access references
+    // synchronously
+    await fieldA.loadReferences();
 
-  // // this will automatically trigger a reload of b, as a is dependent on b
-  // // and we turn on autoReload
-  // await resolveReactions();
+    const refsA = fieldA.references();
+    expect(refSnapshots(refsA)).toEqual([
+      { id: 1, text: "AOne" },
+      { id: 2, text: "ATwo" }
+    ]);
 
-  // refs for B should now be a different list that fits A
-  const refsB2 = fieldB.references();
+    await fieldB.loadReferences();
+    // when we haven't selected A yet, this will be empty - no choices
+    // are possible
+    const refsB = fieldB.references();
+    expect(refSnapshots(refsB)).toEqual([]);
 
-  expect(refSnapshots(refsB2)).toEqual([
-    { id: 3, text: "BThree" },
-    { id: 4, text: "BFour" }
-  ]);
+    // now we make a selection in A
+    const item1 = containerA.items.get("1");
+    if (item1 === undefined) {
+      throw new Error("item1 should exist");
+    }
+    await fieldA.setRaw(item1);
+
+    // this will automatically trigger a reload of b, as a is dependent on b
+    // and we turn on autoReload
+    await resolveReactions();
+
+    // refs for B should now be a different list that fits A
+    const refsB2 = fieldB.references();
+
+    expect(refSnapshots(refsB2)).toEqual([
+      { id: 3, text: "BThree" },
+      { id: 4, text: "BFour" }
+    ]);
+  });
 });
