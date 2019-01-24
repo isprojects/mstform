@@ -1,6 +1,6 @@
 {
     "name": "mstform",
-    "version": "1.6.2",
+    "version": "1.7.1",
     "description": "mobx-state-tree powered forms",
     "main": "dist/mstform.js",
     "typings": "dist/src/index.d.ts",
@@ -111,8 +111,5 @@
         "repeating",
         "state management"
     ],
-    "dependencies": {
-        "@types/lru-cache": "^4.1.1",
-        "lru-cache": "^5.1.1"
-    }
+    "dependencies": {}
 }

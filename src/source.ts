@@ -1,5 +1,5 @@
+import { observable } from "mobx";
 import { applySnapshot, applyPatch } from "mobx-state-tree";
-import LRU from "lru-cache";
 
 interface GetId {
   (o: object): string;
@@ -17,7 +17,10 @@ export class Source<Q> {
   _container: any;
   _load: Load<Q>;
   _getId: GetId;
-  _cache: LRU.Cache<string, any>;
+  // XXX this grows indefinitely with cached results...
+  @observable
+  _cache = new Map();
+
   _keyForQuery: KeyForQuery<Q>;
 
   constructor({
@@ -38,7 +41,6 @@ export class Source<Q> {
       getId = (o: any) => o.id;
     }
     this._getId = getId;
-    this._cache = new LRU();
     if (keyForQuery === undefined) {
       keyForQuery = (q: Q) => JSON.stringify(q);
     }
@@ -74,7 +76,7 @@ export class Source<Q> {
     return references;
   }
 
-  references(q: any): any[] | undefined {
+  references(q: Q): any[] | undefined {
     return this._cache.get(this._keyForQuery(q));
   }
 }
