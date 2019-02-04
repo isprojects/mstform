@@ -231,6 +231,18 @@ test("decimal converter render with six decimals and thousand separators", async
   expect(rendered).toEqual("4.000.000,000000");
 });
 
+test("decimal converter render with six decimals, only showing three", async () => {
+  const converter = converters.decimal({ decimalPlaces: 3 });
+  const options = {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    renderThousands: true
+  };
+  const value = "4000.000000";
+  const rendered = await converter.render(value, options);
+  expect(rendered).toEqual("4.000,000");
+});
+
 test("decimal converter with thousandSeparator . and no decimalSeparator can't convert", async () => {
   let message = false;
   const converter = converters.decimal();
@@ -432,4 +444,75 @@ test("text string array converter", async () => {
   await field.setRaw("   ");
   expect(field.raw).toEqual("   ");
   expect(field.value).toEqual([]);
+});
+
+function resolveReactions() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 0);
+  });
+}
+
+test.only("render decimal number without decimals with decimal separator", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal(getDecimalOptions))
+  });
+
+  function getCurrencyDecimals(currency: string) {
+    if (currency === "EUR") {
+      return 2;
+    }
+    return 4;
+  }
+
+  function getDecimalOptions(context: any) {
+    return {
+      allowNegative: false,
+      decimalPlaces: getCurrencyDecimals(context.getCurrency())
+    };
+  }
+
+  const currency = "EUR";
+
+  const o = M.create({ foo: "12.3456" });
+
+  const previousState = form.state(o, {
+    focus: () => undefined,
+    converterOptions: {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true
+    },
+    context: {
+      getCurrency: () => {
+        currency;
+      }
+    }
+  });
+  const state = form.state(o, {
+    converterOptions: {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true
+    },
+    context: {
+      getCurrency: () => {
+        currency;
+      }
+    }
+  });
+  const field = state.field("foo");
+
+  await field.setRaw("12,34");
+  expect(field.raw).toEqual("12,34");
+  expect(field.value).toEqual("12.34");
+  await field.setRaw("12,");
+  await resolveReactions();
+  expect(field.raw).toEqual("12,");
+  expect(field.value).toEqual("12.");
 });
