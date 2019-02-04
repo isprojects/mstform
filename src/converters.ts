@@ -14,7 +14,8 @@ import {
   convertSeparators,
   DecimalOptions,
   getRegex,
-  renderSeparators
+  renderSeparators,
+  trimDecimals
 } from "./decimal";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
@@ -125,7 +126,10 @@ function decimal(
       return raw;
     },
     render(value, converterOptions) {
-      return renderSeparators(value, converterOptions);
+      return renderSeparators(
+        trimDecimals(value, converterOptions, decimalOptions),
+        converterOptions
+      );
     }
   });
 }
