@@ -8,6 +8,7 @@ import {
   converters,
   StateConverterOptionsWithContext
 } from "../src";
+import { resolveReactions } from "./utils";
 
 async function check(
   converter: IConverter<any, any>,
@@ -446,15 +447,11 @@ test("text string array converter", async () => {
   expect(field.value).toEqual([]);
 });
 
-function resolveReactions() {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve();
-    }, 0);
-  });
-}
-
-test.only("render decimal number without decimals with decimal separator", async () => {
+test("render decimal number without decimals with decimal separator", async () => {
+  // this exposed a dispose bug that occurred when we had a previous state
+  // and thus two onPatch event handlers. Now we properly dispose of the
+  // previous form state when we attach a new form state to the same
+  // node
   const M = types.model("M", {
     foo: types.string
   });
@@ -481,6 +478,7 @@ test.only("render decimal number without decimals with decimal separator", async
 
   const o = M.create({ foo: "12.3456" });
 
+  // this state is essential to replicate the bug, don't remove!
   const previousState = form.state(o, {
     focus: () => undefined,
     converterOptions: {
@@ -489,9 +487,7 @@ test.only("render decimal number without decimals with decimal separator", async
       renderThousands: true
     },
     context: {
-      getCurrency: () => {
-        currency;
-      }
+      getCurrency: () => currency
     }
   });
   const state = form.state(o, {
@@ -501,9 +497,7 @@ test.only("render decimal number without decimals with decimal separator", async
       renderThousands: true
     },
     context: {
-      getCurrency: () => {
-        currency;
-      }
+      getCurrency: () => currency
     }
   });
   const field = state.field("foo");

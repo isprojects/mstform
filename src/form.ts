@@ -93,6 +93,10 @@ export type GroupDefinition<D extends FormDefinition<any>> = {
   [key: string]: Group<D>;
 };
 
+// XXX IDisposer not exported by mobx-state-tree?
+// https://github.com/mobxjs/mobx-state-tree/issues/1169
+const stateDisposers = new Map<number, any>();
+
 export class Form<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
@@ -109,7 +113,19 @@ export class Form<
   }
 
   state(node: Instance<M>, options?: FormStateOptions<M>): FormState<M, D, G> {
-    return new FormState(this, node, options);
+    // XXX we use the internal node.$treenode.nodeId API here
+    // https://github.com/mobxjs/mobx-state-tree/issues/1168
+
+    // make sure we dispose of any old FormState before we create
+    // a new one.
+    const oldDisposer = stateDisposers.get(node.$treenode.nodeId);
+    if (oldDisposer != null) {
+      oldDisposer();
+    }
+    const result = new FormState(this, node, options);
+    // dispose of any old FormState for this same node
+    stateDisposers.set(node.$treenode.nodeId, () => result.dispose());
+    return result;
   }
 }
 

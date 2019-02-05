@@ -52,11 +52,15 @@ export class FieldAccessor<R, V> {
     this._value = state.getValue(this.path);
   }
 
-  clear() {
+  dispose() {
     if (this._disposer == null) {
       return;
     }
     this._disposer();
+  }
+
+  clear() {
+    this.dispose();
   }
 
   @computed
@@ -67,11 +71,6 @@ export class FieldAccessor<R, V> {
   @computed
   get context(): any {
     return this.state.context;
-  }
-
-  @action
-  setDisposer(disposer: IReactionDisposer) {
-    this._disposer = disposer;
   }
 
   createDerivedReaction() {
