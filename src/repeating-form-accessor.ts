@@ -25,6 +25,10 @@ export class RepeatingFormAccessor<
     this.name = name;
   }
 
+  dispose() {
+    // no op
+  }
+
   clear() {
     // no op
   }

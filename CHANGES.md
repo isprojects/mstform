@@ -1,3 +1,14 @@
+# 1.6.4
+
+-   Fix a bug where you could get strange behavior if you attach a form state to
+    the same MST node multiple times. mstform wasn't properly disposing of its
+    `onPatch` handler and its reactions in use for derived fields. Now mstform
+    automatically cleans up the event handlers of the old form state when you
+    attach a new state to an object with `form.state()`.
+
+    mstform now also exposes a `dispose()` method to `FormState` so you can do
+    this manually.
+
 # 1.6.3
 
 -   Removed decimal trimming when rendering decimals due to buggy behavior.

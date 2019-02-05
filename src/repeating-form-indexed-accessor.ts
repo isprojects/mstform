@@ -36,6 +36,10 @@ export class RepeatingFormIndexedAccessor<
     );
   }
 
+  dispose() {
+    // no op
+  }
+
   clear() {
     this.formAccessor.flatAccessors.forEach(accessor => {
       accessor.clear();

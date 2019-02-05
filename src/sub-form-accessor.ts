@@ -29,6 +29,10 @@ export class SubFormAccessor<
     );
   }
 
+  dispose() {
+    // no op
+  }
+
   clear() {
     // no op
   }
