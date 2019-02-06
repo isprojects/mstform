@@ -12,7 +12,8 @@ import {
   FormDefinition,
   ValidationResponse,
   GroupDefinition,
-  ErrorFunc
+  ErrorFunc,
+  IDisposer
 } from "./form";
 import {
   deepCopy,
@@ -127,8 +128,7 @@ export class FormState<
   _context: any;
   _converterOptions: StateConverterOptions;
   _requiredError: string | ErrorFunc;
-  // XXX use IDisposer instead
-  _onPatchDisposer: any;
+  _onPatchDisposer: IDisposer;
 
   constructor(
     public form: Form<M, D, G>,
