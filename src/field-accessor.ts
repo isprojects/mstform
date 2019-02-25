@@ -100,11 +100,6 @@ export class FieldAccessor<R, V> {
     return this._references.references(q);
   }
 
-  @action
-  setDisposer(disposer: IReactionDisposer) {
-    this._disposer = disposer;
-  }
-
   createDerivedReaction() {
     const derivedFunc = this.field.derivedFunc;
     if (derivedFunc == null) {
