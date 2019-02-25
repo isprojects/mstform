@@ -66,6 +66,10 @@ export class FormAccessor<
     return values.every(value => value);
   }
 
+  dispose() {
+    // no op
+  }
+
   clear() {
     // no op
   }

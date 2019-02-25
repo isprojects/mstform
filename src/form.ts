@@ -11,11 +11,9 @@ import {
 } from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
-import { identity } from "./utils";
+import { identity, getNodeId } from "./utils";
 import { Source } from "./source";
 import { FieldAccessor } from "./field-accessor";
-import { any } from "prop-types";
-import { ServerRequest } from "http";
 
 export type ArrayEntryType<T> = T extends IMSTArray<infer A> ? A : never;
 
@@ -108,6 +106,13 @@ export type GroupDefinition<D extends FormDefinition<any>> = {
   [key: string]: Group<D>;
 };
 
+// IDisposer is not (yet) exported by mobx-state-tree so
+// define our own
+// https://github.com/mobxjs/mobx-state-tree/issues/1169
+export type IDisposer = () => void;
+
+const stateDisposers = new Map<number, IDisposer>();
+
 export class Form<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
@@ -124,7 +129,17 @@ export class Form<
   }
 
   state(node: Instance<M>, options?: FormStateOptions<M>): FormState<M, D, G> {
-    return new FormState(this, node, options);
+    const nodeId = getNodeId(node);
+    // make sure we dispose of any old FormState before we create
+    // a new one.
+    const oldDisposer = stateDisposers.get(nodeId);
+    if (oldDisposer != null) {
+      oldDisposer();
+    }
+    const result = new FormState(this, node, options);
+    // dispose of any old FormState for this same node
+    stateDisposers.set(nodeId, () => result.dispose());
+    return result;
   }
 }
 

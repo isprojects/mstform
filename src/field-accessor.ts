@@ -65,11 +65,15 @@ export class FieldAccessor<R, V> {
     }
   }
 
-  clear() {
+  dispose() {
     if (this._disposer == null) {
       return;
     }
     this._disposer();
+  }
+
+  clear() {
+    this.dispose();
   }
 
   @computed

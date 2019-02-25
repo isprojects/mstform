@@ -241,3 +241,73 @@ test("calculated with context", async () => {
   // and also the underlying value, immediately
   expect(calculated.value).toEqual("3.5801");
 });
+
+test("dispose", async () => {
+  // keep a counter to track how often we call our sum function
+  // it's called more than we would wish, but if we don't properly
+  // dispose of previous state it's called even more often
+  let counter = 0;
+
+  const M = types
+    .model("M", {
+      calculated: types.number,
+      a: types.number,
+      b: types.number
+    })
+    .views(self => ({
+      sum() {
+        counter++;
+        return self.a + self.b;
+      }
+    }));
+
+  const form = new Form(M, {
+    calculated: new Field(converters.number, {
+      derived: (node: Instance<typeof M>) => node.sum()
+    }),
+    a: new Field(converters.number),
+    b: new Field(converters.number)
+  });
+
+  const o = M.create({ calculated: 0, a: 1, b: 2 });
+
+  expect(counter).toBe(0);
+
+  // previous state is important to do test dispose
+  // happens properly, don't remove!
+  const previousState = form.state(o);
+  expect(counter).toBe(2);
+
+  const state = form.state(o);
+  expect(counter).toBe(4);
+
+  const calculated = state.field("calculated");
+  const a = state.field("a");
+  const b = state.field("b");
+
+  await resolveReactions();
+
+  // we show the set value, as no modification was made
+  expect(calculated.raw).toEqual("0");
+  expect(calculated.value).toEqual(0);
+
+  // we set it to 4 explicitly
+  await calculated.setRaw("4");
+  expect(calculated.raw).toEqual("4");
+  // this immediately affects the underlying value
+  expect(calculated.value).toEqual(4);
+
+  expect(counter).toBe(4);
+
+  // we now change a, which should modify the derived value
+  await a.setRaw("3");
+  await resolveReactions();
+
+  // if we hadn't disposed properly this would have been
+  // called more
+  expect(counter).toBe(7);
+
+  expect(calculated.raw).toEqual("5");
+  // and also the underlying value, immediately
+  expect(calculated.value).toEqual(5);
+});

@@ -8,6 +8,7 @@ import {
   converters,
   StateConverterOptionsWithContext
 } from "../src";
+import { resolveReactions } from "./utils";
 
 async function check(
   converter: IConverter<any, any>,
@@ -444,4 +445,68 @@ test("text string array converter", async () => {
   await field.setRaw("   ");
   expect(field.raw).toEqual("   ");
   expect(field.value).toEqual([]);
+});
+
+test("render decimal number without decimals with decimal separator", async () => {
+  // this exposed a dispose bug that occurred when we had a previous state
+  // and thus two onPatch event handlers. Now we properly dispose of the
+  // previous form state when we attach a new form state to the same
+  // node
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal(getDecimalOptions))
+  });
+
+  function getCurrencyDecimals(currency: string) {
+    if (currency === "EUR") {
+      return 2;
+    }
+    return 4;
+  }
+
+  function getDecimalOptions(context: any) {
+    return {
+      allowNegative: false,
+      decimalPlaces: getCurrencyDecimals(context.getCurrency())
+    };
+  }
+
+  const currency = "EUR";
+
+  const o = M.create({ foo: "12.3456" });
+
+  // this state is essential to replicate the bug, don't remove!
+  const previousState = form.state(o, {
+    focus: () => undefined,
+    converterOptions: {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true
+    },
+    context: {
+      getCurrency: () => currency
+    }
+  });
+  const state = form.state(o, {
+    converterOptions: {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true
+    },
+    context: {
+      getCurrency: () => currency
+    }
+  });
+  const field = state.field("foo");
+
+  await field.setRaw("12,34");
+  expect(field.raw).toEqual("12,34");
+  expect(field.value).toEqual("12.34");
+  await field.setRaw("12,");
+  await resolveReactions();
+  expect(field.raw).toEqual("12,");
+  expect(field.value).toEqual("12.");
 });

@@ -12,7 +12,8 @@ import {
   FormDefinition,
   ValidationResponse,
   GroupDefinition,
-  ErrorFunc
+  ErrorFunc,
+  IDisposer
 } from "./form";
 import {
   deepCopy,
@@ -127,6 +128,7 @@ export class FormState<
   _context: any;
   _converterOptions: StateConverterOptions;
   _requiredError: string | ErrorFunc;
+  _onPatchDisposer: IDisposer;
 
   constructor(
     public form: Form<M, D, G>,
@@ -137,7 +139,7 @@ export class FormState<
     this.additionalErrorTree = {};
     this.noRawUpdate = false;
 
-    onPatch(node, patch => {
+    this._onPatchDisposer = onPatch(node, patch => {
       if (patch.op === "remove") {
         this.removePath(patch.path);
       } else if (patch.op === "add") {
@@ -212,6 +214,15 @@ export class FormState<
       checkConverterOptions(this._converterOptions);
       this._requiredError = options.requiredError || "Required";
     }
+  }
+
+  dispose(): void {
+    // clean up onPatch
+    this._onPatchDisposer();
+    // do dispose on all accessors, cleaning up
+    this.formAccessor.flatAccessors.forEach(accessor => {
+      accessor.dispose();
+    });
   }
 
   @computed

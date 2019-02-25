@@ -105,6 +105,27 @@ export function renderSeparators(
   );
 }
 
+export function trimDecimals(
+  value: string,
+  options: StateConverterOptionsWithContext,
+  decimalOptions?:
+    | Partial<DecimalOptions>
+    | ((context: any) => Partial<DecimalOptions>)
+): string {
+  const [before, after] = value.split(".");
+  if (typeof after === "undefined") {
+    return value;
+  }
+  const trimmedAfter = after.substring(
+    0,
+    getOptions(options.context, decimalOptions).decimalPlaces
+  );
+  if (trimmedAfter.length === 0) {
+    return before;
+  }
+  return [before, trimmedAfter].join(".");
+}
+
 export function getOptions(
   context: any,
   options?:
@@ -143,27 +164,6 @@ export function getRegex(
       options.decimalPlaces
     }})?$`
   );
-}
-
-export function trimDecimals(
-  value: string,
-  options: StateConverterOptionsWithContext,
-  decimalOptions?:
-    | Partial<DecimalOptions>
-    | ((context: any) => Partial<DecimalOptions>)
-): string {
-  const [before, after] = value.split(".");
-  if (typeof after === "undefined") {
-    return value;
-  }
-  const trimmedAfter = after.substring(
-    0,
-    getOptions(options.context, decimalOptions).decimalPlaces
-  );
-  if (trimmedAfter.length === 0) {
-    return before;
-  }
-  return [before, trimmedAfter].join(".");
 }
 
 export function checkConverterOptions(
