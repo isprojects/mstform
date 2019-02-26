@@ -1213,6 +1213,128 @@ const state = form.state(o, {
 });
 ```
 
+## Sources for references
+
+When you use a reference field in a form (using the `object` or `model`
+converter), you often display it with either a drop-down box or an autocomplete
+widget. mstform offers support for populating these widgets, keeping track of
+values that have appeared before and caching results.
+
+In order to have a source your application needs to define what MST model
+populates these sources and a container for them. Let's imagine we want to
+allow the user to select a user object.
+
+```js
+const User = types.model("User", {
+    id: types.identifier,
+    username: types.string
+});
+
+const UserContainer = types.model("UserContainer", {
+    items: types.map(User)
+});
+```
+
+We use `types.map` so we can keep track of `User` by their identifier so we can
+quickly retrieve them again. You need to attach the `UserContainer` somewhere
+to your state tree so that you can make references to users from other parts in
+your state tree. Let's assume here it's in `root.userContainer`.
+
+We have some way to load an array of users from the backend:
+
+```js
+async function loadUsers(q) {
+   const response = await window.fetch(...);
+   return response.json();
+}
+```
+
+This queries the server based on some source-specific search parameters `q`
+and returns an array of serialized `User` items, so:
+
+```js
+[
+    {
+        id: "a",
+        username: "Alpha"
+    },
+    {
+        id: "b",
+        username: "Beta"
+    }
+];
+```
+
+It's up to the implementer to wrap `loadUsers` into a debounce facility so
+that not every `loadUsers` call results in a server hit.
+
+We can now define a source for users using a `UserContainer` instance and a
+way to load users::
+
+```js
+import { Source } from "mstform";
+
+const userSource = new Source({
+    container: root.userContainer,
+    load: loadUsers
+});
+```
+
+We define a model which contains a reference to a user:
+
+```js
+const M = types.model("M", {
+    user: types.maybe(types.reference(User))
+});
+```
+
+And a form for it:
+
+```js
+const form = new Form(M, {
+    user: new Field(converters.maybe(converters.model(User)), {
+        references: {
+            source: userSource
+        }
+    })
+});
+```
+
+Let's now look at the `user` accessor. When the React component is mounted in
+case of a select box, or in an event handler when we change the content of
+autocomplete, we must load the references:
+
+```js
+const state = this.formState;
+const user = state.field("user");
+
+await user.loadReferences();
+```
+
+`loadReferences` can contain an object argument -- these are additional
+search parameters to pass through `loadUser`, such as what the user typed in
+an autocomplete field.
+
+Once references are loaded, we can access them in the UI (inside a React
+`render` method):
+
+```js
+const state = this.formState;
+const user = state.field("user");
+
+const references = user.references();
+// display references somewhere
+```
+
+The source caches search requests, so that any future `loadReferences` with
+the same parameters resolve immediately without even hitting the backend. For
+this reason, the search query accepted by `load` must be either JSON
+serializable or alternatively you can provide a `keyForQuery` function to
+`Source` which turns the search parameters into a unique cache key.
+
+Note: mstform does not yet not implement any cache eviction facilities, either
+from the container or from the search results.
+
 ## Tips
 
 -   Don't name your form state `this.state` on a React component as this has a
