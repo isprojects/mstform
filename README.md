@@ -1375,8 +1375,8 @@ The `dependentQuery` bit here makes sure that when you load references for
 field.
 
 `autoLoad` makes the friend references automatically reload whenever `user` is
-modified. This is useful for select widgets, which may need to refresh their list
-of options based on the values in other fields. If you leave it off (the
+modified. This is useful for select widgets, which may need to refresh their
+list of options based on the values in other fields. If you leave it off (the
 default) then you are responsible for this yourself. This is useful for
 autocomplete widgets which only reload when the user interacts with them.
 
