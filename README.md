@@ -1332,6 +1332,54 @@ this reason, the search query accepted by `load` must be either JSON
 serializable or alternatively you can provide a `keyForQuery` function to
 `Source` which turns the search parameters into a unique cache key.
 
+You can also make a field depend on another. Let's imagine that we have
+a way to look for users that are friends of a user:
+
+```js
+async function loadFriends({user}) {
+   const response = await window.fetch(...);
+   return response.json();
+}
+```
+
+Now we have a form with a user and a friend:
+
+```js
+const M = types.model("M", {
+    user: types.maybe(types.reference(User)),
+    friend: types.maybe(types.reference(User))
+});
+
+const friendSource = new Source({container: root.userContainer, load: loadFriends });
+
+const form = new Form(M, {
+    user: new Field(converters.maybe(converters.model(User)), {
+        references: {
+            source: userSource
+        }
+    }),
+    friend: new Field(converters.maybe(converters.model(User)), {
+        references: {
+            source: friendSource,
+            dependentQuery: accessor => {
+                return { user: accessor.node.user };
+            }
+            autoLoad: true
+        }
+    })
+});
+```
+
+The `dependentQuery` bit here makes sure that when you load references for
+`friend` the `user` is included automatically in this case the `user`
+field.
+
+`autoLoad` makes the friend references automatically reload whenever `user` is
+modified. This is useful for select widgets, which may need to refresh their list
+of options based on the values in other fields. If you leave it off (the
+default) then you are responsible for this yourself. This is useful for
+autocomplete widgets which only reload when the user interacts with them.
+
 Note: mstform does not yet not implement any cache eviction facilities, either
 from the container or from the search results.
 
