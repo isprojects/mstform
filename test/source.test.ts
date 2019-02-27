@@ -61,6 +61,8 @@ test("source", async () => {
     { id: 1, text: "A" },
     { id: 2, text: "B" }
   ]);
+
+  expect(source.getById(1)).toEqual({ id: 1, text: "A" });
 });
 
 describe("source accessor in fields", () => {

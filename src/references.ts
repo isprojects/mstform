@@ -45,4 +45,8 @@ export class References<SQ extends Query, DQ extends Query> {
   references(searchQuery?: SQ): any[] | undefined {
     return this.source.references(this.getFullQuery(searchQuery));
   }
+
+  getById(id: any) {
+    return this.source.getById(id);
+  }
 }

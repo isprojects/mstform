@@ -47,6 +47,10 @@ export class Source<Q> {
     this._keyForQuery = keyForQuery;
   }
 
+  getById(id: any) {
+    return this._container.items.get(id);
+  }
+
   addOrUpdate(item: any) {
     const id = this._getId(item);
     const items = this._container.items;

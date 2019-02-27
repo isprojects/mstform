@@ -100,6 +100,13 @@ export class FieldAccessor<R, V> {
     return this._references.references(q);
   }
 
+  getReferenceById(id: any) {
+    if (this._references == null) {
+      return undefined;
+    }
+    return this._references.getById(id);
+  }
+
   createDerivedReaction() {
     const derivedFunc = this.field.derivedFunc;
     if (derivedFunc == null) {
