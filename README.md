@@ -1350,7 +1350,10 @@ const M = types.model("M", {
     friend: types.maybe(types.reference(User))
 });
 
-const friendSource = new Source({container: root.userContainer, load: loadFriends });
+const friendSource = new Source({
+    container: root.userContainer,
+    load: loadFriends
+});
 
 const form = new Form(M, {
     user: new Field(converters.maybe(converters.model(User)), {
