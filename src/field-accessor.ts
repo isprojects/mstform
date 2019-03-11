@@ -354,6 +354,7 @@ export class FieldAccessor<R, V> {
     this.setValue(processResult.value);
   }
 
+  @action
   setRawFromValue() {
     // we get the value ignoring add mode
     // this is why we can't use this.value
