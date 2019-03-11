@@ -1,3 +1,7 @@
+# 1.6.5
+
+-   Fix a bug where `setRawFromValue` was not marked with `@action`.
+
 # 1.6.4
 
 -   Fix a bug where you could get strange behavior if you attach a form state to
