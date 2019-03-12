@@ -172,6 +172,11 @@ test("decimal converter", async () => {
     decimalSeparator: ",",
     thousandSeparator: "."
   });
+  await failsWithOptions(converters.decimal({}), "1234.56", {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    renderThousands: true
+  });
 });
 
 test("decimal converter with both options", async () => {
