@@ -15,7 +15,8 @@ import {
   DecimalOptions,
   getRegex,
   renderSeparators,
-  trimDecimals
+  trimDecimals,
+  getOptions
 } from "./decimal";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
@@ -130,6 +131,22 @@ function decimal(
         trimDecimals(value, converterOptions, decimalOptions),
         converterOptions
       );
+    },
+    postprocessRaw(raw, converterOptions) {
+      const options = getOptions(converterOptions.context, decimalOptions);
+      if (options.decimalPlaces === 0) {
+        return raw;
+      }
+      const decimalSeparator = converterOptions.decimalSeparator || ".";
+      const splitRaw = raw.split(decimalSeparator);
+      // if there is no decimal separator, add it along a number of zeroes equal
+      // to decimal places.
+      if (splitRaw.length === 1) {
+        return raw + decimalSeparator + "0".repeat(options.decimalPlaces);
+      }
+      // else, add a number of zeroes equal to decimal places minus the number
+      // of decimals already present.
+      return raw + "0".repeat(options.decimalPlaces - splitRaw[1].length);
     }
   });
 }
