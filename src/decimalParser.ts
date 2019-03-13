@@ -109,6 +109,8 @@ function getDecimalAmount(tokens: Token[]): number {
 // because PEG.js doesn't easily allow parameterized parsers,
 // which we need with our thousand and decimal separators.
 // We can handle this in our tokenizer.
+// (We could however use PEG if we cleverly translated the tokens
+// beforehand, but this was about as easy to work out)
 class Parser {
   tokenIndex = 0;
   currentToken: Token | null | undefined = undefined;
