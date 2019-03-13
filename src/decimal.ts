@@ -2,6 +2,7 @@ import {
   StateConverterOptions,
   StateConverterOptionsWithContext
 } from "./converter";
+
 export interface DecimalOptions {
   maxWholeDigits: number;
   decimalPlaces: number;
