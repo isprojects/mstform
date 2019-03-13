@@ -106,3 +106,9 @@ test("decimalPlaces", () => {
   expect(() => parseDecimal(".12345", options)).toThrow();
   expect(() => parseDecimal("-123.12345", options)).toThrow();
 });
+
+test("numbers without thousand separators", () => {
+  // as a special case we accept numbers without thousand separators too
+  expect(parseDecimal("1000", options)).toEqual("1000");
+  expect(parseDecimal("12345678", options)).toEqual("12345678");
+});

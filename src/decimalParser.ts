@@ -60,7 +60,7 @@ export function parseDecimal(s: string, options: Options): string | undefined {
   parser.parse();
 
   // now that the parser has succeed we can make a simplifying assumption:
-  // strings of tokens are now always legitimate
+  // strings of tokens are now always legitimate.
 
   if (getWholeDigitAmount(tokens) > options.maxWholeDigits) {
     throw new Error("Too many whole digits");
@@ -69,6 +69,8 @@ export function parseDecimal(s: string, options: Options): string | undefined {
     throw new Error("Too many decimal places");
   }
 
+  // note that the tokenizer has replaced the decimal separator
+  // with the standard "." at this point.
   return tokens
     .filter(token => token.type !== TOKEN_THOUSAND_SEPARATOR)
     .map(token => token.value)
@@ -179,7 +181,11 @@ class Parser {
     while (this.accept(TOKEN_DIGIT)) {
       count++;
     }
-    if (count > 3) {
+    if (
+      this.currentToken != null &&
+      this.currentToken.type !== TOKEN_DECIMAL_SEPARATOR &&
+      count > 3
+    ) {
       throw new Error("Too many digits");
     }
   }
