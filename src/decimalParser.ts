@@ -49,7 +49,7 @@ class Token {
   constructor(public type: TokenType, public value: string) {}
 }
 
-export function parseDecimal(s: string, options: Options): string | undefined {
+export function parseDecimal(s: string, options: Options): string {
   const tokens = tokenize(s, options);
   if (tokens == null) {
     throw new Error("Unknown tokens");
@@ -146,7 +146,6 @@ class Parser {
     this.nextToken();
     this.decimal();
     if (this.currentToken != null) {
-      console.log(this.currentToken);
       throw new Error("Could not parse");
     }
   }
