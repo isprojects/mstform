@@ -44,7 +44,7 @@ export interface IConverter<R, V> {
   neverRequired: boolean;
   preprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
   hasPostprocessRaw(): boolean;
-  postprocessRaw?(raw: R, options: StateConverterOptionsWithContext): R;
+  postprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
 }
 
 export class ConversionValue<V> {

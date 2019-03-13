@@ -401,7 +401,7 @@ export class FieldAccessor<R, V> {
   };
 
   handleBlur = async (event: any) => {
-    if (typeof this.field.converter.postprocessRaw !== "undefined") {
+    if (this.field.converter.hasPostprocessRaw() && !this._error) {
       const raw = this.field.converter.postprocessRaw(
         this.raw,
         this.state.stateConverterOptionsWithContext
@@ -410,10 +410,9 @@ export class FieldAccessor<R, V> {
         await this.setRaw(raw);
       }
     }
-    if (this.state.blurFunc == null) {
-      return;
+    if (this.state.blurFunc != null) {
+      this.state.blurFunc(event, this);
     }
-    this.state.blurFunc(event, this);
   };
 
   @computed

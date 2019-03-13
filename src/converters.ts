@@ -253,7 +253,14 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
   }
 
   hasPostprocessRaw() {
-    return false;
+    return this.converter.hasPostprocessRaw();
+  }
+
+  postprocessRaw(
+    raw: string,
+    options: StateConverterOptionsWithContext
+  ): string {
+    return this.converter.postprocessRaw(raw, options);
   }
 }
 
