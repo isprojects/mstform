@@ -44,6 +44,8 @@ export interface IConverter<R, V> {
   preprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
 }
 
+export class ConvertError {}
+
 export class ConversionValue<V> {
   constructor(public value: V) {}
 }
@@ -102,18 +104,24 @@ export class Converter<R, V> implements IConverter<R, V> {
       }
     }
 
-    const value = this.definition.convert(raw, options);
-
-    if (this.definition.validate) {
-      const rawValidationSuccess = await this.definition.validate(
-        value,
-        options
-      );
-      if (!rawValidationSuccess) {
+    try {
+      const value = this.definition.convert(raw, options);
+      if (this.definition.validate) {
+        const rawValidationSuccess = await this.definition.validate(
+          value,
+          options
+        );
+        if (!rawValidationSuccess) {
+          return CONVERSION_ERROR;
+        }
+      }
+      return new ConversionValue<V>(value);
+    } catch (e) {
+      if (e instanceof ConvertError) {
         return CONVERSION_ERROR;
       }
+      throw e;
     }
-    return new ConversionValue<V>(value);
   }
 
   render(value: V, options: StateConverterOptionsWithContext): R {
