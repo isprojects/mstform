@@ -400,7 +400,16 @@ export class FieldAccessor<R, V> {
     this.state.focusFunc(event, this);
   };
 
-  handleBlur = (event: any) => {
+  handleBlur = async (event: any) => {
+    if (typeof this.field.converter.postprocessRaw !== "undefined") {
+      const raw = this.field.converter.postprocessRaw(
+        this.raw,
+        this.state.stateConverterOptionsWithContext
+      );
+      if (raw !== this.raw) {
+        await this.setRaw(raw);
+      }
+    }
     if (this.state.blurFunc == null) {
       return;
     }
@@ -417,7 +426,10 @@ export class FieldAccessor<R, V> {
     if (this.state.focusFunc != null) {
       result.onFocus = this.handleFocus;
     }
-    if (this.state.blurFunc != null) {
+    if (
+      this.state.blurFunc != null ||
+      this.field.converter.hasPostprocessRaw()
+    ) {
       result.onBlur = this.handleBlur;
     }
     return result;

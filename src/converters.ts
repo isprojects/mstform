@@ -251,6 +251,10 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
     }
     return this.converter.render(value as V, options);
   }
+
+  hasPostprocessRaw() {
+    return false;
+  }
 }
 
 function model<M extends IAnyModelType>(model: M) {
