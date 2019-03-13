@@ -2732,3 +2732,35 @@ test("form with thousandSeparator and decimalSeparator same value invalid", asyn
     });
   }).toThrow();
 });
+
+test("blur hook with postprocessRaw", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal({ decimalPlaces: 2 })),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "4314314", bar: "BAR" });
+
+  const state = form.state(o, {
+    converterOptions: {
+      thousandSeparator: ".",
+      decimalSeparator: ",",
+      renderThousands: true
+    }
+  });
+
+  const fooField = state.field("foo");
+  expect(fooField.inputProps.onBlur).toBeDefined();
+  expect(fooField.raw).toEqual("4.314.314");
+
+  fooField.handleBlur(null);
+
+  expect(fooField.raw).toEqual("4.314.314,00");
+  const barField = state.field("bar");
+  expect(barField.inputProps.onBlur).toBeUndefined();
+});
