@@ -1,7 +1,7 @@
 import { parseDecimal } from "../src/decimalParser";
 
 const options = {
-  maxWholeDigits: 5,
+  maxWholeDigits: 20,
   decimalPlaces: 4,
   allowNegative: true,
   decimalSeparator: ".",
@@ -14,6 +14,25 @@ test("basic parse", () => {
   expect(parseDecimal("100.47", options)).toEqual("100.47");
   expect(parseDecimal(".47", options)).toEqual(".47");
   expect(parseDecimal("1.47", options)).toEqual("1.47");
+  expect(parseDecimal("123.", options)).toEqual("123.");
+});
+
+test("minus handling", () => {
+  expect(parseDecimal("-1,000", options)).toEqual("-1000");
+  expect(parseDecimal("-.5", options)).toEqual("-.5");
+});
+
+test("swapped separators", () => {
+  const options = {
+    maxWholeDigits: 50,
+    decimalPlaces: 4,
+    allowNegative: true,
+    decimalSeparator: ",",
+    thousandSeparator: "."
+  };
+  expect(parseDecimal("100.000", options)).toEqual("100000");
+  expect(parseDecimal("100,53", options)).toEqual("100.53");
+  expect(parseDecimal("123.456,78", options)).toEqual("123456.78");
 });
 
 test("parse thousands", () => {
@@ -27,6 +46,7 @@ test("parse thousands multiple 3 digits", () => {
 
 test("cannot parse unknown tokens", () => {
   expect(() => parseDecimal("foo", options)).toThrow();
+  expect(() => parseDecimal("100foo", options)).toThrow();
 });
 
 test("cannot parse double minus", () => {
@@ -35,4 +55,54 @@ test("cannot parse double minus", () => {
 
 test("cannot parse single decimal separator", () => {
   expect(() => parseDecimal(".", options)).toThrow();
+});
+
+test("cannot parse single thousand separator", () => {
+  expect(() => parseDecimal(",", options)).toThrow();
+});
+
+test("cannot parse broken thousands", () => {
+  expect(() => parseDecimal("100,00", options)).toThrow();
+  expect(() => parseDecimal(",000", options)).toThrow();
+  expect(() => parseDecimal("1,000,000,00", options)).toThrow();
+});
+
+test("do not allowNegative", () => {
+  const options = {
+    maxWholeDigits: 5,
+    decimalPlaces: 4,
+    allowNegative: false,
+    decimalSeparator: ".",
+    thousandSeparator: ","
+  };
+  expect(() => parseDecimal("-100", options)).toThrow();
+});
+
+test("maxWholeDigits", () => {
+  const options = {
+    maxWholeDigits: 5,
+    decimalPlaces: 4,
+    allowNegative: true,
+    decimalSeparator: ".",
+    thousandSeparator: ","
+  };
+  expect(parseDecimal("12,345", options)).toEqual("12345");
+  expect(parseDecimal("-12,345", options)).toEqual("-12345");
+  expect(parseDecimal("123.5678", options)).toEqual("123.5678");
+  expect(() => parseDecimal("123,456", options)).toThrow();
+  expect(() => parseDecimal("-123,456", options)).toThrow();
+});
+
+test("decimalPlaces", () => {
+  const options = {
+    maxWholeDigits: 50,
+    decimalPlaces: 4,
+    allowNegative: true,
+    decimalSeparator: ".",
+    thousandSeparator: ","
+  };
+  expect(parseDecimal("12,345.45", options)).toEqual("12345.45");
+  expect(parseDecimal(".1234", options)).toEqual(".1234");
+  expect(() => parseDecimal(".12345", options)).toThrow();
+  expect(() => parseDecimal("-123.12345", options)).toThrow();
 });

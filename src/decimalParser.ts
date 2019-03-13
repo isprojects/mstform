@@ -55,9 +55,19 @@ export function parseDecimal(s: string, options: Options): string | undefined {
     throw new Error("Unknown tokens");
   }
 
-  const parser = new Parser(tokens);
+  const parser = new Parser(tokens, options);
 
   parser.parse();
+
+  // now that the parser has succeed we can make a simplifying assumption:
+  // strings of tokens are now always legitimate
+
+  if (getWholeDigitAmount(tokens) > options.maxWholeDigits) {
+    throw new Error("Too many whole digits");
+  }
+  if (getDecimalAmount(tokens) > options.decimalPlaces) {
+    throw new Error("Too many decimal places");
+  }
 
   return tokens
     .filter(token => token.type !== TOKEN_THOUSAND_SEPARATOR)
@@ -65,20 +75,43 @@ export function parseDecimal(s: string, options: Options): string | undefined {
     .join("");
 }
 
-// Grammar
-// decimal = {minus} absoluteDecimal
-// absoluteDecimal = whole
-//                 | whole decimalSeparator {fraction}
-//                 | decimalSeparator fraction
-// whole = threeOrLessDigits | threeOrLessDigits thousandSeparator moreWholeDigits
-// moreWholeDigits = threeDigits | threeDigits thousandSeparator moreWholeDigits
-// fraction = digit | digit fraction
+function getWholeDigitAmount(tokens: Token[]): number {
+  let result = 0;
+  for (const token of tokens) {
+    if (token.type === TOKEN_DIGIT) {
+      result++;
+    } else if (token.type === TOKEN_DECIMAL_SEPARATOR) {
+      break;
+    }
+  }
+  return result;
+}
 
+function getDecimalAmount(tokens: Token[]): number {
+  let result = 0;
+  let inDecimals = false;
+  for (const token of tokens) {
+    if (token.type === TOKEN_DECIMAL_SEPARATOR) {
+      inDecimals = true;
+      continue;
+    } else if (inDecimals && token.type === TOKEN_DIGIT) {
+      result++;
+    }
+  }
+  return result;
+}
+
+// This is a recursive descent parser
+// https://en.wikipedia.org/wiki/Recursive_descent_parser
+// The reason I didn't use PEG.js to generate a parser instead is
+// because PEG.js doesn't easily allow parameterized parsers,
+// which we need with our thousand and decimal separators.
+// We can handle this in our tokenizer.
 class Parser {
   tokenIndex = 0;
   currentToken: Token | null | undefined = undefined;
 
-  constructor(public tokens: Token[]) {}
+  constructor(public tokens: Token[], public options: Options) {}
 
   nextToken: NextToken = () => {
     if (this.tokenIndex >= this.tokens.length) {
@@ -115,7 +148,9 @@ class Parser {
   }
 
   decimal(): void {
-    this.accept(TOKEN_MINUS);
+    if (this.options.allowNegative) {
+      this.accept(TOKEN_MINUS);
+    }
     this.absoluteDecimal();
   }
 
@@ -134,7 +169,7 @@ class Parser {
   whole(): void {
     this.threeOrLessDigits();
     while (this.accept(TOKEN_THOUSAND_SEPARATOR)) {
-      this.moreWholeDigits();
+      this.threeDigits();
     }
   }
 
@@ -149,13 +184,10 @@ class Parser {
     }
   }
 
-  moreWholeDigits(): void {
+  threeDigits(): void {
     this.expect(TOKEN_DIGIT);
     this.expect(TOKEN_DIGIT);
     this.expect(TOKEN_DIGIT);
-    // if (this.accept(TOKEN_THOUSAND_SEPARATOR)) {
-    //   this.moreWholeDigits();
-    // }
   }
 
   fraction(): void {
