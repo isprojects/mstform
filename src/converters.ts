@@ -5,7 +5,8 @@ import {
   ConversionValue,
   Converter,
   IConverter,
-  StateConverterOptionsWithContext
+  StateConverterOptionsWithContext,
+  ConvertError
 } from "./converter";
 import { controlled } from "./controlled";
 import { identity } from "./utils";
@@ -15,8 +16,10 @@ import {
   DecimalOptions,
   getRegex,
   renderSeparators,
-  trimDecimals
+  trimDecimals,
+  getOptions
 } from "./decimal";
+import { parseDecimal, renderDecimal } from "./decimalParser";
 
 const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
@@ -104,32 +107,31 @@ function decimal(
     emptyImpossible: true,
     defaultControlled: controlled.value,
     neverRequired: false,
-    preprocessRaw(
-      raw: string,
-      converterOptions: StateConverterOptionsWithContext
-    ): string {
-      raw = raw.trim();
-      return convertSeparators(raw, converterOptions);
+    preprocessRaw(raw: string): string {
+      return raw.trim();
     },
-    rawValidate(raw, converterOptions) {
-      if (raw === "" || raw === ".") {
-        return false;
+    convert(raw, converterOptions) {
+      const options = getOptions(converterOptions.context, decimalOptions);
+      try {
+        return parseDecimal(raw, {
+          ...options,
+          decimalSeparator: converterOptions.decimalSeparator || ".",
+          thousandSeparator: converterOptions.thousandSeparator || ",",
+          renderThousands: converterOptions.renderThousands || false
+        });
+      } catch (e) {
+        throw new ConvertError();
       }
-      checkConverterOptions(converterOptions);
-      // deal with case when string starts with .
-      if (raw.startsWith(".")) {
-        raw = "0" + raw;
-      }
-      return getRegex(converterOptions.context, decimalOptions).test(raw);
-    },
-    convert(raw) {
-      return raw;
     },
     render(value, converterOptions) {
-      return renderSeparators(
-        trimDecimals(value, converterOptions, decimalOptions),
-        converterOptions
-      );
+      const options = getOptions(converterOptions.context, decimalOptions);
+
+      return renderDecimal(value, {
+        ...options,
+        decimalSeparator: converterOptions.decimalSeparator || ".",
+        thousandSeparator: converterOptions.thousandSeparator || ",",
+        renderThousands: converterOptions.renderThousands || false
+      });
     }
   });
 }

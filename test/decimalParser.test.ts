@@ -1,11 +1,12 @@
-import { parseDecimal } from "../src/decimalParser";
+import { parseDecimal, renderDecimal } from "../src/decimalParser";
 
 const options = {
   maxWholeDigits: 20,
   decimalPlaces: 4,
   allowNegative: true,
   decimalSeparator: ".",
-  thousandSeparator: ","
+  thousandSeparator: ",",
+  renderThousands: true
 };
 
 test("basic parse", () => {
@@ -28,7 +29,8 @@ test("swapped separators", () => {
     decimalPlaces: 4,
     allowNegative: true,
     decimalSeparator: ",",
-    thousandSeparator: "."
+    thousandSeparator: ".",
+    renderThousands: true
   };
   expect(parseDecimal("100.000", options)).toEqual("100000");
   expect(parseDecimal("100,53", options)).toEqual("100.53");
@@ -73,7 +75,8 @@ test("do not allowNegative", () => {
     decimalPlaces: 4,
     allowNegative: false,
     decimalSeparator: ".",
-    thousandSeparator: ","
+    thousandSeparator: ",",
+    renderThousands: true
   };
   expect(() => parseDecimal("-100", options)).toThrow();
 });
@@ -84,7 +87,8 @@ test("maxWholeDigits", () => {
     decimalPlaces: 4,
     allowNegative: true,
     decimalSeparator: ".",
-    thousandSeparator: ","
+    thousandSeparator: ",",
+    renderThousands: true
   };
   expect(parseDecimal("12,345", options)).toEqual("12345");
   expect(parseDecimal("-12,345", options)).toEqual("-12345");
@@ -99,7 +103,8 @@ test("decimalPlaces", () => {
     decimalPlaces: 4,
     allowNegative: true,
     decimalSeparator: ".",
-    thousandSeparator: ","
+    thousandSeparator: ",",
+    renderThousands: true
   };
   expect(parseDecimal("12,345.45", options)).toEqual("12345.45");
   expect(parseDecimal(".1234", options)).toEqual(".1234");
@@ -111,4 +116,34 @@ test("numbers without thousand separators", () => {
   // as a special case we accept numbers without thousand separators too
   expect(parseDecimal("1000", options)).toEqual("1000");
   expect(parseDecimal("12345678", options)).toEqual("12345678");
+});
+
+test("render", () => {
+  expect(renderDecimal("100", options)).toEqual("100.0000");
+  expect(renderDecimal("1234", options)).toEqual("1,234.0000");
+  expect(renderDecimal("1.12", options)).toEqual("1.1200");
+  expect(renderDecimal(".12", options)).toEqual(".1200");
+  expect(renderDecimal(".12345", options)).toEqual(".1234");
+  expect(renderDecimal("12345678", options)).toEqual("12,345,678.0000");
+  expect(renderDecimal("-1.5", options)).toEqual("-1.5000");
+  expect(renderDecimal("-100", options)).toEqual("-100.0000");
+});
+
+test("render no renderThousands", () => {
+  const options = {
+    maxWholeDigits: 50,
+    decimalPlaces: 4,
+    allowNegative: true,
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: false
+  };
+  expect(renderDecimal("100", options)).toEqual("100.0000");
+  expect(renderDecimal("1234", options)).toEqual("1234.0000");
+  expect(renderDecimal("1.12", options)).toEqual("1.1200");
+  expect(renderDecimal(".12", options)).toEqual(".1200");
+  expect(renderDecimal(".12345", options)).toEqual(".1234");
+  expect(renderDecimal("12345678", options)).toEqual("12345678.0000");
+  expect(renderDecimal("-1.5", options)).toEqual("-1.5000");
+  expect(renderDecimal("-100", options)).toEqual("-100.0000");
 });

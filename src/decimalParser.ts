@@ -37,6 +37,7 @@ type ParserOptions = {
 type TokenOptions = {
   decimalSeparator: string;
   thousandSeparator: string;
+  renderThousands: boolean;
 };
 
 type Options = ParserOptions & TokenOptions;
@@ -47,6 +48,57 @@ type NextToken = () => void;
 
 class Token {
   constructor(public type: TokenType, public value: string) {}
+}
+
+function thousands(wholeDigits: string, thousandSeparator: string): string {
+  const digits = Array.from(wholeDigits);
+  const piles: string[] = [];
+  let pile = [];
+  while (digits.length > 0) {
+    const digit = digits.pop();
+    pile.push(digit);
+    if (pile.length === 3) {
+      piles.push(pile.reverse().join(""));
+      pile = [];
+    }
+  }
+  if (pile.length > 0) {
+    piles.push(pile.reverse().join(""));
+  }
+  return piles.reverse().join(thousandSeparator);
+}
+
+function extraZeroes(decimalDigits: string, decimalPlaces: number): string {
+  if (decimalDigits.length === decimalPlaces) {
+    return decimalDigits;
+  }
+  if (decimalDigits.length > decimalPlaces) {
+    return decimalDigits.slice(0, decimalPlaces);
+  }
+  return decimalDigits + "0".repeat(decimalPlaces - decimalDigits.length);
+}
+
+export function renderDecimal(s: string, options: Options): string {
+  const parts = s.split(".");
+  let wholeDigits = parts.length === 2 ? parts[0] : s;
+  let decimalDigits = parts.length === 2 ? parts[1] : "";
+  const hasMinus = wholeDigits[0] === "-";
+  if (hasMinus) {
+    wholeDigits = wholeDigits.slice(1);
+  }
+
+  wholeDigits = options.renderThousands
+    ? thousands(wholeDigits, options.thousandSeparator)
+    : wholeDigits;
+
+  const result =
+    wholeDigits +
+    options.decimalSeparator +
+    extraZeroes(decimalDigits, options.decimalPlaces);
+  if (hasMinus) {
+    return "-" + result;
+  }
+  return result;
 }
 
 export function parseDecimal(s: string, options: Options): string {

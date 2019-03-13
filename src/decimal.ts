@@ -174,7 +174,7 @@ export function checkConverterOptions(
     converterOptions.thousandSeparator === "." &&
     converterOptions.decimalSeparator == null
   ) {
-    throw Error(
+    throw new Error(
       "Can't set thousandSeparator to . without setting decimalSeparator."
     );
   }
@@ -182,7 +182,7 @@ export function checkConverterOptions(
     converterOptions.thousandSeparator === converterOptions.decimalSeparator &&
     converterOptions.thousandSeparator != null
   ) {
-    throw Error(
+    throw new Error(
       "Can't set thousandSeparator and decimalSeparator to the same value."
     );
   }
