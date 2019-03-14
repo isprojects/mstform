@@ -2740,7 +2740,7 @@ test("blur hook with postprocess", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal({ decimalPlaces: 2 }), {
+    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
       postprocess: true
     }),
     bar: new Field(converters.string)
@@ -2772,7 +2772,7 @@ test("blur hook no postprocess with error", async () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal({ decimalPlaces: 2 }), {
+    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
       postprocess: true
     })
   });
@@ -2801,7 +2801,9 @@ test("blur hook with postprocess maybe field", async () => {
 
   const form = new Form(M, {
     foo: new Field(
-      converters.maybeNull(converters.decimal({ decimalPlaces: 2 })),
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 2, addZeroes: true })
+      ),
       {
         postprocess: true
       }
