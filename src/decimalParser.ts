@@ -69,6 +69,9 @@ function addZeroes(decimalDigits: string, decimalPlaces: number): string {
 }
 
 export function renderDecimal(s: string, options: Options): string {
+  if (s.length === 0) {
+    return s;
+  }
   const parts = s.split(".");
   let wholeDigits = parts.length === 2 ? parts[0] : s;
   let decimalDigits = parts.length === 2 ? parts[1] : "";

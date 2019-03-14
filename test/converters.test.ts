@@ -515,3 +515,75 @@ test("render decimal number without decimals with decimal separator", async () =
   expect(field.raw).toEqual("12,");
   expect(field.value).toEqual("12.");
 });
+
+test("obey addZeroes false", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 6, addZeroes: false })
+      )
+    )
+  });
+
+  const o = M.create({ foo: "1" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("1");
+});
+
+test("obey addZeroes true", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 6, addZeroes: true })
+      )
+    )
+  });
+
+  const o = M.create({ foo: "1" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("1.000000");
+});
+
+test("maybe decimal converter/render for empty", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 6, addZeroes: false })
+      )
+    )
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+
+  await field.setRaw("3.1412");
+  expect(field.raw).toEqual("3.1412");
+  expect(field.value).toEqual("3.1412");
+
+  await field.setRaw("");
+  expect(field.value).toBeNull();
+  field.setRawFromValue();
+  expect(field.raw).toEqual("");
+});
