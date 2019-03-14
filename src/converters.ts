@@ -125,7 +125,6 @@ function decimal(
       try {
         return parseDecimal(raw, {
           ...options,
-          addZeroes: true,
           decimalSeparator: converterOptions.decimalSeparator || ".",
           thousandSeparator: converterOptions.thousandSeparator || ",",
           renderThousands: converterOptions.renderThousands || false
@@ -139,7 +138,6 @@ function decimal(
 
       return renderDecimal(value, {
         ...options,
-        addZeroes: true,
         decimalSeparator: converterOptions.decimalSeparator || ".",
         thousandSeparator: converterOptions.thousandSeparator || ",",
         renderThousands: converterOptions.renderThousands || false

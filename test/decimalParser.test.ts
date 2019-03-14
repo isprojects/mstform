@@ -174,3 +174,20 @@ test("render no addZeroes", () => {
   expect(renderDecimal("-1.5", options)).toEqual("-1.5");
   expect(renderDecimal("-100", options)).toEqual("-100");
 });
+
+test("empty render", () => {
+  expect(renderDecimal("", options)).toEqual("");
+});
+
+test("empty render no addZeroes", () => {
+  const options = {
+    maxWholeDigits: 50,
+    decimalPlaces: 4,
+    allowNegative: true,
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: true,
+    addZeroes: false
+  };
+  expect(renderDecimal("", options)).toEqual("");
+});
