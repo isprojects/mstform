@@ -2760,7 +2760,7 @@ test("setValueAndUpdateRaw", async () => {
   expect(field.value).toEqual("1234.56");
 
   // Instead, we set the value and update the raw based on the value
-  await field.setValueAndUpdateRaw("1234.56");
-  expect(field.raw).toEqual("1.234,56");
-  expect(field.value).toEqual("1234.56");
+  await field.setValueAndUpdateRaw("6543.21");
+  expect(field.raw).toEqual("6.543,21");
+  expect(field.value).toEqual("6543.21");
 });
