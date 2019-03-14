@@ -60,21 +60,12 @@ function thousands(wholeDigits: string, thousandSeparator: string): string {
   return wholeDigits.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
 }
 
-function trimAndZeroes(
-  decimalDigits: string,
-  decimalPlaces: number,
-  addZeroes: boolean
-): string {
-  if (decimalDigits.length === decimalPlaces) {
-    return decimalDigits;
-  }
-  if (decimalDigits.length > decimalPlaces) {
-    return decimalDigits.slice(0, decimalPlaces);
-  }
-  if (addZeroes) {
-    decimalDigits += "0".repeat(decimalPlaces - decimalDigits.length);
-  }
-  return decimalDigits;
+function trimDecimals(decimalDigits: string, decimalPlaces: number): string {
+  return decimalDigits.slice(0, decimalPlaces);
+}
+
+function addZeroes(decimalDigits: string, decimalPlaces: number): string {
+  return decimalDigits + "0".repeat(decimalPlaces - decimalDigits.length);
 }
 
 export function renderDecimal(s: string, options: Options): string {
@@ -90,11 +81,10 @@ export function renderDecimal(s: string, options: Options): string {
     ? thousands(wholeDigits, options.thousandSeparator)
     : wholeDigits;
 
-  decimalDigits = trimAndZeroes(
-    decimalDigits,
-    options.decimalPlaces,
-    options.addZeroes
-  );
+  decimalDigits = trimDecimals(decimalDigits, options.decimalPlaces);
+  if (options.addZeroes) {
+    decimalDigits = addZeroes(decimalDigits, options.decimalPlaces);
+  }
 
   const result =
     decimalDigits.length > 0
