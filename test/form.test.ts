@@ -2760,7 +2760,7 @@ test("blur hook with postprocess", async () => {
   expect(fooField.inputProps.onBlur).toBeDefined();
   await fooField.setRaw("4314314");
   fooField.handleBlur(null);
-  expect(fooField.raw).toEqual("4.314.314");
+  expect(fooField.raw).toEqual("4.314.314,00");
 
   const barField = state.field("bar");
   expect(barField.inputProps.onBlur).toBeUndefined();
@@ -2822,5 +2822,37 @@ test("blur hook with postprocess maybe field", async () => {
   expect(fooField.inputProps.onBlur).toBeDefined();
   await fooField.setRaw("4314314");
   fooField.handleBlur(null);
-  expect(fooField.raw).toEqual("4.314.314");
+  expect(fooField.raw).toEqual("4.314.314,00");
+});
+
+test("setValueAndUpdateRaw", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal())
+  });
+
+  const state = form.state(o, {
+    converterOptions: {
+      thousandSeparator: ".",
+      decimalSeparator: ",",
+      renderThousands: true
+    }
+  });
+
+  // Setting the raw directly would update the value without relying on other event handlers
+  const field = state.field("foo");
+
+  await field.setRaw("1234,56");
+  expect(field.raw).toEqual("1234,56");
+  expect(field.value).toEqual("1234.56");
+
+  // Instead, we set the value and update the raw based on the value
+  await field.setValueAndUpdateRaw("6543.21");
+  expect(field.raw).toEqual("6.543,21");
+  expect(field.value).toEqual("6543.21");
 });

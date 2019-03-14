@@ -1,3 +1,15 @@
+# 1.7.0
+
+-   Rewrite the way decimal numbers (and floating point) are parsed and
+    rendered. We now a have a parser-driven approach.
+
+    The rendering code for decimals now has a new option "addZeroes", which
+    will add trailing zeroes if enabled.
+
+-   Added the `setValueAndUpdateRaw` method on accessors. This function
+    subsequently calls `accessor.setValue` and `accessor.setRawFromValue`,
+    allowing us to update the raw whilst setting the value.
+
 # 1.6.5
 
 -   Fix a bug where `setRawFromValue` was not marked with `@action`.

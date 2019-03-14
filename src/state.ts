@@ -32,7 +32,7 @@ import {
   StateConverterOptions,
   StateConverterOptionsWithContext
 } from "./converter";
-import { checkConverterOptions } from "./decimal";
+import { checkConverterOptions } from "./decimalParser";
 
 export interface FieldAccessorAllows {
   (fieldAccessor: FieldAccessor<any, any>): boolean;

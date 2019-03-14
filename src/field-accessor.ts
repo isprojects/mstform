@@ -373,6 +373,13 @@ export class FieldAccessor<R, V> {
   }
 
   @action
+  setValueAndUpdateRaw(value: V) {
+    // We want to update a value through the accessor and also update the raw
+    this.setValue(value);
+    this.setRawFromValue();
+  }
+
+  @action
   setError(error: string) {
     this._error = error;
   }

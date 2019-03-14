@@ -488,7 +488,8 @@ A converter needs to define a `convert` and a `render` method. `convert` takes
 a raw value and converts it to the MST value. `render` takes the MST value and
 converts it to the raw value. `rawValidate` is an optional function that checks
 whether the raw value is valid. `validate` is an optional function that checks
-whether the value is valid.
+whether the value is valid. Besides `validate` and `rawValidate` you can also
+trigger a conversion error by throwing `ConvertError` inside `convert`.
 
 `emptyRaw` is the raw value that should be shown if the field is empty in the
 UI. We also set `emptyImpossible` -- it's impossible for the result of this
