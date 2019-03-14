@@ -10,8 +10,13 @@ import {
 } from "./converter";
 import { controlled } from "./controlled";
 import { identity } from "./utils";
-import { checkConverterOptions, getOptions } from "./decimal";
-import { parseDecimal, renderDecimal, DecimalOptions } from "./decimalParser";
+import {
+  parseDecimal,
+  renderDecimal,
+  DecimalOptions,
+  checkConverterOptions,
+  getOptions
+} from "./decimalParser";
 
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
