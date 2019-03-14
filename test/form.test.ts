@@ -2746,20 +2746,21 @@ test("setValueAndUpdateRaw", async () => {
 
   const state = form.state(o, {
     converterOptions: {
-      thousandSeparator: ",",
-      decimalSeparator: "."
+      thousandSeparator: ".",
+      decimalSeparator: ",",
+      renderThousands: true
     }
   });
 
   // Setting the raw directly would update the value without relying on other event handlers
   const field = state.field("foo");
 
-  await field.setRaw("1,000.00");
-  expect(field.raw).toEqual("1,000.00");
-  expect(field.value).not.toEqual("1,000.00");
+  await field.setRaw("1234.56");
+  expect(field.raw).toEqual("1234.56");
+  expect(field.value).toEqual("1234.56");
 
   // Instead, we set the value and update the raw based on the value
-  await field.setValueAndUpdateRaw("1,000.00");
-  expect(field.raw).toEqual("1,000.00");
-  expect(field.value).toEqual("1,000.00");
+  await field.setValueAndUpdateRaw("1234.56");
+  expect(field.raw).toEqual("1.234,56");
+  expect(field.value).toEqual("1234.56");
 });
