@@ -2755,8 +2755,8 @@ test("setValueAndUpdateRaw", async () => {
   // Setting the raw directly would update the value without relying on other event handlers
   const field = state.field("foo");
 
-  await field.setRaw("1234.56");
-  expect(field.raw).toEqual("1234.56");
+  await field.setRaw("1234,56");
+  expect(field.raw).toEqual("1234,56");
   expect(field.value).toEqual("1234.56");
 
   // Instead, we set the value and update the raw based on the value
