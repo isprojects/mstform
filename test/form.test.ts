@@ -2733,6 +2733,100 @@ test("form with thousandSeparator and decimalSeparator same value invalid", asyn
   }).toThrow();
 });
 
+test("blur hook with postprocess", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
+      postprocess: true
+    }),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "4314314", bar: "BAR" });
+
+  const state = form.state(o, {
+    converterOptions: {
+      thousandSeparator: ".",
+      decimalSeparator: ",",
+      renderThousands: true
+    }
+  });
+
+  const fooField = state.field("foo");
+  expect(fooField.inputProps.onBlur).toBeDefined();
+  await fooField.setRaw("4314314");
+  fooField.handleBlur(null);
+  expect(fooField.raw).toEqual("4.314.314,00");
+
+  const barField = state.field("bar");
+  expect(barField.inputProps.onBlur).toBeUndefined();
+});
+
+test("blur hook no postprocess with error", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
+      postprocess: true
+    })
+  });
+
+  const o = M.create({ foo: "4314314" });
+
+  const state = form.state(o, {
+    converterOptions: {
+      thousandSeparator: ".",
+      decimalSeparator: ",",
+      renderThousands: true
+    }
+  });
+
+  const fooField = state.field("foo");
+  expect(fooField.inputProps.onBlur).toBeDefined();
+  await fooField.setRaw("4314314,0000");
+  fooField.handleBlur(null);
+  expect(fooField.raw).toEqual("4314314,0000");
+});
+
+test("blur hook with postprocess maybe field", async () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 2, addZeroes: true })
+      ),
+      {
+        postprocess: true
+      }
+    )
+  });
+
+  const o = M.create({ foo: "4314314" });
+
+  const state = form.state(o, {
+    converterOptions: {
+      thousandSeparator: ".",
+      decimalSeparator: ",",
+      renderThousands: true
+    }
+  });
+
+  const fooField = state.field("foo");
+  expect(fooField.inputProps.onBlur).toBeDefined();
+  await fooField.setRaw("4314314");
+  fooField.handleBlur(null);
+  expect(fooField.raw).toEqual("4.314.314,00");
+});
+
 test("setValueAndUpdateRaw", async () => {
   const M = types.model("M", {
     foo: types.string

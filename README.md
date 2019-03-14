@@ -1200,6 +1200,18 @@ etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus`/`onBlur` handler, so if you use that with the field it is there
 automatically.
 
+In addition, you can set a field to rerender itself when you blur out of it,
+using the `postprocess` option on fields. An example use case is rendering
+extra zeroes in decimal fields, like so:
+
+```js
+const form = new Form(M, {
+    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
+        postprocess: true
+    })
+});
+```
+
 ## Update hook
 
 When you want to react to changes to any field value in the form, you can

@@ -10,6 +10,9 @@
     subsequently calls `accessor.setValue` and `accessor.setRawFromValue`,
     allowing us to update the raw whilst setting the value.
 
+-   Added a `postprocess` option on fields. If enabled, when you blur out of the
+    field this rerenders the information.
+
 # 1.6.5
 
 -   Fix a bug where `setRawFromValue` was not marked with `@action`.
