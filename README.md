@@ -1201,11 +1201,12 @@ etc. When you define the hook, `inputProps` on the field accessor contains an
 automatically.
 
 In addition, you can set a field to rerender itself when you blur out of it,
-using the `postprocess` option on fields, like so:
+using the `postprocess` option on fields. An example use case is rendering
+extra zeroes in decimal fields, like so:
 
 ```js
 const form = new Form(M, {
-    foo: new Field(converters.decimal(), {
+    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
         postprocess: true
     })
 });
