@@ -51,21 +51,7 @@ class Token {
 }
 
 function thousands(wholeDigits: string, thousandSeparator: string): string {
-  const digits = Array.from(wholeDigits);
-  const piles: string[] = [];
-  let pile = [];
-  while (digits.length > 0) {
-    const digit = digits.pop();
-    pile.push(digit);
-    if (pile.length === 3) {
-      piles.push(pile.reverse().join(""));
-      pile = [];
-    }
-  }
-  if (pile.length > 0) {
-    piles.push(pile.reverse().join(""));
-  }
-  return piles.reverse().join(thousandSeparator);
+  return wholeDigits.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
 }
 
 function extraZeroes(decimalDigits: string, decimalPlaces: number): string {
