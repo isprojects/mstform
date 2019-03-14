@@ -172,6 +172,11 @@ test("decimal converter", async () => {
     decimalSeparator: ",",
     thousandSeparator: "."
   });
+  await failsWithOptions(converters.decimal({}), "1234.56", {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    renderThousands: true
+  });
 });
 
 test("decimal converter with both options", async () => {
@@ -191,7 +196,7 @@ test("decimal converter render with renderThousands false", async () => {
   const value = "4.314.314,31";
   const processedValue = converter.preprocessRaw(value, options);
   const converted = await converter.convert(processedValue, options);
-  const rendered = await converter.render(
+  const rendered = converter.render(
     (converted as ConversionValue<any>).value,
     options
   );
@@ -201,35 +206,35 @@ test("decimal converter render with renderThousands false", async () => {
 test("decimal converter render with six decimals", async () => {
   const converter = converters.decimal({ decimalPlaces: 6 });
   const options = {
-    decimalSeparator: ",",
-    thousandSeparator: ".",
+    decimalSeparator: ".",
+    thousandSeparator: ",",
     renderThousands: true
   };
   const value = "4.000000";
   const processedValue = converter.preprocessRaw(value, options);
   const converted = await converter.convert(processedValue, options);
-  const rendered = await converter.render(
+  const rendered = converter.render(
     (converted as ConversionValue<any>).value,
     options
   );
-  expect(rendered).toEqual("4,000000");
+  expect(rendered).toEqual("4.000000");
 });
 
 test("decimal converter render with six decimals and thousand separators", async () => {
   const converter = converters.decimal({ decimalPlaces: 6 });
   const options = {
-    decimalSeparator: ",",
-    thousandSeparator: ".",
+    decimalSeparator: ".",
+    thousandSeparator: ",",
     renderThousands: true
   };
   const value = "4000000.000000";
   const processedValue = converter.preprocessRaw(value, options);
   const converted = await converter.convert(processedValue, options);
-  const rendered = await converter.render(
+  const rendered = converter.render(
     (converted as ConversionValue<any>).value,
     options
   );
-  expect(rendered).toEqual("4.000.000,000000");
+  expect(rendered).toEqual("4,000,000.000000");
 });
 
 test("decimal converter render with six decimals, only showing three", async () => {
@@ -240,7 +245,7 @@ test("decimal converter render with six decimals, only showing three", async () 
     renderThousands: true
   };
   const value = "4000.000000";
-  const rendered = await converter.render(value, options);
+  const rendered = converter.render(value, options);
   expect(rendered).toEqual("4.000,000");
 });
 

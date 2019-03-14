@@ -5,20 +5,19 @@ import {
   ConversionValue,
   Converter,
   IConverter,
-  StateConverterOptionsWithContext
+  StateConverterOptionsWithContext,
+  ConvertError
 } from "./converter";
 import { controlled } from "./controlled";
 import { identity } from "./utils";
 import {
-  checkConverterOptions,
-  convertSeparators,
+  parseDecimal,
+  renderDecimal,
   DecimalOptions,
-  getRegex,
-  renderSeparators,
-  trimDecimals
-} from "./decimal";
+  checkConverterOptions,
+  getOptions
+} from "./decimalParser";
 
-const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
 export class StringConverter<V> extends Converter<string, V> {
@@ -42,25 +41,38 @@ const string = new StringConverter<string>({
 const number = new StringConverter<number>({
   emptyRaw: "",
   emptyImpossible: true,
-  rawValidate(raw) {
-    // deal with case when string starts with .
-    if (raw.startsWith(".")) {
-      raw = "0" + raw;
+  convert(raw, converterOptions) {
+    checkConverterOptions(converterOptions);
+    try {
+      return +parseDecimal(raw, {
+        maxWholeDigits: 100,
+        decimalPlaces: 100,
+        allowNegative: true,
+        addZeroes: false,
+        decimalSeparator: converterOptions.decimalSeparator || ".",
+        thousandSeparator: converterOptions.thousandSeparator || ",",
+        renderThousands: converterOptions.renderThousands || false
+      });
+    } catch (e) {
+      throw new ConvertError();
     }
-    return NUMBER_REGEX.test(raw);
   },
-  convert(raw) {
-    return +raw;
-  },
-  render(value, options) {
-    return renderSeparators(value.toString(), options);
+  render(value, converterOptions) {
+    return renderDecimal(value.toString(), {
+      maxWholeDigits: 100,
+      decimalPlaces: 100,
+      allowNegative: true,
+      addZeroes: false,
+      decimalSeparator: converterOptions.decimalSeparator || ".",
+      thousandSeparator: converterOptions.thousandSeparator || ",",
+      renderThousands: converterOptions.renderThousands || false
+    });
   },
   preprocessRaw(
     raw: string,
     options: StateConverterOptionsWithContext
   ): string {
-    raw = raw.trim();
-    return convertSeparators(raw, options);
+    return raw.trim();
   }
 });
 
@@ -104,32 +116,34 @@ function decimal(
     emptyImpossible: true,
     defaultControlled: controlled.value,
     neverRequired: false,
-    preprocessRaw(
-      raw: string,
-      converterOptions: StateConverterOptionsWithContext
-    ): string {
-      raw = raw.trim();
-      return convertSeparators(raw, converterOptions);
+    preprocessRaw(raw: string): string {
+      return raw.trim();
     },
-    rawValidate(raw, converterOptions) {
-      if (raw === "" || raw === ".") {
-        return false;
-      }
+    convert(raw, converterOptions) {
       checkConverterOptions(converterOptions);
-      // deal with case when string starts with .
-      if (raw.startsWith(".")) {
-        raw = "0" + raw;
+      const options = getOptions(converterOptions.context, decimalOptions);
+      try {
+        return parseDecimal(raw, {
+          ...options,
+          addZeroes: true,
+          decimalSeparator: converterOptions.decimalSeparator || ".",
+          thousandSeparator: converterOptions.thousandSeparator || ",",
+          renderThousands: converterOptions.renderThousands || false
+        });
+      } catch (e) {
+        throw new ConvertError();
       }
-      return getRegex(converterOptions.context, decimalOptions).test(raw);
-    },
-    convert(raw) {
-      return raw;
     },
     render(value, converterOptions) {
-      return renderSeparators(
-        trimDecimals(value, converterOptions, decimalOptions),
-        converterOptions
-      );
+      const options = getOptions(converterOptions.context, decimalOptions);
+
+      return renderDecimal(value, {
+        ...options,
+        addZeroes: true,
+        decimalSeparator: converterOptions.decimalSeparator || ".",
+        thousandSeparator: converterOptions.thousandSeparator || ",",
+        renderThousands: converterOptions.renderThousands || false
+      });
     }
   });
 }

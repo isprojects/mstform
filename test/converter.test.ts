@@ -1,7 +1,12 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { Field, Form, converters } from "../src";
-import { CONVERSION_ERROR, ConversionValue, Converter } from "../src/converter";
+import {
+  CONVERSION_ERROR,
+  ConversionValue,
+  Converter,
+  ConvertError
+} from "../src/converter";
 
 configure({ enforceActions: "observed" });
 
@@ -115,4 +120,41 @@ test("converter maybeNull with converter options", async () => {
   expect(field.error).toBeUndefined();
   expect(field.raw).toEqual("36.365,20");
   expect(field.value).toEqual("36365.20");
+});
+
+test("convert can throw ConvertError", async () => {
+  const converter = new Converter<string, string>({
+    emptyRaw: "",
+    emptyValue: "",
+    convert: raw => {
+      throw new ConvertError();
+    },
+    render: value => value
+  });
+
+  const result = await converter.convert("foo", {});
+  expect(result).toEqual(CONVERSION_ERROR);
+});
+
+test("non-ConvertError bubbles up", async () => {
+  const converter = new Converter<string, string>({
+    emptyRaw: "",
+    emptyValue: "",
+    convert: raw => {
+      throw new Error("Unexpected failure");
+    },
+    render: value => value
+  });
+
+  // we want to verify that this throws an error,
+  // but toThrow doesn't work possibly due to the async
+  // nature of convert. This is another way
+  try {
+    await converter.convert("foo", {});
+  } catch (e) {
+    expect(true).toBeTruthy();
+    return;
+  }
+  // should never be reached
+  expect(false).toBeTruthy();
 });
