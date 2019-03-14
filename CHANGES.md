@@ -1,3 +1,9 @@
+# 1.6.6
+
+-   Added the `setValueAndUpdateRaw` method on accessors. This function subsequently
+    calls `accessor.setValue` and `accessor.setRawFromValue`, allowing us to update
+    the raw whilst setting the value.
+
 # 1.6.5
 
 -   Fix a bug where `setRawFromValue` was not marked with `@action`.
