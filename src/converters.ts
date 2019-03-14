@@ -111,6 +111,7 @@ function decimal(
       return raw.trim();
     },
     convert(raw, converterOptions) {
+      checkConverterOptions(converterOptions);
       const options = getOptions(converterOptions.context, decimalOptions);
       try {
         return parseDecimal(raw, {

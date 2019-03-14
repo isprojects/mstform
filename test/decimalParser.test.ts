@@ -35,6 +35,7 @@ test("swapped separators", () => {
   expect(parseDecimal("100.000", options)).toEqual("100000");
   expect(parseDecimal("100,53", options)).toEqual("100.53");
   expect(parseDecimal("123.456,78", options)).toEqual("123456.78");
+  expect(parseDecimal("4.000.000", options)).toEqual("4000000");
 });
 
 test("parse thousands", () => {

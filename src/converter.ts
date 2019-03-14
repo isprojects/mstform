@@ -103,7 +103,6 @@ export class Converter<R, V> implements IConverter<R, V> {
         return CONVERSION_ERROR;
       }
     }
-
     try {
       const value = this.definition.convert(raw, options);
       if (this.definition.validate) {
