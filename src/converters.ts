@@ -131,22 +131,6 @@ function decimal(
         trimDecimals(value, converterOptions, decimalOptions),
         converterOptions
       );
-    },
-    postprocessRaw(raw, converterOptions) {
-      const options = getOptions(converterOptions.context, decimalOptions);
-      if (options.decimalPlaces === 0) {
-        return raw;
-      }
-      const decimalSeparator = converterOptions.decimalSeparator || ".";
-      const splitRaw = raw.split(decimalSeparator);
-      // if there is no decimal separator, add it along a number of zeroes equal
-      // to decimal places.
-      if (splitRaw.length === 1) {
-        return raw + decimalSeparator + "0".repeat(options.decimalPlaces);
-      }
-      // else, add a number of zeroes equal to decimal places minus the number
-      // of decimals already present.
-      return raw + "0".repeat(options.decimalPlaces - splitRaw[1].length);
     }
   });
 }
@@ -250,17 +234,6 @@ class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
       return "";
     }
     return this.converter.render(value as V, options);
-  }
-
-  hasPostprocessRaw() {
-    return this.converter.hasPostprocessRaw();
-  }
-
-  postprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    return this.converter.postprocessRaw(raw, options);
   }
 }
 

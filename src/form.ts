@@ -87,6 +87,7 @@ export interface FieldOptions<R, V> {
   derived?: Derived<V>;
   change?: Change<V>;
   controlled?: Controlled;
+  postprocess?: boolean;
 }
 
 export type GroupDefinition<D extends FormDefinition<any>> = {
@@ -161,6 +162,7 @@ export class Field<R, V> {
   derivedFunc?: Derived<V>;
   changeFunc?: Change<V>;
   controlled: Controlled;
+  postprocess: boolean;
 
   constructor(
     public converter: IConverter<R, V>,
@@ -174,6 +176,7 @@ export class Field<R, V> {
       this.required = false;
       this.getRaw = identity;
       this.controlled = this.createDefaultControlled();
+      this.postprocess = false;
     } else {
       this.rawValidators = options.rawValidators ? options.rawValidators : [];
       this.validators = options.validators ? options.validators : [];
@@ -193,6 +196,7 @@ export class Field<R, V> {
       this.derivedFunc = options.derived;
       this.changeFunc = options.change;
       this.controlled = options.controlled || this.createDefaultControlled();
+      this.postprocess = !!options.postprocess;
     }
   }
 

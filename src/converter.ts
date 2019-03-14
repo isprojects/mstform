@@ -28,7 +28,6 @@ export interface ConverterOptions<R, V> {
   defaultControlled?: Controlled;
   neverRequired?: boolean;
   preprocessRaw?(raw: R, options?: StateConverterOptionsWithContext): R;
-  postprocessRaw?(raw: R, options: StateConverterOptionsWithContext): R;
 }
 
 export interface IConverter<R, V> {
@@ -43,8 +42,6 @@ export interface IConverter<R, V> {
   defaultControlled: Controlled;
   neverRequired: boolean;
   preprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
-  hasPostprocessRaw(): boolean;
-  postprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
 }
 
 export class ConversionValue<V> {
@@ -121,17 +118,5 @@ export class Converter<R, V> implements IConverter<R, V> {
 
   render(value: V, options: StateConverterOptionsWithContext): R {
     return this.definition.render(value, options);
-  }
-
-  hasPostprocessRaw() {
-    return this.definition.postprocessRaw != null;
-  }
-
-  postprocessRaw(raw: R, options: StateConverterOptionsWithContext): R {
-    const postprocessRaw = this.definition.postprocessRaw;
-    if (postprocessRaw == null) {
-      return raw;
-    }
-    return postprocessRaw(raw, options);
   }
 }
