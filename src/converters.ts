@@ -10,18 +10,9 @@ import {
 } from "./converter";
 import { controlled } from "./controlled";
 import { identity } from "./utils";
-import {
-  checkConverterOptions,
-  convertSeparators,
-  DecimalOptions,
-  getRegex,
-  renderSeparators,
-  trimDecimals,
-  getOptions
-} from "./decimal";
-import { parseDecimal, renderDecimal } from "./decimalParser";
+import { checkConverterOptions, getOptions } from "./decimal";
+import { parseDecimal, renderDecimal, DecimalOptions } from "./decimalParser";
 
-const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
 export class StringConverter<V> extends Converter<string, V> {

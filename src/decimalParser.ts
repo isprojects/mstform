@@ -28,7 +28,7 @@ function isWhitespace(c: string): boolean {
   return WHITESPACE.test(c);
 }
 
-type ParserOptions = {
+export type DecimalOptions = {
   maxWholeDigits: number;
   decimalPlaces: number;
   addZeroes: boolean;
@@ -41,7 +41,7 @@ type TokenOptions = {
   renderThousands: boolean;
 };
 
-type Options = ParserOptions & TokenOptions;
+type Options = DecimalOptions & TokenOptions;
 
 type Accept = (tokenType: TokenType) => boolean;
 type Expect = (tokenType: TokenType) => boolean;
