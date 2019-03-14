@@ -1,3 +1,11 @@
+# 1.7.0
+
+-   Rewrite the way decimal numbers (and floating point) are parsed and
+    rendered. We now a have a parser-driven approach.
+
+    The rendering code for decimals now has a new option "addZeroes", which
+    will add trailing zeroes if enabled.
+
 # 1.6.5
 
 -   Fix a bug where `setRawFromValue` was not marked with `@action`.
