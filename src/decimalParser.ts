@@ -31,6 +31,7 @@ function isWhitespace(c: string): boolean {
 type ParserOptions = {
   maxWholeDigits: number;
   decimalPlaces: number;
+  addZeroes: boolean;
   allowNegative: boolean;
 };
 
@@ -54,14 +55,21 @@ function thousands(wholeDigits: string, thousandSeparator: string): string {
   return wholeDigits.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
 }
 
-function extraZeroes(decimalDigits: string, decimalPlaces: number): string {
+function trimAndZeroes(
+  decimalDigits: string,
+  decimalPlaces: number,
+  addZeroes: boolean
+): string {
   if (decimalDigits.length === decimalPlaces) {
     return decimalDigits;
   }
   if (decimalDigits.length > decimalPlaces) {
     return decimalDigits.slice(0, decimalPlaces);
   }
-  return decimalDigits + "0".repeat(decimalPlaces - decimalDigits.length);
+  if (addZeroes) {
+    decimalDigits += "0".repeat(decimalPlaces - decimalDigits.length);
+  }
+  return decimalDigits;
 }
 
 export function renderDecimal(s: string, options: Options): string {
@@ -77,10 +85,17 @@ export function renderDecimal(s: string, options: Options): string {
     ? thousands(wholeDigits, options.thousandSeparator)
     : wholeDigits;
 
+  decimalDigits = trimAndZeroes(
+    decimalDigits,
+    options.decimalPlaces,
+    options.addZeroes
+  );
+
   const result =
-    wholeDigits +
-    options.decimalSeparator +
-    extraZeroes(decimalDigits, options.decimalPlaces);
+    decimalDigits.length > 0
+      ? wholeDigits + options.decimalSeparator + decimalDigits
+      : wholeDigits;
+
   if (hasMinus) {
     return "-" + result;
   }
