@@ -4,6 +4,7 @@ import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
+import { pathToFieldref } from "./utils";
 
 export class SubFormAccessor<
   D extends FormDefinition<any>,
@@ -50,6 +51,11 @@ export class SubFormAccessor<
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed

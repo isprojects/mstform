@@ -20,6 +20,7 @@ import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
+import { pathToFieldref } from "./utils";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -66,6 +67,11 @@ export class FieldAccessor<R, V> {
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed

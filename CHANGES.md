@@ -1,3 +1,9 @@
+# 1.8.0
+
+-   Fieldref support. All accessors expose a 'fieldref' property. This is a
+    general form of the path which can be used to more easily match fields, for
+    instance when implemented 'isRequired' and other hooks.
+
 # 1.7.0
 
 -   Rewrite the way decimal numbers (and floating point) are parsed and

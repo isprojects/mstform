@@ -968,6 +968,7 @@ makes the `foo` field disabled. This uses the JSON Path functionality of
 mstform to determine whether a field is disabled, but any operation can be
 implemented here. You could for instance retrieve information about which
 fields are disabled dynamically from the backend before you display the form.
+The `fieldref` functionality described below is very useful for this.
 
 ```js
 const state = form.state(o, {
@@ -995,6 +996,25 @@ React input widgets support a `readOnly` prop (HTML input does). There is no
 such behavior for `hidden` or `required`; use `accessor.hidden` and
 ``accessor.required` in your rendering code to determine whether a field wants
 to be hidden or required.
+
+## Fieldref
+
+Accessors that have a `path` property also define a `fieldref` property. The
+fieldref is a generalized form of the path that is convenient for matching.
+
+The path `/foo` results in the fieldref `foo`. The path `/foo/bar` results in
+the fieldref `foo.bar`. The path `/foo/1/bar` results in the fieldref
+`foo[].bar`, and so does `/foo/2/bar` or any other index. The path `/foo/1` by
+itself (for `.repeating.index()`) results in the fieldref `foo[]`.
+
+To create an `isDisabled` hook that makes the `bar` field disabled
+in a repeating form, you can write:
+
+```js
+const state = form.state(o, {
+    isDisabled: accessor => accessor.fieldref === "foo[].bar"
+});
+```
 
 ## Warnings
 

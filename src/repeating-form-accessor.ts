@@ -6,6 +6,7 @@ import { Accessor } from "./accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
+import { pathToFieldref } from "./utils";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
@@ -36,6 +37,11 @@ export class RepeatingFormAccessor<
   @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed
