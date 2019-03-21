@@ -22,6 +22,7 @@ import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
+import { pathToFieldref } from "./utils";
 
 export class FormAccessor<
   D extends FormDefinition<any>,
@@ -80,6 +81,11 @@ export class FormAccessor<
       return "";
     }
     return this.parent.path;
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed

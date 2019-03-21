@@ -20,7 +20,8 @@ import {
   deleteByPath,
   getByPath,
   pathToSteps,
-  stepsToPath
+  stepsToPath,
+  pathToFieldref
 } from "./utils";
 import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
@@ -233,6 +234,11 @@ export class FormState<
   @computed
   get path(): string {
     return "/";
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed

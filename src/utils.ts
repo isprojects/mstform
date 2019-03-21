@@ -80,3 +80,23 @@ export function getNodeId(node: any): number {
   }
   return id;
 }
+
+// convert a JSON pointer, AKA a mobx-state-tree node path,
+// to a fieldref
+export function pathToFieldref(path: string): string {
+  if (path[0] === "/") {
+    path = path.slice(1);
+  }
+
+  const steps = path.split("/");
+  const result: string[] = [];
+  for (const step of steps) {
+    if (isInt(step)) {
+      const last = result.pop();
+      result.push(last + "[]");
+    } else {
+      result.push(step);
+    }
+  }
+  return result.join(".");
+}

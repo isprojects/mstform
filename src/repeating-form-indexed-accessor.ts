@@ -5,6 +5,7 @@ import { FormState } from "./state";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 import { FormAccessor } from "./form-accessor";
+import { pathToFieldref } from "./utils";
 
 export class RepeatingFormIndexedAccessor<
   D extends FormDefinition<any>,
@@ -50,6 +51,11 @@ export class RepeatingFormIndexedAccessor<
   @computed
   get path(): string {
     return this.parent.path + "/" + this.index;
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed
