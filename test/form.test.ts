@@ -2858,3 +2858,34 @@ test("setValueAndUpdateRaw", async () => {
   expect(field.raw).toEqual("6.543,21");
   expect(field.value).toEqual("6543.21");
 });
+
+test("repeatingField disabled when repeatingForm disabled", async () => {
+  const N = types.model("N", {
+    repeatingField: types.string
+  });
+
+  const M = types.model("M", {
+    repeating: types.array(N)
+  });
+
+  const form = new Form(M, {
+    repeating: new RepeatingForm({
+      repeatingField: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({
+    repeating: [{ repeatingField: "REPEATING_FIELD" }]
+  });
+
+  const state = form.state(o, {
+    isRepeatingFormDisabled: () => true
+  });
+
+  const repeating = state.repeatingForm("repeating");
+  const repeatingIndex = repeating.index(0);
+  const repeatingField = repeatingIndex.field("repeatingField");
+
+  expect(repeating.disabled).toBeTruthy();
+  expect(repeatingField.disabled).toBeTruthy();
+});
