@@ -2043,7 +2043,7 @@ test("a form with a repeating disabled field", async () => {
   const o = M.create({ foo: [{ bar: "BAR" }] });
 
   const state = form.state(o, {
-    isRepeatingFormDisabled: accessor => accessor.path === "/foo"
+    isDisabled: accessor => accessor.path === "/foo"
   });
   const repeating = state.repeatingForm("foo");
 
@@ -2887,5 +2887,6 @@ test("repeatingField disabled when repeatingForm disabled", async () => {
   const repeatingField = repeatingIndex.field("repeatingField");
 
   expect(repeating.disabled).toBeTruthy();
+  expect(repeatingIndex.disabled).toBeTruthy();
   expect(repeatingField.disabled).toBeTruthy();
 });
