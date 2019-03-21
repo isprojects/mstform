@@ -77,7 +77,9 @@ export class FormAccessor<
 
   @computed
   get disabled(): boolean {
-    return this.state.isDisabledFunc(this);
+    return this.parent != null && this.parent.disabled
+      ? true
+      : this.state.isDisabledFunc(this);
   }
 
   @computed

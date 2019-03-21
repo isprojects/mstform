@@ -240,7 +240,7 @@ export class FieldAccessor<R, V> {
 
   @computed
   get disabled(): boolean {
-    return this.state.isDisabledFunc(this);
+    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
   }
 
   @computed
