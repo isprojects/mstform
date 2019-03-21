@@ -2879,7 +2879,7 @@ test("repeatingField disabled when repeatingForm disabled", async () => {
   });
 
   const state = form.state(o, {
-    isRepeatingFormDisabled: () => true
+    isDisabled: accessor => accessor.path === "/repeating"
   });
 
   const repeating = state.repeatingForm("repeating");
