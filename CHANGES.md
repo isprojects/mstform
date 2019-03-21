@@ -1,3 +1,8 @@
+# 1.9.0
+
+-   BREAKING: Removed `isRepeatingFormDisabled`. Use the generic `isDisabled`
+    version instead.
+
 # 1.8.0
 
 -   Fieldref support. All accessors expose a 'fieldref' property. This is a
