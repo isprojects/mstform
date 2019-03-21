@@ -963,8 +963,8 @@ this.formState = form.state(o, {
 ## Dynamic disabled, hidden, required and readOnly fields
 
 mstform has hooks that let you calculate `hidden`, `disabled`, `required` and
-`readOnly` state based on the field accessor. Here is a small example that
-makes the `foo` field disabled. This uses the JSON Path functionality of
+`readOnly` state based on the accessor. Here is a small example that
+makes the `foo` form or field disabled. This uses the JSON Path functionality of
 mstform to determine whether a field is disabled, but any operation can be
 implemented here. You could for instance retrieve information about which
 fields are disabled dynamically from the backend before you display the form.
@@ -976,26 +976,23 @@ const state = form.state(o, {
 });
 ```
 
-To implement hidden behavior, pass in an `isHidden` function. You can also
-determine whether a repeating form is disabled from add and remove using
-`isRepeatingFormDisabled`. It's up to you to use this information to render the
-add and remove buttons with the disabled status, however.
+To implement hidden behavior, pass in an `isHidden` function.
 
 To implement readOnly behavior, pass in an `isReadOnly` function.
 
 To implement required behavior, pass in an `isRequired` function. This does not
-only affect the `required` property on fieldAccessor, but also makes the field
-require the field just as if you used the `required` flag in the field
-definition. The `required` flag in the field definition always makes something
-required, no wonder what `isRequired` says.
+only affect the `required` property on the accessor, but also makes the form or
+field require the form or field just as if you used the `required` flag in the
+definition. The `required` flag in the definition always makes something
+required, no matter what `isRequired` says.
 
 `isDisabled` returning `true` makes the `disabled` prop `true` in
 `accessor.inputProps`. If `isReadOnly` is true, the `readOnly` flag is added to
 `accessor.inputProps`; otherwise it's absent, but it's up to you to ensure your
 React input widgets support a `readOnly` prop (HTML input does). There is no
 such behavior for `hidden` or `required`; use `accessor.hidden` and
-``accessor.required` in your rendering code to determine whether a field wants
-to be hidden or required.
+``accessor.required` in your rendering code to determine whether a form or field
+wants to be hidden or required.
 
 ## Fieldref
 
