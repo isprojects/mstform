@@ -2048,7 +2048,7 @@ test("a form with a repeating disabled field", async () => {
   const repeating = state.repeatingForm("foo");
 
   expect(repeating.disabled).toBeTruthy();
-  expect(repeating.index(0).field("bar").disabled).toBeFalsy();
+  expect(repeating.index(0).field("bar").disabled).toBeTruthy();
 });
 
 test("a form with a hidden field", async () => {
@@ -2889,4 +2889,70 @@ test("repeatingField disabled when repeatingForm disabled", async () => {
   expect(repeating.disabled).toBeTruthy();
   expect(repeatingIndex.disabled).toBeTruthy();
   expect(repeatingField.disabled).toBeTruthy();
+});
+
+test("repeatingField disabled when repeatingForm in repeatingForm is disabled", async () => {
+  const O = types.model("O", {
+    repeatingField: types.string
+  });
+
+  const N = types.model("N", {
+    repeating2: types.array(O)
+  });
+
+  const M = types.model("M", {
+    repeating: types.array(N)
+  });
+
+  const form = new Form(M, {
+    repeating: new RepeatingForm({
+      repeating2: new RepeatingForm({
+        repeatingField: new Field(converters.string)
+      })
+    })
+  });
+
+  const o = M.create({
+    repeating: [{ repeating2: [{ repeatingField: "REPEATING_FIELD" }] }]
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/repeating"
+  });
+
+  const repeating = state.repeatingForm("repeating");
+  const repeatingIndex = repeating.index(0);
+  const repeating2 = repeatingIndex.repeatingForm("repeating2");
+  const repeating2Index = repeating2.index(0);
+  const repeatingField = repeating2Index.field("repeatingField");
+
+  expect(repeating.disabled).toBeTruthy();
+  expect(repeatingIndex.disabled).toBeTruthy();
+  expect(repeating2.disabled).toBeTruthy();
+  expect(repeating2Index.disabled).toBeTruthy();
+  expect(repeatingField.disabled).toBeTruthy();
+});
+
+test("repeatingField disabled when repeatingForm disabled", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({
+    foo: "FOO"
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === ""
+  });
+
+  const formAccessor = state.formAccessor;
+  const foo = state.field("foo");
+
+  expect(formAccessor.disabled).toBeTruthy();
+  expect(foo.disabled).toBeTruthy();
 });
