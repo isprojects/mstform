@@ -2933,7 +2933,7 @@ test("repeatingField disabled when repeatingForm in repeatingForm is disabled", 
   expect(repeatingField.disabled).toBeTruthy();
 });
 
-test("repeatingField disabled when repeatingForm disabled", async () => {
+test("field disabled when form disabled", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -2955,4 +2955,51 @@ test("repeatingField disabled when repeatingForm disabled", async () => {
 
   expect(formAccessor.disabled).toBeTruthy();
   expect(foo.disabled).toBeTruthy();
+});
+
+test("inputAllowed", async () => {
+  const N = types.model("N", {
+    hiddenRepeatingField: types.string
+  });
+
+  const M = types.model("M", {
+    disabledField: types.string,
+    readOnlyField: types.string,
+    repeatingForm: types.array(N)
+  });
+
+  const form = new Form(M, {
+    disabledField: new Field(converters.string),
+    readOnlyField: new Field(converters.string),
+    repeatingForm: new RepeatingForm({
+      hiddenRepeatingField: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({
+    disabledField: "DISABLED",
+    readOnlyField: "READ_ONLY",
+    repeatingForm: [{ hiddenRepeatingField: "HIDDEN_REPEATING_FIELD" }]
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/disabledField",
+    isHidden: accessor =>
+      accessor.path === "/repeatingForm/0/hiddenRepeatingField",
+    isReadOnly: accessor => accessor.path === "/readOnlyField"
+  });
+
+  const formAccessor = state.formAccessor;
+  const disabledField = state.field("disabledField");
+  const readOnlyField = state.field("readOnlyField");
+  const repeatingForm = state.repeatingForm("repeatingForm");
+  const repeatingIndex = repeatingForm.index(0);
+  const hiddenRepeatingField = repeatingIndex.field("hiddenRepeatingField");
+
+  expect(formAccessor.inputAllowed).toBeTruthy();
+  expect(disabledField.inputAllowed).toBeFalsy();
+  expect(readOnlyField.inputAllowed).toBeFalsy();
+  expect(repeatingForm.inputAllowed).toBeTruthy();
+  expect(repeatingIndex.inputAllowed).toBeTruthy();
+  expect(hiddenRepeatingField.inputAllowed).toBeFalsy();
 });
