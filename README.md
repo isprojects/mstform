@@ -991,7 +991,7 @@ required, no matter what `isRequired` says.
 `accessor.inputProps`; otherwise it's absent, but it's up to you to ensure your
 React input widgets support a `readOnly` prop (HTML input does). There is no
 such behavior for `hidden` or `required`; use `accessor.hidden` and
-`accessor.required`in your rendering code to determine whether a form or field
+`accessor.required` in your rendering code to determine whether a form or field
 wants to be hidden or required. There is also an `inputAllowed` flag on accessors,
 which checks if a form or field isn't disabled, hidden or read-only.
 
