@@ -71,3 +71,74 @@ test("sub form validation", async () => {
 
   expect(state.isValid).toBeTruthy();
 });
+
+test("SubField disabled when SubForm disabled", async () => {
+  const N = types.model("N", {
+    subField: types.string
+  });
+
+  const M = types.model("M", {
+    subForm: N
+  });
+
+  const form = new Form(M, {
+    subForm: new SubForm({
+      subField: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({
+    subForm: { subField: "SUB_FIELD" }
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/subForm"
+  });
+
+  const subForm = state.subForm("subForm");
+  const subField = state.subForm("subForm").field("subField");
+
+  expect(subForm.disabled).toBeTruthy();
+  expect(subField.disabled).toBeTruthy();
+});
+
+test("SubField disabled when SubForm in a SubForm is disabled", async () => {
+  const O = types.model("O", {
+    subField: types.string
+  });
+
+  const N = types.model("N", {
+    subForm2: O
+  });
+
+  const M = types.model("M", {
+    subForm: N
+  });
+
+  const form = new Form(M, {
+    subForm: new SubForm({
+      subForm2: new SubForm({
+        subField: new Field(converters.string)
+      })
+    })
+  });
+
+  const o = M.create({
+    subForm: { subForm2: { subField: "SUB_FIELD" } }
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/subForm"
+  });
+
+  const subForm = state.subForm("subForm");
+  const subForm2 = state.subForm("subForm").subForm("subForm2");
+  const subField = state
+    .subForm("subForm")
+    .subForm("subForm2")
+    .field("subField");
+
+  expect(subForm.disabled).toBeTruthy();
+  expect(subForm2.disabled).toBeTruthy();
+  expect(subField.disabled).toBeTruthy();
+});

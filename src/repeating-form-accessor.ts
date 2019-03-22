@@ -109,7 +109,22 @@ export class RepeatingFormAccessor<
 
   @computed
   get disabled(): boolean {
-    return this.state.isRepeatingFormDisabledFunc(this);
+    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
+  }
+
+  @computed
+  get hidden(): boolean {
+    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
+  }
+
+  @computed
+  get readOnly(): boolean {
+    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
   }
 
   @computed

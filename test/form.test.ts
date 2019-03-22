@@ -2043,12 +2043,12 @@ test("a form with a repeating disabled field", async () => {
   const o = M.create({ foo: [{ bar: "BAR" }] });
 
   const state = form.state(o, {
-    isRepeatingFormDisabled: accessor => accessor.path === "/foo"
+    isDisabled: accessor => accessor.path === "/foo"
   });
   const repeating = state.repeatingForm("foo");
 
   expect(repeating.disabled).toBeTruthy();
-  expect(repeating.index(0).field("bar").disabled).toBeFalsy();
+  expect(repeating.index(0).field("bar").disabled).toBeTruthy();
 });
 
 test("a form with a hidden field", async () => {
@@ -2857,4 +2857,149 @@ test("setValueAndUpdateRaw", async () => {
   await field.setValueAndUpdateRaw("6543.21");
   expect(field.raw).toEqual("6.543,21");
   expect(field.value).toEqual("6543.21");
+});
+
+test("repeatingField disabled when repeatingForm disabled", async () => {
+  const N = types.model("N", {
+    repeatingField: types.string
+  });
+
+  const M = types.model("M", {
+    repeating: types.array(N)
+  });
+
+  const form = new Form(M, {
+    repeating: new RepeatingForm({
+      repeatingField: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({
+    repeating: [{ repeatingField: "REPEATING_FIELD" }]
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/repeating"
+  });
+
+  const repeating = state.repeatingForm("repeating");
+  const repeatingIndex = repeating.index(0);
+  const repeatingField = repeatingIndex.field("repeatingField");
+
+  expect(repeating.disabled).toBeTruthy();
+  expect(repeatingIndex.disabled).toBeTruthy();
+  expect(repeatingField.disabled).toBeTruthy();
+});
+
+test("repeatingField disabled when repeatingForm in repeatingForm is disabled", async () => {
+  const O = types.model("O", {
+    repeatingField: types.string
+  });
+
+  const N = types.model("N", {
+    repeating2: types.array(O)
+  });
+
+  const M = types.model("M", {
+    repeating: types.array(N)
+  });
+
+  const form = new Form(M, {
+    repeating: new RepeatingForm({
+      repeating2: new RepeatingForm({
+        repeatingField: new Field(converters.string)
+      })
+    })
+  });
+
+  const o = M.create({
+    repeating: [{ repeating2: [{ repeatingField: "REPEATING_FIELD" }] }]
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/repeating"
+  });
+
+  const repeating = state.repeatingForm("repeating");
+  const repeatingIndex = repeating.index(0);
+  const repeating2 = repeatingIndex.repeatingForm("repeating2");
+  const repeating2Index = repeating2.index(0);
+  const repeatingField = repeating2Index.field("repeatingField");
+
+  expect(repeating.disabled).toBeTruthy();
+  expect(repeatingIndex.disabled).toBeTruthy();
+  expect(repeating2.disabled).toBeTruthy();
+  expect(repeating2Index.disabled).toBeTruthy();
+  expect(repeatingField.disabled).toBeTruthy();
+});
+
+test("field disabled when form disabled", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({
+    foo: "FOO"
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === ""
+  });
+
+  const formAccessor = state.formAccessor;
+  const foo = state.field("foo");
+
+  expect(formAccessor.disabled).toBeTruthy();
+  expect(foo.disabled).toBeTruthy();
+});
+
+test("inputAllowed", async () => {
+  const N = types.model("N", {
+    hiddenRepeatingField: types.string
+  });
+
+  const M = types.model("M", {
+    disabledField: types.string,
+    readOnlyField: types.string,
+    repeatingForm: types.array(N)
+  });
+
+  const form = new Form(M, {
+    disabledField: new Field(converters.string),
+    readOnlyField: new Field(converters.string),
+    repeatingForm: new RepeatingForm({
+      hiddenRepeatingField: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({
+    disabledField: "DISABLED",
+    readOnlyField: "READ_ONLY",
+    repeatingForm: [{ hiddenRepeatingField: "HIDDEN_REPEATING_FIELD" }]
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/disabledField",
+    isHidden: accessor =>
+      accessor.path === "/repeatingForm/0/hiddenRepeatingField",
+    isReadOnly: accessor => accessor.path === "/readOnlyField"
+  });
+
+  const formAccessor = state.formAccessor;
+  const disabledField = state.field("disabledField");
+  const readOnlyField = state.field("readOnlyField");
+  const repeatingForm = state.repeatingForm("repeatingForm");
+  const repeatingIndex = repeatingForm.index(0);
+  const hiddenRepeatingField = repeatingIndex.field("hiddenRepeatingField");
+
+  expect(formAccessor.inputAllowed).toBeTruthy();
+  expect(disabledField.inputAllowed).toBeFalsy();
+  expect(readOnlyField.inputAllowed).toBeFalsy();
+  expect(repeatingForm.inputAllowed).toBeTruthy();
+  expect(repeatingIndex.inputAllowed).toBeTruthy();
+  expect(hiddenRepeatingField.inputAllowed).toBeFalsy();
 });

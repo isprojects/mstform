@@ -240,17 +240,22 @@ export class FieldAccessor<R, V> {
 
   @computed
   get disabled(): boolean {
-    return this.state.isDisabledFunc(this);
+    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
   }
 
   @computed
   get hidden(): boolean {
-    return this.state.isHiddenFunc(this);
+    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
   }
 
   @computed
   get readOnly(): boolean {
-    return this.state.isReadOnlyFunc(this);
+    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
   }
 
   @computed

@@ -35,8 +35,8 @@ import {
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
 
-export interface FieldAccessorAllows {
-  (fieldAccessor: FieldAccessor<any, any>): boolean;
+export interface AccessorAllows {
+  (accessor: Accessor): boolean;
 }
 
 export interface ErrorOrWarning {
@@ -76,11 +76,10 @@ export interface FormStateOptions<M> {
     afterSave?: ValidationOption;
     pauseDuration?: number;
   };
-  isDisabled?: FieldAccessorAllows;
-  isHidden?: FieldAccessorAllows;
-  isReadOnly?: FieldAccessorAllows;
-  isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
-  isRequired?: FieldAccessorAllows;
+  isDisabled?: AccessorAllows;
+  isHidden?: AccessorAllows;
+  isReadOnly?: AccessorAllows;
+  isRequired?: AccessorAllows;
 
   getError?: ErrorOrWarning;
   getWarning?: ErrorOrWarning;
@@ -113,11 +112,10 @@ export class FormState<
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
-  isDisabledFunc: FieldAccessorAllows;
-  isHiddenFunc: FieldAccessorAllows;
-  isReadOnlyFunc: FieldAccessorAllows;
-  isRequiredFunc: FieldAccessorAllows;
-  isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
+  isDisabledFunc: AccessorAllows;
+  isHiddenFunc: AccessorAllows;
+  isReadOnlyFunc: AccessorAllows;
+  isRequiredFunc: AccessorAllows;
   getErrorFunc: ErrorOrWarning;
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
@@ -167,7 +165,6 @@ export class FormState<
       this.isHiddenFunc = () => false;
       this.isReadOnlyFunc = () => false;
       this.isRequiredFunc = () => false;
-      this.isRepeatingFormDisabledFunc = () => false;
       this.getErrorFunc = () => undefined;
       this.getWarningFunc = () => undefined;
       this.blurFunc = () => undefined;
@@ -192,9 +189,6 @@ export class FormState<
         : () => false;
       this.isRequiredFunc = options.isRequired
         ? options.isRequired
-        : () => false;
-      this.isRepeatingFormDisabledFunc = options.isRepeatingFormDisabled
-        ? options.isRepeatingFormDisabled
         : () => false;
       this.getErrorFunc = options.getError ? options.getError : () => undefined;
       this.getWarningFunc = options.getWarning
