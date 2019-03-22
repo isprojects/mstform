@@ -84,12 +84,21 @@ export class FormAccessor<
 
   @computed
   get hidden(): boolean {
-    return this.state.isHiddenFunc(this);
+    return this.parent != null && this.parent.hidden
+      ? true
+      : this.state.isHiddenFunc(this);
   }
 
   @computed
   get readOnly(): boolean {
-    return this.state.isReadOnlyFunc(this);
+    return this.parent != null && this.parent.readOnly
+      ? true
+      : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
   }
 
   @computed

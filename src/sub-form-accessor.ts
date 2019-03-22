@@ -55,12 +55,17 @@ export class SubFormAccessor<
 
   @computed
   get hidden(): boolean {
-    return this.state.isHiddenFunc(this);
+    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
   }
 
   @computed
   get readOnly(): boolean {
-    return this.state.isReadOnlyFunc(this);
+    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
   }
 
   @computed
