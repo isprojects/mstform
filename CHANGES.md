@@ -2,9 +2,11 @@
 
 -   BREAKING: Removed `isRepeatingFormDisabled`. Use the generic `isDisabled`
     version instead.
+-   BREAKING: `isDisabled` now takes any accessor, rather than just a field
+    accessor.
 -   Forms, repeatingForms and subForms can now all be disabled, read-only and
     hidden. They pass these properties to all their children.
--   Form and field accessors now have an inputAllowed property, which returns
+-   Form and field accessors now have an `inputAllowed` property, which returns
     true when an accessor is not disabled, hidden or read-only.
 
 # 1.8.0

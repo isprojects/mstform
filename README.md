@@ -981,8 +981,8 @@ To implement hidden behavior, pass in an `isHidden` function.
 To implement readOnly behavior, pass in an `isReadOnly` function.
 
 To implement required behavior, pass in an `isRequired` function. This does not
-only affect the `required` property on the accessor, but also makes the form or
-field require the form or field just as if you used the `required` flag in the
+only affect the `required` property on the accessor, but also makes the field
+require the form or field just as if you used the `required` flag in the field
 definition. The `required` flag in the definition always makes something
 required, no matter what `isRequired` says.
 
@@ -992,12 +992,13 @@ required, no matter what `isRequired` says.
 React input widgets support a `readOnly` prop (HTML input does). There is no
 such behavior for `hidden` or `required`; use `accessor.hidden` and
 `accessor.required` in your rendering code to determine whether a form or field
-wants to be hidden or required. There is also an `inputAllowed` flag on accessors,
-which checks if a form or field isn't disabled, hidden or read-only.
+wants to be hidden, or a field wants to be required. There is also an
+`inputAllowed` flag on accessors, which checks if a form or field isn't disabled,
+hidden or read-only.
 
 When these properties are set on forms, they will automatically be passed down
 to the children of said form. This works for regular forms, repeating forms and
-subforms.
+subforms, and every kind of property except required.
 
 ## Fieldref
 
