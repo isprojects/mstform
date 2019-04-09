@@ -24,27 +24,46 @@ export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
 }
 
-const string = new StringConverter<string>({
-  emptyRaw: "",
-  emptyValue: "",
-  convert(raw) {
-    return raw;
-  },
-  render(value) {
-    return value;
-  },
-  preprocessRaw(raw: string): string {
-    return raw.trim();
-  }
-});
+function stringWithOptions() {
+  return new StringConverter<string>({
+    emptyRaw: "",
+    emptyValue: "",
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    preprocessRaw(raw: string): string {
+      return raw.trim();
+    }
+  });
+}
 
-const number = new StringConverter<number>({
-  emptyRaw: "",
-  emptyImpossible: true,
-  convert(raw, converterOptions) {
-    checkConverterOptions(converterOptions);
-    try {
-      return +parseDecimal(raw, {
+const string = stringWithOptions();
+
+function numberWithOptions() {
+  return new StringConverter<number>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    convert(raw, converterOptions) {
+      checkConverterOptions(converterOptions);
+      try {
+        return +parseDecimal(raw, {
+          maxWholeDigits: 100,
+          decimalPlaces: 100,
+          allowNegative: true,
+          addZeroes: false,
+          decimalSeparator: converterOptions.decimalSeparator || ".",
+          thousandSeparator: converterOptions.thousandSeparator || ",",
+          renderThousands: converterOptions.renderThousands || false
+        });
+      } catch (e) {
+        throw new ConvertError();
+      }
+    },
+    render(value, converterOptions) {
+      return renderDecimal(value.toString(), {
         maxWholeDigits: 100,
         decimalPlaces: 100,
         allowNegative: true,
@@ -53,58 +72,55 @@ const number = new StringConverter<number>({
         thousandSeparator: converterOptions.thousandSeparator || ",",
         renderThousands: converterOptions.renderThousands || false
       });
-    } catch (e) {
-      throw new ConvertError();
+    },
+    preprocessRaw(
+      raw: string,
+      options: StateConverterOptionsWithContext
+    ): string {
+      return raw.trim();
     }
-  },
-  render(value, converterOptions) {
-    return renderDecimal(value.toString(), {
-      maxWholeDigits: 100,
-      decimalPlaces: 100,
-      allowNegative: true,
-      addZeroes: false,
-      decimalSeparator: converterOptions.decimalSeparator || ".",
-      thousandSeparator: converterOptions.thousandSeparator || ",",
-      renderThousands: converterOptions.renderThousands || false
-    });
-  },
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    return raw.trim();
-  }
-});
+  });
+}
 
-const integer = new StringConverter<number>({
-  emptyRaw: "",
-  emptyImpossible: true,
-  rawValidate(raw) {
-    return INTEGER_REGEX.test(raw);
-  },
-  convert(raw) {
-    return +raw;
-  },
-  render(value) {
-    return value.toString();
-  },
-  preprocessRaw(raw: string): string {
-    return raw.trim();
-  }
-});
+const number = numberWithOptions();
 
-const boolean = new Converter<boolean, boolean>({
-  emptyRaw: false,
-  emptyImpossible: true,
-  convert(raw) {
-    return raw;
-  },
-  render(value) {
-    return value;
-  },
-  defaultControlled: controlled.checked,
-  neverRequired: true
-});
+function integerWithOptions() {
+  return new StringConverter<number>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    rawValidate(raw) {
+      return INTEGER_REGEX.test(raw);
+    },
+    convert(raw) {
+      return +raw;
+    },
+    render(value) {
+      return value.toString();
+    },
+    preprocessRaw(raw: string): string {
+      return raw.trim();
+    }
+  });
+}
+
+const integer = integerWithOptions();
+
+function booleanWithOptions() {
+  return new Converter<boolean, boolean>({
+    emptyRaw: false,
+    emptyImpossible: true,
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    defaultControlled: controlled.checked,
+    neverRequired: true
+  });
+}
+
+const boolean = booleanWithOptions();
 
 function decimal(
   decimalOptions?:
@@ -147,32 +163,39 @@ function decimal(
 }
 
 // XXX create a way to create arrays with mobx state tree types
-const stringArray = new Converter<string[], IObservableArray<string>>({
-  emptyRaw: [],
-  emptyValue: observable.array([]),
-  convert(raw) {
-    return observable.array(raw);
-  },
-  render(value) {
-    return value.slice();
-  }
-});
-
-const textStringArray = new Converter<string, IObservableArray<string>>({
-  emptyRaw: "",
-  emptyValue: observable.array([]),
-  defaultControlled: controlled.value,
-  convert(raw) {
-    const rawSplit = raw.split("\n").map(r => r.trim());
-    if (rawSplit.length === 1 && rawSplit[0] === "") {
-      return observable.array([]);
+function stringArrayWithOptions() {
+  return new Converter<string[], IObservableArray<string>>({
+    emptyRaw: [],
+    emptyValue: observable.array([]),
+    convert(raw) {
+      return observable.array(raw);
+    },
+    render(value) {
+      return value.slice();
     }
-    return observable.array(rawSplit);
-  },
-  render(value) {
-    return value.join("\n");
-  }
-});
+  });
+}
+const stringArray = stringArrayWithOptions();
+
+function textStringArrayWithOptions() {
+  return new Converter<string, IObservableArray<string>>({
+    emptyRaw: "",
+    emptyValue: observable.array([]),
+    defaultControlled: controlled.value,
+    convert(raw) {
+      const rawSplit = raw.split("\n").map(r => r.trim());
+      if (rawSplit.length === 1 && rawSplit[0] === "") {
+        return observable.array([]);
+      }
+      return observable.array(rawSplit);
+    },
+    render(value) {
+      return value.join("\n");
+    }
+  });
+}
+
+const textStringArray = textStringArrayWithOptions();
 
 function maybe<R, V>(
   converter: StringConverter<V>
