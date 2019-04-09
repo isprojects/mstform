@@ -186,7 +186,8 @@ function maybe<R, V>(
   if (converter instanceof StringConverter) {
     return new StringMaybe(converter, undefined);
   }
-  return maybeModel(converter, null, undefined) as IConverter<
+  // XXX add an 'as any' as we get a typeerror for some reason now
+  return maybeModel(converter as any, null, undefined) as IConverter<
     R | null,
     V | undefined
   >;
@@ -204,7 +205,11 @@ function maybeNull<R, V>(
   if (converter instanceof StringConverter) {
     return new StringMaybe(converter, null);
   }
-  return maybeModel(converter, null, null) as IConverter<R | null, V | null>;
+  // XXX add an 'as any' as we get a typeerror for some reason now
+  return maybeModel(converter as any, null, null) as IConverter<
+    R | null,
+    V | null
+  >;
 }
 
 // XXX it would be nice if this could be a simple converter instead
