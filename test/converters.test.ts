@@ -377,16 +377,14 @@ test("object converter", async () => {
 test("dynamic decimal converter", async () => {
   const context = { options: { decimalPlaces: 0 } };
 
-  function currency() {
-    return converters.decimal(context => context.options);
-  }
-
   const M = types.model("M", {
     foo: types.string
   });
 
   const form = new Form(M, {
-    foo: new Field(currency())
+    foo: new Field(
+      converters.dynamic(converters.decimal, context => context.options)
+    )
   });
 
   const o = M.create({ foo: "4" });
@@ -462,7 +460,12 @@ test("render decimal number without decimals with decimal separator", async () =
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal(getDecimalOptions))
+    foo: new Field(
+      converters.dynamic(converters.decimal, context => ({
+        allowNegative: false,
+        decimalPlaces: getCurrencyDecimals(context.getCurrency())
+      }))
+    )
   });
 
   function getCurrencyDecimals(currency: string) {
@@ -470,13 +473,6 @@ test("render decimal number without decimals with decimal separator", async () =
       return 2;
     }
     return 4;
-  }
-
-  function getDecimalOptions(context: any) {
-    return {
-      allowNegative: false,
-      decimalPlaces: getCurrencyDecimals(context.getCurrency())
-    };
   }
 
   const currency = "EUR";

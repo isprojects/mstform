@@ -127,3 +127,18 @@ export class Converter<R, V> implements IConverter<R, V> {
     return this.definition.render(value, options);
   }
 }
+
+export interface PartialConverterFactory<O, R, V> {
+  (options?: Partial<O>): IConverter<R, V>;
+}
+
+// turn a converter which accepts options into a converter that
+// accepts partial options and fill in the rest with defaults
+export function withDefaults<O, R, V>(
+  converterFactory: (options: O) => IConverter<R, V>,
+  defaults: O
+): PartialConverterFactory<O, R, V> {
+  return (partialOptions?: Partial<O>) => {
+    return converterFactory({ ...defaults, ...partialOptions });
+  };
+}

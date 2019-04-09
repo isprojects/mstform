@@ -6,16 +6,18 @@ import {
   Converter,
   IConverter,
   StateConverterOptionsWithContext,
-  ConvertError
+  ConvertError,
+  withDefaults
 } from "./converter";
 import { controlled } from "./controlled";
+import { dynamic } from "./dynamic-converter";
+
 import { identity } from "./utils";
 import {
   parseDecimal,
   renderDecimal,
   DecimalOptions,
-  checkConverterOptions,
-  getOptions
+  checkConverterOptions
 } from "./decimalParser";
 
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
@@ -130,11 +132,7 @@ function booleanWithOptions(options?: BooleanOptions) {
 
 const boolean = booleanWithOptions();
 
-function decimal(
-  decimalOptions?:
-    | Partial<DecimalOptions>
-    | ((context: any) => Partial<DecimalOptions>)
-) {
+function decimal(options: DecimalOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -145,7 +143,6 @@ function decimal(
     },
     convert(raw, converterOptions) {
       checkConverterOptions(converterOptions);
-      const options = getOptions(converterOptions.context, decimalOptions);
       try {
         return parseDecimal(raw, {
           ...options,
@@ -158,8 +155,6 @@ function decimal(
       }
     },
     render(value, converterOptions) {
-      const options = getOptions(converterOptions.context, decimalOptions);
-
       return renderDecimal(value, {
         ...options,
         decimalSeparator: converterOptions.decimalSeparator || ".",
@@ -332,12 +327,18 @@ export const converters = {
   string,
   number,
   integer,
-  decimal,
+  decimal: withDefaults(decimal, {
+    maxWholeDigits: 10,
+    decimalPlaces: 2,
+    allowNegative: true,
+    addZeroes: true
+  }),
   boolean,
   textStringArray,
   stringArray,
   maybe,
   maybeNull,
   model,
-  object
+  object,
+  dynamic
 };

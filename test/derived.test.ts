@@ -213,11 +213,14 @@ test("calculated with context", async () => {
   }
 
   const form = new Form(M, {
-    calculated: new Field(converters.decimal(getDecimalPlaces), {
-      derived: (node: Instance<typeof M>) => node.sum()
-    }),
-    a: new Field(converters.decimal(getDecimalPlaces)),
-    b: new Field(converters.decimal(getDecimalPlaces))
+    calculated: new Field(
+      converters.dynamic(converters.decimal, getDecimalPlaces),
+      {
+        derived: (node: Instance<typeof M>) => node.sum()
+      }
+    ),
+    a: new Field(converters.dynamic(converters.decimal, getDecimalPlaces)),
+    b: new Field(converters.dynamic(converters.decimal, getDecimalPlaces))
   });
 
   const o = M.create({ calculated: "0.0000", a: "1.0000", b: "2.3456" });
