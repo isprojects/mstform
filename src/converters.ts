@@ -24,7 +24,9 @@ export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
 }
 
-function stringWithOptions() {
+type StringOptions = {};
+
+function stringWithOptions(options?: StringOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyValue: "",
@@ -42,7 +44,9 @@ function stringWithOptions() {
 
 const string = stringWithOptions();
 
-function numberWithOptions() {
+type NumberOptions = {};
+
+function numberWithOptions(options?: NumberOptions) {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -84,7 +88,9 @@ function numberWithOptions() {
 
 const number = numberWithOptions();
 
-function integerWithOptions() {
+type IntegerOptions = {};
+
+function integerWithOptions(options?: IntegerOptions) {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -105,7 +111,9 @@ function integerWithOptions() {
 
 const integer = integerWithOptions();
 
-function booleanWithOptions() {
+type BooleanOptions = {};
+
+function booleanWithOptions(options?: BooleanOptions) {
   return new Converter<boolean, boolean>({
     emptyRaw: false,
     emptyImpossible: true,
@@ -162,8 +170,10 @@ function decimal(
   });
 }
 
+type StringArrayOptions = {};
+
 // XXX create a way to create arrays with mobx state tree types
-function stringArrayWithOptions() {
+function stringArrayWithOptions(options?: StringArrayOptions) {
   return new Converter<string[], IObservableArray<string>>({
     emptyRaw: [],
     emptyValue: observable.array([]),
@@ -175,9 +185,12 @@ function stringArrayWithOptions() {
     }
   });
 }
+
 const stringArray = stringArrayWithOptions();
 
-function textStringArrayWithOptions() {
+type TextStringArrayOptions = {};
+
+function textStringArrayWithOptions(options?: TextStringArrayOptions) {
   return new Converter<string, IObservableArray<string>>({
     emptyRaw: "",
     emptyValue: observable.array([]),
