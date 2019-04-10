@@ -9,7 +9,7 @@ export interface DynamicOptions<O> {
 }
 
 export interface GetContextConverter<R, V> {
-  (context: any): IConverter<R, V>;
+  (context: any, accessor: any): IConverter<R, V>;
 }
 
 function delegatingConverter<R, V>(
@@ -23,13 +23,22 @@ function delegatingConverter<R, V>(
     defaultControlled: defaultConverter.defaultControlled,
     neverRequired: defaultConverter.neverRequired,
     convert(raw: R, options: StateConverterOptionsWithContext) {
-      return getContextConverter(options.context).convert(raw, options);
+      return getContextConverter(options.context, options.accessor).convert(
+        raw,
+        options
+      );
     },
     render(value: V, options: StateConverterOptionsWithContext) {
-      return getContextConverter(options.context).render(value, options);
+      return getContextConverter(options.context, options.accessor).render(
+        value,
+        options
+      );
     },
     preprocessRaw(raw: R, options: StateConverterOptionsWithContext) {
-      return getContextConverter(options.context).preprocessRaw(raw, options);
+      return getContextConverter(
+        options.context,
+        options.accessor
+      ).preprocessRaw(raw, options);
     }
   };
 }
@@ -41,7 +50,7 @@ export function dynamic<O, R, V>(
   // the default converter is good enough for anything that
   // isn't influenced by parameters anyway
   const defaultConverter = converterFactory();
-  return delegatingConverter(defaultConverter, (context: any) =>
-    converterFactory(getOptions(context, null))
+  return delegatingConverter(defaultConverter, (context: any, accessor: any) =>
+    converterFactory(getOptions(context, accessor))
   );
 }

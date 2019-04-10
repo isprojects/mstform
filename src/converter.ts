@@ -9,6 +9,7 @@ export interface StateConverterOptions {
 export interface StateConverterOptionsWithContext
   extends StateConverterOptions {
   context?: any;
+  accessor?: any;
 }
 
 export interface ConverterOptions<R, V> {

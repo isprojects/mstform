@@ -240,8 +240,14 @@ export class FormState<
     return this.node;
   }
 
-  get stateConverterOptionsWithContext(): StateConverterOptionsWithContext {
-    return { context: this.context, ...this._converterOptions };
+  stateConverterOptionsWithContext(
+    accessor: any
+  ): StateConverterOptionsWithContext {
+    return {
+      context: this.context,
+      accessor: accessor,
+      ...this._converterOptions
+    };
   }
 
   @action
