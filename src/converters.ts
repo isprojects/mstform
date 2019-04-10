@@ -7,7 +7,8 @@ import {
   IConverter,
   StateConverterOptionsWithContext,
   ConvertError,
-  withDefaults
+  withDefaults,
+  instanceWithDefaults
 } from "./converter";
 import { controlled } from "./controlled";
 import { dynamic } from "./dynamic-converter";
@@ -28,7 +29,7 @@ export class StringConverter<V> extends Converter<string, V> {
 
 type StringOptions = {};
 
-function stringWithOptions(options?: StringOptions) {
+function string(options: StringOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyValue: "",
@@ -44,11 +45,9 @@ function stringWithOptions(options?: StringOptions) {
   });
 }
 
-const string = stringWithOptions();
-
 type NumberOptions = {};
 
-function numberWithOptions(options?: NumberOptions) {
+function number(options: NumberOptions) {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -88,11 +87,9 @@ function numberWithOptions(options?: NumberOptions) {
   });
 }
 
-const number = numberWithOptions();
-
 type IntegerOptions = {};
 
-function integerWithOptions(options?: IntegerOptions) {
+function integer(options: IntegerOptions) {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -111,11 +108,9 @@ function integerWithOptions(options?: IntegerOptions) {
   });
 }
 
-const integer = integerWithOptions();
-
 type BooleanOptions = {};
 
-function booleanWithOptions(options?: BooleanOptions) {
+function boolean(options: BooleanOptions) {
   return new Converter<boolean, boolean>({
     emptyRaw: false,
     emptyImpossible: true,
@@ -129,8 +124,6 @@ function booleanWithOptions(options?: BooleanOptions) {
     neverRequired: true
   });
 }
-
-const boolean = booleanWithOptions();
 
 function decimal(options: DecimalOptions) {
   return new StringConverter<string>({
@@ -168,7 +161,7 @@ function decimal(options: DecimalOptions) {
 type StringArrayOptions = {};
 
 // XXX create a way to create arrays with mobx state tree types
-function stringArrayWithOptions(options?: StringArrayOptions) {
+function stringArray(options: StringArrayOptions) {
   return new Converter<string[], IObservableArray<string>>({
     emptyRaw: [],
     emptyValue: observable.array([]),
@@ -181,11 +174,9 @@ function stringArrayWithOptions(options?: StringArrayOptions) {
   });
 }
 
-const stringArray = stringArrayWithOptions();
-
 type TextStringArrayOptions = {};
 
-function textStringArrayWithOptions(options?: TextStringArrayOptions) {
+function textStringArray(options: TextStringArrayOptions) {
   return new Converter<string, IObservableArray<string>>({
     emptyRaw: "",
     emptyValue: observable.array([]),
@@ -202,8 +193,6 @@ function textStringArrayWithOptions(options?: TextStringArrayOptions) {
     }
   });
 }
-
-const textStringArray = textStringArrayWithOptions();
 
 function maybe<R, V>(
   converter: StringConverter<V>
@@ -324,18 +313,18 @@ const object = new Converter<any, any>({
 });
 
 export const converters = {
-  string,
-  number,
-  integer,
+  string: instanceWithDefaults(string, {}),
+  number: instanceWithDefaults(number, {}),
+  integer: instanceWithDefaults(integer, {}),
   decimal: withDefaults(decimal, {
     maxWholeDigits: 10,
     decimalPlaces: 2,
     allowNegative: true,
     addZeroes: true
   }),
-  boolean,
-  textStringArray,
-  stringArray,
+  boolean: instanceWithDefaults(boolean, {}),
+  textStringArray: instanceWithDefaults(textStringArray, {}),
+  stringArray: instanceWithDefaults(stringArray, {}),
   maybe,
   maybeNull,
   model,
