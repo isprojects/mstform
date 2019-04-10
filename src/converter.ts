@@ -146,10 +146,3 @@ export function withDefaults<O, R, V>(
     return converterFactory({ ...defaults, ...partialOptions });
   };
 }
-
-export function instanceWithDefaults<O, R, V>(
-  converterFactory: ConverterFactory<O, R, V>,
-  defaults: O
-): IConverter<R, V> {
-  return converterFactory({ ...defaults });
-}
