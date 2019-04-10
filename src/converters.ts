@@ -292,7 +292,7 @@ function model<M extends IAnyModelType>(model: M) {
 }
 
 function maybeModel<M, RE, VE>(
-  converter: IConverter<M | RE, M | VE>,
+  converter: IConverter<M, M>,
   emptyRaw: RE,
   emptyValue: VE
 ): IConverter<M | RE, M | VE> {
