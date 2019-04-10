@@ -1,4 +1,5 @@
 import { Controlled, controlled } from "./controlled";
+import { FieldAccessor } from "./field-accessor";
 
 export interface StateConverterOptions {
   decimalSeparator?: string;
@@ -9,7 +10,7 @@ export interface StateConverterOptions {
 export interface StateConverterOptionsWithContext
   extends StateConverterOptions {
   context?: any;
-  accessor?: any;
+  accessor: FieldAccessor<any, any>;
 }
 
 export interface ConverterOptions<R, V> {

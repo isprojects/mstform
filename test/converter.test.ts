@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, converters } from "../src";
+import { Field, Form, converters, FieldAccessor } from "../src";
 import {
   CONVERSION_ERROR,
   ConversionValue,
@@ -10,6 +10,13 @@ import {
 
 configure({ enforceActions: "observed" });
 
+const options = {
+  // a BIG lie. but we don't really have an accessor in these
+  // tests and it's safe to leave it null, even though in
+  // the integrated code accessor always *does* exist
+  accessor: (null as unknown) as FieldAccessor<any, any>
+};
+
 test("simple converter", async () => {
   const converter = new Converter<string, string>({
     emptyRaw: "",
@@ -18,12 +25,12 @@ test("simple converter", async () => {
     render: value => value
   });
 
-  const result = await converter.convert("foo", {});
+  const result = await converter.convert("foo", options);
   expect(result).toBeInstanceOf(ConversionValue);
   expect((result as ConversionValue<string>).value).toEqual("foo");
 
   // the string "ConversionError" is a valid text to convert
-  const result2 = await converter.convert("ConversionError", {});
+  const result2 = await converter.convert("ConversionError", options);
   expect(result2).toBeInstanceOf(ConversionValue);
   expect((result2 as ConversionValue<string>).value).toEqual("ConversionError");
 });
@@ -50,11 +57,11 @@ test("converter to integer", async () => {
     render: value => value.toString()
   });
 
-  const result = await converter.convert("3", {});
+  const result = await converter.convert("3", options);
   expect(result).toBeInstanceOf(ConversionValue);
   expect((result as ConversionValue<number>).value).toEqual(3);
 
-  const result2 = await converter.convert("not a number", {});
+  const result2 = await converter.convert("not a number", options);
   expect(result2).toEqual(CONVERSION_ERROR);
 });
 
@@ -67,11 +74,11 @@ test("converter with validate", async () => {
     validate: value => value <= 10
   });
 
-  const result = await converter.convert("3", {});
+  const result = await converter.convert("3", options);
   expect(result).toBeInstanceOf(ConversionValue);
   expect((result as ConversionValue<number>).value).toEqual(3);
 
-  const result2 = await converter.convert("100", {});
+  const result2 = await converter.convert("100", options);
   expect(result2).toEqual(CONVERSION_ERROR);
 });
 
@@ -91,7 +98,7 @@ test("converter with async validate", async () => {
     render: value => value
   });
 
-  const result = converter.convert("foo", {});
+  const result = converter.convert("foo", options);
   done[0]();
   const v = await result;
   expect((v as ConversionValue<string>).value).toEqual("foo");
@@ -132,7 +139,7 @@ test("convert can throw ConvertError", async () => {
     render: value => value
   });
 
-  const result = await converter.convert("foo", {});
+  const result = await converter.convert("foo", options);
   expect(result).toEqual(CONVERSION_ERROR);
 });
 
@@ -150,7 +157,7 @@ test("non-ConvertError bubbles up", async () => {
   // but toThrow doesn't work possibly due to the async
   // nature of convert. This is another way
   try {
-    await converter.convert("foo", {});
+    await converter.convert("foo", options);
   } catch (e) {
     expect(true).toBeTruthy();
     return;

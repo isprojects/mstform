@@ -1,5 +1,5 @@
 import { types } from "mobx-state-tree";
-import { converters, Field, Form } from "../src";
+import { converters, Field, Form, FieldAccessor } from "../src";
 
 test("dynamic based on accessor", async () => {
   const M = types.model("M", {
@@ -7,7 +7,7 @@ test("dynamic based on accessor", async () => {
     bar: types.string
   });
 
-  const getOptions = (context: any, accessor: any) => {
+  const getOptions = (context: any, accessor: FieldAccessor<any, any>) => {
     if (accessor.fieldref === "foo") {
       return { allowNegative: false };
     } else {

@@ -3,13 +3,14 @@ import {
   StateConverterOptionsWithContext,
   PartialConverterFactory
 } from "./converter";
+import { FieldAccessor } from "./field-accessor";
 
 export interface DynamicOptions<O> {
-  (context: any, accessor: any): Partial<O>;
+  (context: any, accessor: FieldAccessor<any, any>): Partial<O>;
 }
 
 export interface GetContextConverter<R, V> {
-  (context: any, accessor: any): IConverter<R, V>;
+  (context: any, accessor: FieldAccessor<any, any>): IConverter<R, V>;
 }
 
 function delegatingConverter<R, V>(
@@ -50,7 +51,9 @@ export function dynamic<O, R, V>(
   // the default converter is good enough for anything that
   // isn't influenced by parameters anyway
   const defaultConverter = converterFactory();
-  return delegatingConverter(defaultConverter, (context: any, accessor: any) =>
-    converterFactory(getOptions(context, accessor))
+  return delegatingConverter(
+    defaultConverter,
+    (context: any, accessor: FieldAccessor<any, any>) =>
+      converterFactory(getOptions(context, accessor))
   );
 }
