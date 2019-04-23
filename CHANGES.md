@@ -1,3 +1,10 @@
+# 1.10.0
+
+-   Added `isEmpty` and `isEmptyAndRequired` to fieldref. This checks whether
+    the `raw` value equals the `emptyRaw` value on the converter, if so it is
+    considered empty. `isEmptyAndRequired` makes use of `isEmpty` and in addition
+    checks whether the field is marked `required`.
+
 # 1.9.0
 
 -   BREAKING: Removed `isRepeatingFormDisabled`. Use the generic `isDisabled`
