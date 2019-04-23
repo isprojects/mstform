@@ -318,6 +318,8 @@ have some properties in common:
 
 -   `path`: The JSON path to the underlying MST value (see mobx-state-tree).
 
+-   `fieldref`: a generalization of the path to a pattern. `foo/3/bar' becomes`foo[].bar`.
+
 -   `context`: The context object such as passed into `form.state()`.
 
 -   `isValid`: Is true if the accessor (and all its sub-accessors) is valid.
@@ -355,9 +357,7 @@ other object:
     `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
     the number of decimals that is initially rendered when opening the form.
     With `allowNegative` (boolean, default true) you can specify if negatives
-    are allowed. These options can be set directly, or through the use of a
-    function that returns these options based on `context`. Using a function
-    allows these options to be dynamic.
+    are allowed.
 
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to
@@ -382,8 +382,8 @@ instead.
 ### Text Arrays
 
 `converters.textStringArray`: raw value is a string with newlines. Value is an
-array of strings split by newline. You can use this with a textarea to edit an array
-of strings by newline.
+array of strings split by newline. You can use this with a textarea to edit an
+array of strings by newline.
 
 ### Models
 
@@ -407,6 +407,33 @@ empty. This is handy when you have a `types.maybe(types.reference())` in MST.
 
 `converters.maybeNull(converter)` is like `converters.maybe` but is designed to
 work with `types.maybeNull`, so the empty value is `null`.
+
+### Dynamic
+
+`converters.dynamic(converter, getOptions)`. This works on any converter that
+expects a parameter object for its configuration. Currently this is only
+`converters.decimal`.
+
+This is a way to make the parameters for a converter dynamic and get
+decided at run-time, based on the `context` you pass into `state()`
+as well as the field accessor -- these get passed into the `getOptions`
+function as arguments. So:
+
+```js
+const form = new Form(Foo, {
+    value: new Field(
+        converters.dynamic(converters.decimal, (context, accessor) => {
+            return { allowNegative: context.weWantNegatives };
+        })
+    )
+});
+```
+
+allows negative values for this decimal dynamically if
+`context.weWantNegatives` is set to `true`.
+
+`converters.maybe` and `converters.maybeNull` wrap around `converters.dynamic`,
+so it's `converters.maybe(converters.dynamic(converters.decimal, getOptions))`.
 
 ### Object
 

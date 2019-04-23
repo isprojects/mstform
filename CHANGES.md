@@ -1,3 +1,35 @@
+# 1.10.0
+
+-   BREAKING CHANGE: the decimal converter accepts options, like this:
+
+    `converters.decimal({allowNegative: false})`
+
+    Previously it was also possible to pass a function into the `decimal`
+    converter which would return options, like this:
+
+    `converters.decimal(getOptions)`.
+
+    This was a way to make options dynamic and depend on context. You can't do
+    this anymore, but instead this system has been generalized with
+    `converters.dynamic`.
+
+    `converters.decimal(getOptions)` becomes
+    `converters.dynamic(converters.decimal, getOptions)`
+
+    A `converters.maybe(converters.decimal(getOptions))` becomes
+    `converters.maybe(converters.dynamic(converters.decimal, getOptions))`, and
+    the same for `maybeNull`.
+
+    `getOptions` gets two parameters: `context` (as passed to `state()`) and a
+    new second parameter, `accessor`, the field accessor for which this
+    converter is working.
+
+    While `converters.dynamic` currently only works for decimal, it will work
+    for new converters to be introduced as well that take parameters.
+
+-   Some internal reworking to prepare for versions of the existing converters
+    that take parameters.
+
 # 1.9.0
 
 -   BREAKING: Removed `isRepeatingFormDisabled`. Use the generic `isDisabled`

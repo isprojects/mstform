@@ -214,8 +214,12 @@ function maybe<M>(
 function maybe<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
-  if (converter instanceof StringConverter) {
-    return new StringMaybe(converter, undefined);
+  // we detect that we're converting a string, which needs a special maybe
+  if (typeof converter.emptyRaw === "string") {
+    return new StringMaybe(
+      (converter as unknown) as IConverter<string, V>,
+      undefined
+    );
   }
   // XXX add an 'as any' as we get a typeerror for some reason now
   return maybeModel(converter as any, null, undefined) as IConverter<
@@ -233,8 +237,12 @@ function maybeNull<M>(
 function maybeNull<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | null> | IConverter<R | null, V | null> {
-  if (converter instanceof StringConverter) {
-    return new StringMaybe(converter, null);
+  // we detect that we're converting a string, which needs a special maybe
+  if (typeof converter.emptyRaw === "string") {
+    return new StringMaybe(
+      (converter as unknown) as IConverter<string, V>,
+      null
+    );
   }
   // XXX add an 'as any' as we get a typeerror for some reason now
   return maybeModel(converter as any, null, null) as IConverter<
