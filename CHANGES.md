@@ -30,14 +30,22 @@
 -   Some internal reworking to prepare for versions of the existing converters
     that take parameters.
 
+-   Added `isEmpty` and `isEmptyAndRequired` to field accessor. This checks
+    whether the `raw` value equals the `emptyRaw` value on the converter, if so
+    it is considered empty. `isEmptyAndRequired` makes use of `isEmpty` and in
+    addition checks whether the field is marked `required`.
+
 # 1.9.0
 
 -   BREAKING: Removed `isRepeatingFormDisabled`. Use the generic `isDisabled`
     version instead.
+
 -   BREAKING: `isDisabled`, `isHidden` and `isReadOnly` now take any accessor,
     rather than just a field accessor.
+
 -   Forms, repeatingForms and subForms can now all be disabled, read-only and
     hidden. They pass these properties to all their children.
+
 -   Form and field accessors now have an `inputAllowed` property, which returns
     true when an accessor is not disabled, hidden or read-only.
 

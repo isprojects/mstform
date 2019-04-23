@@ -79,6 +79,19 @@ export class FieldAccessor<R, V> {
     return this.state.context;
   }
 
+  @computed
+  get isEmpty(): boolean {
+    if (this.field.converter.emptyImpossible) {
+      return false;
+    }
+    return this.raw === this.field.converter.emptyRaw;
+  }
+
+  @computed
+  get isEmptyAndRequired(): boolean {
+    return this.isEmpty && this.required;
+  }
+
   createDerivedReaction() {
     const derivedFunc = this.field.derivedFunc;
     if (derivedFunc == null) {

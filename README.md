@@ -988,6 +988,16 @@ this.formState = form.state(o, {
 });
 ```
 
+## Empty and required fields
+
+All fields have the `isEmpty` and `isEmptyAndRequired` properties.
+`isEmpty` checks whether the `raw` value of the field equals the `emptyRaw`
+value of the converter and if so it is considered empty. If the converter option
+`emptyImpossible` is true `isEmpty` will always return `false`.
+
+`isEmptyAndRequired` additionally checks whether the `required` property is true
+for this field.
+
 ## Dynamic disabled, hidden, required and readOnly fields
 
 mstform has hooks that let you calculate `hidden`, `disabled`, `required` and
