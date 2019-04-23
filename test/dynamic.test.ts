@@ -32,14 +32,3 @@ test("dynamic based on accessor", async () => {
   await bar.setRaw("-3.4");
   expect(bar.error).toBeUndefined();
 });
-
-// test("map conversion error types", () => {
-//   const form = new Form(M, {
-//     foo: new Field(converters.decimal(), {
-//       conversionError: (context, errorType) => { return "Foo"}
-//     })
-//   }, {}, {conversionErrors: { converters.decimal: (context, errorType) => ({})});
-// });
-
-// is there a way to create decimal options that are global for the whole form?
-// for instance whether to use a . or , for the decimal separator.
