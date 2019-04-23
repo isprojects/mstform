@@ -3003,3 +3003,229 @@ test("inputAllowed", async () => {
   expect(repeatingIndex.inputAllowed).toBeTruthy();
   expect(hiddenRepeatingField.inputAllowed).toBeFalsy();
 });
+
+test("isEmpty on fields", async () => {
+  const M = types.model("M", {
+    string: types.string,
+    maybeNullString: types.maybeNull(types.string),
+    boolean: types.boolean,
+    textStringArray: types.array(types.string),
+    decimal: types.string
+  });
+
+  const form = new Form(M, {
+    string: new Field(converters.string),
+    maybeNullString: new Field(converters.maybeNull(converters.string)),
+    boolean: new Field(converters.boolean),
+    textStringArray: new Field(converters.textStringArray),
+    decimal: new Field(converters.decimal({ decimalPlaces: 2 }))
+  });
+
+  const o = M.create({
+    string: "",
+    maybeNullString: null,
+    boolean: false,
+    textStringArray: ["Q"],
+    decimal: "0.00"
+  });
+
+  const state = form.state(o, { save: () => null });
+
+  const stringField = state.field("string");
+  const maybeNullStringField = state.field("maybeNullString");
+  const booleanField = state.field("boolean");
+  const textStringArrayField = state.field("textStringArray");
+  const decimalField = state.field("decimal");
+
+  // String
+  expect(stringField.isEmpty).toBe(true);
+
+  await stringField.setRaw("TEST");
+  expect(stringField.isEmpty).toBe(false);
+
+  await stringField.setRaw("");
+  expect(stringField.isEmpty).toBe(true);
+
+  // Maybe null string
+  expect(maybeNullStringField.isEmpty).toBe(true);
+
+  await maybeNullStringField.setRaw("TEST");
+  expect(maybeNullStringField.isEmpty).toBe(false);
+
+  await maybeNullStringField.setRaw("");
+  expect(maybeNullStringField.isEmpty).toBe(true);
+
+  // Boolean
+  expect(booleanField.isEmpty).toBe(false);
+  await booleanField.setRaw(true);
+  expect(booleanField.isEmpty).toBe(false);
+
+  // textStringArray
+  expect(textStringArrayField.isEmpty).toBe(false);
+
+  await textStringArrayField.setRaw("");
+  expect(textStringArrayField.isEmpty).toBe(true);
+
+  await textStringArrayField.setRaw("A\nB\nC");
+  expect(textStringArrayField.isEmpty).toBe(false);
+
+  // decimal
+  expect(decimalField.isEmpty).toBe(false);
+
+  await decimalField.setRaw("");
+  expect(decimalField.isEmpty).toBe(false);
+
+  await decimalField.setRaw("123.0");
+  expect(decimalField.isEmpty).toBe(false);
+});
+
+test("isEmptyAndRequired on fields", async () => {
+  const M = types.model("M", {
+    string: types.string,
+    maybeNullString: types.maybeNull(types.string),
+    boolean: types.boolean,
+    textStringArray: types.array(types.string),
+    decimal: types.string,
+    requiredString: types.string,
+    requiredMaybeNullString: types.maybeNull(types.string),
+    requiredBoolean: types.boolean,
+    requiredTextStringArray: types.array(types.string),
+    requiredDecimal: types.string
+  });
+
+  const form = new Form(M, {
+    string: new Field(converters.string),
+    maybeNullString: new Field(converters.maybeNull(converters.string)),
+    boolean: new Field(converters.boolean),
+    textStringArray: new Field(converters.textStringArray),
+    decimal: new Field(converters.decimal({ decimalPlaces: 2 })),
+    requiredString: new Field(converters.string, {
+      required: true
+    }),
+    requiredMaybeNullString: new Field(
+      converters.maybeNull(converters.string),
+      {
+        required: true
+      }
+    ),
+    requiredBoolean: new Field(converters.boolean, {
+      required: true
+    }),
+    requiredTextStringArray: new Field(converters.textStringArray, {
+      required: true
+    }),
+    requiredDecimal: new Field(converters.decimal({ decimalPlaces: 2 }), {
+      required: true
+    })
+  });
+
+  const o = M.create({
+    string: "",
+    maybeNullString: null,
+    boolean: false,
+    textStringArray: ["Q"],
+    decimal: "0.00",
+    requiredString: "",
+    requiredMaybeNullString: null,
+    requiredBoolean: false,
+    requiredTextStringArray: ["Q"],
+    requiredDecimal: "0.00"
+  });
+
+  const state = form.state(o, { save: () => null });
+
+  const stringField = state.field("string");
+  const maybeNullStringField = state.field("maybeNullString");
+  const booleanField = state.field("boolean");
+  const textStringArrayField = state.field("textStringArray");
+  const decimalField = state.field("decimal");
+
+  const requiredStringField = state.field("requiredString");
+  const requiredMaybeNullStringField = state.field("requiredMaybeNullString");
+  const requiredBooleanField = state.field("requiredBoolean");
+  const requiredTextStringArrayField = state.field("requiredTextStringArray");
+  const requiredDecimalField = state.field("requiredDecimal");
+
+  // String
+  expect(stringField.isEmptyAndRequired).toBe(false);
+
+  await stringField.setRaw("TEST");
+  expect(stringField.isEmptyAndRequired).toBe(false);
+
+  await stringField.setRaw("");
+  expect(stringField.isEmptyAndRequired).toBe(false);
+
+  // Maybe null string
+  expect(maybeNullStringField.isEmptyAndRequired).toBe(false);
+
+  await maybeNullStringField.setRaw("TEST");
+  expect(maybeNullStringField.isEmptyAndRequired).toBe(false);
+
+  await maybeNullStringField.setRaw("");
+  expect(maybeNullStringField.isEmptyAndRequired).toBe(false);
+
+  // Boolean
+  expect(booleanField.isEmptyAndRequired).toBe(false);
+  await booleanField.setRaw(true);
+  expect(booleanField.isEmptyAndRequired).toBe(false);
+
+  // textStringArray
+  expect(textStringArrayField.isEmptyAndRequired).toBe(false);
+
+  await textStringArrayField.setRaw("");
+  expect(textStringArrayField.isEmptyAndRequired).toBe(false);
+
+  await textStringArrayField.setRaw("A\nB\nC");
+  expect(textStringArrayField.isEmptyAndRequired).toBe(false);
+
+  // decimal
+  expect(decimalField.isEmptyAndRequired).toBe(false);
+
+  await decimalField.setRaw("");
+  expect(decimalField.isEmptyAndRequired).toBe(false);
+
+  await decimalField.setRaw("123.0");
+  expect(decimalField.isEmptyAndRequired).toBe(false);
+
+  // Required
+  // String
+  expect(requiredStringField.isEmptyAndRequired).toBe(true);
+
+  await requiredStringField.setRaw("TEST");
+  expect(requiredStringField.isEmptyAndRequired).toBe(false);
+
+  await requiredStringField.setRaw("");
+  expect(requiredStringField.isEmptyAndRequired).toBe(true);
+
+  // Maybe null string
+  expect(requiredMaybeNullStringField.isEmptyAndRequired).toBe(true);
+
+  await requiredMaybeNullStringField.setRaw("TEST");
+  expect(requiredMaybeNullStringField.isEmptyAndRequired).toBe(false);
+
+  await requiredMaybeNullStringField.setRaw("");
+  expect(requiredMaybeNullStringField.isEmptyAndRequired).toBe(true);
+
+  // Boolean
+  expect(requiredBooleanField.isEmptyAndRequired).toBe(false);
+  await requiredBooleanField.setRaw(true);
+  expect(requiredBooleanField.isEmptyAndRequired).toBe(false);
+
+  // textStringArray
+  expect(requiredTextStringArrayField.isEmptyAndRequired).toBe(false);
+
+  await requiredTextStringArrayField.setRaw("");
+  expect(requiredTextStringArrayField.isEmptyAndRequired).toBe(true);
+
+  await requiredTextStringArrayField.setRaw("A\nB\nC");
+  expect(requiredTextStringArrayField.isEmptyAndRequired).toBe(false);
+
+  // decimal
+  expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
+
+  await requiredDecimalField.setRaw("");
+  expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
+
+  await requiredDecimalField.setRaw("123.0");
+  expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
+});
