@@ -113,7 +113,7 @@ export class FieldAccessor<R, V> {
         this.setRaw(
           this.field.render(
             derivedValue,
-            this.state.stateConverterOptionsWithContext
+            this.state.stateConverterOptionsWithContext(this)
           )
         );
       }
@@ -160,7 +160,7 @@ export class FieldAccessor<R, V> {
     }
     return this.field.render(
       this.value,
-      this.state.stateConverterOptionsWithContext
+      this.state.stateConverterOptionsWithContext(this)
     );
   }
 
@@ -318,7 +318,9 @@ export class FieldAccessor<R, V> {
     const originalRaw = raw;
     this._raw = raw;
 
-    const stateConverterOptions = this.state.stateConverterOptionsWithContext;
+    const stateConverterOptions = this.state.stateConverterOptionsWithContext(
+      this
+    );
 
     raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
 
@@ -390,7 +392,7 @@ export class FieldAccessor<R, V> {
     // to be disabled
     this._raw = this.field.render(
       value,
-      this.state.stateConverterOptionsWithContext
+      this.state.stateConverterOptionsWithContext(this)
     );
     // trigger validation
     this.validate();

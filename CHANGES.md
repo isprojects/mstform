@@ -1,18 +1,51 @@
 # 1.10.0
 
--   Added `isEmpty` and `isEmptyAndRequired` to fieldref. This checks whether
-    the `raw` value equals the `emptyRaw` value on the converter, if so it is
-    considered empty. `isEmptyAndRequired` makes use of `isEmpty` and in addition
-    checks whether the field is marked `required`.
+-   BREAKING CHANGE: the decimal converter accepts options, like this:
+
+    `converters.decimal({allowNegative: false})`
+
+    Previously it was also possible to pass a function into the `decimal`
+    converter which would return options, like this:
+
+    `converters.decimal(getOptions)`.
+
+    This was a way to make options dynamic and depend on context. You can't do
+    this anymore, but instead this system has been generalized with
+    `converters.dynamic`.
+
+    `converters.decimal(getOptions)` becomes
+    `converters.dynamic(converters.decimal, getOptions)`
+
+    A `converters.maybe(converters.decimal(getOptions))` becomes
+    `converters.maybe(converters.dynamic(converters.decimal, getOptions))`, and
+    the same for `maybeNull`.
+
+    `getOptions` gets two parameters: `context` (as passed to `state()`) and a
+    new second parameter, `accessor`, the field accessor for which this
+    converter is working.
+
+    While `converters.dynamic` currently only works for decimal, it will work
+    for new converters to be introduced as well that take parameters.
+
+-   Some internal reworking to prepare for versions of the existing converters
+    that take parameters.
+
+-   Added `isEmpty` and `isEmptyAndRequired` to field accessor. This checks
+    whether the `raw` value equals the `emptyRaw` value on the converter, if so
+    it is considered empty. `isEmptyAndRequired` makes use of `isEmpty` and in
+    addition checks whether the field is marked `required`.
 
 # 1.9.0
 
 -   BREAKING: Removed `isRepeatingFormDisabled`. Use the generic `isDisabled`
     version instead.
+
 -   BREAKING: `isDisabled`, `isHidden` and `isReadOnly` now take any accessor,
     rather than just a field accessor.
+
 -   Forms, repeatingForms and subForms can now all be disabled, read-only and
     hidden. They pass these properties to all their children.
+
 -   Form and field accessors now have an `inputAllowed` property, which returns
     true when an accessor is not disabled, hidden or read-only.
 

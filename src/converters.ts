@@ -6,16 +6,18 @@ import {
   Converter,
   IConverter,
   StateConverterOptionsWithContext,
-  ConvertError
+  ConvertError,
+  withDefaults
 } from "./converter";
 import { controlled } from "./controlled";
+import { dynamic } from "./dynamic-converter";
+
 import { identity } from "./utils";
 import {
   parseDecimal,
   renderDecimal,
   DecimalOptions,
-  checkConverterOptions,
-  getOptions
+  checkConverterOptions
 } from "./decimalParser";
 
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
@@ -24,27 +26,50 @@ export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
 }
 
-const string = new StringConverter<string>({
-  emptyRaw: "",
-  emptyValue: "",
-  convert(raw) {
-    return raw;
-  },
-  render(value) {
-    return value;
-  },
-  preprocessRaw(raw: string): string {
-    return raw.trim();
-  }
-});
+type StringOptions = {};
 
-const number = new StringConverter<number>({
-  emptyRaw: "",
-  emptyImpossible: true,
-  convert(raw, converterOptions) {
-    checkConverterOptions(converterOptions);
-    try {
-      return +parseDecimal(raw, {
+function stringWithOptions(options?: StringOptions) {
+  return new StringConverter<string>({
+    emptyRaw: "",
+    emptyValue: "",
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    preprocessRaw(raw: string): string {
+      return raw.trim();
+    }
+  });
+}
+
+const string = stringWithOptions();
+
+type NumberOptions = {};
+
+function numberWithOptions(options?: NumberOptions) {
+  return new StringConverter<number>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    convert(raw, converterOptions) {
+      checkConverterOptions(converterOptions);
+      try {
+        return +parseDecimal(raw, {
+          maxWholeDigits: 100,
+          decimalPlaces: 100,
+          allowNegative: true,
+          addZeroes: false,
+          decimalSeparator: converterOptions.decimalSeparator || ".",
+          thousandSeparator: converterOptions.thousandSeparator || ",",
+          renderThousands: converterOptions.renderThousands || false
+        });
+      } catch (e) {
+        throw new ConvertError();
+      }
+    },
+    render(value, converterOptions) {
+      return renderDecimal(value.toString(), {
         maxWholeDigits: 100,
         decimalPlaces: 100,
         allowNegative: true,
@@ -53,64 +78,61 @@ const number = new StringConverter<number>({
         thousandSeparator: converterOptions.thousandSeparator || ",",
         renderThousands: converterOptions.renderThousands || false
       });
-    } catch (e) {
-      throw new ConvertError();
+    },
+    preprocessRaw(
+      raw: string,
+      options: StateConverterOptionsWithContext
+    ): string {
+      return raw.trim();
     }
-  },
-  render(value, converterOptions) {
-    return renderDecimal(value.toString(), {
-      maxWholeDigits: 100,
-      decimalPlaces: 100,
-      allowNegative: true,
-      addZeroes: false,
-      decimalSeparator: converterOptions.decimalSeparator || ".",
-      thousandSeparator: converterOptions.thousandSeparator || ",",
-      renderThousands: converterOptions.renderThousands || false
-    });
-  },
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    return raw.trim();
-  }
-});
+  });
+}
 
-const integer = new StringConverter<number>({
-  emptyRaw: "",
-  emptyImpossible: true,
-  rawValidate(raw) {
-    return INTEGER_REGEX.test(raw);
-  },
-  convert(raw) {
-    return +raw;
-  },
-  render(value) {
-    return value.toString();
-  },
-  preprocessRaw(raw: string): string {
-    return raw.trim();
-  }
-});
+const number = numberWithOptions();
 
-const boolean = new Converter<boolean, boolean>({
-  emptyRaw: false,
-  emptyImpossible: true,
-  convert(raw) {
-    return raw;
-  },
-  render(value) {
-    return value;
-  },
-  defaultControlled: controlled.checked,
-  neverRequired: true
-});
+type IntegerOptions = {};
 
-function decimal(
-  decimalOptions?:
-    | Partial<DecimalOptions>
-    | ((context: any) => Partial<DecimalOptions>)
-) {
+function integerWithOptions(options?: IntegerOptions) {
+  return new StringConverter<number>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    rawValidate(raw) {
+      return INTEGER_REGEX.test(raw);
+    },
+    convert(raw) {
+      return +raw;
+    },
+    render(value) {
+      return value.toString();
+    },
+    preprocessRaw(raw: string): string {
+      return raw.trim();
+    }
+  });
+}
+
+const integer = integerWithOptions();
+
+type BooleanOptions = {};
+
+function booleanWithOptions(options?: BooleanOptions) {
+  return new Converter<boolean, boolean>({
+    emptyRaw: false,
+    emptyImpossible: true,
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    defaultControlled: controlled.checked,
+    neverRequired: true
+  });
+}
+
+const boolean = booleanWithOptions();
+
+function decimal(options: DecimalOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -121,7 +143,6 @@ function decimal(
     },
     convert(raw, converterOptions) {
       checkConverterOptions(converterOptions);
-      const options = getOptions(converterOptions.context, decimalOptions);
       try {
         return parseDecimal(raw, {
           ...options,
@@ -134,8 +155,6 @@ function decimal(
       }
     },
     render(value, converterOptions) {
-      const options = getOptions(converterOptions.context, decimalOptions);
-
       return renderDecimal(value, {
         ...options,
         decimalSeparator: converterOptions.decimalSeparator || ".",
@@ -146,33 +165,45 @@ function decimal(
   });
 }
 
-// XXX create a way to create arrays with mobx state tree types
-const stringArray = new Converter<string[], IObservableArray<string>>({
-  emptyRaw: [],
-  emptyValue: observable.array([]),
-  convert(raw) {
-    return observable.array(raw);
-  },
-  render(value) {
-    return value.slice();
-  }
-});
+type StringArrayOptions = {};
 
-const textStringArray = new Converter<string, IObservableArray<string>>({
-  emptyRaw: "",
-  emptyValue: observable.array([]),
-  defaultControlled: controlled.value,
-  convert(raw) {
-    const rawSplit = raw.split("\n").map(r => r.trim());
-    if (rawSplit.length === 1 && rawSplit[0] === "") {
-      return observable.array([]);
+// XXX create a way to create arrays with mobx state tree types
+function stringArrayWithOptions(options?: StringArrayOptions) {
+  return new Converter<string[], IObservableArray<string>>({
+    emptyRaw: [],
+    emptyValue: observable.array([]),
+    convert(raw) {
+      return observable.array(raw);
+    },
+    render(value) {
+      return value.slice();
     }
-    return observable.array(rawSplit);
-  },
-  render(value) {
-    return value.join("\n");
-  }
-});
+  });
+}
+
+const stringArray = stringArrayWithOptions();
+
+type TextStringArrayOptions = {};
+
+function textStringArrayWithOptions(options?: TextStringArrayOptions) {
+  return new Converter<string, IObservableArray<string>>({
+    emptyRaw: "",
+    emptyValue: observable.array([]),
+    defaultControlled: controlled.value,
+    convert(raw) {
+      const rawSplit = raw.split("\n").map(r => r.trim());
+      if (rawSplit.length === 1 && rawSplit[0] === "") {
+        return observable.array([]);
+      }
+      return observable.array(rawSplit);
+    },
+    render(value) {
+      return value.join("\n");
+    }
+  });
+}
+
+const textStringArray = textStringArrayWithOptions();
 
 function maybe<R, V>(
   converter: StringConverter<V>
@@ -183,10 +214,15 @@ function maybe<M>(
 function maybe<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
-  if (converter instanceof StringConverter) {
-    return new StringMaybe(converter, undefined);
+  // we detect that we're converting a string, which needs a special maybe
+  if (typeof converter.emptyRaw === "string") {
+    return new StringMaybe(
+      (converter as unknown) as IConverter<string, V>,
+      undefined
+    );
   }
-  return maybeModel(converter, null, undefined) as IConverter<
+  // XXX add an 'as any' as we get a typeerror for some reason now
+  return maybeModel(converter as any, null, undefined) as IConverter<
     R | null,
     V | undefined
   >;
@@ -201,10 +237,18 @@ function maybeNull<M>(
 function maybeNull<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | null> | IConverter<R | null, V | null> {
-  if (converter instanceof StringConverter) {
-    return new StringMaybe(converter, null);
+  // we detect that we're converting a string, which needs a special maybe
+  if (typeof converter.emptyRaw === "string") {
+    return new StringMaybe(
+      (converter as unknown) as IConverter<string, V>,
+      null
+    );
   }
-  return maybeModel(converter, null, null) as IConverter<R | null, V | null>;
+  // XXX add an 'as any' as we get a typeerror for some reason now
+  return maybeModel(converter as any, null, null) as IConverter<
+    R | null,
+    V | null
+  >;
 }
 
 // XXX it would be nice if this could be a simple converter instead
@@ -267,7 +311,7 @@ function model<M extends IAnyModelType>(model: M) {
 }
 
 function maybeModel<M, RE, VE>(
-  converter: IConverter<M | RE, M | VE>,
+  converter: IConverter<M, M>,
   emptyRaw: RE,
   emptyValue: VE
 ): IConverter<M | RE, M | VE> {
@@ -291,12 +335,18 @@ export const converters = {
   string,
   number,
   integer,
-  decimal,
+  decimal: withDefaults(decimal, {
+    maxWholeDigits: 10,
+    decimalPlaces: 2,
+    allowNegative: true,
+    addZeroes: true
+  }),
   boolean,
   textStringArray,
   stringArray,
   maybe,
   maybeNull,
   model,
-  object
+  object,
+  dynamic
 };
