@@ -318,7 +318,8 @@ have some properties in common:
 
 -   `path`: The JSON path to the underlying MST value (see mobx-state-tree).
 
--   `fieldref`: a generalization of the path to a pattern. `foo/3/bar' becomes`foo[].bar`.
+-   `fieldref`: a generalization of the path to a pattern. `foo/3/bar` becomes
+    `foo[].bar`.
 
 -   `context`: The context object such as passed into `form.state()`.
 
@@ -356,8 +357,8 @@ other object:
     maximum `maxWholeDigits` (default 10) before the period and a maximum of
     `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
     the number of decimals that is initially rendered when opening the form.
-    With `allowNegative` (boolean, default true) you can specify if negatives
-    are allowed.
+    With `allowNegative` (boolean, default true) you can specify if negative
+    values are allowed.
 
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to
