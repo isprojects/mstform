@@ -1,4 +1,5 @@
 import { Controlled, controlled } from "./controlled";
+import { FieldAccessor } from "./field-accessor";
 
 export interface StateConverterOptions {
   decimalSeparator?: string;
@@ -9,6 +10,7 @@ export interface StateConverterOptions {
 export interface StateConverterOptionsWithContext
   extends StateConverterOptions {
   context?: any;
+  accessor: FieldAccessor<any, any>;
 }
 
 export interface ConverterOptions<R, V> {
@@ -126,4 +128,23 @@ export class Converter<R, V> implements IConverter<R, V> {
   render(value: V, options: StateConverterOptionsWithContext): R {
     return this.definition.render(value, options);
   }
+}
+
+export interface PartialConverterFactory<O, R, V> {
+  (options?: Partial<O>): IConverter<R, V>;
+}
+
+export interface ConverterFactory<O, R, V> {
+  (options: O): IConverter<R, V>;
+}
+
+// turn a converter which accepts options into a converter that
+// accepts partial options and fill in the rest with defaults
+export function withDefaults<O, R, V>(
+  converterFactory: ConverterFactory<O, R, V>,
+  defaults: O
+): PartialConverterFactory<O, R, V> {
+  return (partialOptions?: Partial<O>) => {
+    return converterFactory({ ...defaults, ...partialOptions });
+  };
 }
