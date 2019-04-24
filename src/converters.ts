@@ -216,7 +216,7 @@ function maybe<R, V>(
 ): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
-    return new StringMaybe(
+    return stringMaybe(
       (converter as unknown) as IConverter<string, V>,
       undefined
     );
@@ -239,8 +239,8 @@ function maybeNull<R, V>(
 ): IConverter<string, V | null> | IConverter<R | null, V | null> {
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
-    return new StringMaybe(
-      (converter as unknown) as IConverter<string, V>,
+    return stringMaybe(
+      (converter as unknown) as IConverter<string, V | null>,
       null
     );
   }
@@ -251,45 +251,35 @@ function maybeNull<R, V>(
   >;
 }
 
-// XXX it would be nice if this could be a simple converter instead
-// of a reimplementation. unfortunately the delegation to the
-// underlying converter makes this impossible as it has a different
-// and asynchronous API. We need to refactor this further in the future.
-class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
-  emptyRaw: string;
-  defaultControlled = controlled.value;
-  neverRequired = false;
-  emptyImpossible: boolean;
-
-  constructor(public converter: IConverter<string, V>, public emptyValue: VE) {
-    this.emptyRaw = "";
-    this.emptyImpossible = false;
-  }
-
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    raw = raw.trim();
-    return this.converter.preprocessRaw(raw, options);
-  }
-
-  async convert(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): Promise<ConversionResponse<V | VE>> {
-    if (raw.trim() === "") {
-      return new ConversionValue(this.emptyValue);
+function stringMaybe<V>(converter: IConverter<string, V>, emptyValue: V) {
+  return new Converter<string, V>({
+    emptyRaw: "",
+    emptyValue: emptyValue,
+    defaultControlled: controlled.value,
+    preprocessRaw(
+      raw: string,
+      options: StateConverterOptionsWithContext
+    ): string {
+      raw = raw.trim();
+      return converter.preprocessRaw(raw, options);
+    },
+    convert(raw: string, options: StateConverterOptionsWithContext) {
+      if (raw.trim() === "") {
+        return emptyValue;
+      }
+      const r = converter.convert(raw, options);
+      if (r instanceof ConversionError) {
+        throw r;
+      }
+      return r.value;
+    },
+    render(value: V, options: StateConverterOptionsWithContext) {
+      if (value === this.emptyValue) {
+        return "";
+      }
+      return converter.render(value, options);
     }
-    return this.converter.convert(raw, options);
-  }
-
-  render(value: V | VE, options: StateConverterOptionsWithContext): string {
-    if (value === this.emptyValue) {
-      return "";
-    }
-    return this.converter.render(value as V, options);
-  }
+  });
 }
 
 function model<M extends IAnyModelType>(model: M) {

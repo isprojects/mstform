@@ -31,7 +31,7 @@ export interface IConverter<R, V> {
   convert(
     raw: R,
     options: StateConverterOptionsWithContext
-  ): Promise<ConversionResponse<V>>;
+  ): ConversionResponse<V>;
   render(value: V, options: StateConverterOptionsWithContext): R;
   defaultControlled: Controlled;
   neverRequired: boolean;
@@ -82,10 +82,10 @@ export class Converter<R, V> implements IConverter<R, V> {
     return this.definition.preprocessRaw(raw, options);
   }
 
-  async convert(
+  convert(
     raw: R,
     options: StateConverterOptionsWithContext
-  ): Promise<ConversionResponse<V>> {
+  ): ConversionResponse<V> {
     try {
       const value = this.definition.convert(raw, options);
       return new ConversionValue<V>(value);
