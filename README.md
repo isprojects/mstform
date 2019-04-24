@@ -360,6 +360,19 @@ other object:
     With `allowNegative` (boolean, default true) you can specify if negative
     values are allowed.
 
+    Conversion error types are:
+
+    -   `default`: Cannot be parsed, not a decimal number
+
+    -   `tooManyDecimalPlaces`: we entered too many digits after the decimal
+        separator.
+
+    -   `tooManyWholeDigits`: we entered too many digits before the decimal
+        separator.
+
+    -   `cannotBeNegative`: you entered a negative number where this wasn't
+        allowed.
+
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to
 separate the integral and fractional part of a number or decimal.
