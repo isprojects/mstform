@@ -50,9 +50,9 @@ export class ConversionValue<V> {
   constructor(public value: V) {}
 }
 
-export type ConversionError = "ConversionError";
-
-export const CONVERSION_ERROR: ConversionError = "ConversionError";
+export class ConversionError {
+  constructor(public type: string) {}
+}
 
 export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 

@@ -76,11 +76,15 @@ export interface ErrorFunc {
   (context: any): string;
 }
 
+export type ConversionErrors = {
+  [key: string]: string;
+};
+
 export interface FieldOptions<R, V> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
-  conversionError?: string | ErrorFunc;
+  conversionError?: string | ErrorFunc | ConversionErrors;
   requiredError?: string | ErrorFunc;
   required?: boolean;
   fromEvent?: boolean;
@@ -155,7 +159,7 @@ export interface ProcessOptions {
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
-  conversionError: string | ErrorFunc;
+  conversionError: string | ErrorFunc | ConversionErrors;
   requiredError?: string | ErrorFunc;
   required: boolean;
   getRaw: RawGetter<R>;
