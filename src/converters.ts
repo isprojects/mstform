@@ -1,8 +1,6 @@
 import { IObservableArray, observable } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 import {
-  ConversionResponse,
-  ConversionValue,
   Converter,
   IConverter,
   StateConverterOptionsWithContext,
@@ -17,6 +15,7 @@ import {
   parseDecimal,
   renderDecimal,
   DecimalOptions,
+  DecimalParserError,
   checkConverterOptions
 } from "./decimalParser";
 
@@ -65,7 +64,10 @@ function numberWithOptions(options?: NumberOptions) {
           renderThousands: converterOptions.renderThousands || false
         });
       } catch (e) {
-        throw new ConversionError();
+        if (e instanceof DecimalParserError) {
+          throw new ConversionError(e.type);
+        }
+        throw e;
       }
     },
     render(value, converterOptions) {
@@ -151,7 +153,10 @@ function decimal(options: DecimalOptions) {
           renderThousands: converterOptions.renderThousands || false
         });
       } catch (e) {
-        throw new ConversionError();
+        if (e instanceof DecimalParserError) {
+          throw new ConversionError(e.type);
+        }
+        throw e;
       }
     },
     render(value, converterOptions) {
