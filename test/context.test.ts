@@ -6,7 +6,8 @@ import {
   SubForm,
   RepeatingForm,
   converters,
-  Converter
+  Converter,
+  ConversionError
 } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -131,10 +132,10 @@ test("context in converter", async () => {
 
   const myConverter = new Converter<string, string>({
     emptyRaw: "",
-    rawValidate(raw, options) {
-      return raw.startsWith(options.context.prefix);
-    },
-    convert(raw) {
+    convert(raw, options) {
+      if (!raw.startsWith(options.context.prefix)) {
+        throw new ConversionError();
+      }
       return raw;
     },
     render(value) {

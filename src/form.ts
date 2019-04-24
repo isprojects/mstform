@@ -5,7 +5,7 @@ import {
   Instance
 } from "mobx-state-tree";
 import {
-  CONVERSION_ERROR,
+  ConversionError,
   IConverter,
   StateConverterOptionsWithContext
 } from "./converter";
@@ -77,14 +77,17 @@ export interface ErrorFunc {
 }
 
 export type ConversionErrors = {
-  [key: string]: string;
+  default: string | ErrorFunc;
+  [key: string]: string | ErrorFunc;
 };
+
+export type ConversionErrorType = string | ErrorFunc | ConversionErrors;
 
 export interface FieldOptions<R, V> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
-  conversionError?: string | ErrorFunc | ConversionErrors;
+  conversionError?: ConversionErrorType;
   requiredError?: string | ErrorFunc;
   required?: boolean;
   fromEvent?: boolean;
@@ -159,7 +162,7 @@ export interface ProcessOptions {
 export class Field<R, V> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
-  conversionError: string | ErrorFunc | ConversionErrors;
+  conversionError: ConversionErrorType;
   requiredError?: string | ErrorFunc;
   required: boolean;
   getRaw: RawGetter<R>;
@@ -224,8 +227,21 @@ export class Field<R, V> {
     throw new Error("This is a function to enable type introspection");
   }
 
-  getConversionError(context: any): string {
-    return errorMessage(this.conversionError, context);
+  getConversionError(conversionError: ConversionError, context: any): string {
+    // if we have a simple conversion error defined, we use that
+    const resolveConversionError = this.conversionError;
+    if (
+      typeof resolveConversionError === "string" ||
+      typeof resolveConversionError === "function"
+    ) {
+      return errorMessage(resolveConversionError, context);
+    }
+    // we have a structure, so look things up
+    let resolved = resolveConversionError[conversionError.type];
+    if (resolved === undefined) {
+      resolved = resolveConversionError.default;
+    }
+    return errorMessage(resolved, context);
   }
 
   isRequired(
@@ -261,9 +277,9 @@ export class Field<R, V> {
       }
     }
     const result = await this.converter.convert(raw, stateConverterOptions);
-    if (result === CONVERSION_ERROR) {
+    if (result instanceof ConversionError) {
       return new ValidationMessage(
-        this.getConversionError(stateConverterOptions.context)
+        this.getConversionError(result, stateConverterOptions.context)
       );
     }
     for (const validator of this.validators) {

@@ -1,3 +1,15 @@
+# 1.11.0
+
+-   BREAKING CHANGE: converters have changed.
+
+    If you had a converter that threw `ConvertError`, you now need to throw
+    `ConversionError`, which takes a single argument, the conversion error
+    type.
+
+    If you had a converter that used `rawValidate` or `validate` - these are
+    now not in use anymore, because we found they aren't that useful. You can
+    rewrite your converters to throw `ConversionError` instead.
+
 # 1.10.0
 
 -   BREAKING CHANGE: the decimal converter accepts options, like this:

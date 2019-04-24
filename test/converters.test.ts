@@ -1,6 +1,6 @@
 import { types } from "mobx-state-tree";
 import {
-  CONVERSION_ERROR,
+  ConversionError,
   ConversionValue,
   Field,
   Form,
@@ -43,7 +43,7 @@ async function checkWithOptions(
 
 async function fails(converter: IConverter<any, any>, value: any) {
   const r = await converter.convert(value, baseOptions);
-  expect(r).toBe(CONVERSION_ERROR);
+  expect(r).toBeInstanceOf(ConversionError);
 }
 
 async function failsWithOptions(
@@ -53,7 +53,7 @@ async function failsWithOptions(
 ) {
   const processedValue = converter.preprocessRaw(value, options);
   const r = await converter.convert(processedValue, options);
-  expect(r).toBe(CONVERSION_ERROR);
+  expect(r).toBeInstanceOf(ConversionError);
 }
 
 test("string converter", async () => {

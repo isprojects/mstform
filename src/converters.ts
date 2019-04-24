@@ -6,7 +6,7 @@ import {
   Converter,
   IConverter,
   StateConverterOptionsWithContext,
-  ConvertError,
+  ConversionError,
   withDefaults
 } from "./converter";
 import { controlled } from "./controlled";
@@ -65,7 +65,7 @@ function numberWithOptions(options?: NumberOptions) {
           renderThousands: converterOptions.renderThousands || false
         });
       } catch (e) {
-        throw new ConvertError();
+        throw new ConversionError();
       }
     },
     render(value, converterOptions) {
@@ -96,10 +96,10 @@ function integerWithOptions(options?: IntegerOptions) {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
-    rawValidate(raw) {
-      return INTEGER_REGEX.test(raw);
-    },
     convert(raw) {
+      if (!INTEGER_REGEX.test(raw)) {
+        throw new ConversionError();
+      }
       return +raw;
     },
     render(value) {
@@ -151,7 +151,7 @@ function decimal(options: DecimalOptions) {
           renderThousands: converterOptions.renderThousands || false
         });
       } catch (e) {
-        throw new ConvertError();
+        throw new ConversionError();
       }
     },
     render(value, converterOptions) {
