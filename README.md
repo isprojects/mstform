@@ -488,6 +488,34 @@ const form = new Form(M, {
 });
 ```
 
+Some converters can return multiple types of conversion error. If
+you care about showing these differences in the UI, you can set up
+an object for `conversionError`:
+
+```js
+conversionError: {
+    default: "Not a number",
+    tooManyDecimalPlaces: "Too many decimal places",
+    tooManyWholeDigits: "Too many whole digits",
+    cannotBeNegative: "Cannot be negative"
+}
+```
+
+This object must always contain a `default` key, which contains the fallback
+conversion error if no error type matched.
+
+It's also possible to use a function to dynamically generate the messages,
+like this:
+
+```js
+conversionError: {
+    default: context => "Not a number",
+    tooManyDecimalPlaces: context => "Too many decimal places",
+    tooManyWholeDigits: context => "Too many whole digits",
+    cannotBeNegative: context => "Cannot be negative"
+}
+```
+
 ### Defining a new converter
 
 You can define a new converter. For instance this is a converter which
