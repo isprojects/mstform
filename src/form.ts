@@ -276,7 +276,7 @@ export class Field<R, V> {
         return new ValidationMessage(validationResponse);
       }
     }
-    const result = await this.converter.convert(raw, stateConverterOptions);
+    const result = this.converter.convert(raw, stateConverterOptions);
     if (result instanceof ConversionError) {
       return new ValidationMessage(
         this.getConversionError(result, stateConverterOptions.context)
