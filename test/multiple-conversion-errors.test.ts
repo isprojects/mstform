@@ -49,6 +49,9 @@ test("conversion failure with multiple messages", async () => {
   await field.setRaw("12345,1");
   expect(field.error).toEqual("Too many whole digits");
 
+  await field.setRaw("34.4567,1");
+  expect(field.error).toEqual("Not a number");
+
   await field.setRaw("123ab");
   expect(field.error).toEqual("Not a number");
 });
