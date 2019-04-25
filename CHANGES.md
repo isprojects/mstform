@@ -1,5 +1,10 @@
 # 1.11.0
 
+-   BREAKING CHANGE: we had a undocumented feature where you could declare
+    asynchronous `validators` and `rawValidators` for a field. This was little
+    used and complicated the code quite a bit. Now these functions have to be
+    simple synchronous functions.
+
 -   BREAKING CHANGE: converters have changed.
 
     If you had a converter that threw `ConvertError`, you now need to throw
