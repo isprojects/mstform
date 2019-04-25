@@ -5,7 +5,7 @@ import { Field, Form, RepeatingForm, SubForm, converters } from "../src";
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("setRaw with required ignore", async () => {
+test("setRaw with required ignore", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -21,17 +21,17 @@ test("setRaw with required ignore", async () => {
   const state = form.state(o);
   const field = state.field("foo");
 
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.error).toEqual("Required");
   expect(field.value).toEqual("");
 
-  await field.setRaw("", { ignoreRequired: true });
+  field.setRaw("", { ignoreRequired: true });
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("");
   expect(o.foo).toEqual("");
 });
 
-test("setRaw with required ignore with automatically required", async () => {
+test("setRaw with required ignore with automatically required", () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -45,13 +45,13 @@ test("setRaw with required ignore with automatically required", async () => {
   const state = form.state(o);
   const field = state.field("foo");
 
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.error).toEqual("Required");
   expect(field.value).toEqual(1);
 
   // we can set ignoreRequired, but it has no impact
   // if the field *has* to be required by definition
-  await field.setRaw("", { ignoreRequired: true });
+  field.setRaw("", { ignoreRequired: true });
   expect(field.error).toEqual("Required");
   expect(field.value).toEqual(1);
   expect(o.foo).toEqual(1);
@@ -80,7 +80,7 @@ test("FormState can be saved ignoring required", async () => {
   const field = state.field("foo");
 
   // we set the raw to the empty string even though it's required
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.error).toEqual("Required");
   expect(o.foo).toEqual("");
 
@@ -127,7 +127,7 @@ test("FormState can be saved ignoring external errors", async () => {
   const field = state.field("foo");
 
   // we change a value to trigger the error
-  await field.setRaw("BAR");
+  field.setRaw("BAR");
   expect(field.error).toEqual("Wrong!");
   // this is an external error, so change does happen
   expect(o.foo).toEqual("BAR");
