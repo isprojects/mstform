@@ -403,7 +403,7 @@ test("object converter", () => {
   expect(r3).toEqual({ value: null });
 });
 
-test("dynamic decimal converter", async () => {
+test("dynamic decimal converter", () => {
   const context = { options: { decimalPlaces: 0 } };
 
   const M = types.model("M", {
@@ -440,7 +440,7 @@ test("dynamic decimal converter", async () => {
   expect(field.error).toEqual("Could not convert");
 });
 
-test("text string array converter", async () => {
+test("text string array converter", () => {
   const M = types.model("M", {
     foo: types.array(types.string)
   });
@@ -479,7 +479,7 @@ test("text string array converter", async () => {
   expect(field.value).toEqual([]);
 });
 
-test("render decimal number without decimals with decimal separator", async () => {
+test("render decimal number without decimals with decimal separator", () => {
   // this exposed a dispose bug that occurred when we had a previous state
   // and thus two onPatch event handlers. Now we properly dispose of the
   // previous form state when we attach a new form state to the same
@@ -540,7 +540,7 @@ test("render decimal number without decimals with decimal separator", async () =
   expect(field.value).toEqual("12.");
 });
 
-test("obey addZeroes false", async () => {
+test("obey addZeroes false", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -561,7 +561,7 @@ test("obey addZeroes false", async () => {
   expect(field.raw).toEqual("1");
 });
 
-test("obey addZeroes true", async () => {
+test("obey addZeroes true", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -582,7 +582,7 @@ test("obey addZeroes true", async () => {
   expect(field.raw).toEqual("1.000000");
 });
 
-test("maybe decimal converter/render for empty", async () => {
+test("maybe decimal converter/render for empty", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });

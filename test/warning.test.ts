@@ -79,7 +79,7 @@ test("a simple error", async () => {
   expect(isSaved).toBeFalsy();
 });
 
-test("client side errors trumps getError", async () => {
+test("client side errors trumps getError", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -109,7 +109,7 @@ test("client side errors trumps getError", async () => {
   expect(field.error).toEqual("Wrong");
   expect(result1).toBeFalsy();
 
-  await field.setRaw("correct");
+  field.setRaw("correct");
   const result2 = state.validate();
   // We fix one error, the other remains
   expect(field.error).toEqual("Not uppercase");
@@ -206,7 +206,7 @@ test("warning in subform field", () => {
   expect(state.isWarningFree).toBeFalsy();
 });
 
-test("error on repeating form", async () => {
+test("error on repeating form", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -244,7 +244,7 @@ test("error on repeating form", async () => {
   expect(result2).toBeTruthy();
 });
 
-test("warning on repeating form", async () => {
+test("warning on repeating form", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -283,7 +283,7 @@ test("warning on repeating form", async () => {
   expect(state.isWarningFree).toBeTruthy();
 });
 
-test("error on indexed repeating form", async () => {
+test("error on indexed repeating form", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -346,7 +346,7 @@ test("warning on indexed repeating form", () => {
   expect(state.isWarningFree).toBeFalsy();
 });
 
-test("error on subform", async () => {
+test("error on subform", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -409,7 +409,7 @@ test("warning on subform", () => {
   expect(state.isWarningFree).toBeFalsy();
 });
 
-test("error on formstate", async () => {
+test("error on formstate", () => {
   const M = types.model("M", {
     foo: types.string
   });

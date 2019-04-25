@@ -5,7 +5,7 @@ import { Field, Form, SubForm, RepeatingForm, converters } from "../src";
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("value for state", async () => {
+test("value for state", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -20,7 +20,7 @@ test("value for state", async () => {
   expect(state.value).toBe(o);
 });
 
-test("value for sub form", async () => {
+test("value for sub form", () => {
   const N = types
     .model("N", {
       bar: types.string
@@ -52,7 +52,7 @@ test("value for sub form", async () => {
   expect(getType(sub.parent.value)).toBe(M);
 });
 
-test("value for repeating form", async () => {
+test("value for repeating form", () => {
   const N = types
     .model("N", {
       bar: types.string
