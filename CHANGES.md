@@ -4,11 +4,14 @@
 
     If you had a converter that threw `ConvertError`, you now need to throw
     `ConversionError`, which takes a single argument, the conversion error
-    type.
+    type, or if omitted, the conversion error type is 'default'.
 
     If you had a converter that used `rawValidate` or `validate` - these are
     now not in use anymore, because we found they aren't that useful. You can
     rewrite your converters to throw `ConversionError` instead.
+
+    This makes converters entirely synchronous, which should make them faster
+    and easier to test.
 
 -   It's possible to set `conversionError` on a `Field` as an object with as
     keys the conversion error type (defined by the converter) and as values
