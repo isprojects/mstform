@@ -69,7 +69,7 @@ test("changehook", () => {
   expect(b.value).toEqual(23);
 });
 
-test("change hook with raw value", async () => {
+test("change hook with raw value", () => {
   const M = types
     .model("M", {
       c: types.number,

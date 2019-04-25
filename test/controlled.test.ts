@@ -3,7 +3,7 @@ import { types } from "mobx-state-tree";
 import { converters, controlled, Form, Field } from "../src";
 configure({ enforceActions: "observed" });
 
-test("object controlled", async () => {
+test("object controlled", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -19,11 +19,11 @@ test("object controlled", async () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  await field.inputProps.onChange("BAR");
+  field.inputProps.onChange("BAR");
   expect(field.raw).toEqual("BAR");
 });
 
-test("value controlled", async () => {
+test("value controlled", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -39,11 +39,11 @@ test("value controlled", async () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  await field.inputProps.onChange({ target: { value: "BAR" } });
+  field.inputProps.onChange({ target: { value: "BAR" } });
   expect(field.raw).toEqual("BAR");
 });
 
-test("checked controlled", async () => {
+test("checked controlled", () => {
   const M = types.model("M", {
     foo: types.boolean
   });
@@ -59,11 +59,11 @@ test("checked controlled", async () => {
 
   expect(field.inputProps.checked).toEqual(true);
   expect(field.inputProps.value).toBeUndefined();
-  await field.inputProps.onChange({ target: { checked: false } });
+  field.inputProps.onChange({ target: { checked: false } });
   expect(field.raw).toEqual(false);
 });
 
-test("custom controlled", async () => {
+test("custom controlled", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -85,11 +85,11 @@ test("custom controlled", async () => {
   const field = state.field("foo");
 
   expect(field.inputProps.weird).toEqual("FOO");
-  await field.inputProps.onChange("BAR");
+  field.inputProps.onChange("BAR");
   expect(field.raw).toEqual("BAR");
 });
 
-test("default value controlled for string converter", async () => {
+test("default value controlled for string converter", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -105,11 +105,11 @@ test("default value controlled for string converter", async () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  await field.inputProps.onChange({ target: { value: "BAR" } });
+  field.inputProps.onChange({ target: { value: "BAR" } });
   expect(field.raw).toEqual("BAR");
 });
 
-test("default value controlled for maybe string converter", async () => {
+test("default value controlled for maybe string converter", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -125,11 +125,11 @@ test("default value controlled for maybe string converter", async () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  await field.inputProps.onChange({ target: { value: "BAR" } });
+  field.inputProps.onChange({ target: { value: "BAR" } });
   expect(field.raw).toEqual("BAR");
 });
 
-test("default checked controlled for boolean converter", async () => {
+test("default checked controlled for boolean converter", () => {
   const M = types.model("M", {
     foo: types.boolean
   });
@@ -145,11 +145,11 @@ test("default checked controlled for boolean converter", async () => {
 
   expect(field.inputProps.checked).toEqual(true);
   expect(field.inputProps.value).toBeUndefined();
-  await field.inputProps.onChange({ target: { checked: false } });
+  field.inputProps.onChange({ target: { checked: false } });
   expect(field.raw).toEqual(false);
 });
 
-test("default object controlled", async () => {
+test("default object controlled", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -165,11 +165,11 @@ test("default object controlled", async () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  await field.inputProps.onChange("BAR");
+  field.inputProps.onChange("BAR");
   expect(field.raw).toEqual("BAR");
 });
 
-test("default object controlled for stringArray converter", async () => {
+test("default object controlled for stringArray converter", () => {
   const M = types.model("M", {
     foo: types.array(types.string)
   });
@@ -184,11 +184,11 @@ test("default object controlled for stringArray converter", async () => {
   const field = state.field("foo");
 
   expect(field.inputProps.value).toEqual([]);
-  await field.inputProps.onChange(["a", "b"]);
+  field.inputProps.onChange(["a", "b"]);
   expect(field.raw).toEqual(["a", "b"]);
 });
 
-test("default object controlled for maybe converter", async () => {
+test("default object controlled for maybe converter", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -204,12 +204,12 @@ test("default object controlled for maybe converter", async () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  await field.inputProps.onChange("BAR");
+  field.inputProps.onChange("BAR");
   expect(field.raw).toEqual("BAR");
 });
 
 // fromEvent backwards compatibility
-test("getRaw fromEvent", async () => {
+test("getRaw fromEvent", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -227,12 +227,12 @@ test("getRaw fromEvent", async () => {
   const field = state.field("foo");
 
   expect(field.inputProps.value).toEqual("FOO");
-  await field.inputProps.onChange({ target: { value: "BAR" } });
+  field.inputProps.onChange({ target: { value: "BAR" } });
   expect(field.raw).toEqual("BAR");
 });
 
 // handleChange backwards compatibility
-test("getRaw fromEvent", async () => {
+test("getRaw fromEvent", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -250,12 +250,12 @@ test("getRaw fromEvent", async () => {
   const field = state.field("foo");
 
   expect(field.inputProps.value).toEqual("FOO");
-  await field.handleChange({ target: { value: "BAR" } });
+  field.handleChange({ target: { value: "BAR" } });
   expect(field.raw).toEqual("BAR");
 });
 
 // getRaw backwards compatibility
-test("override getRaw", async () => {
+test("override getRaw", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -275,6 +275,6 @@ test("override getRaw", async () => {
   const field = state.field("foo");
 
   expect(field.inputProps.value).toEqual("FOO");
-  await field.inputProps.onChange({ target: { weird: "BAR" } });
+  field.inputProps.onChange({ target: { weird: "BAR" } });
   expect(field.raw).toEqual("BAR");
 });
