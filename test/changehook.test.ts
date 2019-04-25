@@ -5,7 +5,7 @@ import { Field, Form, converters } from "../src";
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("changehook", async () => {
+test("changehook", () => {
   const M = types
     .model("M", {
       c: types.number,
@@ -36,34 +36,34 @@ test("changehook", async () => {
   const b = state.field("b");
 
   // we set it to 4 explicitly
-  await c.setRaw("4");
+  c.setRaw("4");
   expect(b.raw).toEqual("4");
   // this immediately affects the underlying value
   expect(b.value).toEqual(4);
 
   // when we change it to something unvalid, change hook doesn't fire
-  await c.setRaw("invalid");
+  c.setRaw("invalid");
   expect(b.raw).toEqual("4");
   expect(b.value).toEqual(4);
 
-  await c.setRaw("17");
+  c.setRaw("17");
   expect(b.raw).toEqual("17");
   expect(b.value).toEqual(17);
 
   // we change b independently
-  await b.setRaw("23");
+  b.setRaw("23");
   expect(b.raw).toEqual("23");
 
   let prevLength = touched.length;
   // validation shouldn't modify the value (it calls setRaw)
-  await state.validate();
+  state.validate();
   expect(touched.length).toEqual(prevLength);
   expect(b.raw).toEqual("23");
   expect(b.value).toEqual(23);
 
   // a modification of `c` to the same value shouldn't modify the value either
   prevLength = touched.length;
-  await c.setRaw("17");
+  c.setRaw("17");
   expect(touched.length).toEqual(prevLength);
   expect(b.raw).toEqual("23");
   expect(b.value).toEqual(23);
@@ -100,16 +100,16 @@ test("change hook with raw value", async () => {
   const b = state.field("b");
 
   // first we modify the raw value of b
-  await b.setRaw("17");
+  b.setRaw("17");
 
   // we set then set c to 4 explicitly
-  await c.setRaw("4");
+  c.setRaw("4");
   // the raw should also be changed
   expect(b.raw).toEqual("4");
   expect(b.value).toEqual(4);
 });
 
-test("changehook with null", async () => {
+test("changehook with null", () => {
   const M = types
     .model("M", {
       c: types.maybeNull(types.number),
@@ -140,18 +140,18 @@ test("changehook with null", async () => {
   const b = state.field("b");
 
   // we set it to 4 explicitly
-  await c.setRaw("4");
+  c.setRaw("4");
   expect(b.raw).toEqual("4");
   // this immediately affects the underlying value
   expect(b.value).toEqual(4);
 
   // when we change it to something unvalid, change hook doesn't fire
-  await c.setRaw("invalid");
+  c.setRaw("invalid");
   expect(b.raw).toEqual("4");
   expect(b.value).toEqual(4);
 
   // now we set it to null, change hook fires
-  await c.setRaw("");
+  c.setRaw("");
   expect(b.raw).toEqual("");
   expect(b.value).toEqual(null);
 });
