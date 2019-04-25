@@ -464,66 +464,6 @@ test("accessors should retain index order after insert", async () => {
   ]);
 });
 
-test("async validation in converter", async () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const done: any[] = [];
-
-  const converter = new Converter<string, string>({
-    emptyRaw: "",
-    emptyValue: "",
-    convert: raw => raw,
-    validate: async value => {
-      await new Promise(resolve => {
-        done.push(resolve);
-      });
-      return true;
-    },
-    render: value => value
-  });
-
-  const form = new Form(M, {
-    foo: new Field(converter, {
-      validators: [
-        value => {
-          return value !== "correct" && "Wrong";
-        }
-      ]
-    })
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.state(o);
-
-  const field = state.field("foo");
-
-  expect(field.raw).toEqual("FOO");
-  const promise = field.setRaw("correct");
-  expect(field.raw).toEqual("correct");
-  // value hasn't changed yet as promise hasn't resolved yet
-  expect(field.value).toEqual("FOO");
-  expect(field.error).toBeUndefined();
-  done[0]();
-  await promise;
-  expect(field.value).toEqual("correct");
-  expect(field.raw).toEqual("correct");
-  expect(field.error).toBeUndefined();
-  // now put in a wrong value
-  const promise2 = field.setRaw("wrong");
-  expect(field.raw).toEqual("wrong");
-  // value hasn't changed yet as promise hasn't resolved yet
-  expect(field.value).toEqual("correct");
-  expect(field.error).toBeUndefined();
-  done[1]();
-  await promise2;
-  expect(field.value).toEqual("correct");
-  expect(field.raw).toEqual("wrong");
-  expect(field.error).toEqual("Wrong");
-});
-
 test("async validation in validator", async () => {
   const M = types.model("M", {
     foo: types.string

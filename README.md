@@ -360,6 +360,19 @@ other object:
     With `allowNegative` (boolean, default true) you can specify if negative
     values are allowed.
 
+    Conversion error types are:
+
+    -   `default`: Cannot be parsed, not a decimal number
+
+    -   `tooManyDecimalPlaces`: we entered too many digits after the decimal
+        separator.
+
+    -   `tooManyWholeDigits`: we entered too many digits before the decimal
+        separator.
+
+    -   `cannotBeNegative`: you entered a negative number where this wasn't
+        allowed.
+
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to
 separate the integral and fractional part of a number or decimal.
@@ -462,10 +475,9 @@ const formState = form.state(o, {
 
 ### Controlling the conversion error message
 
-A converter may fail to convert a raw value into a value if the raw value
-doesn't pass its `rawValidate` function or the converted value doesn't pass its
-`validate` function. In this case, the UI displays a conversion error. You can
-control this conversion error with the `conversionError` property for a field.
+A converter may fail to convert a raw value. In this case, the UI displays a
+conversion error. You can control this conversion error with the
+`conversionError` property for a field.
 
 ```js
 const form = new Form(M, {
@@ -487,6 +499,34 @@ const form = new Form(M, {
                 : "De conversie faalde"
     })
 });
+```
+
+Some converters can return multiple types of conversion error. If
+you care about showing these differences in the UI, you can set up
+an object for `conversionError`:
+
+```js
+conversionError: {
+    default: "Not a number",
+    tooManyDecimalPlaces: "Too many decimal places",
+    tooManyWholeDigits: "Too many whole digits",
+    cannotBeNegative: "Cannot be negative"
+}
+```
+
+This object must always contain a `default` key, which contains the fallback
+conversion error if no error type matched.
+
+It's also possible to use a function to dynamically generate the messages,
+like this:
+
+```js
+conversionError: {
+    default: context => "Not a number",
+    tooManyDecimalPlaces: context => "Too many decimal places",
+    tooManyWholeDigits: context => "Too many whole digits",
+    cannotBeNegative: context => "Cannot be negative"
+}
 ```
 
 ### Defining a new converter
@@ -514,10 +554,9 @@ converted value (as you have in the MST model).
 
 A converter needs to define a `convert` and a `render` method. `convert` takes
 a raw value and converts it to the MST value. `render` takes the MST value and
-converts it to the raw value. `rawValidate` is an optional function that checks
-whether the raw value is valid. `validate` is an optional function that checks
-whether the value is valid. Besides `validate` and `rawValidate` you can also
-trigger a conversion error by throwing `ConvertError` inside `convert`.
+converts it to the raw value. You can trigger a conversion error by throwing
+`ConversionError` inside `convert`; it takes the conversion error type as its
+first argument.
 
 `emptyRaw` is the raw value that should be shown if the field is empty in the
 UI. We also set `emptyImpossible` -- it's impossible for the result of this
@@ -533,10 +572,10 @@ default for this converter. You can also optionally set `neverRequired`; this
 is handy for fields where the `required` status makes no sense -- a checkbox is
 an example.
 
-`convert`, `render`, `rawValidate` and `validate` all take an optional
-second argument, `options`. With `options`, you can pass `converterOptions` and
-a `context`. `context` is an arbitrary value you can pass in as a `form.state()`
-option from your application:
+`convert` and `render` take an optional second argument, `options`. With
+`options`, you can pass `converterOptions` and a `context`. `context` is an
+arbitrary value you can pass in as a `form.state()` option from your
+application:
 
 ```js
 const formState = form.state(o, { context: { something: "FOO" } });

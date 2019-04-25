@@ -1,3 +1,43 @@
+# 1.11.0
+
+-   BREAKING CHANGE: converters have changed.
+
+    If you had a converter that threw `ConvertError`, you now need to throw
+    `ConversionError`, which takes a single argument, the conversion error
+    type, or if omitted, the conversion error type is 'default'.
+
+    If you had a converter that used `rawValidate` or `validate` - these are
+    now not in use anymore, because we found they aren't that useful. You can
+    rewrite your converters to throw `ConversionError` instead.
+
+    This makes converters entirely synchronous, which should make them faster
+    and easier to test.
+
+-   It's possible to set `conversionError` on a `Field` as an object with as
+    keys the conversion error type (defined by the converter) and as values
+    either a message or a function that returns the message given the context.
+    A key `default` must always exist. So like this:
+
+    ```js
+          conversionError: {
+            default: "Not a number",
+            tooManyDecimalPlaces: "Too many decimal places",
+            tooManyWholeDigits: "Too many whole digits",
+            cannotBeNegative: "Cannot be negative"
+          }
+    ```
+
+    or like this:
+
+    ```js
+          conversionError: {
+            default: context => "Not a number",
+            tooManyDecimalPlaces: context => "Too many decimal places",
+            tooManyWholeDigits: context => "Too many whole digits",
+            cannotBeNegative: context => "Cannot be negative"
+          }
+    ```
+
 # 1.10.0
 
 -   BREAKING CHANGE: the decimal converter accepts options, like this:

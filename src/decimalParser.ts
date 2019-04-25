@@ -68,6 +68,10 @@ function addZeroes(decimalDigits: string, decimalPlaces: number): string {
   return decimalDigits + "0".repeat(decimalPlaces - decimalDigits.length);
 }
 
+export class DecimalParserError {
+  constructor(public type: string) {}
+}
+
 export function renderDecimal(s: string, options: Options): string {
   if (s.length === 0) {
     return s;
@@ -103,7 +107,7 @@ export function renderDecimal(s: string, options: Options): string {
 export function parseDecimal(s: string, options: Options): string {
   const tokens = tokenize(s, options);
   if (tokens == null) {
-    throw new Error("Unknown tokens");
+    throw new DecimalParserError("default");
   }
 
   const parser = new Parser(tokens, options);
@@ -114,10 +118,10 @@ export function parseDecimal(s: string, options: Options): string {
   // strings of tokens are now always legitimate.
 
   if (getWholeDigitAmount(tokens) > options.maxWholeDigits) {
-    throw new Error("Too many whole digits");
+    throw new DecimalParserError("tooManyWholeDigits");
   }
   if (getDecimalAmount(tokens) > options.decimalPlaces) {
-    throw new Error("Too many decimal places");
+    throw new DecimalParserError("tooManyDecimalPlaces");
   }
 
   // note that the tokenizer has replaced the decimal separator
@@ -190,21 +194,24 @@ class Parser {
     if (this.accept(tokenType)) {
       return true;
     }
-    throw new Error(`Unexpected symbol: ${this.currentToken}`);
+    throw new DecimalParserError("default");
   };
 
   parse(): void {
     this.nextToken();
     this.decimal();
     if (this.currentToken != null) {
-      throw new Error("Could not parse");
+      throw new DecimalParserError("default");
     }
   }
 
   decimal(): void {
-    if (this.options.allowNegative) {
-      this.accept(TOKEN_MINUS);
+    if (this.accept(TOKEN_MINUS)) {
+      if (!this.options.allowNegative) {
+        throw new DecimalParserError("cannotBeNegative");
+      }
     }
+
     this.absoluteDecimal();
   }
 
@@ -238,7 +245,7 @@ class Parser {
       this.currentToken.type !== TOKEN_DECIMAL_SEPARATOR &&
       count > 3
     ) {
-      throw new Error("Too many digits");
+      throw new DecimalParserError("default");
     }
   }
 

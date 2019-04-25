@@ -1,12 +1,7 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { Field, Form, converters, FieldAccessor } from "../src";
-import {
-  CONVERSION_ERROR,
-  ConversionValue,
-  Converter,
-  ConvertError
-} from "../src/converter";
+import { ConversionValue, Converter, ConversionError } from "../src/converter";
 
 configure({ enforceActions: "observed" });
 
@@ -17,7 +12,7 @@ const options = {
   accessor: (null as unknown) as FieldAccessor<any, any>
 };
 
-test("simple converter", async () => {
+test("simple converter", () => {
   const converter = new Converter<string, string>({
     emptyRaw: "",
     emptyValue: "",
@@ -25,17 +20,17 @@ test("simple converter", async () => {
     render: value => value
   });
 
-  const result = await converter.convert("foo", options);
+  const result = converter.convert("foo", options);
   expect(result).toBeInstanceOf(ConversionValue);
   expect((result as ConversionValue<string>).value).toEqual("foo");
 
   // the string "ConversionError" is a valid text to convert
-  const result2 = await converter.convert("ConversionError", options);
+  const result2 = converter.convert("ConversionError", options);
   expect(result2).toBeInstanceOf(ConversionValue);
   expect((result2 as ConversionValue<string>).value).toEqual("ConversionError");
 });
 
-test("converter emptyImpossible and emptyValue", async () => {
+test("converter emptyImpossible and emptyValue", () => {
   expect(
     () =>
       new Converter<string, string>({
@@ -48,60 +43,25 @@ test("converter emptyImpossible and emptyValue", async () => {
   ).toThrow();
 });
 
-test("converter to integer", async () => {
+test("converter to integer", () => {
   const converter = new Converter<string, number>({
     emptyRaw: "",
     emptyImpossible: true,
-    rawValidate: raw => /^\d+$/.test(raw),
-    convert: raw => parseInt(raw, 10),
+    convert: raw => {
+      if (!/^\d+$/.test(raw)) {
+        throw new ConversionError();
+      }
+      return parseInt(raw, 10);
+    },
     render: value => value.toString()
   });
 
-  const result = await converter.convert("3", options);
+  const result = converter.convert("3", options);
   expect(result).toBeInstanceOf(ConversionValue);
   expect((result as ConversionValue<number>).value).toEqual(3);
 
-  const result2 = await converter.convert("not a number", options);
-  expect(result2).toEqual(CONVERSION_ERROR);
-});
-
-test("converter with validate", async () => {
-  const converter = new Converter<string, number>({
-    emptyRaw: "",
-    emptyImpossible: true,
-    convert: raw => parseInt(raw, 10),
-    render: value => value.toString(),
-    validate: value => value <= 10
-  });
-
-  const result = await converter.convert("3", options);
-  expect(result).toBeInstanceOf(ConversionValue);
-  expect((result as ConversionValue<number>).value).toEqual(3);
-
-  const result2 = await converter.convert("100", options);
-  expect(result2).toEqual(CONVERSION_ERROR);
-});
-
-test("converter with async validate", async () => {
-  const done: any[] = [];
-
-  const converter = new Converter<string, string>({
-    emptyRaw: "",
-    emptyValue: "",
-    convert: raw => raw,
-    validate: async value => {
-      await new Promise(resolve => {
-        done.push(resolve);
-      });
-      return true;
-    },
-    render: value => value
-  });
-
-  const result = converter.convert("foo", options);
-  done[0]();
-  const v = await result;
-  expect((v as ConversionValue<string>).value).toEqual("foo");
+  const result2 = converter.convert("not a number", options);
+  expect(result2).toBeInstanceOf(ConversionError);
 });
 
 test("converter maybeNull with converter options", async () => {
@@ -129,21 +89,21 @@ test("converter maybeNull with converter options", async () => {
   expect(field.value).toEqual("36365.20");
 });
 
-test("convert can throw ConvertError", async () => {
+test("convert can throw ConversionError", () => {
   const converter = new Converter<string, string>({
     emptyRaw: "",
     emptyValue: "",
     convert: raw => {
-      throw new ConvertError();
+      throw new ConversionError();
     },
     render: value => value
   });
 
-  const result = await converter.convert("foo", options);
-  expect(result).toEqual(CONVERSION_ERROR);
+  const result = converter.convert("foo", options);
+  expect(result).toBeInstanceOf(ConversionError);
 });
 
-test("non-ConvertError bubbles up", async () => {
+test("non-ConversionError bubbles up", () => {
   const converter = new Converter<string, string>({
     emptyRaw: "",
     emptyValue: "",
@@ -153,15 +113,5 @@ test("non-ConvertError bubbles up", async () => {
     render: value => value
   });
 
-  // we want to verify that this throws an error,
-  // but toThrow doesn't work possibly due to the async
-  // nature of convert. This is another way
-  try {
-    await converter.convert("foo", options);
-  } catch (e) {
-    expect(true).toBeTruthy();
-    return;
-  }
-  // should never be reached
-  expect(false).toBeTruthy();
+  expect(() => converter.convert("foo", options)).toThrow();
 });
