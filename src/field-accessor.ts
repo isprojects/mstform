@@ -273,10 +273,10 @@ export class FieldAccessor<R, V> {
     );
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
+  validate(options?: ValidateOptions): boolean {
     const ignoreRequired = options != null ? options.ignoreRequired : false;
     const ignoreGetError = options != null ? options.ignoreGetError : false;
-    await this.setRaw(this.raw, { ignoreRequired });
+    this.setRaw(this.raw, { ignoreRequired });
     if (ignoreGetError) {
       return this.isInternallyValid;
     }
