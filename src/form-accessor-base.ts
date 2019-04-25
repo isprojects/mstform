@@ -21,7 +21,7 @@ export abstract class FormAccessorBase<
     this.formAccessor.initialize();
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
+  validate(options?: ValidateOptions): boolean {
     return this.formAccessor.validate(options);
   }
 

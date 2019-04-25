@@ -392,9 +392,9 @@ export class FieldAccessor<R, V> {
   }
 
   // backward compatibility -- use setRaw instead
-  handleChange = async (...args: any[]) => {
+  handleChange = (...args: any[]) => {
     const raw = this.field.getRaw(...args);
-    await this.setRaw(raw);
+    this.setRaw(raw);
   };
 
   handleFocus = (event: any) => {
@@ -404,7 +404,7 @@ export class FieldAccessor<R, V> {
     this.state.focusFunc(event, this);
   };
 
-  handleBlur = async (event: any) => {
+  handleBlur = (event: any) => {
     if (this.field.postprocess && !this._error) {
       this.setRawFromValue();
     }

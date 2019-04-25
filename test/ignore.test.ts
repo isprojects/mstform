@@ -134,7 +134,7 @@ test("FormState can be saved ignoring external errors", async () => {
 
   expect(field.isInternallyValid).toBeTruthy();
   // we are without internal errors
-  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+  expect(state.validate({ ignoreGetError: true })).toBeTruthy();
 
   // now we save, ignoring external error
   const saveResult = await state.save({ ignoreGetError: true });
@@ -175,9 +175,9 @@ test("FormState can be saved ignoring non-field external errors", async () => {
   const field = state.field("foo");
 
   // we have an internal error
-  expect(await state.validate()).toBeFalsy();
+  expect(state.validate()).toBeFalsy();
   // we can ignore it
-  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+  expect(state.validate({ ignoreGetError: true })).toBeTruthy();
 
   // now we save, ignoring external error
   const saveResult = await state.save({ ignoreGetError: true });
@@ -217,9 +217,9 @@ test("ignoreGetError repeating indexed accessor non-field external", async () =>
   });
 
   // we have an internal error
-  expect(await state.validate()).toBeFalsy();
+  expect(state.validate()).toBeFalsy();
   // we can ignore it
-  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+  expect(state.validate({ ignoreGetError: true })).toBeTruthy();
 
   // now we save, ignoring external error
   const saveResult = await state.save({ ignoreGetError: true });
@@ -258,9 +258,9 @@ test("ignoreGetError repeating accessor non-field external", async () => {
   });
 
   // we have an internal error
-  expect(await state.validate()).toBeFalsy();
+  expect(state.validate()).toBeFalsy();
   // we can ignore it
-  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+  expect(state.validate({ ignoreGetError: true })).toBeTruthy();
 
   // now we save, ignoring external error
   const saveResult = await state.save({ ignoreGetError: true });
@@ -299,9 +299,9 @@ test("ignoreGetError sub form accessor non-field external", async () => {
   });
 
   // we have an internal error
-  expect(await state.validate()).toBeFalsy();
+  expect(state.validate()).toBeFalsy();
   // we can ignore it
-  expect(await state.validate({ ignoreGetError: true })).toBeTruthy();
+  expect(state.validate({ ignoreGetError: true })).toBeTruthy();
 
   // now we save, ignoring external error
   const saveResult = await state.save({ ignoreGetError: true });

@@ -488,13 +488,13 @@ test("repeating form validate", async () => {
   const field = forms.index(0).field("bar");
   expect(field.raw).toEqual("incorrect");
   expect(field.error).toBeUndefined();
-  const result = await state.validate();
+  const result = state.validate();
   expect(result).toBeFalsy();
   expect(field.error).toEqual("Wrong");
 
   await field.setRaw("correct");
   expect(field.error).toBeUndefined();
-  const result2 = await state.validate();
+  const result2 = state.validate();
   expect(result2).toBeTruthy();
 });
 
@@ -524,20 +524,20 @@ test("repeating form multiple entries validate", async () => {
   const field = forms.index(0).field("bar");
   expect(field.raw).toEqual("incorrect");
   expect(field.error).toBeUndefined();
-  const result = await state.validate();
+  const result = state.validate();
   expect(result).toBeFalsy();
   expect(field.error).toEqual("Wrong");
 
   await field.setRaw("correct");
   expect(field.error).toBeUndefined();
-  const result2 = await state.validate();
+  const result2 = state.validate();
   expect(result2).toBeFalsy();
 
   await forms
     .index(1)
     .field("bar")
     .setRaw("correct");
-  const result3 = await state.validate();
+  const result3 = state.validate();
   expect(result3).toBeTruthy();
 });
 
@@ -1337,7 +1337,7 @@ test("model converter with validate does not throw", async () => {
 
   await field.setRaw(r2);
   expect(field.value).toBe(r2);
-  await state.validate();
+  state.validate();
 });
 
 test("model converter maybe", async () => {
@@ -1763,7 +1763,7 @@ test("add mode validate", async () => {
 
   const state = form.state(o, { addMode: true });
 
-  const v = await state.validate();
+  const v = state.validate();
   expect(v).toBeFalsy();
 
   const field = state.field("foo");

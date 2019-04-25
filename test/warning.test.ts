@@ -41,7 +41,7 @@ test("a simple warning", async () => {
   expect(state.isWarningFree).toBeFalsy();
 
   // warnings don't make a form invalid
-  const result2 = await state.validate();
+  const result2 = state.validate();
   expect(result2).toBeTruthy();
 
   const isSaved = await state.save();
@@ -68,7 +68,7 @@ test("a simple error", async () => {
   });
   const fooField = state.field("foo");
 
-  const result2 = await state.validate();
+  const result2 = state.validate();
   expect(result2).toBeFalsy();
 
   const isSaved = await state.save();
@@ -105,12 +105,12 @@ test("client side errors trumps getError", async () => {
   // The getErrors hook already fills in the error
   expect(field.error).toEqual("Not uppercase");
   // Form validation should trump the old error
-  const result1 = await state.validate();
+  const result1 = state.validate();
   expect(field.error).toEqual("Wrong");
   expect(result1).toBeFalsy();
 
   await field.setRaw("correct");
-  const result2 = await state.validate();
+  const result2 = state.validate();
   // We fix one error, the other remains
   expect(field.error).toEqual("Not uppercase");
   expect(result2).toBeFalsy();
@@ -229,7 +229,7 @@ test("error on repeating form", async () => {
         : undefined
   });
 
-  const result1 = await state.validate();
+  const result1 = state.validate();
 
   const repeatingForms = state.repeatingForm("foo");
 
@@ -238,7 +238,7 @@ test("error on repeating form", async () => {
   expect(result1).toBeFalsy();
 
   repeatingForms.push({ bar: "BAR" });
-  const result2 = await state.validate();
+  const result2 = state.validate();
 
   expect(repeatingForms.error).toBeUndefined();
   expect(result2).toBeTruthy();
@@ -277,7 +277,7 @@ test("warning on repeating form", async () => {
   expect(state.isWarningFree).toBeFalsy();
 
   repeatingForms.push({ bar: "BAR" });
-  await state.validate();
+  state.validate();
 
   expect(repeatingForms.warning).toBeUndefined();
   expect(state.isWarningFree).toBeTruthy();
@@ -304,7 +304,7 @@ test("error on indexed repeating form", async () => {
       accessor.path === "/foo/1" ? "Error" : undefined
   });
 
-  const result = await state.validate();
+  const result = state.validate();
 
   const forms = state.repeatingForm("foo");
   const fooForm1 = forms.index(0);
@@ -370,7 +370,7 @@ test("error on subform", async () => {
       accessor.path === "/sub" ? "Error" : undefined
   });
 
-  const result = await state.validate();
+  const result = state.validate();
 
   const subForms = state.subForm("sub");
 
@@ -431,7 +431,7 @@ test("error on formstate", async () => {
     }
   });
 
-  const result = await state.validate();
+  const result = state.validate();
 
   expect(state.error).toEqual("Error");
   expect(state.isWarningFree).toBeTruthy();

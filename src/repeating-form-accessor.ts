@@ -54,12 +54,8 @@ export class RepeatingFormAccessor<
     return this.state.context;
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
-    const promises: Promise<any>[] = [];
-    for (const accessor of this.accessors) {
-      promises.push(accessor.validate(options));
-    }
-    const values = await Promise.all(promises);
+  validate(options?: ValidateOptions): boolean {
+    const values = this.accessors.map(accessor => accessor.validate(options));
     // appending possible error on the repeatingform itself
     const ignoreGetError = options != null ? options.ignoreGetError : false;
     if (!ignoreGetError) {
