@@ -402,14 +402,6 @@ export class FormState<
     return resolvePath(this.node, path);
   }
 
-  @computed
-  get isValidating(): boolean {
-    return this.flatAccessors.some(
-      accessor =>
-        accessor instanceof FieldAccessor ? accessor.isValidating : false
-    );
-  }
-
   accessByPath(path: string): Accessor | undefined {
     const steps = pathToSteps(path);
     return this.accessBySteps(steps);
