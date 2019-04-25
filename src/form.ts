@@ -57,7 +57,7 @@ export type InstanceFormDefinition<
 export type ValidationResponse = string | null | undefined | false;
 
 export interface Validator<V> {
-  (value: V, context?: any): ValidationResponse | Promise<ValidationResponse>;
+  (value: V, context?: any): ValidationResponse;
 }
 
 export interface Derived<V> {
