@@ -1,5 +1,14 @@
 # 1.11.0
 
+-   BREAKING CHANGE: we had a undocumented feature where you could declare
+    asynchronous `validators` and `rawValidators` for a field. This was little
+    used and complicated the code quite a bit. Now these functions have to be
+    simple synchronous functions.
+
+-   BREAKING CHANGE: since we don't actually asynchronously validate anymore,
+    the `isValidating` API on `FieldAccessor` as well as `FormState` now has
+    been removed.
+
 -   BREAKING CHANGE: converters have changed.
 
     If you had a converter that threw `ConvertError`, you now need to throw

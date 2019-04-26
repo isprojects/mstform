@@ -9,7 +9,6 @@ import {
   StateConverterOptionsWithContext,
   FieldAccessor
 } from "../src";
-import { resolveReactions } from "./utils";
 
 const baseOptions = {
   // a BIG lie. but we don't really have an accessor in these
@@ -404,7 +403,7 @@ test("object converter", () => {
   expect(r3).toEqual({ value: null });
 });
 
-test("dynamic decimal converter", async () => {
+test("dynamic decimal converter", () => {
   const context = { options: { decimalPlaces: 0 } };
 
   const M = types.model("M", {
@@ -422,12 +421,12 @@ test("dynamic decimal converter", async () => {
   const state = form.state(o, { context: context });
   const field = state.field("foo");
 
-  await field.setRaw("3.141");
+  field.setRaw("3.141");
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("4"); // conversion error
   expect(field.error).toEqual("Could not convert");
   context.options = { decimalPlaces: 3 };
-  await field.setRaw("3.141");
+  field.setRaw("3.141");
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141"); // conversion succeeds
   expect(field.error).toBeUndefined();
@@ -435,13 +434,13 @@ test("dynamic decimal converter", async () => {
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141"); // nothing happens until field is touched
   expect(field.error).toBeUndefined();
-  await field.setRaw("3.141"); // touch field again
+  field.setRaw("3.141"); // touch field again
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141");
   expect(field.error).toEqual("Could not convert");
 });
 
-test("text string array converter", async () => {
+test("text string array converter", () => {
   const M = types.model("M", {
     foo: types.array(types.string)
   });
@@ -455,32 +454,32 @@ test("text string array converter", async () => {
   const state = form.state(o);
   const field = state.field("foo");
 
-  await field.setRaw("A\nB\nC");
+  field.setRaw("A\nB\nC");
   expect(field.raw).toEqual("A\nB\nC");
   expect(field.value).toEqual(["A", "B", "C"]);
 
-  await field.setRaw("D");
+  field.setRaw("D");
   expect(field.raw).toEqual("D");
   expect(field.value).toEqual(["D"]);
 
-  await field.setRaw("1\n2 \n3");
+  field.setRaw("1\n2 \n3");
   expect(field.raw).toEqual("1\n2 \n3");
   expect(field.value).toEqual(["1", "2", "3"]);
 
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.raw).toEqual("");
   expect(field.value).toEqual([]);
 
-  await field.setRaw("\n");
+  field.setRaw("\n");
   expect(field.raw).toEqual("\n");
   expect(field.value).toEqual(["", ""]);
 
-  await field.setRaw("   ");
+  field.setRaw("   ");
   expect(field.raw).toEqual("   ");
   expect(field.value).toEqual([]);
 });
 
-test("render decimal number without decimals with decimal separator", async () => {
+test("render decimal number without decimals with decimal separator", () => {
   // this exposed a dispose bug that occurred when we had a previous state
   // and thus two onPatch event handlers. Now we properly dispose of the
   // previous form state when we attach a new form state to the same
@@ -533,16 +532,15 @@ test("render decimal number without decimals with decimal separator", async () =
   });
   const field = state.field("foo");
 
-  await field.setRaw("12,34");
+  field.setRaw("12,34");
   expect(field.raw).toEqual("12,34");
   expect(field.value).toEqual("12.34");
-  await field.setRaw("12,");
-  await resolveReactions();
+  field.setRaw("12,");
   expect(field.raw).toEqual("12,");
   expect(field.value).toEqual("12.");
 });
 
-test("obey addZeroes false", async () => {
+test("obey addZeroes false", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -563,7 +561,7 @@ test("obey addZeroes false", async () => {
   expect(field.raw).toEqual("1");
 });
 
-test("obey addZeroes true", async () => {
+test("obey addZeroes true", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -584,7 +582,7 @@ test("obey addZeroes true", async () => {
   expect(field.raw).toEqual("1.000000");
 });
 
-test("maybe decimal converter/render for empty", async () => {
+test("maybe decimal converter/render for empty", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -604,11 +602,11 @@ test("maybe decimal converter/render for empty", async () => {
 
   expect(field.raw).toEqual("");
 
-  await field.setRaw("3.1412");
+  field.setRaw("3.1412");
   expect(field.raw).toEqual("3.1412");
   expect(field.value).toEqual("3.1412");
 
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.value).toBeNull();
   field.setRawFromValue();
   expect(field.raw).toEqual("");

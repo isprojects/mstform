@@ -1,7 +1,7 @@
 import { types } from "mobx-state-tree";
 import { converters, Field, Form, FieldAccessor } from "../src";
 
-test("dynamic based on accessor", async () => {
+test("dynamic based on accessor", () => {
   const M = types.model("M", {
     foo: types.string,
     bar: types.string
@@ -26,14 +26,14 @@ test("dynamic based on accessor", async () => {
   const foo = state.field("foo");
   const bar = state.field("bar");
 
-  await foo.setRaw("-1.2");
+  foo.setRaw("-1.2");
   expect(foo.error).toEqual("Could not convert");
 
-  await bar.setRaw("-3.4");
+  bar.setRaw("-3.4");
   expect(bar.error).toBeUndefined();
 });
 
-test("dynamic converter with maybe", async () => {
+test("dynamic converter with maybe", () => {
   const M = types.model("M", {
     foo: types.maybe(types.string)
   });
@@ -53,15 +53,15 @@ test("dynamic converter with maybe", async () => {
   const state = form.state(o);
   const foo = state.field("foo");
 
-  await foo.setRaw("-1.2");
+  foo.setRaw("-1.2");
   expect(foo.error).toEqual("Could not convert");
 
-  await foo.setRaw("");
+  foo.setRaw("");
   expect(foo.error).toBeUndefined();
   expect(foo.value).toBeUndefined();
 });
 
-test("dynamic converter with maybeNull", async () => {
+test("dynamic converter with maybeNull", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -81,10 +81,10 @@ test("dynamic converter with maybeNull", async () => {
   const state = form.state(o);
   const foo = state.field("foo");
 
-  await foo.setRaw("-1.2");
+  foo.setRaw("-1.2");
   expect(foo.error).toEqual("Could not convert");
 
-  await foo.setRaw("");
+  foo.setRaw("");
   expect(foo.error).toBeUndefined();
   expect(foo.value).toBeNull();
 });

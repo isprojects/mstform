@@ -5,7 +5,7 @@ import { Field, Form, Group, SubForm, RepeatingForm, converters } from "../src";
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("groups basic", async () => {
+test("groups basic", () => {
   const M = types.model("M", {
     a: types.number,
     b: types.number,
@@ -37,22 +37,22 @@ test("groups basic", async () => {
   const one = state.group("one");
   const two = state.group("two");
 
-  await a.setRaw("wrong");
+  a.setRaw("wrong");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeTruthy();
 
-  await c.setRaw("wrong too");
+  c.setRaw("wrong too");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeFalsy();
 
-  await a.setRaw("10");
-  await c.setRaw("30");
+  a.setRaw("10");
+  c.setRaw("30");
 
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
 });
 
-test("groups exclude", async () => {
+test("groups exclude", () => {
   const M = types.model("M", {
     a: types.number,
     b: types.number,
@@ -84,22 +84,22 @@ test("groups exclude", async () => {
   const one = state.group("one");
   const two = state.group("two");
 
-  await a.setRaw("wrong");
+  a.setRaw("wrong");
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeFalsy();
 
-  await c.setRaw("wrong too");
+  c.setRaw("wrong too");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeFalsy();
 
-  await a.setRaw("10");
-  await c.setRaw("30");
+  a.setRaw("10");
+  c.setRaw("30");
 
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
 });
 
-test("groups sub form", async () => {
+test("groups sub form", () => {
   const N = types.model("N", {
     a: types.number,
     b: types.number,
@@ -145,29 +145,29 @@ test("groups sub form", async () => {
   const one = item.group("one");
   const two = item.group("two");
 
-  await a.setRaw("wrong");
+  a.setRaw("wrong");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeTruthy();
   expect(whole.isValid).toBeFalsy();
 
-  await c.setRaw("wrong too");
+  c.setRaw("wrong too");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeFalsy();
   expect(whole.isValid).toBeFalsy();
 
-  await a.setRaw("10");
-  await c.setRaw("30");
+  a.setRaw("10");
+  c.setRaw("30");
 
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
   expect(whole.isValid).toBeTruthy();
 
-  await field.setRaw("wrong");
+  field.setRaw("wrong");
   // whole is not affected as it only is affected by the sub form
   expect(whole.isValid).toBeTruthy();
 });
 
-test("groups sub form exclude", async () => {
+test("groups sub form exclude", () => {
   const N = types.model("N", {
     a: types.number,
     b: types.number,
@@ -213,29 +213,29 @@ test("groups sub form exclude", async () => {
   const one = item.group("one");
   const two = item.group("two");
 
-  await a.setRaw("wrong");
+  a.setRaw("wrong");
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeFalsy();
   expect(whole.isValid).toBeFalsy();
 
-  await c.setRaw("wrong too");
+  c.setRaw("wrong too");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeFalsy();
   expect(whole.isValid).toBeFalsy();
 
-  await a.setRaw("10");
-  await c.setRaw("30");
+  a.setRaw("10");
+  c.setRaw("30");
 
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
   expect(whole.isValid).toBeTruthy();
 
-  await field.setRaw("wrong");
+  field.setRaw("wrong");
   // whole is not affected as it only is affected by the sub form
   expect(whole.isValid).toBeTruthy();
 });
 
-test("groups repeating form", async () => {
+test("groups repeating form", () => {
   const N = types.model("N", {
     a: types.number,
     b: types.number,
@@ -273,22 +273,22 @@ test("groups repeating form", async () => {
   const one = item0.group("one");
   const two = item0.group("two");
 
-  await a.setRaw("wrong");
+  a.setRaw("wrong");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeTruthy();
 
-  await c.setRaw("wrong too");
+  c.setRaw("wrong too");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeFalsy();
 
-  await a.setRaw("10");
-  await c.setRaw("30");
+  a.setRaw("10");
+  c.setRaw("30");
 
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
 });
 
-test("groups repeating form exclude", async () => {
+test("groups repeating form exclude", () => {
   const N = types.model("N", {
     a: types.number,
     b: types.number,
@@ -326,16 +326,16 @@ test("groups repeating form exclude", async () => {
   const one = item0.group("one");
   const two = item0.group("two");
 
-  await a.setRaw("wrong");
+  a.setRaw("wrong");
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeFalsy();
 
-  await c.setRaw("wrong too");
+  c.setRaw("wrong too");
   expect(one.isValid).toBeFalsy();
   expect(two.isValid).toBeFalsy();
 
-  await a.setRaw("10");
-  await c.setRaw("30");
+  a.setRaw("10");
+  c.setRaw("30");
 
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();

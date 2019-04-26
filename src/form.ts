@@ -57,7 +57,7 @@ export type InstanceFormDefinition<
 export type ValidationResponse = string | null | undefined | false;
 
 export interface Validator<V> {
-  (value: V, context?: any): ValidationResponse | Promise<ValidationResponse>;
+  (value: V, context?: any): ValidationResponse;
 }
 
 export interface Derived<V> {
@@ -263,15 +263,12 @@ export class Field<R, V> {
     return required;
   }
 
-  async process(
+  process(
     raw: R,
     stateConverterOptions: StateConverterOptionsWithContext
-  ): Promise<ProcessResponse<V>> {
+  ): ProcessResponse<V> {
     for (const validator of this.rawValidators) {
-      const validationResponse = await validator(
-        raw,
-        stateConverterOptions.context
-      );
+      const validationResponse = validator(raw, stateConverterOptions.context);
       if (typeof validationResponse === "string" && validationResponse) {
         return new ValidationMessage(validationResponse);
       }
@@ -283,7 +280,7 @@ export class Field<R, V> {
       );
     }
     for (const validator of this.validators) {
-      const validationResponse = await validator(
+      const validationResponse = validator(
         result.value,
         stateConverterOptions.context
       );

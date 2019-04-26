@@ -338,7 +338,7 @@ export class FormState<
 
   @action
   async save(options?: ValidateOptions): Promise<boolean> {
-    const isValid = await this.validate(options);
+    const isValid = this.validate(options);
 
     // if we ignored required, we need to re-validate to restore
     // the required messages (if any)
@@ -346,7 +346,7 @@ export class FormState<
     if (options != null && options.ignoreRequired) {
       // we don't care about the answer, only about updating the messages
       // in the UI
-      await this.validate();
+      this.validate();
     }
 
     this.setSaveStatus("rightAfter");
@@ -400,14 +400,6 @@ export class FormState<
 
   getValue(path: string): any {
     return resolvePath(this.node, path);
-  }
-
-  @computed
-  get isValidating(): boolean {
-    return this.flatAccessors.some(
-      accessor =>
-        accessor instanceof FieldAccessor ? accessor.isValidating : false
-    );
   }
 
   accessByPath(path: string): Accessor | undefined {

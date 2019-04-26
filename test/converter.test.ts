@@ -64,7 +64,7 @@ test("converter to integer", () => {
   expect(result2).toBeInstanceOf(ConversionError);
 });
 
-test("converter maybeNull with converter options", async () => {
+test("converter maybeNull with converter options", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string)
   });
@@ -83,7 +83,7 @@ test("converter maybeNull with converter options", async () => {
     }
   });
   const field = state.field("foo");
-  await field.setRaw("36.365,20");
+  field.setRaw("36.365,20");
   expect(field.error).toBeUndefined();
   expect(field.raw).toEqual("36.365,20");
   expect(field.value).toEqual("36365.20");

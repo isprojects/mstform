@@ -11,7 +11,7 @@ test("path to fieldref", () => {
   expect(pathToFieldref("/foo")).toEqual("foo");
 });
 
-test("fieldref", async () => {
+test("fieldref", () => {
   const N = types.model("N", {
     repeatingField: types.string
   });

@@ -32,9 +32,6 @@ export class FieldAccessor<R, V> {
   _error: string | undefined;
 
   @observable
-  _isValidating: boolean = false;
-
-  @observable
   _addMode: boolean = false;
 
   @observable
@@ -247,11 +244,6 @@ export class FieldAccessor<R, V> {
   }
 
   @computed
-  get isValidating(): boolean {
-    return this._isValidating;
-  }
-
-  @computed
   get disabled(): boolean {
     return this.parent.disabled ? true : this.state.isDisabledFunc(this);
   }
@@ -281,10 +273,10 @@ export class FieldAccessor<R, V> {
     );
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
+  validate(options?: ValidateOptions): boolean {
     const ignoreRequired = options != null ? options.ignoreRequired : false;
     const ignoreGetError = options != null ? options.ignoreGetError : false;
-    await this.setRaw(this.raw, { ignoreRequired });
+    this.setRaw(this.raw, { ignoreRequired });
     if (ignoreGetError) {
       return this.isInternallyValid;
     }
@@ -309,13 +301,11 @@ export class FieldAccessor<R, V> {
   }
 
   @action
-  async setRaw(raw: R, options?: ProcessOptions) {
+  setRaw(raw: R, options?: ProcessOptions) {
     if (this.state.saveStatus === "rightAfter") {
       this.state.setSaveStatus("after");
     }
 
-    // we can still set raw directly before the await
-    const originalRaw = raw;
     this._raw = raw;
 
     const stateConverterOptions = this.state.stateConverterOptionsWithContext(
@@ -332,27 +322,13 @@ export class FieldAccessor<R, V> {
       return;
     }
 
-    this.setValidating(true);
-
     let processResult;
     try {
-      // XXX is await correct here? we should await the result
-      // later
-      processResult = await this.field.process(raw, stateConverterOptions);
+      processResult = this.field.process(raw, stateConverterOptions);
     } catch (e) {
       this.setError("Something went wrong");
-      this.setValidating(false);
       return;
     }
-
-    const currentRaw = this._raw;
-
-    // if the raw changed in the mean time, bail out
-    if (!comparer.structural(currentRaw, originalRaw)) {
-      return;
-    }
-    // validation only is complete if the currentRaw has been validated
-    this.setValidating(false);
 
     if (processResult instanceof ValidationMessage) {
       this.setError(processResult.message);
@@ -415,15 +391,10 @@ export class FieldAccessor<R, V> {
     this._error = undefined;
   }
 
-  @action
-  setValidating(flag: boolean) {
-    this._isValidating = flag;
-  }
-
   // backward compatibility -- use setRaw instead
-  handleChange = async (...args: any[]) => {
+  handleChange = (...args: any[]) => {
     const raw = this.field.getRaw(...args);
-    await this.setRaw(raw);
+    this.setRaw(raw);
   };
 
   handleFocus = (event: any) => {
@@ -433,7 +404,7 @@ export class FieldAccessor<R, V> {
     this.state.focusFunc(event, this);
   };
 
-  handleBlur = async (event: any) => {
+  handleBlur = (event: any) => {
     if (this.field.postprocess && !this._error) {
       this.setRawFromValue();
     }

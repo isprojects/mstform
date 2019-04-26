@@ -57,9 +57,8 @@ export class FormAccessor<
     this.initialize();
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
-    const promises = this.accessors.map(accessor => accessor.validate(options));
-    const values = await Promise.all(promises);
+  validate(options?: ValidateOptions): boolean {
+    const values = this.accessors.map(accessor => accessor.validate(options));
     const ignoreGetError = options != null ? options.ignoreGetError : false;
     if (!ignoreGetError) {
       values.push(this.errorValue === undefined); // add possible error of the form itself
