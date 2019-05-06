@@ -21,6 +21,7 @@ import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
 import { References } from "./references";
+import { pathToFieldref } from "./utils";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -30,9 +31,6 @@ export class FieldAccessor<R, V> {
 
   @observable
   _error: string | undefined;
-
-  @observable
-  _isValidating: boolean = false;
 
   @observable
   _addMode: boolean = false;
@@ -82,6 +80,11 @@ export class FieldAccessor<R, V> {
   }
 
   @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
+  }
+
+  @computed
   get context(): any {
     return this.state.context;
   }
@@ -107,6 +110,19 @@ export class FieldAccessor<R, V> {
     return this._references.getById(id);
   }
 
+  @computed
+  get isEmpty(): boolean {
+    if (this.field.converter.emptyImpossible) {
+      return false;
+    }
+    return this.raw === this.field.converter.emptyRaw;
+  }
+
+  @computed
+  get isEmptyAndRequired(): boolean {
+    return this.isEmpty && this.required;
+  }
+
   createDerivedReaction() {
     const derivedFunc = this.field.derivedFunc;
     if (derivedFunc == null) {
@@ -128,7 +144,7 @@ export class FieldAccessor<R, V> {
         this.setRaw(
           this.field.render(
             derivedValue,
-            this.state.stateConverterOptionsWithContext
+            this.state.stateConverterOptionsWithContext(this)
           )
         );
       }
@@ -175,7 +191,7 @@ export class FieldAccessor<R, V> {
     }
     return this.field.render(
       this.value,
-      this.state.stateConverterOptionsWithContext
+      this.state.stateConverterOptionsWithContext(this)
     );
   }
 
@@ -262,23 +278,23 @@ export class FieldAccessor<R, V> {
   }
 
   @computed
-  get isValidating(): boolean {
-    return this._isValidating;
-  }
-
-  @computed
   get disabled(): boolean {
-    return this.state.isDisabledFunc(this);
+    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
   }
 
   @computed
   get hidden(): boolean {
-    return this.state.isHiddenFunc(this);
+    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
   }
 
   @computed
   get readOnly(): boolean {
-    return this.state.isReadOnlyFunc(this);
+    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
   }
 
   @computed
@@ -291,10 +307,10 @@ export class FieldAccessor<R, V> {
     );
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
+  validate(options?: ValidateOptions): boolean {
     const ignoreRequired = options != null ? options.ignoreRequired : false;
     const ignoreGetError = options != null ? options.ignoreGetError : false;
-    await this.setRaw(this.raw, { ignoreRequired });
+    this.setRaw(this.raw, { ignoreRequired });
     if (ignoreGetError) {
       return this.isInternallyValid;
     }
@@ -319,16 +335,16 @@ export class FieldAccessor<R, V> {
   }
 
   @action
-  async setRaw(raw: R, options?: ProcessOptions) {
+  setRaw(raw: R, options?: ProcessOptions) {
     if (this.state.saveStatus === "rightAfter") {
       this.state.setSaveStatus("after");
     }
 
-    // we can still set raw directly before the await
-    const originalRaw = raw;
     this._raw = raw;
 
-    const stateConverterOptions = this.state.stateConverterOptionsWithContext;
+    const stateConverterOptions = this.state.stateConverterOptionsWithContext(
+      this
+    );
 
     raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
 
@@ -340,27 +356,13 @@ export class FieldAccessor<R, V> {
       return;
     }
 
-    this.setValidating(true);
-
     let processResult;
     try {
-      // XXX is await correct here? we should await the result
-      // later
-      processResult = await this.field.process(raw, stateConverterOptions);
+      processResult = this.field.process(raw, stateConverterOptions);
     } catch (e) {
       this.setError("Something went wrong");
-      this.setValidating(false);
       return;
     }
-
-    const currentRaw = this._raw;
-
-    // if the raw changed in the mean time, bail out
-    if (!comparer.structural(currentRaw, originalRaw)) {
-      return;
-    }
-    // validation only is complete if the currentRaw has been validated
-    this.setValidating(false);
 
     if (processResult instanceof ValidationMessage) {
       this.setError(processResult.message);
@@ -388,6 +390,7 @@ export class FieldAccessor<R, V> {
     this.setValue(processResult.value);
   }
 
+  @action
   setRawFromValue() {
     // we get the value ignoring add mode
     // this is why we can't use this.value
@@ -399,10 +402,17 @@ export class FieldAccessor<R, V> {
     // to be disabled
     this._raw = this.field.render(
       value,
-      this.state.stateConverterOptionsWithContext
+      this.state.stateConverterOptionsWithContext(this)
     );
     // trigger validation
     this.validate();
+  }
+
+  @action
+  setValueAndUpdateRaw(value: V) {
+    // We want to update a value through the accessor and also update the raw
+    this.setValue(value);
+    this.setRawFromValue();
   }
 
   @action
@@ -415,15 +425,10 @@ export class FieldAccessor<R, V> {
     this._error = undefined;
   }
 
-  @action
-  setValidating(flag: boolean) {
-    this._isValidating = flag;
-  }
-
   // backward compatibility -- use setRaw instead
-  handleChange = async (...args: any[]) => {
+  handleChange = (...args: any[]) => {
     const raw = this.field.getRaw(...args);
-    await this.setRaw(raw);
+    this.setRaw(raw);
   };
 
   handleFocus = (event: any) => {
@@ -434,10 +439,12 @@ export class FieldAccessor<R, V> {
   };
 
   handleBlur = (event: any) => {
-    if (this.state.blurFunc == null) {
-      return;
+    if (this.field.postprocess && !this._error) {
+      this.setRawFromValue();
     }
-    this.state.blurFunc(event, this);
+    if (this.state.blurFunc != null) {
+      this.state.blurFunc(event, this);
+    }
   };
 
   @computed
@@ -450,7 +457,7 @@ export class FieldAccessor<R, V> {
     if (this.state.focusFunc != null) {
       result.onFocus = this.handleFocus;
     }
-    if (this.state.blurFunc != null) {
+    if (this.state.blurFunc != null || this.field.postprocess) {
       result.onBlur = this.handleBlur;
     }
     return result;

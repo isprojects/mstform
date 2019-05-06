@@ -6,13 +6,14 @@ import {
   SubForm,
   RepeatingForm,
   converters,
-  Converter
+  Converter,
+  ConversionError
 } from "../src";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("context passed to field accessor", async () => {
+test("context passed to field accessor", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -29,7 +30,7 @@ test("context passed to field accessor", async () => {
   expect(field.context).toEqual("foo");
 });
 
-test("context passed to sub form accessor", async () => {
+test("context passed to sub form accessor", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -49,7 +50,7 @@ test("context passed to sub form accessor", async () => {
   expect(subForm.context).toEqual("foo");
 });
 
-test("context passed to repeating form accessor", async () => {
+test("context passed to repeating form accessor", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -69,7 +70,7 @@ test("context passed to repeating form accessor", async () => {
   expect(repeatingForm.context).toEqual("foo");
 });
 
-test("context passed to repeating form indexed accessor", async () => {
+test("context passed to repeating form indexed accessor", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -90,7 +91,7 @@ test("context passed to repeating form indexed accessor", async () => {
   expect(f.context).toEqual("foo");
 });
 
-test("context in validate", async () => {
+test("context in validate", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -107,11 +108,11 @@ test("context in validate", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("FOO");
-  await field.setRaw("BAR");
+  field.setRaw("BAR");
   expect(field.raw).toEqual("BAR");
   expect(field.error).toEqual("Wrong");
   expect(field.value).toEqual("FOO");
-  await field.setRaw("correct");
+  field.setRaw("correct");
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("correct");
 
@@ -120,21 +121,21 @@ test("context in validate", async () => {
 
   const field2 = state2.field("foo");
 
-  await field2.setRaw("correct");
+  field2.setRaw("correct");
   expect(field2.error).toEqual("Wrong");
 });
 
-test("context in converter", async () => {
+test("context in converter", () => {
   const M = types.model("M", {
     foo: types.string
   });
 
   const myConverter = new Converter<string, string>({
     emptyRaw: "",
-    rawValidate(raw, options) {
-      return raw.startsWith(options.context.prefix);
-    },
-    convert(raw) {
+    convert(raw, options) {
+      if (!raw.startsWith(options.context.prefix)) {
+        throw new ConversionError();
+      }
       return raw;
     },
     render(value) {
@@ -151,16 +152,16 @@ test("context in converter", async () => {
   const state = form.state(o, { context: { prefix: "X" } });
   const field = state.field("foo");
 
-  await field.setRaw("XBAR");
+  field.setRaw("XBAR");
   expect(field.raw).toEqual("XBAR");
   expect(field.error).toBeUndefined();
 
-  await field.setRaw("YBAR");
+  field.setRaw("YBAR");
   expect(field.value).toEqual("XBAR");
   expect(field.error).toEqual("Could not convert");
 });
 
-test("context in converter in convert", async () => {
+test("context in converter in convert", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -184,13 +185,13 @@ test("context in converter in convert", async () => {
   const state = form.state(o, { context: { prefix: "X" } });
   const field = state.field("foo");
 
-  await field.setRaw("BAR");
+  field.setRaw("BAR");
   expect(field.error).toBeUndefined();
   expect(field.raw).toEqual("BAR");
   expect(field.value).toEqual("XBAR");
 });
 
-test("context in converter in render", async () => {
+test("context in converter in render", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -216,13 +217,13 @@ test("context in converter in render", async () => {
 
   expect(field.raw).toEqual("XFOO");
 
-  await field.setRaw("BAR");
+  field.setRaw("BAR");
   expect(field.error).toBeUndefined();
   expect(field.raw).toEqual("BAR");
   expect(field.value).toEqual("BAR");
 });
 
-test("requiredError", async () => {
+test("requiredError", () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -242,12 +243,12 @@ test("requiredError", async () => {
 
   expect(field.raw).toEqual("3");
   expect(field.value).toEqual(3);
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.error).toEqual("Required!");
   expect(field.value).toEqual(3);
 });
 
-test("requiredError dynamic with context", async () => {
+test("requiredError dynamic with context", () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -267,12 +268,12 @@ test("requiredError dynamic with context", async () => {
 
   expect(field.raw).toEqual("3");
   expect(field.value).toEqual(3);
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.error).toEqual("Required!!");
   expect(field.value).toEqual(3);
 });
 
-test("conversionError dynamic with context", async () => {
+test("conversionError dynamic with context", () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -290,16 +291,16 @@ test("conversionError dynamic with context", async () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("3");
-  await field.setRaw("4");
+  field.setRaw("4");
   expect(field.raw).toEqual("4");
   expect(field.value).toEqual(4);
   expect(field.error).toBeUndefined();
-  await field.setRaw("not a number");
+  field.setRaw("not a number");
   expect(field.value).toEqual(4);
   expect(field.error).toEqual("Not a number!!");
 });
 
-test("converter options in decimal converter in convert", async () => {
+test("converter options in decimal converter in convert", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -315,13 +316,13 @@ test("converter options in decimal converter in convert", async () => {
   });
   const field = state.field("foo");
 
-  await field.setRaw("5300,20");
+  field.setRaw("5300,20");
   expect(field.error).toBeUndefined();
   expect(field.raw).toEqual("5300,20");
   expect(field.value).toEqual("5300.20");
 });
 
-test("converter options in decimal converter in render", async () => {
+test("converter options in decimal converter in render", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -340,7 +341,7 @@ test("converter options in decimal converter in render", async () => {
   expect(field.raw).toEqual("1234567,89");
 });
 
-test("converter options in number converter in convert", async () => {
+test("converter options in number converter in convert", () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -356,13 +357,13 @@ test("converter options in number converter in convert", async () => {
   });
   const field = state.field("foo");
 
-  await field.setRaw("5300,20");
+  field.setRaw("5300,20");
   expect(field.error).toBeUndefined();
   expect(field.raw).toEqual("5300,20");
   expect(field.value).toEqual(5300.2);
 });
 
-test("converter options in number converter in render", async () => {
+test("converter options in number converter in render", () => {
   const M = types.model("M", {
     foo: types.number
   });

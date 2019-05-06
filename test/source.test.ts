@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types, getSnapshot, Instance, getIdentifier } from "mobx-state-tree";
+import { types, getSnapshot } from "mobx-state-tree";
 import { Source, Form, converters, Field } from "../src";
 import { resolveReactions } from "./util";
 
@@ -179,14 +179,14 @@ describe("source accessor in fields", () => {
     if (item1 === undefined) {
       throw new Error("item1 should exist");
     }
-    await fieldA.setRaw(item1);
+    fieldA.setRaw(item1);
 
     // now we reload B
-    await fieldB.loadReferences();
+    fieldB.loadReferences();
 
-    // // this will automatically trigger a reload of b, as a is dependent on b
-    // // and we turn on autoReload
-    // await resolveReactions();
+    // this will automatically trigger a reload of b, as a is dependent on b
+    // and we turn on autoReload
+    await resolveReactions();
 
     // refs for B should now be a different list that fits A
     const refsB2 = fieldB.references();
@@ -261,10 +261,10 @@ describe("source accessor in fields", () => {
     if (item1 === undefined) {
       throw new Error("item1 should exist");
     }
-    await fieldA.setRaw(item1);
+    fieldA.setRaw(item1);
 
-    // this will automatically trigger a reload of b, as a is dependent on b
-    // and we turn on autoReload
+    // // this will automatically trigger a reload of b, as a is dependent on b
+    // // and we turn on autoReload
     await resolveReactions();
 
     // refs for B should now be a different list that fits A

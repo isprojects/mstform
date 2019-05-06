@@ -318,6 +318,9 @@ have some properties in common:
 
 -   `path`: The JSON path to the underlying MST value (see mobx-state-tree).
 
+-   `fieldref`: a generalization of the path to a pattern. `foo/3/bar` becomes
+    `foo[].bar`.
+
 -   `context`: The context object such as passed into `form.state()`.
 
 -   `isValid`: Is true if the accessor (and all its sub-accessors) is valid.
@@ -354,10 +357,21 @@ other object:
     maximum `maxWholeDigits` (default 10) before the period and a maximum of
     `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
     the number of decimals that is initially rendered when opening the form.
-    With `allowNegative` (boolean, default true) you can specify if negatives
-    are allowed. These options can be set directly, or through the use of a
-    function that returns these options based on `context`. Using a function
-    allows these options to be dynamic.
+    With `allowNegative` (boolean, default true) you can specify if negative
+    values are allowed.
+
+    Conversion error types are:
+
+    -   `default`: Cannot be parsed, not a decimal number
+
+    -   `tooManyDecimalPlaces`: we entered too many digits after the decimal
+        separator.
+
+    -   `tooManyWholeDigits`: we entered too many digits before the decimal
+        separator.
+
+    -   `cannotBeNegative`: you entered a negative number where this wasn't
+        allowed.
 
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to
@@ -382,8 +396,8 @@ instead.
 ### Text Arrays
 
 `converters.textStringArray`: raw value is a string with newlines. Value is an
-array of strings split by newline. You can use this with a textarea to edit an array
-of strings by newline.
+array of strings split by newline. You can use this with a textarea to edit an
+array of strings by newline.
 
 ### Models
 
@@ -407,6 +421,33 @@ empty. This is handy when you have a `types.maybe(types.reference())` in MST.
 
 `converters.maybeNull(converter)` is like `converters.maybe` but is designed to
 work with `types.maybeNull`, so the empty value is `null`.
+
+### Dynamic
+
+`converters.dynamic(converter, getOptions)`. This works on any converter that
+expects a parameter object for its configuration. Currently this is only
+`converters.decimal`.
+
+This is a way to make the parameters for a converter dynamic and get
+decided at run-time, based on the `context` you pass into `state()`
+as well as the field accessor -- these get passed into the `getOptions`
+function as arguments. So:
+
+```js
+const form = new Form(Foo, {
+    value: new Field(
+        converters.dynamic(converters.decimal, (context, accessor) => {
+            return { allowNegative: context.weWantNegatives };
+        })
+    )
+});
+```
+
+allows negative values for this decimal dynamically if
+`context.weWantNegatives` is set to `true`.
+
+`converters.maybe` and `converters.maybeNull` wrap around `converters.dynamic`,
+so it's `converters.maybe(converters.dynamic(converters.decimal, getOptions))`.
 
 ### Object
 
@@ -434,10 +475,9 @@ const formState = form.state(o, {
 
 ### Controlling the conversion error message
 
-A converter may fail to convert a raw value into a value if the raw value
-doesn't pass its `rawValidate` function or the converted value doesn't pass its
-`validate` function. In this case, the UI displays a conversion error. You can
-control this conversion error with the `conversionError` property for a field.
+A converter may fail to convert a raw value. In this case, the UI displays a
+conversion error. You can control this conversion error with the
+`conversionError` property for a field.
 
 ```js
 const form = new Form(M, {
@@ -459,6 +499,34 @@ const form = new Form(M, {
                 : "De conversie faalde"
     })
 });
+```
+
+Some converters can return multiple types of conversion error. If
+you care about showing these differences in the UI, you can set up
+an object for `conversionError`:
+
+```js
+conversionError: {
+    default: "Not a number",
+    tooManyDecimalPlaces: "Too many decimal places",
+    tooManyWholeDigits: "Too many whole digits",
+    cannotBeNegative: "Cannot be negative"
+}
+```
+
+This object must always contain a `default` key, which contains the fallback
+conversion error if no error type matched.
+
+It's also possible to use a function to dynamically generate the messages,
+like this:
+
+```js
+conversionError: {
+    default: context => "Not a number",
+    tooManyDecimalPlaces: context => "Too many decimal places",
+    tooManyWholeDigits: context => "Too many whole digits",
+    cannotBeNegative: context => "Cannot be negative"
+}
 ```
 
 ### Defining a new converter
@@ -486,9 +554,9 @@ converted value (as you have in the MST model).
 
 A converter needs to define a `convert` and a `render` method. `convert` takes
 a raw value and converts it to the MST value. `render` takes the MST value and
-converts it to the raw value. `rawValidate` is an optional function that checks
-whether the raw value is valid. `validate` is an optional function that checks
-whether the value is valid.
+converts it to the raw value. You can trigger a conversion error by throwing
+`ConversionError` inside `convert`; it takes the conversion error type as its
+first argument.
 
 `emptyRaw` is the raw value that should be shown if the field is empty in the
 UI. We also set `emptyImpossible` -- it's impossible for the result of this
@@ -504,10 +572,10 @@ default for this converter. You can also optionally set `neverRequired`; this
 is handy for fields where the `required` status makes no sense -- a checkbox is
 an example.
 
-`convert`, `render`, `rawValidate` and `validate` all take an optional
-second argument, `options`. With `options`, you can pass `converterOptions` and
-a `context`. `context` is an arbitrary value you can pass in as a `form.state()`
-option from your application:
+`convert` and `render` take an optional second argument, `options`. With
+`options`, you can pass `converterOptions` and a `context`. `context` is an
+arbitrary value you can pass in as a `form.state()` option from your
+application:
 
 ```js
 const formState = form.state(o, { context: { something: "FOO" } });
@@ -959,14 +1027,25 @@ this.formState = form.state(o, {
 });
 ```
 
+## Empty and required fields
+
+All fields have the `isEmpty` and `isEmptyAndRequired` properties.
+`isEmpty` checks whether the `raw` value of the field equals the `emptyRaw`
+value of the converter and if so it is considered empty. If the converter option
+`emptyImpossible` is true `isEmpty` will always return `false`.
+
+`isEmptyAndRequired` additionally checks whether the `required` property is true
+for this field.
+
 ## Dynamic disabled, hidden, required and readOnly fields
 
 mstform has hooks that let you calculate `hidden`, `disabled`, `required` and
-`readOnly` state based on the field accessor. Here is a small example that
-makes the `foo` field disabled. This uses the JSON Path functionality of
+`readOnly` state based on the accessor. Here is a small example that
+makes the `foo` form or field disabled. This uses the JSON Path functionality of
 mstform to determine whether a field is disabled, but any operation can be
 implemented here. You could for instance retrieve information about which
 fields are disabled dynamically from the backend before you display the form.
+The `fieldref` functionality described below is very useful for this.
 
 ```js
 const state = form.state(o, {
@@ -974,26 +1053,48 @@ const state = form.state(o, {
 });
 ```
 
-To implement hidden behavior, pass in an `isHidden` function. You can also
-determine whether a repeating form is disabled from add and remove using
-`isRepeatingFormDisabled`. It's up to you to use this information to render the
-add and remove buttons with the disabled status, however.
+To implement hidden behavior, pass in an `isHidden` function.
 
 To implement readOnly behavior, pass in an `isReadOnly` function.
 
 To implement required behavior, pass in an `isRequired` function. This does not
-only affect the `required` property on fieldAccessor, but also makes the field
-require the field just as if you used the `required` flag in the field
-definition. The `required` flag in the field definition always makes something
-required, no wonder what `isRequired` says.
+only affect the `required` property on the accessor, but also makes the field
+require the form or field just as if you used the `required` flag in the field
+definition. The `required` flag in the definition always makes something
+required, no matter what `isRequired` says.
 
 `isDisabled` returning `true` makes the `disabled` prop `true` in
 `accessor.inputProps`. If `isReadOnly` is true, the `readOnly` flag is added to
 `accessor.inputProps`; otherwise it's absent, but it's up to you to ensure your
 React input widgets support a `readOnly` prop (HTML input does). There is no
 such behavior for `hidden` or `required`; use `accessor.hidden` and
-``accessor.required` in your rendering code to determine whether a field wants
-to be hidden or required.
+`accessor.required` in your rendering code to determine whether a form or field
+wants to be hidden, or a field wants to be required. There is also an
+`inputAllowed` flag on accessors, which checks if a form or field isn't disabled,
+hidden or read-only.
+
+When these properties are set on forms, they will automatically be passed down
+to the children of said form. This works for regular forms, repeating forms and
+subforms, and every kind of property except required.
+
+## Fieldref
+
+Accessors that have a `path` property also define a `fieldref` property. The
+fieldref is a generalized form of the path that is convenient for matching.
+
+The path `/foo` results in the fieldref `foo`. The path `/foo/bar` results in
+the fieldref `foo.bar`. The path `/foo/1/bar` results in the fieldref
+`foo[].bar`, and so does `/foo/2/bar` or any other index. The path `/foo/1` by
+itself (for `.repeating.index()`) results in the fieldref `foo[]`.
+
+To create an `isDisabled` hook that makes the `bar` field disabled
+in a repeating form, you can write:
+
+```js
+const state = form.state(o, {
+    isDisabled: accessor => accessor.fieldref === "foo[].bar"
+});
+```
 
 ## Warnings
 
@@ -1198,6 +1299,18 @@ accessor to get the field name (`accessor.name`), value (`accessor.value`),
 etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus`/`onBlur` handler, so if you use that with the field it is there
 automatically.
+
+In addition, you can set a field to rerender itself when you blur out of it,
+using the `postprocess` option on fields. An example use case is rendering
+extra zeroes in decimal fields, like so:
+
+```js
+const form = new Form(M, {
+    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
+        postprocess: true
+    })
+});
+```
 
 ## Update hook
 

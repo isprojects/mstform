@@ -20,7 +20,8 @@ import {
   deleteByPath,
   getByPath,
   pathToSteps,
-  stepsToPath
+  stepsToPath,
+  pathToFieldref
 } from "./utils";
 import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
@@ -32,10 +33,10 @@ import {
   StateConverterOptions,
   StateConverterOptionsWithContext
 } from "./converter";
-import { checkConverterOptions } from "./decimal";
+import { checkConverterOptions } from "./decimalParser";
 
-export interface FieldAccessorAllows {
-  (fieldAccessor: FieldAccessor<any, any>): boolean;
+export interface AccessorAllows {
+  (accessor: Accessor): boolean;
 }
 
 export interface ErrorOrWarning {
@@ -75,11 +76,10 @@ export interface FormStateOptions<M> {
     afterSave?: ValidationOption;
     pauseDuration?: number;
   };
-  isDisabled?: FieldAccessorAllows;
-  isHidden?: FieldAccessorAllows;
-  isReadOnly?: FieldAccessorAllows;
-  isRepeatingFormDisabled?: RepeatingFormAccessorAllows;
-  isRequired?: FieldAccessorAllows;
+  isDisabled?: AccessorAllows;
+  isHidden?: AccessorAllows;
+  isReadOnly?: AccessorAllows;
+  isRequired?: AccessorAllows;
 
   getError?: ErrorOrWarning;
   getWarning?: ErrorOrWarning;
@@ -112,11 +112,10 @@ export class FormState<
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
-  isDisabledFunc: FieldAccessorAllows;
-  isHiddenFunc: FieldAccessorAllows;
-  isReadOnlyFunc: FieldAccessorAllows;
-  isRequiredFunc: FieldAccessorAllows;
-  isRepeatingFormDisabledFunc: RepeatingFormAccessorAllows;
+  isDisabledFunc: AccessorAllows;
+  isHiddenFunc: AccessorAllows;
+  isReadOnlyFunc: AccessorAllows;
+  isRequiredFunc: AccessorAllows;
   getErrorFunc: ErrorOrWarning;
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
@@ -166,7 +165,6 @@ export class FormState<
       this.isHiddenFunc = () => false;
       this.isReadOnlyFunc = () => false;
       this.isRequiredFunc = () => false;
-      this.isRepeatingFormDisabledFunc = () => false;
       this.getErrorFunc = () => undefined;
       this.getWarningFunc = () => undefined;
       this.blurFunc = () => undefined;
@@ -191,9 +189,6 @@ export class FormState<
         : () => false;
       this.isRequiredFunc = options.isRequired
         ? options.isRequired
-        : () => false;
-      this.isRepeatingFormDisabledFunc = options.isRepeatingFormDisabled
-        ? options.isRepeatingFormDisabled
         : () => false;
       this.getErrorFunc = options.getError ? options.getError : () => undefined;
       this.getWarningFunc = options.getWarning
@@ -236,12 +231,23 @@ export class FormState<
   }
 
   @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
+  }
+
+  @computed
   get value(): Instance<M> {
     return this.node;
   }
 
-  get stateConverterOptionsWithContext(): StateConverterOptionsWithContext {
-    return { context: this.context, ...this._converterOptions };
+  stateConverterOptionsWithContext(
+    accessor: any
+  ): StateConverterOptionsWithContext {
+    return {
+      context: this.context,
+      accessor: accessor,
+      ...this._converterOptions
+    };
   }
 
   @action
@@ -332,7 +338,7 @@ export class FormState<
 
   @action
   async save(options?: ValidateOptions): Promise<boolean> {
-    const isValid = await this.validate(options);
+    const isValid = this.validate(options);
 
     // if we ignored required, we need to re-validate to restore
     // the required messages (if any)
@@ -340,7 +346,7 @@ export class FormState<
     if (options != null && options.ignoreRequired) {
       // we don't care about the answer, only about updating the messages
       // in the UI
-      await this.validate();
+      this.validate();
     }
 
     this.setSaveStatus("rightAfter");
@@ -394,14 +400,6 @@ export class FormState<
 
   getValue(path: string): any {
     return resolvePath(this.node, path);
-  }
-
-  @computed
-  get isValidating(): boolean {
-    return this.flatAccessors.some(
-      accessor =>
-        accessor instanceof FieldAccessor ? accessor.isValidating : false
-    );
   }
 
   accessByPath(path: string): Accessor | undefined {

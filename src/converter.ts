@@ -1,4 +1,5 @@
 import { Controlled, controlled } from "./controlled";
+import { FieldAccessor } from "./field-accessor";
 
 export interface StateConverterOptions {
   decimalSeparator?: string;
@@ -9,19 +10,12 @@ export interface StateConverterOptions {
 export interface StateConverterOptionsWithContext
   extends StateConverterOptions {
   context?: any;
+  accessor: FieldAccessor<any, any>;
 }
 
 export interface ConverterOptions<R, V> {
   convert(raw: R, options: StateConverterOptionsWithContext): V;
   render(value: V, options: StateConverterOptionsWithContext): R;
-  rawValidate?(
-    value: R,
-    options: StateConverterOptionsWithContext
-  ): boolean | Promise<boolean>;
-  validate?(
-    value: V,
-    options: StateConverterOptionsWithContext
-  ): boolean | Promise<boolean>;
   emptyRaw: R;
   emptyValue?: V;
   emptyImpossible?: boolean;
@@ -37,7 +31,7 @@ export interface IConverter<R, V> {
   convert(
     raw: R,
     options: StateConverterOptionsWithContext
-  ): Promise<ConversionResponse<V>>;
+  ): ConversionResponse<V>;
   render(value: V, options: StateConverterOptionsWithContext): R;
   defaultControlled: Controlled;
   neverRequired: boolean;
@@ -48,9 +42,9 @@ export class ConversionValue<V> {
   constructor(public value: V) {}
 }
 
-export type ConversionError = "ConversionError";
-
-export const CONVERSION_ERROR: ConversionError = "ConversionError";
+export class ConversionError {
+  constructor(public type: string = "default") {}
+}
 
 export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
@@ -88,35 +82,41 @@ export class Converter<R, V> implements IConverter<R, V> {
     return this.definition.preprocessRaw(raw, options);
   }
 
-  async convert(
+  convert(
     raw: R,
     options: StateConverterOptionsWithContext
-  ): Promise<ConversionResponse<V>> {
-    if (this.definition.rawValidate) {
-      const rawValidationSuccess = await this.definition.rawValidate(
-        raw,
-        options
-      );
-      if (!rawValidationSuccess) {
-        return CONVERSION_ERROR;
+  ): ConversionResponse<V> {
+    try {
+      const value = this.definition.convert(raw, options);
+      return new ConversionValue<V>(value);
+    } catch (e) {
+      if (e instanceof ConversionError) {
+        return e;
       }
+      throw e;
     }
-
-    const value = this.definition.convert(raw, options);
-
-    if (this.definition.validate) {
-      const rawValidationSuccess = await this.definition.validate(
-        value,
-        options
-      );
-      if (!rawValidationSuccess) {
-        return CONVERSION_ERROR;
-      }
-    }
-    return new ConversionValue<V>(value);
   }
 
   render(value: V, options: StateConverterOptionsWithContext): R {
     return this.definition.render(value, options);
   }
+}
+
+export interface PartialConverterFactory<O, R, V> {
+  (options?: Partial<O>): IConverter<R, V>;
+}
+
+export interface ConverterFactory<O, R, V> {
+  (options: O): IConverter<R, V>;
+}
+
+// turn a converter which accepts options into a converter that
+// accepts partial options and fill in the rest with defaults
+export function withDefaults<O, R, V>(
+  converterFactory: ConverterFactory<O, R, V>,
+  defaults: O
+): PartialConverterFactory<O, R, V> {
+  return (partialOptions?: Partial<O>) => {
+    return converterFactory({ ...defaults, ...partialOptions });
+  };
 }

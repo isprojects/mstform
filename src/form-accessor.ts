@@ -22,6 +22,7 @@ import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
+import { pathToFieldref } from "./utils";
 
 export class FormAccessor<
   D extends FormDefinition<any>,
@@ -56,9 +57,8 @@ export class FormAccessor<
     this.initialize();
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
-    const promises = this.accessors.map(accessor => accessor.validate(options));
-    const values = await Promise.all(promises);
+  validate(options?: ValidateOptions): boolean {
+    const values = this.accessors.map(accessor => accessor.validate(options));
     const ignoreGetError = options != null ? options.ignoreGetError : false;
     if (!ignoreGetError) {
       values.push(this.errorValue === undefined); // add possible error of the form itself
@@ -75,11 +75,42 @@ export class FormAccessor<
   }
 
   @computed
+  get disabled(): boolean {
+    return this.parent != null && this.parent.disabled
+      ? true
+      : this.state.isDisabledFunc(this);
+  }
+
+  @computed
+  get hidden(): boolean {
+    return this.parent != null && this.parent.hidden
+      ? true
+      : this.state.isHiddenFunc(this);
+  }
+
+  @computed
+  get readOnly(): boolean {
+    return this.parent != null && this.parent.readOnly
+      ? true
+      : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
+  }
+
+  @computed
   get path(): string {
     if (this.parent == null) {
       return "";
     }
     return this.parent.path;
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed

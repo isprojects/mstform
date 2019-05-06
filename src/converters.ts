@@ -1,166 +1,214 @@
 import { IObservableArray, observable } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 import {
-  ConversionResponse,
-  ConversionValue,
   Converter,
   IConverter,
-  StateConverterOptionsWithContext
+  StateConverterOptionsWithContext,
+  ConversionError,
+  withDefaults
 } from "./converter";
 import { controlled } from "./controlled";
+import { dynamic } from "./dynamic-converter";
+
 import { identity } from "./utils";
 import {
-  checkConverterOptions,
-  convertSeparators,
+  parseDecimal,
+  renderDecimal,
   DecimalOptions,
-  getRegex,
-  renderSeparators,
-  trimDecimals
-} from "./decimal";
+  DecimalParserError,
+  checkConverterOptions
+} from "./decimalParser";
 
-const NUMBER_REGEX = new RegExp("^-?(0|[1-9]\\d*)(\\.\\d*)?$");
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
 
 export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
 }
 
-const string = new StringConverter<string>({
-  emptyRaw: "",
-  emptyValue: "",
-  convert(raw) {
-    return raw;
-  },
-  render(value) {
-    return value;
-  },
-  preprocessRaw(raw: string): string {
-    return raw.trim();
-  }
-});
+type StringOptions = {};
 
-const number = new StringConverter<number>({
-  emptyRaw: "",
-  emptyImpossible: true,
-  rawValidate(raw) {
-    // deal with case when string starts with .
-    if (raw.startsWith(".")) {
-      raw = "0" + raw;
+function stringWithOptions(options?: StringOptions) {
+  return new StringConverter<string>({
+    emptyRaw: "",
+    emptyValue: "",
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    preprocessRaw(raw: string): string {
+      return raw.trim();
     }
-    return NUMBER_REGEX.test(raw);
-  },
-  convert(raw) {
-    return +raw;
-  },
-  render(value, options) {
-    return renderSeparators(value.toString(), options);
-  },
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    raw = raw.trim();
-    return convertSeparators(raw, options);
-  }
-});
+  });
+}
 
-const integer = new StringConverter<number>({
-  emptyRaw: "",
-  emptyImpossible: true,
-  rawValidate(raw) {
-    return INTEGER_REGEX.test(raw);
-  },
-  convert(raw) {
-    return +raw;
-  },
-  render(value) {
-    return value.toString();
-  },
-  preprocessRaw(raw: string): string {
-    return raw.trim();
-  }
-});
+const string = stringWithOptions();
 
-const boolean = new Converter<boolean, boolean>({
-  emptyRaw: false,
-  emptyImpossible: true,
-  convert(raw) {
-    return raw;
-  },
-  render(value) {
-    return value;
-  },
-  defaultControlled: controlled.checked,
-  neverRequired: true
-});
+type NumberOptions = {};
 
-function decimal(
-  decimalOptions?:
-    | Partial<DecimalOptions>
-    | ((context: any) => Partial<DecimalOptions>)
-) {
+function numberWithOptions(options?: NumberOptions) {
+  return new StringConverter<number>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    convert(raw, converterOptions) {
+      checkConverterOptions(converterOptions);
+      try {
+        return +parseDecimal(raw, {
+          maxWholeDigits: 100,
+          decimalPlaces: 100,
+          allowNegative: true,
+          addZeroes: false,
+          decimalSeparator: converterOptions.decimalSeparator || ".",
+          thousandSeparator: converterOptions.thousandSeparator || ",",
+          renderThousands: converterOptions.renderThousands || false
+        });
+      } catch (e) {
+        if (e instanceof DecimalParserError) {
+          throw new ConversionError(e.type);
+        }
+        throw e;
+      }
+    },
+    render(value, converterOptions) {
+      return renderDecimal(value.toString(), {
+        maxWholeDigits: 100,
+        decimalPlaces: 100,
+        allowNegative: true,
+        addZeroes: false,
+        decimalSeparator: converterOptions.decimalSeparator || ".",
+        thousandSeparator: converterOptions.thousandSeparator || ",",
+        renderThousands: converterOptions.renderThousands || false
+      });
+    },
+    preprocessRaw(
+      raw: string,
+      options: StateConverterOptionsWithContext
+    ): string {
+      return raw.trim();
+    }
+  });
+}
+
+const number = numberWithOptions();
+
+type IntegerOptions = {};
+
+function integerWithOptions(options?: IntegerOptions) {
+  return new StringConverter<number>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    convert(raw) {
+      if (!INTEGER_REGEX.test(raw)) {
+        throw new ConversionError();
+      }
+      return +raw;
+    },
+    render(value) {
+      return value.toString();
+    },
+    preprocessRaw(raw: string): string {
+      return raw.trim();
+    }
+  });
+}
+
+const integer = integerWithOptions();
+
+type BooleanOptions = {};
+
+function booleanWithOptions(options?: BooleanOptions) {
+  return new Converter<boolean, boolean>({
+    emptyRaw: false,
+    emptyImpossible: true,
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    defaultControlled: controlled.checked,
+    neverRequired: true
+  });
+}
+
+const boolean = booleanWithOptions();
+
+function decimal(options: DecimalOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyImpossible: true,
     defaultControlled: controlled.value,
     neverRequired: false,
-    preprocessRaw(
-      raw: string,
-      converterOptions: StateConverterOptionsWithContext
-    ): string {
-      raw = raw.trim();
-      return convertSeparators(raw, converterOptions);
+    preprocessRaw(raw: string): string {
+      return raw.trim();
     },
-    rawValidate(raw, converterOptions) {
-      if (raw === "" || raw === ".") {
-        return false;
-      }
+    convert(raw, converterOptions) {
       checkConverterOptions(converterOptions);
-      // deal with case when string starts with .
-      if (raw.startsWith(".")) {
-        raw = "0" + raw;
+      try {
+        return parseDecimal(raw, {
+          ...options,
+          decimalSeparator: converterOptions.decimalSeparator || ".",
+          thousandSeparator: converterOptions.thousandSeparator || ",",
+          renderThousands: converterOptions.renderThousands || false
+        });
+      } catch (e) {
+        if (e instanceof DecimalParserError) {
+          throw new ConversionError(e.type);
+        }
+        throw e;
       }
-      return getRegex(converterOptions.context, decimalOptions).test(raw);
-    },
-    convert(raw) {
-      return raw;
     },
     render(value, converterOptions) {
-      return renderSeparators(
-        trimDecimals(value, converterOptions, decimalOptions),
-        converterOptions
-      );
+      return renderDecimal(value, {
+        ...options,
+        decimalSeparator: converterOptions.decimalSeparator || ".",
+        thousandSeparator: converterOptions.thousandSeparator || ",",
+        renderThousands: converterOptions.renderThousands || false
+      });
     }
   });
 }
 
-// XXX create a way to create arrays with mobx state tree types
-const stringArray = new Converter<string[], IObservableArray<string>>({
-  emptyRaw: [],
-  emptyValue: observable.array([]),
-  convert(raw) {
-    return observable.array(raw);
-  },
-  render(value) {
-    return value.slice();
-  }
-});
+type StringArrayOptions = {};
 
-const textStringArray = new Converter<string, IObservableArray<string>>({
-  emptyRaw: "",
-  emptyValue: observable.array([]),
-  defaultControlled: controlled.value,
-  convert(raw) {
-    const rawSplit = raw.split("\n").map(r => r.trim());
-    if (rawSplit.length === 1 && rawSplit[0] === "") {
-      return observable.array([]);
+// XXX create a way to create arrays with mobx state tree types
+function stringArrayWithOptions(options?: StringArrayOptions) {
+  return new Converter<string[], IObservableArray<string>>({
+    emptyRaw: [],
+    emptyValue: observable.array([]),
+    convert(raw) {
+      return observable.array(raw);
+    },
+    render(value) {
+      return value.slice();
     }
-    return observable.array(rawSplit);
-  },
-  render(value) {
-    return value.join("\n");
-  }
-});
+  });
+}
+
+const stringArray = stringArrayWithOptions();
+
+type TextStringArrayOptions = {};
+
+function textStringArrayWithOptions(options?: TextStringArrayOptions) {
+  return new Converter<string, IObservableArray<string>>({
+    emptyRaw: "",
+    emptyValue: observable.array([]),
+    defaultControlled: controlled.value,
+    convert(raw) {
+      const rawSplit = raw.split("\n").map(r => r.trim());
+      if (rawSplit.length === 1 && rawSplit[0] === "") {
+        return observable.array([]);
+      }
+      return observable.array(rawSplit);
+    },
+    render(value) {
+      return value.join("\n");
+    }
+  });
+}
+
+const textStringArray = textStringArrayWithOptions();
 
 function maybe<R, V>(
   converter: StringConverter<V>
@@ -171,10 +219,15 @@ function maybe<M>(
 function maybe<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
-  if (converter instanceof StringConverter) {
-    return new StringMaybe(converter, undefined);
+  // we detect that we're converting a string, which needs a special maybe
+  if (typeof converter.emptyRaw === "string") {
+    return stringMaybe(
+      (converter as unknown) as IConverter<string, V>,
+      undefined
+    );
   }
-  return maybeModel(converter, null, undefined) as IConverter<
+  // XXX add an 'as any' as we get a typeerror for some reason now
+  return maybeModel(converter as any, null, undefined) as IConverter<
     R | null,
     V | undefined
   >;
@@ -189,51 +242,49 @@ function maybeNull<M>(
 function maybeNull<R, V>(
   converter: IConverter<R, V>
 ): IConverter<string, V | null> | IConverter<R | null, V | null> {
-  if (converter instanceof StringConverter) {
-    return new StringMaybe(converter, null);
+  // we detect that we're converting a string, which needs a special maybe
+  if (typeof converter.emptyRaw === "string") {
+    return stringMaybe(
+      (converter as unknown) as IConverter<string, V | null>,
+      null
+    );
   }
-  return maybeModel(converter, null, null) as IConverter<R | null, V | null>;
+  // XXX add an 'as any' as we get a typeerror for some reason now
+  return maybeModel(converter as any, null, null) as IConverter<
+    R | null,
+    V | null
+  >;
 }
 
-// XXX it would be nice if this could be a simple converter instead
-// of a reimplementation. unfortunately the delegation to the
-// underlying converter makes this impossible as it has a different
-// and asynchronous API. We need to refactor this further in the future.
-class StringMaybe<V, RE, VE> implements IConverter<string, V | VE> {
-  emptyRaw: string;
-  defaultControlled = controlled.value;
-  neverRequired = false;
-  emptyImpossible: boolean;
-
-  constructor(public converter: IConverter<string, V>, public emptyValue: VE) {
-    this.emptyRaw = "";
-    this.emptyImpossible = false;
-  }
-
-  preprocessRaw(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): string {
-    raw = raw.trim();
-    return this.converter.preprocessRaw(raw, options);
-  }
-
-  async convert(
-    raw: string,
-    options: StateConverterOptionsWithContext
-  ): Promise<ConversionResponse<V | VE>> {
-    if (raw.trim() === "") {
-      return new ConversionValue(this.emptyValue);
+function stringMaybe<V>(converter: IConverter<string, V>, emptyValue: V) {
+  return new Converter<string, V>({
+    emptyRaw: "",
+    emptyValue: emptyValue,
+    defaultControlled: controlled.value,
+    preprocessRaw(
+      raw: string,
+      options: StateConverterOptionsWithContext
+    ): string {
+      raw = raw.trim();
+      return converter.preprocessRaw(raw, options);
+    },
+    convert(raw: string, options: StateConverterOptionsWithContext) {
+      if (raw.trim() === "") {
+        return emptyValue;
+      }
+      const r = converter.convert(raw, options);
+      if (r instanceof ConversionError) {
+        throw r;
+      }
+      return r.value;
+    },
+    render(value: V, options: StateConverterOptionsWithContext) {
+      if (value === this.emptyValue) {
+        return "";
+      }
+      return converter.render(value, options);
     }
-    return this.converter.convert(raw, options);
-  }
-
-  render(value: V | VE, options: StateConverterOptionsWithContext): string {
-    if (value === this.emptyValue) {
-      return "";
-    }
-    return this.converter.render(value as V, options);
-  }
+  });
 }
 
 function model<M extends IAnyModelType>(model: M) {
@@ -255,7 +306,7 @@ function model<M extends IAnyModelType>(model: M) {
 }
 
 function maybeModel<M, RE, VE>(
-  converter: IConverter<M | RE, M | VE>,
+  converter: IConverter<M, M>,
   emptyRaw: RE,
   emptyValue: VE
 ): IConverter<M | RE, M | VE> {
@@ -279,12 +330,18 @@ export const converters = {
   string,
   number,
   integer,
-  decimal,
+  decimal: withDefaults(decimal, {
+    maxWholeDigits: 10,
+    decimalPlaces: 2,
+    allowNegative: true,
+    addZeroes: true
+  }),
   boolean,
   textStringArray,
   stringArray,
   maybe,
   maybeNull,
   model,
-  object
+  object,
+  dynamic
 };

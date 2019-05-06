@@ -6,6 +6,7 @@ import { Accessor } from "./accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
+import { pathToFieldref } from "./utils";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
@@ -39,6 +40,11 @@ export class RepeatingFormAccessor<
   }
 
   @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
+  }
+
+  @computed
   get value(): any {
     return this.state.getValue(this.path);
   }
@@ -48,12 +54,8 @@ export class RepeatingFormAccessor<
     return this.state.context;
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
-    const promises: Promise<any>[] = [];
-    for (const accessor of this.accessors) {
-      promises.push(accessor.validate(options));
-    }
-    const values = await Promise.all(promises);
+  validate(options?: ValidateOptions): boolean {
+    const values = this.accessors.map(accessor => accessor.validate(options));
     // appending possible error on the repeatingform itself
     const ignoreGetError = options != null ? options.ignoreGetError : false;
     if (!ignoreGetError) {
@@ -103,7 +105,22 @@ export class RepeatingFormAccessor<
 
   @computed
   get disabled(): boolean {
-    return this.state.isRepeatingFormDisabledFunc(this);
+    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
+  }
+
+  @computed
+  get hidden(): boolean {
+    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
+  }
+
+  @computed
+  get readOnly(): boolean {
+    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
   }
 
   @computed

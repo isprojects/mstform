@@ -4,6 +4,7 @@ import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
+import { pathToFieldref } from "./utils";
 
 export class SubFormAccessor<
   D extends FormDefinition<any>,
@@ -37,9 +38,8 @@ export class SubFormAccessor<
     // no op
   }
 
-  async validate(options?: ValidateOptions): Promise<boolean> {
-    const promises = this.accessors.map(accessor => accessor.validate(options));
-    const values = await Promise.all(promises);
+  validate(options?: ValidateOptions): boolean {
+    const values = this.accessors.map(accessor => accessor.validate(options));
     const ignoreGetError = options != null ? options.ignoreGetError : false;
     if (!ignoreGetError) {
       values.push(this.errorValue === undefined);
@@ -48,8 +48,33 @@ export class SubFormAccessor<
   }
 
   @computed
+  get disabled(): boolean {
+    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
+  }
+
+  @computed
+  get hidden(): boolean {
+    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
+  }
+
+  @computed
+  get readOnly(): boolean {
+    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return !this.disabled && !this.hidden && !this.readOnly;
+  }
+
+  @computed
   get path(): string {
     return this.parent.path + "/" + this.name;
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
   }
 
   @computed

@@ -5,7 +5,7 @@ import { Field, Form, SubForm, converters } from "../src";
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("a sub form", async () => {
+test("a sub form", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -29,18 +29,18 @@ test("a sub form", async () => {
   const barField = state.subForm("sub").field("bar");
 
   expect(fooField.raw).toEqual("FOO");
-  await fooField.setRaw("FOO!");
+  fooField.setRaw("FOO!");
   expect(fooField.raw).toEqual("FOO!");
   expect(fooField.value).toEqual("FOO!");
   expect(o.foo).toEqual("FOO!");
 
   expect(barField.raw).toEqual("BAR");
-  await barField.setRaw("BAR!");
+  barField.setRaw("BAR!");
   expect(barField.value).toEqual("BAR!");
   expect(o.sub.bar).toEqual("BAR!");
 });
 
-test("sub form validation", async () => {
+test("sub form validation", () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -63,11 +63,82 @@ test("sub form validation", async () => {
   const fooField = state.field("foo");
   const barField = state.subForm("sub").field("bar");
 
-  await barField.setRaw("");
+  barField.setRaw("");
 
   expect(state.isValid).toBeFalsy();
 
-  await barField.setRaw("BAR!");
+  barField.setRaw("BAR!");
 
   expect(state.isValid).toBeTruthy();
+});
+
+test("SubField disabled when SubForm disabled", () => {
+  const N = types.model("N", {
+    subField: types.string
+  });
+
+  const M = types.model("M", {
+    subForm: N
+  });
+
+  const form = new Form(M, {
+    subForm: new SubForm({
+      subField: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({
+    subForm: { subField: "SUB_FIELD" }
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/subForm"
+  });
+
+  const subForm = state.subForm("subForm");
+  const subField = state.subForm("subForm").field("subField");
+
+  expect(subForm.disabled).toBeTruthy();
+  expect(subField.disabled).toBeTruthy();
+});
+
+test("SubField disabled when SubForm in a SubForm is disabled", () => {
+  const O = types.model("O", {
+    subField: types.string
+  });
+
+  const N = types.model("N", {
+    subForm2: O
+  });
+
+  const M = types.model("M", {
+    subForm: N
+  });
+
+  const form = new Form(M, {
+    subForm: new SubForm({
+      subForm2: new SubForm({
+        subField: new Field(converters.string)
+      })
+    })
+  });
+
+  const o = M.create({
+    subForm: { subForm2: { subField: "SUB_FIELD" } }
+  });
+
+  const state = form.state(o, {
+    isDisabled: accessor => accessor.path === "/subForm"
+  });
+
+  const subForm = state.subForm("subForm");
+  const subForm2 = state.subForm("subForm").subForm("subForm2");
+  const subField = state
+    .subForm("subForm")
+    .subForm("subForm2")
+    .field("subField");
+
+  expect(subForm.disabled).toBeTruthy();
+  expect(subForm2.disabled).toBeTruthy();
+  expect(subField.disabled).toBeTruthy();
 });

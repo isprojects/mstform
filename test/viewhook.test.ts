@@ -11,7 +11,7 @@ import {
 
 configure({ enforceActions: "observed" });
 
-test("custom validationProps", async () => {
+test("custom validationProps", () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -31,7 +31,7 @@ test("custom validationProps", async () => {
   const field = state.field("foo");
 
   expect(field.validationProps).toEqual({});
-  await field.setRaw("wrong");
+  field.setRaw("wrong");
   expect(field.validationProps).toEqual({
     error: "Could not convert"
   });

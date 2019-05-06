@@ -1,312 +1,346 @@
 import { types } from "mobx-state-tree";
 import {
-  CONVERSION_ERROR,
+  ConversionError,
   ConversionValue,
   Field,
   Form,
   IConverter,
   converters,
-  StateConverterOptionsWithContext
+  StateConverterOptionsWithContext,
+  FieldAccessor
 } from "../src";
-import { resolveReactions } from "./utils";
 
-async function check(
-  converter: IConverter<any, any>,
-  value: any,
-  expected: any
-) {
-  const processedValue = converter.preprocessRaw(value, {});
-  const r = await converter.convert(processedValue, {});
+const baseOptions = {
+  // a BIG lie. but we don't really have an accessor in these
+  // tests and it's safe to leave it null, even though in
+  // the integrated code accessor always *does* exist
+  accessor: (null as unknown) as FieldAccessor<any, any>
+};
+
+function check(converter: IConverter<any, any>, value: any, expected: any) {
+  const processedValue = converter.preprocessRaw(value, baseOptions);
+  const r = converter.convert(processedValue, baseOptions);
   expect(r).toBeInstanceOf(ConversionValue);
   expect((r as ConversionValue<any>).value).toEqual(expected);
 }
 
-async function checkWithOptions(
+function checkWithOptions(
   converter: IConverter<any, any>,
   value: any,
   expected: any,
   options: StateConverterOptionsWithContext
 ) {
   const processedValue = converter.preprocessRaw(value, options);
-  const r = await converter.convert(processedValue, options);
+  const r = converter.convert(processedValue, options);
   expect(r).toBeInstanceOf(ConversionValue);
   expect((r as ConversionValue<any>).value).toEqual(expected);
 }
 
-async function fails(converter: IConverter<any, any>, value: any) {
-  const r = await converter.convert(value, {});
-  expect(r).toBe(CONVERSION_ERROR);
+function fails(converter: IConverter<any, any>, value: any) {
+  const r = converter.convert(value, baseOptions);
+  expect(r).toBeInstanceOf(ConversionError);
 }
 
-async function failsWithOptions(
+function failsWithOptions(
   converter: IConverter<any, any>,
   value: any,
   options: StateConverterOptionsWithContext
 ) {
   const processedValue = converter.preprocessRaw(value, options);
-  const r = await converter.convert(processedValue, options);
-  expect(r).toBe(CONVERSION_ERROR);
+  const r = converter.convert(processedValue, options);
+  expect(r).toBeInstanceOf(ConversionError);
 }
 
-test("string converter", async () => {
-  await check(converters.string, "foo", "foo");
-  await check(converters.string, "", "");
+test("string converter", () => {
+  check(converters.string, "foo", "foo");
+  check(converters.string, "", "");
 });
 
-test("number converter", async () => {
-  await check(converters.number, "3", 3);
-  await check(converters.number, "3.14", 3.14);
-  await check(converters.number, ".14", 0.14);
-  await check(converters.number, "19.14", 19.14);
-  await check(converters.number, "19.", 19);
-  await check(converters.number, "-3.14", -3.14);
-  await checkWithOptions(converters.number, "1234,56", 1234.56, {
-    decimalSeparator: ","
-  });
-  await checkWithOptions(converters.number, "4.000,000000", 4000, {
+test("number converter", () => {
+  check(converters.number, "3", 3);
+  check(converters.number, "3.14", 3.14);
+  check(converters.number, ".14", 0.14);
+  check(converters.number, "19.14", 19.14);
+  check(converters.number, "19.", 19);
+  check(converters.number, "-3.14", -3.14);
+  checkWithOptions(converters.number, "1234,56", 1234.56, {
     decimalSeparator: ",",
-    thousandSeparator: "."
+    ...baseOptions
   });
-  await fails(converters.number, "foo");
-  await fails(converters.number, "1foo");
-  await fails(converters.number, "");
-  await failsWithOptions(converters.number, "1,23.45", {
+  checkWithOptions(converters.number, "4.000,000000", 4000, {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    ...baseOptions
+  });
+  fails(converters.number, "foo");
+  fails(converters.number, "1foo");
+  fails(converters.number, "");
+  failsWithOptions(converters.number, "1,23.45", {
     decimalSeparator: ".",
-    thousandSeparator: ","
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.number, ",12345", {
-    thousandSeparator: ","
+  failsWithOptions(converters.number, ",12345", {
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.number, "1234,567", {
-    thousandSeparator: ","
+  failsWithOptions(converters.number, "1234,567", {
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.number, "12.3,456", {
+  failsWithOptions(converters.number, "12.3,456", {
     decimalSeparator: ".",
-    thousandSeparator: ","
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.number, "1.1,1", {
+  failsWithOptions(converters.number, "1.1,1", {
     decimalSeparator: ",",
-    thousandSeparator: "."
+    thousandSeparator: ".",
+    ...baseOptions
   });
-  await failsWithOptions(converters.number, "1,1.1", {
+  failsWithOptions(converters.number, "1,1.1", {
     decimalSeparator: ",",
-    thousandSeparator: "."
+    thousandSeparator: ".",
+    ...baseOptions
   });
 });
 
-test("number converter with both options", async () => {
-  await checkWithOptions(converters.number, "4.314.314,31", 4314314.31, {
+test("number converter with both options", () => {
+  checkWithOptions(converters.number, "4.314.314,31", 4314314.31, {
     decimalSeparator: ",",
-    thousandSeparator: "."
+    thousandSeparator: ".",
+    ...baseOptions
   });
 });
 
-test("integer converter", async () => {
-  await check(converters.integer, "3", 3);
-  await fails(converters.integer, "3.14");
-  await fails(converters.integer, ".14");
-  await check(converters.integer, "0", 0);
-  await check(converters.integer, "-3", -3);
-  await fails(converters.integer, "foo");
-  await fails(converters.integer, "1foo");
-  await fails(converters.integer, "");
+test("integer converter", () => {
+  check(converters.integer, "3", 3);
+  fails(converters.integer, "3.14");
+  fails(converters.integer, ".14");
+  check(converters.integer, "0", 0);
+  check(converters.integer, "-3", -3);
+  fails(converters.integer, "foo");
+  fails(converters.integer, "1foo");
+  fails(converters.integer, "");
 });
 
-test("decimal converter", async () => {
-  await check(converters.decimal({}), "3", "3");
-  await check(converters.decimal({}), "3.14", "3.14");
-  await check(converters.decimal({}), "43.14", "43.14");
-  await check(converters.decimal({}), "4313", "4313");
-  await check(converters.decimal({}), "-3.14", "-3.14");
-  await check(converters.decimal({}), "0", "0");
-  await check(converters.decimal({}), ".14", ".14");
-  await check(converters.decimal({}), "14.", "14.");
-  await checkWithOptions(converters.decimal({}), "43,14", "43.14", {
-    decimalSeparator: ","
+test("decimal converter", () => {
+  check(converters.decimal({}), "3", "3");
+  check(converters.decimal({}), "3.14", "3.14");
+  check(converters.decimal({}), "43.14", "43.14");
+  check(converters.decimal({}), "4313", "4313");
+  check(converters.decimal({}), "-3.14", "-3.14");
+  check(converters.decimal({}), "0", "0");
+  check(converters.decimal({}), ".14", ".14");
+  check(converters.decimal({}), "14.", "14.");
+  checkWithOptions(converters.decimal({}), "43,14", "43.14", {
+    decimalSeparator: ",",
+    ...baseOptions
   });
-  await checkWithOptions(
+  checkWithOptions(
     converters.decimal({ decimalPlaces: 6 }),
     "4.000,000000",
     "4000.000000",
     {
       decimalSeparator: ",",
-      thousandSeparator: "."
+      thousandSeparator: ".",
+      ...baseOptions
     }
   );
-  await checkWithOptions(
+  checkWithOptions(
     converters.decimal({ decimalPlaces: 2 }),
     "36.365,21",
     "36365.21",
     {
       decimalSeparator: ",",
       thousandSeparator: ".",
-      renderThousands: true
+      renderThousands: true,
+      ...baseOptions
     }
   );
-  await fails(converters.decimal({}), "foo");
-  await fails(converters.decimal({}), "1foo");
-  await fails(converters.decimal({}), "");
-  await fails(converters.decimal({}), ".");
-  await fails(converters.decimal({ maxWholeDigits: 4 }), "12345.34");
-  await fails(converters.decimal({ decimalPlaces: 2 }), "12.444");
-  await fails(converters.decimal({ allowNegative: false }), "-45.34");
-  await failsWithOptions(converters.decimal({}), "1,23.45", {
+  fails(converters.decimal({}), "foo");
+  fails(converters.decimal({}), "1foo");
+  fails(converters.decimal({}), "");
+  fails(converters.decimal({}), ".");
+  fails(converters.decimal({ maxWholeDigits: 4 }), "12345.34");
+  fails(converters.decimal({ decimalPlaces: 2 }), "12.444");
+  fails(converters.decimal({ allowNegative: false }), "-45.34");
+  failsWithOptions(converters.decimal({}), "1,23.45", {
     decimalSeparator: ".",
-    thousandSeparator: ","
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.decimal({}), ",12345", {
-    thousandSeparator: ","
+  failsWithOptions(converters.decimal({}), ",12345", {
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.decimal({}), "1234,567", {
-    thousandSeparator: ","
+  failsWithOptions(converters.decimal({}), "1234,567", {
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.decimal({}), "12.3,456", {
+  failsWithOptions(converters.decimal({}), "12.3,456", {
     decimalSeparator: ".",
-    thousandSeparator: ","
+    thousandSeparator: ",",
+    ...baseOptions
   });
-  await failsWithOptions(converters.decimal({}), "1.1,1", {
+  failsWithOptions(converters.decimal({}), "1.1,1", {
     decimalSeparator: ",",
-    thousandSeparator: "."
+    thousandSeparator: ".",
+    ...baseOptions
   });
-  await failsWithOptions(converters.decimal({}), "1,1.1", {
+  failsWithOptions(converters.decimal({}), "1,1.1", {
     decimalSeparator: ",",
-    thousandSeparator: "."
+    thousandSeparator: ".",
+    ...baseOptions
+  });
+  failsWithOptions(converters.decimal({}), "1234.56", {
+    decimalSeparator: ",",
+    thousandSeparator: ".",
+    renderThousands: true,
+    ...baseOptions
   });
 });
 
-test("decimal converter with both options", async () => {
-  await checkWithOptions(converters.decimal({}), "4.314.314,31", "4314314.31", {
+test("decimal converter with both options", () => {
+  checkWithOptions(converters.decimal({}), "4.314.314,31", "4314314.31", {
     decimalSeparator: ",",
-    thousandSeparator: "."
+    thousandSeparator: ".",
+    ...baseOptions
   });
 });
 
-test("decimal converter render with renderThousands false", async () => {
+test("decimal converter render with renderThousands false", () => {
   const converter = converters.decimal({});
   const options = {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    renderThousands: false
+    renderThousands: false,
+    ...baseOptions
   };
   const value = "4.314.314,31";
   const processedValue = converter.preprocessRaw(value, options);
-  const converted = await converter.convert(processedValue, options);
-  const rendered = await converter.render(
+  const converted = converter.convert(processedValue, options);
+  const rendered = converter.render(
     (converted as ConversionValue<any>).value,
     options
   );
   expect(rendered).toEqual("4314314,31");
 });
 
-test("decimal converter render with six decimals", async () => {
+test("decimal converter render with six decimals", () => {
   const converter = converters.decimal({ decimalPlaces: 6 });
   const options = {
-    decimalSeparator: ",",
-    thousandSeparator: ".",
-    renderThousands: true
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: true,
+    ...baseOptions
   };
   const value = "4.000000";
   const processedValue = converter.preprocessRaw(value, options);
-  const converted = await converter.convert(processedValue, options);
-  const rendered = await converter.render(
+  const converted = converter.convert(processedValue, options);
+  const rendered = converter.render(
     (converted as ConversionValue<any>).value,
     options
   );
-  expect(rendered).toEqual("4,000000");
+  expect(rendered).toEqual("4.000000");
 });
 
-test("decimal converter render with six decimals and thousand separators", async () => {
+test("decimal converter render with six decimals and thousand separators", () => {
   const converter = converters.decimal({ decimalPlaces: 6 });
   const options = {
-    decimalSeparator: ",",
-    thousandSeparator: ".",
-    renderThousands: true
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: true,
+    ...baseOptions
   };
   const value = "4000000.000000";
   const processedValue = converter.preprocessRaw(value, options);
-  const converted = await converter.convert(processedValue, options);
-  const rendered = await converter.render(
+  const converted = converter.convert(processedValue, options);
+  const rendered = converter.render(
     (converted as ConversionValue<any>).value,
     options
   );
-  expect(rendered).toEqual("4.000.000,000000");
+  expect(rendered).toEqual("4,000,000.000000");
 });
 
-test("decimal converter render with six decimals, only showing three", async () => {
+test("decimal converter render with six decimals, only showing three", () => {
   const converter = converters.decimal({ decimalPlaces: 3 });
   const options = {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    renderThousands: true
+    renderThousands: true,
+    ...baseOptions
   };
   const value = "4000.000000";
-  const rendered = await converter.render(value, options);
+  const rendered = converter.render(value, options);
   expect(rendered).toEqual("4.000,000");
 });
 
-test("decimal converter with thousandSeparator . and no decimalSeparator can't convert", async () => {
+test("decimal converter with thousandSeparator . and no decimalSeparator can't convert", () => {
   let message = false;
   const converter = converters.decimal();
   const options = {
     thousandSeparator: ".",
-    renderThousands: true
+    renderThousands: true,
+    ...baseOptions
   };
   const value = "4.000";
   const processedValue = converter.preprocessRaw(value, options);
   try {
-    await converter.convert(processedValue, options);
+    converter.convert(processedValue, options);
   } catch (e) {
     message = e.message;
   }
   expect(message).toBeTruthy();
 });
 
-test("do not convert a normal string with decimal options", async () => {
-  await checkWithOptions(converters.string, "43,14", "43,14", {
-    decimalSeparator: ","
+test("do not convert a normal string with decimal options", () => {
+  checkWithOptions(converters.string, "43,14", "43,14", {
+    decimalSeparator: ",",
+    ...baseOptions
   });
 });
 
-test("boolean converter", async () => {
-  await check(converters.boolean, false, false);
-  await check(converters.boolean, true, true);
+test("boolean converter", () => {
+  check(converters.boolean, false, false);
+  check(converters.boolean, true, true);
 });
 
-test("maybe number converter", async () => {
-  await check(converters.maybe(converters.number), "3", 3);
-  await check(converters.maybe(converters.number), "", undefined);
+test("maybe number converter", () => {
+  check(converters.maybe(converters.number), "3", 3);
+  check(converters.maybe(converters.number), "", undefined);
 });
 
-test("maybeNull number converter", async () => {
-  await check(converters.maybeNull(converters.number), "3", 3);
-  await check(converters.maybeNull(converters.number), "", null);
+test("maybeNull number converter", () => {
+  check(converters.maybeNull(converters.number), "3", 3);
+  check(converters.maybeNull(converters.number), "", null);
 });
 
-test("maybe decimal converter", async () => {
-  await check(converters.maybe(converters.decimal()), "3.14", "3.14");
-  await check(converters.maybe(converters.decimal()), "", undefined);
+test("maybe decimal converter", () => {
+  check(converters.maybe(converters.decimal()), "3.14", "3.14");
+  check(converters.maybe(converters.decimal()), "", undefined);
   const c = converters.maybe(converters.decimal());
-  expect(c.render(undefined, {})).toEqual("");
+  expect(c.render(undefined, baseOptions)).toEqual("");
 });
 
-test("maybeNull decimal converter", async () => {
-  await check(converters.maybeNull(converters.decimal()), "3.14", "3.14");
-  await check(converters.maybeNull(converters.decimal()), "", null);
+test("maybeNull decimal converter", () => {
+  check(converters.maybeNull(converters.decimal()), "3.14", "3.14");
+  check(converters.maybeNull(converters.decimal()), "", null);
   const c = converters.maybeNull(converters.decimal());
-  expect(c.render(null, {})).toEqual("");
+  expect(c.render(null, baseOptions)).toEqual("");
 });
 
-test("maybe string converter", async () => {
-  await check(converters.maybe(converters.string), "foo", "foo");
-  await check(converters.maybe(converters.string), "", undefined);
+test("maybe string converter", () => {
+  check(converters.maybe(converters.string), "foo", "foo");
+  check(converters.maybe(converters.string), "", undefined);
 });
 
-test("maybeNull string converter", async () => {
-  await check(converters.maybeNull(converters.string), "foo", "foo");
-  await check(converters.maybeNull(converters.string), "", null);
+test("maybeNull string converter", () => {
+  check(converters.maybeNull(converters.string), "foo", "foo");
+  check(converters.maybeNull(converters.string), "", null);
 });
 
-test("model converter", async () => {
+test("model converter", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -314,13 +348,13 @@ test("model converter", async () => {
     foo: "FOO"
   });
   const converter = converters.model(M);
-  const r = await converter.convert({ foo: "value" }, {});
+  const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o, {});
+  const r2 = converter.convert(o, baseOptions);
   expect(r2).toEqual({ value: o });
 });
 
-test("maybe model converter", async () => {
+test("maybe model converter", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -328,16 +362,16 @@ test("maybe model converter", async () => {
     foo: "FOO"
   });
   const converter = converters.maybe(converters.model(M));
-  const r = await converter.convert({ foo: "value" }, {});
+  const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o, {});
+  const r2 = converter.convert(o, baseOptions);
   expect(r2).toEqual({ value: o });
   // we use null as the sentinel value for raw
-  const r3 = await converter.convert(null, {});
+  const r3 = converter.convert(null, baseOptions);
   expect(r3).toEqual({ value: undefined });
 });
 
-test("maybeNull model converter", async () => {
+test("maybeNull model converter", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -345,15 +379,15 @@ test("maybeNull model converter", async () => {
     foo: "FOO"
   });
   const converter = converters.maybeNull(converters.model(M));
-  const r = await converter.convert({ foo: "value" }, {});
+  const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o, {});
+  const r2 = converter.convert(o, baseOptions);
   expect(r2).toEqual({ value: o });
-  const r3 = await converter.convert(null, {});
+  const r3 = converter.convert(null, baseOptions);
   expect(r3).toEqual({ value: null });
 });
 
-test("object converter", async () => {
+test("object converter", () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -361,27 +395,25 @@ test("object converter", async () => {
     foo: "FOO"
   });
   const converter = converters.object;
-  const r = await converter.convert({ foo: "value" }, {});
+  const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
-  const r2 = await converter.convert(o, {});
+  const r2 = converter.convert(o, baseOptions);
   expect(r2).toEqual({ value: o });
-  const r3 = await converter.convert(null, {});
+  const r3 = converter.convert(null, baseOptions);
   expect(r3).toEqual({ value: null });
 });
 
-test("dynamic decimal converter", async () => {
+test("dynamic decimal converter", () => {
   const context = { options: { decimalPlaces: 0 } };
-
-  function currency() {
-    return converters.decimal(context => context.options);
-  }
 
   const M = types.model("M", {
     foo: types.string
   });
 
   const form = new Form(M, {
-    foo: new Field(currency())
+    foo: new Field(
+      converters.dynamic(converters.decimal, context => context.options)
+    )
   });
 
   const o = M.create({ foo: "4" });
@@ -389,12 +421,12 @@ test("dynamic decimal converter", async () => {
   const state = form.state(o, { context: context });
   const field = state.field("foo");
 
-  await field.setRaw("3.141");
+  field.setRaw("3.141");
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("4"); // conversion error
   expect(field.error).toEqual("Could not convert");
   context.options = { decimalPlaces: 3 };
-  await field.setRaw("3.141");
+  field.setRaw("3.141");
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141"); // conversion succeeds
   expect(field.error).toBeUndefined();
@@ -402,13 +434,13 @@ test("dynamic decimal converter", async () => {
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141"); // nothing happens until field is touched
   expect(field.error).toBeUndefined();
-  await field.setRaw("3.141"); // touch field again
+  field.setRaw("3.141"); // touch field again
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141");
   expect(field.error).toEqual("Could not convert");
 });
 
-test("text string array converter", async () => {
+test("text string array converter", () => {
   const M = types.model("M", {
     foo: types.array(types.string)
   });
@@ -422,32 +454,32 @@ test("text string array converter", async () => {
   const state = form.state(o);
   const field = state.field("foo");
 
-  await field.setRaw("A\nB\nC");
+  field.setRaw("A\nB\nC");
   expect(field.raw).toEqual("A\nB\nC");
   expect(field.value).toEqual(["A", "B", "C"]);
 
-  await field.setRaw("D");
+  field.setRaw("D");
   expect(field.raw).toEqual("D");
   expect(field.value).toEqual(["D"]);
 
-  await field.setRaw("1\n2 \n3");
+  field.setRaw("1\n2 \n3");
   expect(field.raw).toEqual("1\n2 \n3");
   expect(field.value).toEqual(["1", "2", "3"]);
 
-  await field.setRaw("");
+  field.setRaw("");
   expect(field.raw).toEqual("");
   expect(field.value).toEqual([]);
 
-  await field.setRaw("\n");
+  field.setRaw("\n");
   expect(field.raw).toEqual("\n");
   expect(field.value).toEqual(["", ""]);
 
-  await field.setRaw("   ");
+  field.setRaw("   ");
   expect(field.raw).toEqual("   ");
   expect(field.value).toEqual([]);
 });
 
-test("render decimal number without decimals with decimal separator", async () => {
+test("render decimal number without decimals with decimal separator", () => {
   // this exposed a dispose bug that occurred when we had a previous state
   // and thus two onPatch event handlers. Now we properly dispose of the
   // previous form state when we attach a new form state to the same
@@ -457,7 +489,12 @@ test("render decimal number without decimals with decimal separator", async () =
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal(getDecimalOptions))
+    foo: new Field(
+      converters.dynamic(converters.decimal, context => ({
+        allowNegative: false,
+        decimalPlaces: getCurrencyDecimals(context.getCurrency())
+      }))
+    )
   });
 
   function getCurrencyDecimals(currency: string) {
@@ -465,13 +502,6 @@ test("render decimal number without decimals with decimal separator", async () =
       return 2;
     }
     return 4;
-  }
-
-  function getDecimalOptions(context: any) {
-    return {
-      allowNegative: false,
-      decimalPlaces: getCurrencyDecimals(context.getCurrency())
-    };
   }
 
   const currency = "EUR";
@@ -502,11 +532,82 @@ test("render decimal number without decimals with decimal separator", async () =
   });
   const field = state.field("foo");
 
-  await field.setRaw("12,34");
+  field.setRaw("12,34");
   expect(field.raw).toEqual("12,34");
   expect(field.value).toEqual("12.34");
-  await field.setRaw("12,");
-  await resolveReactions();
+  field.setRaw("12,");
   expect(field.raw).toEqual("12,");
   expect(field.value).toEqual("12.");
+});
+
+test("obey addZeroes false", () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 6, addZeroes: false })
+      )
+    )
+  });
+
+  const o = M.create({ foo: "1" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("1");
+});
+
+test("obey addZeroes true", () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 6, addZeroes: true })
+      )
+    )
+  });
+
+  const o = M.create({ foo: "1" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("1.000000");
+});
+
+test("maybe decimal converter/render for empty", () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string)
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.decimal({ decimalPlaces: 6, addZeroes: false })
+      )
+    )
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+
+  field.setRaw("3.1412");
+  expect(field.raw).toEqual("3.1412");
+  expect(field.value).toEqual("3.1412");
+
+  field.setRaw("");
+  expect(field.value).toBeNull();
+  field.setRawFromValue();
+  expect(field.raw).toEqual("");
 });

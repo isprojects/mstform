@@ -1,6 +1,6 @@
 {
     "name": "mstform",
-    "version": "1.7.2",
+    "version": "1.10.0",
     "description": "mobx-state-tree powered forms",
     "main": "dist/mstform.js",
     "typings": "dist/src/index.d.ts",
@@ -92,7 +92,7 @@
         "tslint": "^5.8.0",
         "tslint-config-prettier": "^1.1.0",
         "tslint-config-standard": "^7.0.0",
-        "typescript": "3",
+        "typescript": "3.4.1",
         "validate-commit-msg": "^2.12.2",
         "webpack": "^4.16.2",
         "webpack-cli": "^3.1.0",

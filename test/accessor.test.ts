@@ -5,7 +5,7 @@ import { Field, Form, RepeatingForm, converters, FieldAccessor } from "../src";
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("accessByPath simple field", async () => {
+test("accessByPath simple field", () => {
   const M = types.model("M", {
     foo: types.number
   });
@@ -24,7 +24,7 @@ test("accessByPath simple field", async () => {
   expect(accessor.value).toEqual(3);
 });
 
-test("accessByPath repeating form", async () => {
+test("accessByPath repeating form", () => {
   const N = types.model("N", {
     foo: types.number,
     bar: types.number // no field
@@ -52,7 +52,7 @@ test("accessByPath repeating form", async () => {
   expect(state.accessByPath("/entries/0/bar")).toBeUndefined();
 });
 
-test("acccessByPath which has no field", async () => {
+test("acccessByPath which has no field", () => {
   const M = types.model("M", {
     foo: types.number,
     bar: types.number

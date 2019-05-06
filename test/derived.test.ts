@@ -1,12 +1,11 @@
 import { configure, IReactionDisposer } from "mobx";
 import { types, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
-import { resolveReactions } from "./util";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("calculated", async () => {
+test("calculated", () => {
   const M = types
     .model("M", {
       calculated: types.number,
@@ -34,26 +33,24 @@ test("calculated", async () => {
   const a = state.field("a");
   const b = state.field("b");
 
-  await resolveReactions();
   // we show the set value, as no modification was made
   expect(calculated.raw).toEqual("0");
   expect(calculated.value).toEqual(0);
 
   // we set it to 4 explicitly
-  await calculated.setRaw("4");
+  calculated.setRaw("4");
   expect(calculated.raw).toEqual("4");
   // this immediately affects the underlying value
   expect(calculated.value).toEqual(4);
 
   // we now change a, which should modify the derived value
-  await a.setRaw("3");
-  await resolveReactions();
+  a.setRaw("3");
   expect(calculated.raw).toEqual("5");
   // and also the underlying value, immediately
   expect(calculated.value).toEqual(5);
 });
 
-test("calculated repeating", async () => {
+test("calculated repeating", () => {
   const N = types
     .model("N", {
       calculated: types.number,
@@ -86,27 +83,24 @@ test("calculated repeating", async () => {
   const calculated = sub.field("calculated");
   const a = sub.field("a");
   const b = sub.field("b");
-
-  await resolveReactions();
   // we show the original value as no change was made
   expect(calculated.raw).toEqual("0");
   expect(calculated.value).toEqual(0);
 
   // we set it to 4 explicitly
-  await calculated.setRaw("4");
+  calculated.setRaw("4");
   expect(calculated.raw).toEqual("4");
   // this immediately affects the underlying value
   expect(calculated.value).toEqual(4);
 
   // we now change a, which should modify the derived value
-  await a.setRaw("3");
-  await resolveReactions();
+  a.setRaw("3");
   expect(calculated.raw).toEqual("5");
   // and also the underlying value, immediately
   expect(calculated.value).toEqual(5);
 });
 
-test("calculated repeating push and remove", async () => {
+test("calculated repeating push and remove", () => {
   const N = types
     .model("N", {
       calculated: types.number,
@@ -149,19 +143,18 @@ test("calculated repeating push and remove", async () => {
   const a = sub.field("a");
   const b = sub.field("b");
 
-  await resolveReactions();
   // we show nothing as we're in add mode
   expect(calculated.raw).toEqual("");
 
   // we set it to 4 explicitly
-  await calculated.setRaw("4");
+  calculated.setRaw("4");
   expect(calculated.raw).toEqual("4");
   // this immediately affects the underlying value
   expect(calculated.value).toEqual(4);
 
   // we now change a, which should modify the derived value
-  await a.setRaw("3");
-  await resolveReactions();
+  a.setRaw("3");
+
   expect(calculated.raw).toEqual("6");
   // and also the underlying value, immediately
   expect(calculated.value).toEqual(6);
@@ -186,15 +179,15 @@ test("calculated repeating push and remove", async () => {
   const calculated2 = sub2.field("calculated");
   expect(calculated2.raw).toEqual("6");
   expect(calculated2.value).toEqual(6);
-  await calculated2.setRaw("4");
+  calculated2.setRaw("4");
   expect(calculated2.value).toEqual(4);
   const a2 = sub.field("a");
-  await a2.setRaw("7");
+  a2.setRaw("7");
   expect(calculated2.raw).toBe("10");
   expect(touched).toBeTruthy();
 });
 
-test("calculated with context", async () => {
+test("calculated with context", () => {
   const M = types
     .model("M", {
       calculated: types.string,
@@ -213,11 +206,14 @@ test("calculated with context", async () => {
   }
 
   const form = new Form(M, {
-    calculated: new Field(converters.decimal(getDecimalPlaces), {
-      derived: (node: Instance<typeof M>) => node.sum()
-    }),
-    a: new Field(converters.decimal(getDecimalPlaces)),
-    b: new Field(converters.decimal(getDecimalPlaces))
+    calculated: new Field(
+      converters.dynamic(converters.decimal, getDecimalPlaces),
+      {
+        derived: (node: Instance<typeof M>) => node.sum()
+      }
+    ),
+    a: new Field(converters.dynamic(converters.decimal, getDecimalPlaces)),
+    b: new Field(converters.dynamic(converters.decimal, getDecimalPlaces))
   });
 
   const o = M.create({ calculated: "0.0000", a: "1.0000", b: "2.3456" });
@@ -229,20 +225,18 @@ test("calculated with context", async () => {
   const a = state.field("a");
   const b = state.field("b");
 
-  await resolveReactions();
   // we show the set value, as no modification was made
   expect(calculated.raw).toEqual("0.0000");
   expect(calculated.value).toEqual("0.0000");
 
   // we now change a, which should modify the derived value
-  await a.setRaw("1.2345");
-  await resolveReactions();
+  a.setRaw("1.2345");
   expect(calculated.raw).toEqual("3.5801");
   // and also the underlying value, immediately
   expect(calculated.value).toEqual("3.5801");
 });
 
-test("dispose", async () => {
+test("dispose", () => {
   // keep a counter to track how often we call our sum function
   // it's called more than we would wish, but if we don't properly
   // dispose of previous state it's called even more often
@@ -285,14 +279,12 @@ test("dispose", async () => {
   const a = state.field("a");
   const b = state.field("b");
 
-  await resolveReactions();
-
   // we show the set value, as no modification was made
   expect(calculated.raw).toEqual("0");
   expect(calculated.value).toEqual(0);
 
   // we set it to 4 explicitly
-  await calculated.setRaw("4");
+  calculated.setRaw("4");
   expect(calculated.raw).toEqual("4");
   // this immediately affects the underlying value
   expect(calculated.value).toEqual(4);
@@ -300,8 +292,7 @@ test("dispose", async () => {
   expect(counter).toBe(4);
 
   // we now change a, which should modify the derived value
-  await a.setRaw("3");
-  await resolveReactions();
+  a.setRaw("3");
 
   // if we hadn't disposed properly this would have been
   // called more
