@@ -1,11 +1,5 @@
 import { configure, autorun } from "mobx";
-import {
-  getSnapshot,
-  types,
-  applySnapshot,
-  onPatch,
-  Instance
-} from "mobx-state-tree";
+import { types, applySnapshot, onPatch, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
 
 // "always" leads to trouble during initialization.
