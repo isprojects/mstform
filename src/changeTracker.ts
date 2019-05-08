@@ -31,13 +31,12 @@ class DebounceProcess {
 
 export class ChangeTracker {
   changed: Map<string, void> = new Map();
-  requested: Map<string, number> = new Map();
 
   // process requests - field paths in the order of changes, debounced
   requests: string[] = [];
 
   isProcessing: boolean = false;
-  processingPromises: Map<string, Promise<any>> = new Map();
+  processingPromise: Promise<void> = Promise.resolve();
 
   debounceProcess: DebounceProcess;
 
@@ -55,58 +54,67 @@ export class ChangeTracker {
 
   // track a field that has changed. debounce requests
   change(path: string): void {
-    this.changed.set(path, undefined);
+    this.startChange(path);
     this.debounceProcess.run(path);
+  }
+
+  startChange(path: string) {
+    this.changed.set(path, undefined);
+  }
+
+  finishChange(path: string) {
+    this.changed.delete(path);
   }
 
   // queue the request
   makeRequest(path: string): void {
-    const count = this.requested.get(path);
-    this.requested.set(path, count != null ? count + 1 : 0);
     this.requests.push(path);
-    this.processingPromises.set(path, this.processRequests());
+    this.finishChange(path);
+    this.processingPromise = this.processRequests();
   }
 
   // process all requests, in order
   // store the fields in requested.
-  async processRequests(): Promise<any> {
+  async processRequests(): Promise<void> {
+    // if we're already busy, wait for promise we already have
     if (this.isProcessing) {
-      return;
+      return this.processingPromise;
     }
     this.isProcessing = true;
+
+    // get the requests, updating the requests to be empty immediately
+    // as new ones can come in now
     const requests = this.requests;
     this.requests = [];
-    this.isProcessing = true;
+
+    // process it all in sequence
     const processingPromise = requests.reduce(async (previousPromise, path) => {
       await previousPromise;
+      // as soon as we start processing a path are done with the request
       const r = await this.process(path);
-      const count = this.requested.get(path);
-      if (count != null) {
-        if (count > 1) {
-          this.requested.set(path, count - 1);
-        } else {
-          this.requested.delete(path);
-        }
-      }
       return r;
     }, Promise.resolve());
+
+    // we need to wait until processing is done before we complete
     await processingPromise;
     this.isProcessing = false;
+
+    // if there is more to process now, process it too
     if (this.requests.length > 0) {
       return this.processRequests();
     }
+
     return processingPromise;
   }
 
-  isRequested(path: string): boolean {
-    const count = this.requested.get(path);
-    if (count == null) {
-      return false;
+  hasChanged(path: string): boolean {
+    if (this.changed.has(path)) {
+      return true;
     }
-    return count > 0;
+    return this.requests.includes(path);
   }
 
-  isFinished(): Promise<any> {
-    return Promise.all(Array.from(this.processingPromises.values()));
+  isFinished(): Promise<void> {
+    return this.processingPromise;
   }
 }

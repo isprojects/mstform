@@ -179,6 +179,11 @@ class FormProcessor {
     const processResult = await this.process(getSnapshot(this.node), path);
     const { updates, errorValidations, warningValidations } = processResult;
     updates.forEach(update => {
+      // anything that has changed by the user in the mean time shouldn't
+      // be updated, as the user input takes precedence
+      if (this.changeTracker.hasChanged(update.path)) {
+        return;
+      }
       if (update.value !== undefined) {
         applyPatch(this.node, [
           { op: "replace", path: update.path, value: update.value }
