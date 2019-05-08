@@ -116,7 +116,7 @@ class FormProcessor {
     public process: Process,
     {
       debounce,
-      applyUpdate
+      applyUpdate = defaultApplyUpdate
     }: { debounce?: DebounceFunc; applyUpdate?: ApplyUpdate } = {}
   ) {
     this.node = node;
@@ -126,7 +126,7 @@ class FormProcessor {
       (path: string) => this.realProcess(path),
       { debounce }
     );
-    this.applyUpdate = applyUpdate || defaultApplyUpdate;
+    this.applyUpdate = applyUpdate;
   }
 
   run(path: string) {
