@@ -155,7 +155,7 @@ test("form processor three requests are synced", async () => {
   resolveA();
 
   await p.isFinished();
-  // these should both be called, in that order
+  // these should all be called, in the right order
   expect(requests).toEqual(["a", "b", "c"]);
   // and we expect the error message to be set
   expect(p.getError("a")).toEqual("error c");
