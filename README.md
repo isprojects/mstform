@@ -23,7 +23,7 @@ It doesn't put any requirements on your widgets. It works with any React
     instance in code as well and the form is automatically updated.
 -   Thanks to MST it's easy to convert form contents to JSON and back again.
 -   It knows about types. If you use vscode for instance, your editor tells you
-    if you do something wrong. This works even in plain Javascript if you enable
+    if you do something wrong. This works even in plain JavaScript if you enable
     `ts-check`.
 
 ## Philosophy
@@ -1300,7 +1300,7 @@ etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus`/`onBlur` handler, so if you use that with the field it is there
 automatically.
 
-In addition, you can set a field to rerender itself when you blur out of it,
+In addition, you can set a field to re-render itself when you blur out of it,
 using the `postprocess` option on fields. An example use case is rendering
 extra zeroes in decimal fields, like so:
 
@@ -1325,6 +1325,36 @@ const state = form.state(o, {
     update: accessor => {}
 });
 ```
+
+## Form Processor
+
+Sometimes the backend knows more than the frontend, and you want to implement
+some form behavior on the backend. Besides the low-level hooks mstform offers
+to do so (such as `getError`), you can also implement the more high level form
+processor.
+
+If you implement the form processor protocol on your backend, your backend can
+control validation messages (error and warning) messages, as well as control
+default values for fields and clear them if they become invalid.
+
+The keeps track of which field paths have been changed by the user. It also
+makes sure that user input is debounced, so that a change in the form only
+registers after the user stops changing the field for a field, or when a set
+time has passed.
+
+Once a field path has been changed, the MST instance underlying the form is
+snapshotted and sent to an asynchronous "process" function, along with the
+field path that changed. You should implement this function to define backend
+processing. It should send back a structure with error messages, warning
+messages, and field updates.
+
+The form processor ensures that the process function only runs one at the time,
+and in sequence (in the order in which they were triggered). This way,
+the consistency of updates is ensured.
+
+The form processor also keeps track of fields that have changed but have not
+yet been processed by the backend. In this case any updates from the backends
+are ignored - the user input takes precedence.
 
 ## Tips
 
