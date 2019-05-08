@@ -1,5 +1,17 @@
 import { debounce as lodashDebounce } from "lodash";
 
+// the change tracker solves the problem of sending changes to
+// a form to the server in the order in which they were made,
+// one after another, and allowing changes to be queued up.
+// Queued up changes that aren't yet being handled can be
+// accessed -- this is useful if we want new changes to override
+// any changes from the backend in the form processor.
+
+// the change tracker debounces changes, so that multiple changes
+// to the same field shortly after another are only sent once.
+
+// the change tracker is used by the form processor.
+
 interface ProcessChange {
   (path: string): Promise<any>;
 }

@@ -8,51 +8,6 @@ import {
 import { observable, action } from "mobx";
 import { ChangeTracker, DebounceFunc } from "./changeTracker";
 
-// modify a
-// modify a
-// modify a -> debounced call to the server
-// modify b
-// modify b
-// a resolves
-// -> debounced call of b to the server
-// b resolves
-
-// we keep track of all paths we need to send to the server we memoize and
-// debounce this, so that only after a bit of typing on a path a process
-// request is made. the process requests are then resolved in sequence - the
-// first process request is resolved before the second one is issued, as it
-// could result in an update to a field.
-
-// so we keep a list of process requests, with the field included
-// we execute each item of this list in sequence
-// while this is happening we create a new list of process requests
-// once the original process requests lists is processed, the new
-// list is also processed. this way it's impossible to process out of sequence
-
-// this means it's possible to be typing
-// in a field already only for it to be cleared by the server. that sucks. the
-// reason for the strict sequencing is that we can't issue another process
-// request with an inconsistent state - the update can affect validation
-// behavior.
-
-// what if we gave up the strict sequencing? we'd end up with inconsistent
-// state if we modify one field while a field is to be cleared in the future
-
-// what if we showed the form in a loading state while a process is taking
-// place? but we cannot indicate which field is in a loading state.
-
-// an alternative is to indeed send the clearing and defaulting information
-// to the client. this means that for each relationship, we should
-// send the related information to the client. as a result of this, we
-// can pre-fill immediately and also clear immediately.
-// this works differently than for dimensions, however.
-
-// we send the first one immediately to the server
-// once it resolves, we n
-
-// we keep a sequence of items we need to resolve
-//
-
 // TODO:
 // * abstract away inclusion handling
 
