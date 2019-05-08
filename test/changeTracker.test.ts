@@ -1,5 +1,5 @@
 import { ChangeTracker } from "../src/changeTracker";
-import { debounce } from "./utils";
+import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
 
@@ -42,16 +42,6 @@ test("multiple paths", async () => {
 
   expect(processed).toEqual(["a", "b"]);
 });
-
-function until() {
-  let resolveResult: () => void = () => {
-    /* nothing */
-  };
-  const finished = new Promise((resolve, reject) => {
-    resolveResult = resolve;
-  });
-  return { resolve: resolveResult, finished };
-}
 
 test("multiple paths with delay", async () => {
   const processed: string[] = [];

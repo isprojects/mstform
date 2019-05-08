@@ -1,7 +1,7 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { FormProcessor } from "../src";
-import { debounce } from "./utils";
+import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
 
@@ -41,16 +41,7 @@ test("form processor two requests are synced", async () => {
     foo: types.string
   });
 
-  // set up a resolve function to resolve
-  // use a dummy resolve function to please ts
-  let resolveA: () => void = () => {
-    /* nothing */
-  };
-
-  // keep a reference to the real resolve function
-  const finishA = new Promise((resolve, reject) => {
-    resolveA = resolve;
-  });
+  const untilA = until();
 
   const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
@@ -62,7 +53,7 @@ test("form processor two requests are synced", async () => {
       // the code ensures the next call to run is only executed after the
       // first is resolved.
       if (path === "a") {
-        await finishA;
+        await untilA.finished;
       }
       requests.push(path);
       return {
@@ -84,7 +75,7 @@ test("form processor two requests are synced", async () => {
   jest.runAllTimers();
 
   // we resolve 'a'
-  resolveA();
+  untilA.resolve();
 
   await p.isFinished();
   // these should both be called, in that order
@@ -98,22 +89,8 @@ test("form processor three requests are synced", async () => {
     foo: types.string
   });
 
-  // set up a resolve function to resolve
-  // use a dummy resolve function to please ts
-  let resolveA: () => void = () => {
-    /* nothing */
-  };
-  let resolveB: () => void = () => {
-    /* nothing */
-  };
-
-  // keep a reference to the real resolve function
-  const finishA = new Promise((resolve, reject) => {
-    resolveA = resolve;
-  });
-  const finishB = new Promise((resolve, reject) => {
-    resolveB = resolve;
-  });
+  const untilA = until();
+  const untilB = until();
 
   const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
@@ -125,10 +102,10 @@ test("form processor three requests are synced", async () => {
       // the code ensures the next call to run is only executed after the
       // first is resolved.
       if (path === "a") {
-        await finishA;
+        await untilA.finished;
       }
       if (path === "b") {
-        await finishB;
+        await untilB.finished;
       }
       requests.push(path);
       return {
@@ -150,9 +127,9 @@ test("form processor three requests are synced", async () => {
   p.run("c");
   jest.runAllTimers();
   // we resolve 'b'
-  resolveB();
+  untilB.resolve();
   // we resolve 'a'
-  resolveA();
+  untilA.resolve();
 
   await p.isFinished();
   // these should all be called, in the right order

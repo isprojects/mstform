@@ -18,3 +18,13 @@ export function debounce(f: any, delay: number) {
     timeout = setTimeout(f, delay);
   };
 }
+
+export function until() {
+  let resolveResult: () => void = () => {
+    /* nothing */
+  };
+  const finished = new Promise((resolve, reject) => {
+    resolveResult = resolve;
+  });
+  return { resolve: resolveResult, finished };
+}
