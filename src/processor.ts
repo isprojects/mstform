@@ -8,9 +8,6 @@ import {
 import { observable, action } from "mobx";
 import { ChangeTracker, DebounceFunc } from "./changeTracker";
 
-// TODO:
-// * abstract away inclusion handling
-
 type Message = {
   path: string;
   message: string;
@@ -100,15 +97,27 @@ interface Process {
   (snapshot: any, path: string): Promise<ProcessResult>;
 }
 
+interface ApplyUpdate {
+  (node: Instance<IAnyModelType>, update: any): void;
+}
+
+function defaultApplyUpdate(node: Instance<IAnyModelType>, update: any): void {
+  applyPatch(node, [{ op: "replace", path: update.path, value: update.value }]);
+}
+
 class FormProcessor {
   errorValidations: ValidationEntries;
   warningValidations: ValidationEntries;
   changeTracker: ChangeTracker;
+  applyUpdate: ApplyUpdate;
 
   constructor(
     public node: Instance<IAnyModelType>,
     public process: Process,
-    { debounce }: { debounce?: DebounceFunc } = {}
+    {
+      debounce,
+      applyUpdate
+    }: { debounce?: DebounceFunc; applyUpdate?: ApplyUpdate } = {}
   ) {
     this.node = node;
     this.errorValidations = new ValidationEntries();
@@ -117,6 +126,7 @@ class FormProcessor {
       (path: string) => this.realProcess(path),
       { debounce }
     );
+    this.applyUpdate = applyUpdate || defaultApplyUpdate;
   }
 
   run(path: string) {
@@ -139,22 +149,7 @@ class FormProcessor {
       if (this.changeTracker.hasChanged(update.path)) {
         return;
       }
-      if (update.value !== undefined) {
-        applyPatch(this.node, [
-          { op: "replace", path: update.path, value: update.value }
-        ]);
-      } else if (update.inclusion !== undefined) {
-        applyPatch(this.node, [
-          {
-            op: "replace",
-            path: update.path,
-            value: this.loadInclusion(
-              update.model_key as string,
-              update.inclusion
-            )
-          }
-        ]);
-      }
+      this.applyUpdate(this.node, update);
     });
     this.errorValidations.update(errorValidations);
     this.warningValidations.update(warningValidations);
