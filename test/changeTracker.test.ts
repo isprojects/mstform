@@ -38,9 +38,8 @@ test("multiple paths", async () => {
     { debounce: mydebounce }
   );
 
-  // the problem is that each process path is currently a separate series of
-  // requests. but once requests is processing and held up, we can
-  // accumulate requests of different paths
+  // here we just generate a bunch of change events, but these aren't
+  // handled by a single list of requests as nothing is held up
   tracker.change("a");
   tracker.change("a");
   tracker.change("b");
@@ -49,4 +48,49 @@ test("multiple paths", async () => {
   await tracker.isFinished();
 
   expect(processed).toEqual(["a", "b"]);
+});
+
+function until() {
+  let resolveResult: () => void = () => {
+    /* nothing */
+  };
+  const finished = new Promise((resolve, reject) => {
+    resolveResult = resolve;
+  });
+  return { resolve: resolveResult, finished };
+}
+
+test("multiple paths with delay", async () => {
+  const processed: string[] = [];
+
+  const untilA = until();
+
+  const tracker = new ChangeTracker(
+    async (path: string) => {
+      if (path === "a") {
+        await untilA.finished;
+      }
+      return processed.push(path);
+    },
+    { debounce: mydebounce }
+  );
+
+  // here we generate an a event
+  tracker.change("a");
+  jest.runAllTimers();
+
+  // now we generate more events, meanwhile waiting for a to resolve
+  tracker.change("b");
+  tracker.change("c");
+  jest.runAllTimers();
+  // these are saved in the requests
+  expect(tracker.requests).toEqual(["b", "c"]);
+
+  // we resolve a
+  untilA.resolve();
+
+  // we ensure that the process promise only resolves when we want it
+  await tracker.isFinished();
+
+  expect(processed).toEqual(["a", "b", "c"]);
 });

@@ -41,8 +41,6 @@ export class ChangeTracker {
 
   debounceProcess: DebounceProcess;
 
-  // memoizedDebouncedMakeRequest: (path: string) => void;
-
   constructor(
     public process: ProcessChange,
     { debounce }: { debounce?: DebounceFunc }
@@ -53,17 +51,12 @@ export class ChangeTracker {
         debounce: debounce
       }
     );
-    // this.memoizedDebouncedMakeRequest = memoize((path: string) => {
-    //   console.log(path);
-    //   return debounce(() => this.makeRequest(path), 500);
-    // });
   }
 
   // track a field that has changed. debounce requests
   change(path: string): void {
     this.changed.set(path, undefined);
     this.debounceProcess.run(path);
-    //    this.memoizedDebouncedMakeRequest(path);
   }
 
   // queue the request
