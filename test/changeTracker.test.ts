@@ -1,19 +1,7 @@
 import { ChangeTracker } from "../src/changeTracker";
+import { debounce } from "./utils";
 
 jest.useFakeTimers();
-
-// we have to use a simplistic mock debounce instead of the
-// one in lodash, as the lodash one doesn't play well
-// with jest's fake timers. we use the lodash one in production
-// as it's more robust.
-// https://github.com/facebook/jest/issues/3465
-function mydebounce(f: any, delay: number) {
-  let timeout: any = null;
-  return () => {
-    clearTimeout(timeout);
-    timeout = setTimeout(f, delay);
-  };
-}
 
 test("simple change tracker", async () => {
   const processed: string[] = [];
@@ -21,7 +9,7 @@ test("simple change tracker", async () => {
     async (path: string) => {
       return processed.push(path);
     },
-    { debounce: mydebounce }
+    { debounce }
   );
 
   tracker.change("a");
@@ -40,7 +28,7 @@ test("multiple paths", async () => {
     async (path: string) => {
       return processed.push(path);
     },
-    { debounce: mydebounce }
+    { debounce }
   );
 
   // here we just generate a bunch of change events, but these aren't
@@ -77,7 +65,7 @@ test("multiple paths with delay", async () => {
       }
       return processed.push(path);
     },
-    { debounce: mydebounce }
+    { debounce }
   );
 
   // here we generate an a event

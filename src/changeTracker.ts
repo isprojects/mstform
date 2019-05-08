@@ -4,7 +4,7 @@ interface ProcessChange {
   (path: string): Promise<any>;
 }
 
-interface DebounceFunc {
+export interface DebounceFunc {
   (f: any, delay: number): void;
 }
 
@@ -104,10 +104,6 @@ export class ChangeTracker {
       return false;
     }
     return count > 0;
-  }
-
-  isPathProcessing(path: string): boolean {
-    return false;
   }
 
   isFinished(): Promise<any> {

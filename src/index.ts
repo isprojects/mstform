@@ -11,3 +11,4 @@ export * from "./validation-props";
 export * from "./controlled";
 export * from "./state";
 export * from "./messages";
+export * from "./processor";
