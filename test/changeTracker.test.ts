@@ -2,6 +2,11 @@ import { ChangeTracker } from "../src/changeTracker";
 
 jest.useFakeTimers();
 
+// we have to use a simplistic mock debounce instead of the
+// one in lodash, as the lodash one doesn't play well
+// with jest's fake timers. we use the lodash one in production
+// as it's more robust.
+// https://github.com/facebook/jest/issues/3465
 function mydebounce(f: any, delay: number) {
   let timeout: any = null;
   return () => {
@@ -86,10 +91,10 @@ test("multiple paths with delay", async () => {
   // these are saved in the requests
   expect(tracker.requests).toEqual(["b", "c"]);
 
-  // we resolve a
+  // we finally resolve processing a
+  // this sould result in b and c being processed afterwards
   untilA.resolve();
 
-  // we ensure that the process promise only resolves when we want it
   await tracker.isFinished();
 
   expect(processed).toEqual(["a", "b", "c"]);
