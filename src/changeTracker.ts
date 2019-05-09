@@ -20,21 +20,28 @@ export interface DebounceFunc {
   (f: any, delay: number): void;
 }
 
+export type DebounceOptions = {
+  debounce: DebounceFunc;
+  delay: number;
+};
+
 class DebounceProcess {
   debounced: Map<string, any> = new Map();
   debounce: DebounceFunc;
+  delay: number;
 
   constructor(
     public func: (path: string) => void,
-    { debounce }: { debounce?: DebounceFunc }
+    { debounce = lodashDebounce, delay = 500 }: Partial<DebounceOptions>
   ) {
-    this.debounce = debounce || lodashDebounce;
+    this.debounce = debounce;
+    this.delay = delay;
   }
 
   run(path: string) {
     let f = this.debounced.get(path);
     if (f == null) {
-      f = this.debounce(() => this.func(path), 500);
+      f = this.debounce(() => this.func(path), this.delay);
       this.debounced.set(path, f);
     }
     f();
@@ -54,13 +61,11 @@ export class ChangeTracker {
 
   constructor(
     public process: ProcessChange,
-    { debounce }: { debounce?: DebounceFunc }
+    options: Partial<DebounceOptions>
   ) {
     this.debounceProcess = new DebounceProcess(
       (path: string) => this.makeRequest(path),
-      {
-        debounce: debounce
-      }
+      options
     );
   }
 

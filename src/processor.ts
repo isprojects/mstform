@@ -6,7 +6,7 @@ import {
   Instance
 } from "mobx-state-tree";
 import { observable, action } from "mobx";
-import { ChangeTracker, DebounceFunc } from "./changeTracker";
+import { ChangeTracker, DebounceFunc, DebounceOptions } from "./changeTracker";
 
 type Message = {
   path: string;
@@ -116,15 +116,16 @@ class FormProcessor {
     public process: Process,
     {
       debounce,
+      delay,
       applyUpdate = defaultApplyUpdate
-    }: { debounce?: DebounceFunc; applyUpdate?: ApplyUpdate } = {}
+    }: { applyUpdate?: ApplyUpdate } & Partial<DebounceOptions> = {}
   ) {
     this.node = node;
     this.errorValidations = new ValidationEntries();
     this.warningValidations = new ValidationEntries();
     this.changeTracker = new ChangeTracker(
       (path: string) => this.realProcess(path),
-      { debounce }
+      { debounce, delay }
     );
     this.applyUpdate = applyUpdate;
   }
