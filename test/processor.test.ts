@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Processor } from "../src";
+import { Processor, Form, Field, converters } from "../src";
 import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
@@ -264,4 +264,42 @@ test("form processor ignores update if path re-modified during processing", asyn
   // isn't even triggered yet (and doesn't update anyhow), the value should
   // be unchanged
   expect(o.foo).toEqual("FOO");
+});
+
+test("configuration with state", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  async function myProcess(json: any, path: string) {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo", message: "error!" }] }
+      ],
+      warningValidations: []
+    };
+  }
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const field = state.field("foo");
+  field.setRaw("BAR");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(field.error).toEqual("error!");
 });

@@ -1330,10 +1330,10 @@ const state = form.state(o, {
 
 Sometimes the backend knows more than the frontend, and you want to implement
 some form behavior on the backend. Besides the low-level hooks (such as
-`getError`) offer facilities to do so by hand, you can also implement a more
-high-level form processor.
+`getError`) offer facilities to do so by hand, you can also configure this
+behavior at a higher level.
 
-If you implement the form process protocol on your backend, your backend can
+If you implement the form processing protocol on your backend, your backend can
 control validation messages (error and warning) messages, as well as control
 default values for fields and clear them if they become invalid.
 

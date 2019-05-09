@@ -34,7 +34,7 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
-import { ProcessorOptions, Process } from "./processor";
+import { Processor, ProcessorOptions, Process } from "./processor";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -133,6 +133,8 @@ export class FormState<
   blurFunc: EventFunc<any, any> | undefined;
   updateFunc: UpdateFunc<any, any> | undefined;
 
+  processor: Processor | undefined;
+
   _context: any;
   _converterOptions: StateConverterOptions;
   _requiredError: string | ErrorFunc;
@@ -150,6 +152,7 @@ export class FormState<
       isRequired = () => false,
       getError = () => undefined,
       getWarning = () => undefined,
+      backend = undefined,
       extraValidation = () => false,
       validation = {},
       focus,
@@ -208,6 +211,31 @@ export class FormState<
     this._requiredError = requiredError;
 
     checkConverterOptions(this._converterOptions);
+
+    if (backend != null) {
+      const processor = new Processor(node, backend.process, backend);
+      this.processor = processor;
+      this.getErrorFunc = (accessor: Accessor): string | undefined => {
+        const result = getError(accessor);
+        if (result != null) {
+          return result;
+        }
+        return processor.getError(accessor.path);
+      };
+      this.getWarningFunc = (accessor: Accessor): string | undefined => {
+        const result = getWarning(accessor);
+        if (result != null) {
+          return result;
+        }
+        return processor.getWarning(accessor.path);
+      };
+      this.updateFunc = (accessor: FieldAccessor<any, any>) => {
+        if (update != null) {
+          update(accessor);
+        }
+        processor.run(accessor.path);
+      };
+    }
   }
 
   dispose(): void {
@@ -237,6 +265,14 @@ export class FormState<
   @computed
   get value(): Instance<M> {
     return this.node;
+  }
+
+  @computed
+  get processPromise(): Promise<void> {
+    if (this.processor == null) {
+      return Promise.resolve();
+    }
+    return this.processor.isFinished();
   }
 
   stateConverterOptionsWithContext(

@@ -87,23 +87,27 @@ type ValidationInfo = {
   messages: Message[];
 };
 
-type ProcessResult = {
+export type ProcessResult = {
   updates: Update[];
   errorValidations: ValidationInfo[];
   warningValidations: ValidationInfo[];
 };
 
-interface Process {
+export interface Process {
   (snapshot: any, path: string): Promise<ProcessResult>;
 }
 
-interface ApplyUpdate {
+export interface ApplyUpdate {
   (node: Instance<IAnyModelType>, update: any): void;
 }
 
 function defaultApplyUpdate(node: Instance<IAnyModelType>, update: any): void {
   applyPatch(node, [{ op: "replace", path: update.path, value: update.value }]);
 }
+
+export type ProcessorOptions = { applyUpdate?: ApplyUpdate } & Partial<
+  DebounceOptions
+>;
 
 export class Processor {
   errorValidations: ValidationEntries;
@@ -114,11 +118,7 @@ export class Processor {
   constructor(
     public node: Instance<IAnyModelType>,
     public process: Process,
-    {
-      debounce,
-      delay,
-      applyUpdate = defaultApplyUpdate
-    }: { applyUpdate?: ApplyUpdate } & Partial<DebounceOptions> = {}
+    { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
   ) {
     this.node = node;
     this.errorValidations = new ValidationEntries();
