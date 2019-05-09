@@ -6,7 +6,7 @@ import {
   Instance
 } from "mobx-state-tree";
 import { observable, action } from "mobx";
-import { ChangeTracker, DebounceFunc, DebounceOptions } from "./changeTracker";
+import { ChangeTracker, DebounceOptions } from "./changeTracker";
 
 type Message = {
   path: string;
@@ -105,7 +105,7 @@ function defaultApplyUpdate(node: Instance<IAnyModelType>, update: any): void {
   applyPatch(node, [{ op: "replace", path: update.path, value: update.value }]);
 }
 
-class FormProcessor {
+export class Processor {
   errorValidations: ValidationEntries;
   warningValidations: ValidationEntries;
   changeTracker: ChangeTracker;
@@ -167,5 +167,3 @@ class FormProcessor {
     return this.warningValidations.getMessage(path);
   }
 }
-
-export { FormProcessor };

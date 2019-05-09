@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { FormProcessor } from "../src";
+import { Processor } from "../src";
 import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
@@ -14,7 +14,7 @@ test("form processor has error messages", async () => {
   });
 
   const o = M.create({ foo: "FOO" });
-  const p = new FormProcessor(
+  const p = new Processor(
     o,
     async (json: any, path: string) => {
       return {
@@ -36,6 +36,63 @@ test("form processor has error messages", async () => {
   expect(p.getError("a")).toEqual("error");
 });
 
+test("form processor wipes out error messages", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+  let called = false;
+
+  // the idea is that the form processor only returns errors related
+  // to the field that was just touched under an id. if that id is wiped out,
+  // those errors are removed. but other error structures (like for 'beta' here)
+  // are not affected and remain
+  const p = new Processor(
+    o,
+    async (json: any, path: string) => {
+      if (!called) {
+        called = true;
+        return {
+          updates: [],
+          errorValidations: [
+            {
+              id: "alpha",
+              messages: [{ path: "a", message: "error a" }]
+            },
+            {
+              id: "beta",
+              messages: [{ path: "b", message: "error b" }]
+            }
+          ],
+          warningValidations: []
+        };
+      } else {
+        return {
+          updates: [],
+          errorValidations: [{ id: "alpha", messages: [] }],
+          warningValidations: []
+        };
+      }
+    },
+    { debounce }
+  );
+
+  await p.run("a");
+  jest.runAllTimers();
+
+  await p.isFinished();
+
+  expect(p.getError("a")).toEqual("error a");
+  expect(p.getError("b")).toEqual("error b");
+
+  await p.run("a");
+  jest.runAllTimers();
+  await p.isFinished();
+  expect(p.getError("a")).toBeUndefined();
+  expect(p.getError("b")).toEqual("error b");
+});
+
 test("form processor two requests are synced", async () => {
   const M = types.model("M", {
     foo: types.string
@@ -45,7 +102,7 @@ test("form processor two requests are synced", async () => {
 
   const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
-  const p = new FormProcessor(
+  const p = new Processor(
     o,
     async (json: any, path: string) => {
       // if the 'a' path is passed, we await a promise
@@ -94,7 +151,7 @@ test("form processor three requests are synced", async () => {
 
   const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
-  const p = new FormProcessor(
+  const p = new Processor(
     o,
     async (json: any, path: string) => {
       // if the 'a' path is passed, we await a promise
@@ -144,7 +201,7 @@ test("form processor does update", async () => {
   });
 
   const o = M.create({ foo: "FOO" });
-  const p = new FormProcessor(
+  const p = new Processor(
     o,
     async (json: any, path: string) => {
       return {
@@ -171,7 +228,7 @@ test("form processor ignores update if path re-modified during processing", asyn
 
   const o = M.create({ foo: "FOO" });
   let called = false;
-  const p = new FormProcessor(
+  const p = new Processor(
     o,
     async (json: any, path: string) => {
       // we ensure that only the first time we call this we
