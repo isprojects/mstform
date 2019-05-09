@@ -303,3 +303,83 @@ test("configuration with state", async () => {
 
   expect(field.error).toEqual("error!");
 });
+
+test("configuration other getError", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  async function myProcess(json: any, path: string) {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo", message: "error!" }] }
+      ],
+      warningValidations: []
+    };
+  }
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    },
+    getError() {
+      return "override";
+    }
+  });
+
+  const field = state.field("foo");
+  field.setRaw("BAR");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(field.error).toEqual("override");
+});
+
+test("update", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO", bar: "unchanged" });
+
+  async function myProcess(json: any, path: string) {
+    return {
+      updates: [{ path: "bar", value: "BAR" }],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+  fooField.setRaw("FOO!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(barField.value).toEqual("BAR");
+});
