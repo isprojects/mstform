@@ -34,6 +34,7 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
+import { ProcessorOptions, Process } from "./processor";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -68,14 +69,20 @@ export interface UpdateFunc<R, V> {
 // pause would show validation after the user stops input for a while
 export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 
+export type BackendOptions = {
+  process: Process;
+};
+
+type ValidationOptions = {
+  beforeSave: ValidationOption;
+  afterSave: ValidationOption;
+  pauseDuration: number;
+};
+
 export interface FormStateOptions<M> {
   save?: SaveFunc<M>;
   addMode?: boolean;
-  validation?: {
-    beforeSave?: ValidationOption;
-    afterSave?: ValidationOption;
-    pauseDuration?: number;
-  };
+  validation?: Partial<ValidationOptions>;
   isDisabled?: AccessorAllows;
   isHidden?: AccessorAllows;
   isReadOnly?: AccessorAllows;
@@ -83,6 +90,8 @@ export interface FormStateOptions<M> {
 
   getError?: ErrorOrWarning;
   getWarning?: ErrorOrWarning;
+
+  backend?: BackendOptions & ProcessorOptions;
 
   extraValidation?: ExtraValidation;
   focus?: EventFunc<any, any>;
@@ -120,9 +129,9 @@ export class FormState<
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
-  focusFunc: EventFunc<any, any> | null;
-  blurFunc: EventFunc<any, any> | null;
-  updateFunc: UpdateFunc<any, any> | null;
+  focusFunc: EventFunc<any, any> | undefined;
+  blurFunc: EventFunc<any, any> | undefined;
+  updateFunc: UpdateFunc<any, any> | undefined;
 
   _context: any;
   _converterOptions: StateConverterOptions;
@@ -132,7 +141,24 @@ export class FormState<
   constructor(
     public form: Form<M, D, G>,
     public node: Instance<M>,
-    options?: FormStateOptions<M>
+    {
+      save = defaultSaveFunc,
+      addMode = false,
+      isDisabled = () => false,
+      isHidden = () => false,
+      isReadOnly = () => false,
+      isRequired = () => false,
+      getError = () => undefined,
+      getWarning = () => undefined,
+      extraValidation = () => false,
+      validation = {},
+      focus,
+      blur,
+      update,
+      context,
+      converterOptions = {},
+      requiredError = "Required"
+    }: FormStateOptions<M> = {}
   ) {
     super();
     this.additionalErrorTree = {};
@@ -148,8 +174,6 @@ export class FormState<
       }
     });
 
-    const addMode: boolean = options != null ? options.addMode || false : false;
-
     this.formAccessor = new FormAccessor(
       this,
       this.form.definition,
@@ -159,56 +183,31 @@ export class FormState<
     );
     this.formAccessor.initialize();
 
-    if (options == null) {
-      this.saveFunc = defaultSaveFunc;
-      this.isDisabledFunc = () => false;
-      this.isHiddenFunc = () => false;
-      this.isReadOnlyFunc = () => false;
-      this.isRequiredFunc = () => false;
-      this.getErrorFunc = () => undefined;
-      this.getWarningFunc = () => undefined;
-      this.blurFunc = () => undefined;
-      this.extraValidationFunc = () => false;
-      this.validationBeforeSave = "immediate";
-      this.validationAfterSave = "immediate";
-      this.validationPauseDuration = 0;
-      this.focusFunc = null;
-      this.blurFunc = null;
-      this.updateFunc = null;
-      this._context = undefined;
-      this._converterOptions = {};
-      this._requiredError = "Required";
-    } else {
-      this.saveFunc = options.save ? options.save : defaultSaveFunc;
-      this.isDisabledFunc = options.isDisabled
-        ? options.isDisabled
-        : () => false;
-      this.isHiddenFunc = options.isHidden ? options.isHidden : () => false;
-      this.isReadOnlyFunc = options.isReadOnly
-        ? options.isReadOnly
-        : () => false;
-      this.isRequiredFunc = options.isRequired
-        ? options.isRequired
-        : () => false;
-      this.getErrorFunc = options.getError ? options.getError : () => undefined;
-      this.getWarningFunc = options.getWarning
-        ? options.getWarning
-        : () => undefined;
-      this.extraValidationFunc = options.extraValidation
-        ? options.extraValidation
-        : () => false;
-      const validation = options.validation || {};
-      this.validationBeforeSave = validation.beforeSave || "immediate";
-      this.validationAfterSave = validation.afterSave || "immediate";
-      this.validationPauseDuration = validation.pauseDuration || 0;
-      this.focusFunc = options.focus ? options.focus : null;
-      this.blurFunc = options.blur ? options.blur : null;
-      this.updateFunc = options.update ? options.update : null;
-      this._context = options.context;
-      this._converterOptions = options.converterOptions || {};
-      checkConverterOptions(this._converterOptions);
-      this._requiredError = options.requiredError || "Required";
-    }
+    this.saveFunc = save;
+    this.isDisabledFunc = isDisabled;
+    this.isHiddenFunc = isHidden;
+    this.isReadOnlyFunc = isReadOnly;
+    this.isRequiredFunc = isRequired;
+    this.getErrorFunc = getError;
+    this.getWarningFunc = getWarning;
+    this.extraValidationFunc = extraValidation;
+    const validationOptions: ValidationOptions = {
+      beforeSave: "immediate",
+      afterSave: "immediate",
+      pauseDuration: 0,
+      ...validation
+    };
+    this.validationBeforeSave = validationOptions.beforeSave;
+    this.validationAfterSave = validationOptions.afterSave;
+    this.validationPauseDuration = validationOptions.pauseDuration;
+    this.focusFunc = focus;
+    this.blurFunc = blur;
+    this.updateFunc = update;
+    this._context = context;
+    this._converterOptions = converterOptions;
+    this._requiredError = requiredError;
+
+    checkConverterOptions(this._converterOptions);
   }
 
   dispose(): void {
