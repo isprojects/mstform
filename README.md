@@ -1326,19 +1326,19 @@ const state = form.state(o, {
 });
 ```
 
-## Form Processor
+## Form processing on the backend
 
 Sometimes the backend knows more than the frontend, and you want to implement
-some form behavior on the backend. Besides the low-level hooks mstform offers
-to do so (such as `getError`), you can also implement the more high level form
-processor.
+some form behavior on the backend. Besides the low-level hooks (such as
+`getError`) offer facilities to do so by hand, you can also implement a more
+high-level form processor.
 
-If you implement the form processor protocol on your backend, your backend can
+If you implement the form process protocol on your backend, your backend can
 control validation messages (error and warning) messages, as well as control
 default values for fields and clear them if they become invalid.
 
-The keeps track of which field paths have been changed by the user. It also
-makes sure that user input is debounced, so that a change in the form only
+The system keeps track of which field paths have been changed by the user. It
+also makes sure that user input is debounced, so that a change in the form only
 registers after the user stops changing the field for a field, or when a set
 time has passed.
 
@@ -1348,13 +1348,103 @@ field path that changed. You should implement this function to define backend
 processing. It should send back a structure with error messages, warning
 messages, and field updates.
 
-The form processor ensures that the process function only runs one at the time,
-and in sequence (in the order in which they were triggered). This way,
-the consistency of updates is ensured.
+The backend processing system ensures that the process function only runs one
+at the time, and in sequence (in the order in which they were triggered). This
+way, the consistency of updates is ensured.
 
-The form processor also keeps track of fields that have changed but have not
+The system also keeps track of fields that have changed but have not
 yet been processed by the backend. In this case any updates from the backends
 are ignored - the user input takes precedence.
+
+### process protocol
+
+You need to implement a `process` function with the following signature:
+
+```typescript
+function async process(snapshot: any, path: string): ProcessResult {
+  // call your backend and eventually return ProcessResult
+}
+```
+
+The `snapshot` argument is a JSON serialization of the underlying node that the
+form represents. `path` is a JSON pointer (aka MST node path) to the field
+that was just changed by the user modifying the form. The form processor
+debounces user input so that multiple changes to the same field in a short time
+are collapsed into a single call to `process`.
+
+Here is an example `ProcessResult`:
+
+```js
+const result = {
+    updates: [{ path: "/a", value: "Alpha" }],
+    errorValidations: [
+        { id: "one", messages: [{ path: "/b", message: "This is wrong" }] }
+    ],
+    warningValidations: []
+};
+```
+
+`updates` is a list of fields to update. Each field is indicated by the field
+path. The rest of the structure is up to the developer and defines the update
+information. By default, you need to supply a `value` with the new value to put
+in the form there, but you can implement by your custom update procedure based
+on other information if you pass an `applyUpdate` function (to be described
+later).
+
+Both `errorValidations` and `warningValidations` are lists of validation
+structures. These validation structures each have an `id` -- if a new
+validation structure comes in, the previous validation structure with that id
+(if it exists) is removed. A validation structure contains a list of validation
+messages, each have a `path`. The `path` may be a path to a non-field such as a
+sub-form, or repeating form as well, in case the validation error applies to
+this.
+
+The idea is that the backend associates validation functions with one or more
+patterns of field paths (such as using the fieldref mechanism). Each validation
+function has a unique id and can generate messages for arbitrary field paths in
+the form. When a process request comes in, the backend only has to re-run
+validation functions that match the path that just changed. Other fields that
+are not affected do not have their messages affected - the frontend holds on to
+these validation messages.
+
+### Configuring backend processing
+
+```js
+const M = types.model("M", {
+    foo: types.string
+});
+
+const o = M.create({foo: "FOO"})
+
+function async myProcess(json, path) {
+  // call the backend, turn into ProcessResult and return it
+}
+
+form.state(o, {backend: {process: myProcess}})
+```
+
+This causes `myProcess` to be called whenever a field changes in the form
+(debounced). You can control the debounce delay by passing `delay` (default `500`):
+
+```js
+form.state(o, { backend: { process: myProcess, delay: 300 } });
+```
+
+As mentioned before you can also configure the `applyUpdate` function with
+a custom one:
+
+```js
+import { applyPatch } from "mobx-state-tree";
+
+function myApplyUpdate(node, update) {
+    // same behavior as the default
+    applyPatch(node, [
+        { op: "replace", path: update.path, value: update.value }
+    ]);
+}
+
+form.state(o, { backend: { process: myProcess, applyUpdate: myApplyUpdate } });
+```
 
 ## Tips
 
