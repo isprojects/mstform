@@ -266,6 +266,9 @@ test("form processor ignores update if path re-modified during processing", asyn
   expect(o.foo).toEqual("FOO");
 });
 
+// write a test where I verify that I accept backend changes to a field
+// again once ..when?
+
 test("configuration with state", async () => {
   const M = types.model("M", {
     foo: types.string
