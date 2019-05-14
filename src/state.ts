@@ -34,7 +34,13 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
-import { Processor, ProcessorOptions, Process } from "./processor";
+import {
+  Processor,
+  ProcessResult,
+  ProcessorOptions,
+  Process,
+  SaveFunc
+} from "./processor";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -52,10 +58,6 @@ export interface RepeatingFormAccessorAllows {
   (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
 }
 
-export interface SaveFunc<M> {
-  (node: Instance<M>): any;
-}
-
 export interface EventFunc<R, V> {
   (event: any, accessor: FieldAccessor<R, V>): void;
 }
@@ -69,8 +71,9 @@ export interface UpdateFunc<R, V> {
 // pause would show validation after the user stops input for a while
 export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 
-export type BackendOptions = {
-  process: Process;
+export type BackendOptions<M> = {
+  save?: SaveFunc<M>;
+  process?: Process;
 };
 
 type ValidationOptions = {
@@ -80,7 +83,6 @@ type ValidationOptions = {
 };
 
 export interface FormStateOptions<M> {
-  save?: SaveFunc<M>;
   addMode?: boolean;
   validation?: Partial<ValidationOptions>;
   isDisabled?: AccessorAllows;
@@ -91,7 +93,7 @@ export interface FormStateOptions<M> {
   getError?: ErrorOrWarning;
   getWarning?: ErrorOrWarning;
 
-  backend?: BackendOptions & ProcessorOptions;
+  backend?: BackendOptions<M> & ProcessorOptions;
 
   extraValidation?: ExtraValidation;
   focus?: EventFunc<any, any>;
@@ -117,7 +119,6 @@ export class FormState<
   saveStatus: SaveStatusOptions = "before";
 
   formAccessor: FormAccessor<D, G>;
-  saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
@@ -133,7 +134,7 @@ export class FormState<
   blurFunc: EventFunc<any, any> | undefined;
   updateFunc: UpdateFunc<any, any> | undefined;
 
-  processor: Processor | undefined;
+  processor: Processor<M> | undefined;
 
   _context: any;
   _converterOptions: StateConverterOptions;
@@ -144,7 +145,6 @@ export class FormState<
     public form: Form<M, D, G>,
     public node: Instance<M>,
     {
-      save = defaultSaveFunc,
       addMode = false,
       isDisabled = () => false,
       isHidden = () => false,
@@ -186,7 +186,6 @@ export class FormState<
     );
     this.formAccessor.initialize();
 
-    this.saveFunc = save;
     this.isDisabledFunc = isDisabled;
     this.isHiddenFunc = isHidden;
     this.isReadOnlyFunc = isReadOnly;
@@ -213,7 +212,12 @@ export class FormState<
     checkConverterOptions(this._converterOptions);
 
     if (backend != null) {
-      const processor = new Processor(node, backend.process, backend);
+      const processor = new Processor(
+        node,
+        backend.save,
+        backend.process,
+        backend
+      );
       this.processor = processor;
       this.getErrorFunc = (accessor: Accessor): string | undefined => {
         const result = getError(accessor);
@@ -373,6 +377,9 @@ export class FormState<
 
   @action
   async save(options?: ValidateOptions): Promise<boolean> {
+    if (this.processor == null) {
+      throw new Error("Cannot save without backend configuration");
+    }
     const isValid = this.validate(options);
 
     // if we ignored required, we need to re-validate to restore
@@ -390,15 +397,7 @@ export class FormState<
       return false;
     }
 
-    const errors = await this.saveFunc(this.node);
-
-    if (errors != null) {
-      this.setErrors(errors);
-      return false;
-    }
-    this.clearAdditionalErrors();
-
-    return true;
+    return this.processor.realSave();
   }
 
   @action

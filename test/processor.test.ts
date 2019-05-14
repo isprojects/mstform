@@ -14,8 +14,9 @@ test("form processor has error messages", async () => {
   });
 
   const o = M.create({ foo: "FOO" });
-  const p = new Processor(
+  const p = new Processor<typeof M>(
     o,
+    undefined,
     async (json: any, path: string) => {
       return {
         updates: [],
@@ -48,8 +49,9 @@ test("form processor wipes out error messages", async () => {
   // to the field that was just touched under an id. if that id is wiped out,
   // those errors are removed. but other error structures (like for 'beta' here)
   // are not affected and remain
-  const p = new Processor(
+  const p = new Processor<typeof M>(
     o,
+    undefined,
     async (json: any, path: string) => {
       if (!called) {
         called = true;
@@ -102,8 +104,9 @@ test("form processor two requests are synced", async () => {
 
   const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
-  const p = new Processor(
+  const p = new Processor<typeof M>(
     o,
+    undefined,
     async (json: any, path: string) => {
       // if the 'a' path is passed, we await a promise
       // This way we can test a long-duration promise and that
@@ -151,8 +154,9 @@ test("form processor three requests are synced", async () => {
 
   const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
-  const p = new Processor(
+  const p = new Processor<typeof M>(
     o,
+    undefined,
     async (json: any, path: string) => {
       // if the 'a' path is passed, we await a promise
       // This way we can test a long-duration promise and that
@@ -201,8 +205,9 @@ test("form processor does update", async () => {
   });
 
   const o = M.create({ foo: "FOO" });
-  const p = new Processor(
+  const p = new Processor<typeof M>(
     o,
+    undefined,
     async (json: any, path: string) => {
       return {
         updates: [{ path: "foo", value: "BAR" }],
@@ -228,8 +233,9 @@ test("form processor ignores update if path re-modified during processing", asyn
 
   const o = M.create({ foo: "FOO" });
   let called = false;
-  const p = new Processor(
+  const p = new Processor<typeof M>(
     o,
+    undefined,
     async (json: any, path: string) => {
       // we ensure that only the first time we call this we
       // try to update foo

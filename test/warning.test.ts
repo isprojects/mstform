@@ -28,6 +28,7 @@ test("a simple warning", async () => {
   const o = M.create({ foo: "FOO", bar: "BAR" });
 
   const state = form.state(o, {
+    backend: { save: async () => null },
     getWarning: (accessor: any) =>
       accessor.path === "/foo" ? "Please reconsider" : undefined
   });
@@ -63,6 +64,7 @@ test("a simple error", async () => {
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o, {
+    backend: { save: async () => null },
     getError: (accessor: any) =>
       accessor.path === "/foo" ? "Wrong" : undefined
   });

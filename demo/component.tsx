@@ -86,9 +86,11 @@ export class MyForm extends Component<MyFormProps> {
     super(props);
     // we create a form state for this model
     this.formState = form.state(o, {
-      save: node => {
-        console.log(getSnapshot(node));
-        return null;
+      backend: {
+        save: async node => {
+          console.log(getSnapshot(node));
+          return null;
+        }
       }
     });
   }

@@ -8,6 +8,10 @@ import {
 import { observable, action } from "mobx";
 import { ChangeTracker, DebounceOptions } from "./changeTracker";
 
+export interface SaveFunc<M> {
+  (node: Instance<M>): Promise<Partial<ProcessResult> | undefined | null>;
+}
+
 type Message = {
   path: string;
   message: string;
@@ -109,15 +113,16 @@ export type ProcessorOptions = { applyUpdate?: ApplyUpdate } & Partial<
   DebounceOptions
 >;
 
-export class Processor {
+export class Processor<M extends IAnyModelType> {
   errorValidations: ValidationEntries;
   warningValidations: ValidationEntries;
   changeTracker: ChangeTracker;
   applyUpdate: ApplyUpdate;
 
   constructor(
-    public node: Instance<IAnyModelType>,
-    public process: Process,
+    public node: Instance<M>,
+    public save?: SaveFunc<M>,
+    public process?: Process,
     { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
   ) {
     this.node = node;
@@ -131,6 +136,7 @@ export class Processor {
   }
 
   run(path: string) {
+    // XXX this.errorValidations.remove(path)
     this.changeTracker.change(path);
   }
 
@@ -141,8 +147,7 @@ export class Processor {
     );
   }
 
-  async realProcess(path: string) {
-    const processResult = await this.process(getSnapshot(this.node), path);
+  runProcessResult(processResult: ProcessResult) {
     const { updates, errorValidations, warningValidations } = processResult;
     updates.forEach(update => {
       // anything that has changed by the user in the mean time shouldn't
@@ -154,6 +159,33 @@ export class Processor {
     });
     this.errorValidations.update(errorValidations);
     this.warningValidations.update(warningValidations);
+  }
+
+  async realSave(): Promise<boolean> {
+    if (this.save == null) {
+      throw new Error("Cannot save if save function is not configured");
+    }
+    const processResult = await this.save(this.node);
+
+    if (processResult == null) {
+      return true;
+    }
+    const completeProcessResult: ProcessResult = {
+      updates: [],
+      errorValidations: [],
+      warningValidations: [],
+      ...processResult
+    };
+    this.runProcessResult(completeProcessResult);
+    return false;
+  }
+
+  async realProcess(path: string) {
+    if (this.process == null) {
+      return;
+    }
+    const processResult = await this.process(getSnapshot(this.node), path);
+    this.runProcessResult(processResult);
   }
 
   isFinished() {

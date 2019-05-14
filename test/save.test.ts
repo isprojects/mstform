@@ -1,12 +1,5 @@
-import { configure, autorun } from "mobx";
-import {
-  getSnapshot,
-  types,
-  applySnapshot,
-  onPatch,
-  Instance
-} from "mobx-state-tree";
-import { Field, Form, RepeatingForm, converters } from "../src";
+import { getSnapshot, types, Instance } from "mobx-state-tree";
+import { Field, Form, converters } from "../src";
 
 test("FormState can be saved", async () => {
   const M = types.model("M", {
@@ -21,12 +14,16 @@ test("FormState can be saved", async () => {
 
   async function save(data: any) {
     if (data.foo === "") {
-      return { foo: "Wrong" };
+      return {
+        errorValidations: [
+          { id: "dummy", messages: [{ path: "/foo", message: "Wrong" }] }
+        ]
+      };
     }
     return null;
   }
 
-  const state = form.state(o, { save });
+  const state = form.state(o, { backend: { save } });
 
   const field = state.field("foo");
 
@@ -71,7 +68,7 @@ test("save argument can be snapshotted", async () => {
     return null;
   }
 
-  const state = form.state(o, { save });
+  const state = form.state(o, { backend: { save } });
 
   await state.save();
 
@@ -92,81 +89,17 @@ test("inline save argument can be snapshotted", async () => {
   let snapshot;
 
   const state = form.state(o, {
-    save: node => {
-      snapshot = getSnapshot(node);
-      return null;
+    backend: {
+      save: async node => {
+        snapshot = getSnapshot(node);
+        return null;
+      }
     }
   });
 
   await state.save();
 
   expect(snapshot).toEqual({ foo: "FOO" });
-});
-
-test("additional error by name", async () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const form = new Form(M, {
-    foo: new Field(converters.string)
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.state(o, {
-    save: async node => {
-      return null;
-    }
-  });
-
-  expect(state.additionalError("other")).toBeUndefined();
-  state.setErrors({ foo: "WRONG", other: "OTHER!" });
-
-  const field = state.field("foo");
-  expect(field.error).toEqual("WRONG");
-
-  expect(state.additionalError("other")).toEqual("OTHER!");
-  expect(state.additionalError("foo")).toBeUndefined();
-
-  await state.save();
-  expect(state.additionalError("other")).toBeUndefined();
-});
-
-test("additional errors array", async () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const form = new Form(M, {
-    foo: new Field(converters.string)
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.state(o, {
-    save: async node => {
-      return null;
-    }
-  });
-
-  expect(state.additionalErrors).toEqual([]);
-  expect(state.additionalError("other")).toBeUndefined();
-  state.setErrors({
-    foo: "WRONG",
-    other: "OTHER!",
-    another: "ANOTHER",
-    deep: { more: "MORE" }
-  });
-
-  const field = state.field("foo");
-  expect(field.error).toEqual("WRONG");
-
-  expect(state.additionalError("deep")).toBeUndefined();
-  expect(state.additionalErrors).toEqual(["ANOTHER", "OTHER!"]);
-
-  await state.save();
-  expect(state.additionalErrors).toEqual([]);
 });
 
 test("required with save", async () => {
@@ -182,7 +115,7 @@ test("required with save", async () => {
 
   const o = M.create({ foo: "" });
 
-  const state = form.state(o);
+  const state = form.state(o, { backend: { save: async () => null } });
 
   const field = state.field("foo");
 
@@ -207,7 +140,10 @@ test("dynamic required with save", async () => {
 
   const o = M.create({ foo: "", bar: "" });
 
-  const state = form.state(o, { isRequired: () => true });
+  const state = form.state(o, {
+    isRequired: () => true,
+    backend: { save: async () => null }
+  });
 
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -235,7 +171,10 @@ test("no validation before save", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.state(o, { validation: { beforeSave: "no" } });
+  const state = form.state(o, {
+    validation: { beforeSave: "no" },
+    backend: { save: async () => null }
+  });
 
   const field = state.field("foo");
 
@@ -279,13 +218,20 @@ test("no validation after save either", async () => {
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o, {
-    save: async node => {
-      if (node.foo !== "correct") {
-        return {
-          foo: "Server wrong"
-        };
+    backend: {
+      save: async node => {
+        if (node.foo !== "correct") {
+          return {
+            errorValidations: [
+              {
+                id: "dummy",
+                messages: [{ path: "/foo", message: "Server wrong" }]
+              }
+            ]
+          };
+        }
+        return null;
       }
-      return null;
     },
     validation: {
       beforeSave: "no",
@@ -342,17 +288,24 @@ test("a form with a dynamic required field", async () => {
 
   let touched = false;
 
-  function save(data: any) {
+  async function save(data: any) {
     touched = true;
     if (data.foo === "") {
-      return { foo: "Required by save" };
+      return {
+        errorValidations: [
+          {
+            id: "dummy",
+            messages: [{ path: "/foo", message: "Required by save" }]
+          }
+        ]
+      };
     }
     return null;
   }
 
   const state = form.state(o, {
     isRequired: accessor => accessor.path.startsWith("/foo"),
-    save
+    backend: { save }
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -401,7 +354,7 @@ test("string is trimmed and save", async () => {
     return null;
   }
 
-  const state = form.state(o, { save });
+  const state = form.state(o, { backend: { save } });
 
   const field = state.field("foo");
 
