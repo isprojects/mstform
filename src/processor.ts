@@ -1,7 +1,6 @@
 import {
   getSnapshot,
   applyPatch,
-  getEnv,
   IAnyModelType,
   Instance
 } from "mobx-state-tree";
@@ -136,15 +135,7 @@ export class Processor<M extends IAnyModelType> {
   }
 
   run(path: string) {
-    // XXX this.errorValidations.remove(path)
     this.changeTracker.change(path);
-  }
-
-  loadInclusion(modelKey: string, inclusion: any) {
-    return getEnv(this.node).inclusionLoader.includeReference(
-      modelKey,
-      inclusion
-    );
   }
 
   runProcessResult(processResult: ProcessResult) {
