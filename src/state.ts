@@ -478,8 +478,3 @@ export class FormState<
     );
   }
 }
-
-async function defaultSaveFunc() {
-  console.warn("No mstform save function configured");
-  return null;
-}
