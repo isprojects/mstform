@@ -12,8 +12,8 @@ test("FormState can be saved", async () => {
     foo: new Field(converters.string, {})
   });
 
-  async function save(data: any) {
-    if (data.foo === "") {
+  async function save(node: Instance<typeof M>) {
+    if (node.foo === "") {
       return {
         errorValidations: [
           { id: "dummy", messages: [{ path: "/foo", message: "Wrong" }] }
@@ -63,7 +63,7 @@ test("save argument can be snapshotted", async () => {
 
   let snapshot;
 
-  async function save(node: any) {
+  async function save(node: Instance<typeof M>) {
     snapshot = getSnapshot(node);
     return null;
   }
