@@ -1,9 +1,4 @@
-import {
-  getSnapshot,
-  applyPatch,
-  IAnyModelType,
-  Instance
-} from "mobx-state-tree";
+import { applyPatch, IAnyModelType, Instance } from "mobx-state-tree";
 import { ChangeTracker, DebounceOptions } from "./changeTracker";
 import { ValidationEntries, Message } from "./validationMessages";
 
@@ -29,8 +24,8 @@ export type ProcessResult = {
   warningValidations: ValidationInfo[];
 };
 
-export interface Process {
-  (snapshot: any, path: string): Promise<ProcessResult>;
+export interface Process<M> {
+  (node: Instance<M>, path: string): Promise<ProcessResult>;
 }
 
 export interface ApplyUpdate {
@@ -54,7 +49,7 @@ export class Backend<M extends IAnyModelType> {
   constructor(
     public node: Instance<M>,
     public save?: SaveFunc<M>,
-    public process?: Process,
+    public process?: Process<M>,
     { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
   ) {
     this.node = node;
@@ -110,7 +105,7 @@ export class Backend<M extends IAnyModelType> {
     if (this.process == null) {
       return;
     }
-    const processResult = await this.process(getSnapshot(this.node), path);
+    const processResult = await this.process(this.node, path);
     this.runProcessResult(processResult);
   }
 

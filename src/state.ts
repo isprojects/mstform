@@ -60,7 +60,7 @@ export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 
 export type BackendOptions<M> = {
   save?: SaveFunc<M>;
-  process?: Process;
+  process?: Process<M>;
 };
 
 type ValidationOptions = {

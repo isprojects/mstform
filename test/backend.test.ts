@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types } from "mobx-state-tree";
+import { types, Instance } from "mobx-state-tree";
 import { Backend, Form, Field, converters } from "../src";
 import { debounce, until } from "./utils";
 
@@ -17,7 +17,7 @@ test("backend process has error messages", async () => {
   const p = new Backend<typeof M>(
     o,
     undefined,
-    async (json: any, path: string) => {
+    async (node: Instance<typeof M>, path: string) => {
       return {
         updates: [],
         errorValidations: [
@@ -52,7 +52,7 @@ test("backend process wipes out error messages", async () => {
   const p = new Backend<typeof M>(
     o,
     undefined,
-    async (json: any, path: string) => {
+    async (node: Instance<typeof M>, path: string) => {
       if (!called) {
         called = true;
         return {
@@ -107,7 +107,7 @@ test("backend process two requests are synced", async () => {
   const p = new Backend<typeof M>(
     o,
     undefined,
-    async (json: any, path: string) => {
+    async (node: Instance<typeof M>, path: string) => {
       // if the 'a' path is passed, we await a promise
       // This way we can test a long-duration promise and that
       // the code ensures the next call to run is only executed after the
@@ -157,7 +157,7 @@ test("backend process three requests are synced", async () => {
   const p = new Backend<typeof M>(
     o,
     undefined,
-    async (json: any, path: string) => {
+    async (node: Instance<typeof M>, path: string) => {
       // if the 'a' path is passed, we await a promise
       // This way we can test a long-duration promise and that
       // the code ensures the next call to run is only executed after the
@@ -208,7 +208,7 @@ test("backend process hasdoes update", async () => {
   const p = new Backend<typeof M>(
     o,
     undefined,
-    async (json: any, path: string) => {
+    async (node: Instance<typeof M>, path: string) => {
       return {
         updates: [{ path: "foo", value: "BAR" }],
         errorValidations: [],
@@ -236,7 +236,7 @@ test("backend process ignores update if path re-modified during processing", asy
   const p = new Backend<typeof M>(
     o,
     undefined,
-    async (json: any, path: string) => {
+    async (node: Instance<typeof M>, path: string) => {
       // we ensure that only the first time we call this we
       // try to update foo
       if (!called) {
@@ -286,7 +286,7 @@ test("configuration with state", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  async function myProcess(json: any, path: string) {
+  async function myProcess(node: Instance<typeof M>, path: string) {
     return {
       updates: [],
       errorValidations: [
@@ -324,7 +324,7 @@ test("configuration other getError", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  async function myProcess(json: any, path: string) {
+  async function myProcess(node: Instance<typeof M>, path: string) {
     return {
       updates: [],
       errorValidations: [
@@ -367,7 +367,7 @@ test("update", async () => {
 
   const o = M.create({ foo: "FOO", bar: "unchanged" });
 
-  async function myProcess(json: any, path: string) {
+  async function myProcess(node: Instance<typeof M>, path: string) {
     return {
       updates: [{ path: "bar", value: "BAR" }],
       errorValidations: [],
