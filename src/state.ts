@@ -34,7 +34,7 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
-import { Processor, ProcessorOptions, Process, SaveFunc } from "./processor";
+import { Processor, ProcessorOptions, Process, SaveFunc } from "./backend";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
