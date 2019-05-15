@@ -15,14 +15,7 @@ import {
   ErrorFunc,
   IDisposer
 } from "./form";
-import {
-  deepCopy,
-  deleteByPath,
-  getByPath,
-  pathToSteps,
-  stepsToPath,
-  pathToFieldref
-} from "./utils";
+import { pathToSteps, stepsToPath, pathToFieldref } from "./utils";
 import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
@@ -107,9 +100,6 @@ export class FormState<
   G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   @observable
-  additionalErrorTree: any;
-
-  @observable
   saveStatus: SaveStatusOptions = "before";
 
   formAccessor: FormAccessor<D, G>;
@@ -158,7 +148,6 @@ export class FormState<
     }: FormStateOptions<M> = {}
   ) {
     super();
-    this.additionalErrorTree = {};
     this.noRawUpdate = false;
 
     this._onPatchDisposer = onPatch(node, patch => {
@@ -401,38 +390,6 @@ export class FormState<
     return this.processor.realSave();
   }
 
-  @action
-  setErrors(errors: any) {
-    const additionalErrors = deepCopy(errors);
-    this.flatAccessors.map(accessor => {
-      const error = getByPath(errors, accessor.path);
-      if (accessor instanceof FieldAccessor) {
-        if (error != null) {
-          accessor.setError(error);
-          // this.errors.set(accessor.path, error);
-          // delete from remaining structure
-          deleteByPath(additionalErrors, accessor.path);
-        }
-      }
-    });
-    this.additionalErrorTree = additionalErrors;
-  }
-
-  @action
-  clearErrors() {
-    this.additionalErrorTree = {};
-    this.flatAccessors.map(accessor => {
-      if (accessor instanceof FieldAccessor) {
-        accessor.clearError();
-      }
-    });
-  }
-
-  @action
-  clearAdditionalErrors() {
-    this.additionalErrorTree = {};
-  }
-
   getValue(path: string): any {
     return resolvePath(this.node, path);
   }
@@ -444,28 +401,6 @@ export class FormState<
 
   accessBySteps(steps: string[]): Accessor | undefined {
     return this.formAccessor.accessBySteps(steps);
-  }
-
-  additionalError(name: string): string | undefined {
-    const result = this.additionalErrorTree[name];
-    if (typeof result !== "string") {
-      return undefined;
-    }
-    return result;
-  }
-
-  @computed
-  get additionalErrors(): string[] {
-    const result: string[] = [];
-    Object.keys(this.additionalErrorTree).forEach(key => {
-      const value = this.additionalErrorTree[key];
-      if (typeof value !== "string") {
-        return;
-      }
-      result.push(value);
-    });
-    result.sort();
-    return result;
   }
 
   @computed

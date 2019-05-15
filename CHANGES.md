@@ -46,6 +46,10 @@
     Alternatively you can specify a backend `process` function so they can be
     updated dynamically.
 
+-   BREAKING CHANGE: the `additionalError` and `additionalErrors` methods on
+    state have been removed. Associate additional errors to particular
+    accessors using their path.
+
 -   BREAKING CHANGE: we had a undocumented feature where you could declare
     asynchronous `validators` and `rawValidators` for a field. This was little
     used and complicated the code quite a bit. Now these functions have to be

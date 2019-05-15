@@ -535,47 +535,6 @@ test("repeating form multiple entries validate", () => {
   expect(result3).toBeTruthy();
 });
 
-test("setErrors", () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const form = new Form(M, {
-    foo: new Field(converters.string)
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.state(o);
-  state.setErrors({ foo: "WRONG" });
-
-  const field = state.field("foo");
-  expect(field.error).toEqual("WRONG");
-});
-
-test("setErrors repeating", () => {
-  const N = types.model("N", {
-    bar: types.string
-  });
-  const M = types.model("M", {
-    foo: types.array(N)
-  });
-
-  const form = new Form(M, {
-    foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
-  });
-
-  const o = M.create({ foo: [{ bar: "FOOO" }] });
-
-  const state = form.state(o);
-  state.setErrors({ foo: [{ bar: "WRONG" }] });
-
-  const field = state.repeatingForm("foo").accessors[0].field("bar");
-  expect(field.error).toBe("WRONG");
-});
-
 test("not required with maybe", () => {
   const M = types.model("M", {
     foo: types.maybe(types.number)
