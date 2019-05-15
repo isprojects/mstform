@@ -880,6 +880,9 @@ validation functions that match the path that just changed. Other fields that
 are not affected do not have their messages affected - the frontend holds on to
 these validation messages.
 
+Warnings are treated like errors, except that any warning does not make the
+form invalid - saving is still possible.
+
 ### Configuring backend processing
 
 Here is how we hook our `process` function into the backend.
