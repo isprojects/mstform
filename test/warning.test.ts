@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types } from "mobx-state-tree";
+import { types, Instance } from "mobx-state-tree";
 import {
   Field,
   Form,
@@ -63,8 +63,14 @@ test("a simple error", async () => {
 
   const o = M.create({ foo: "FOO" });
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return { updates: [], errorValidations: [], warningValidations: [] };
+  }
+
   const state = form.state(o, {
-    backend: { save: async () => null },
+    backend: { save: async () => null, process },
     getError: (accessor: any) =>
       accessor.path === "/foo" ? "Wrong" : undefined
   });

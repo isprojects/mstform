@@ -34,13 +34,7 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
-import {
-  Processor,
-  ProcessResult,
-  ProcessorOptions,
-  Process,
-  SaveFunc
-} from "./processor";
+import { Processor, ProcessorOptions, Process, SaveFunc } from "./processor";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -380,7 +374,14 @@ export class FormState<
     if (this.processor == null) {
       throw new Error("Cannot save without backend configuration");
     }
-    const isValid = this.validate(options);
+    if (options == null) {
+      options = {};
+    }
+    let extraOptions = {};
+    if (this.processor.process == null) {
+      extraOptions = { ignoreGetError: true };
+    }
+    const isValid = this.validate({ ...extraOptions, ...options });
 
     // if we ignored required, we need to re-validate to restore
     // the required messages (if any)
@@ -388,7 +389,7 @@ export class FormState<
     if (options != null && options.ignoreRequired) {
       // we don't care about the answer, only about updating the messages
       // in the UI
-      this.validate();
+      this.validate(extraOptions);
     }
 
     this.setSaveStatus("rightAfter");

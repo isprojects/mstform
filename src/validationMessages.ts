@@ -1,4 +1,4 @@
-import { observable, action } from "mobx";
+import { observable, action, IObservableArray } from "mobx";
 
 export type Message = {
   path: string;
@@ -33,7 +33,7 @@ type Validation = {
 };
 
 export class ValidationEntries {
-  validations: ValidationEntry[] = observable.array();
+  validations: IObservableArray<ValidationEntry> = observable.array();
 
   @action
   update(updatedValidations: Validation[]) {
@@ -54,6 +54,11 @@ export class ValidationEntries {
         new ValidationEntry(validation.id, validation.messages)
       );
     });
+  }
+
+  @action
+  clear() {
+    this.validations.clear();
   }
 
   getMessage(path: string): string | undefined {

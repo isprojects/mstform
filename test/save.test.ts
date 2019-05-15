@@ -41,8 +41,8 @@ test("FormState can be saved", async () => {
   // correct things
   field.setRaw("BAR");
   expect(o.foo).toEqual("BAR");
-  // editing always wipes out the errors
-  expect(field.error).toBeUndefined();
+  // editing does not wipe out external errors
+  expect(field.error).toEqual("Wrong");
 
   const saveResult1 = await state.save();
   expect(saveResult1).toBe(true);

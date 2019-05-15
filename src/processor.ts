@@ -92,6 +92,8 @@ export class Processor<M extends IAnyModelType> {
     const processResult = await this.save(this.node);
 
     if (processResult == null) {
+      this.errorValidations.clear();
+      this.warningValidations.clear();
       return true;
     }
     const completeProcessResult: ProcessResult = {
