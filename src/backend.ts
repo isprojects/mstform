@@ -45,7 +45,7 @@ export type ProcessorOptions = { applyUpdate?: ApplyUpdate } & Partial<
   DebounceOptions
 >;
 
-export class Processor<M extends IAnyModelType> {
+export class Backend<M extends IAnyModelType> {
   errorValidations: ValidationEntries;
   warningValidations: ValidationEntries;
   changeTracker: ChangeTracker;

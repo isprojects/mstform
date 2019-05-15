@@ -34,7 +34,7 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
-import { Processor, ProcessorOptions, Process, SaveFunc } from "./backend";
+import { Backend, ProcessorOptions, Process, SaveFunc } from "./backend";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -128,7 +128,7 @@ export class FormState<
   blurFunc: EventFunc<any, any> | undefined;
   updateFunc: UpdateFunc<any, any> | undefined;
 
-  processor: Processor<M> | undefined;
+  processor: Backend<M> | undefined;
 
   _context: any;
   _converterOptions: StateConverterOptions;
@@ -206,7 +206,7 @@ export class FormState<
     checkConverterOptions(this._converterOptions);
 
     if (backend != null) {
-      const processor = new Processor(
+      const processor = new Backend(
         node,
         backend.save,
         backend.process,
