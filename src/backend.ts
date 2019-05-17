@@ -105,7 +105,13 @@ export class Backend<M extends IAnyModelType> {
     if (this.process == null) {
       return;
     }
-    const processResult = await this.process(this.node, path);
+    let processResult;
+    try {
+      processResult = await this.process(this.node, path);
+    } catch (e) {
+      console.error("Unexpected error during process:", e);
+      return;
+    }
     this.runProcessResult(processResult);
   }
 

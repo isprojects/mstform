@@ -392,3 +392,57 @@ test("update", async () => {
 
   expect(barField.value).toEqual("BAR");
 });
+
+test("backend process is rejected, recovery", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const fakeError = jest.fn();
+
+  console.error = fakeError;
+
+  const o = M.create({ foo: "FOO" });
+  const requests: string[] = [];
+
+  let crashy = true;
+
+  const p = new Backend<typeof M>(
+    o,
+    undefined,
+    async (node: Instance<typeof M>, path: string) => {
+      requests.push(path);
+      if (crashy) {
+        crashy = false; // crash only the first time
+        throw new Error("We crash out");
+      }
+
+      return {
+        updates: [],
+        errorValidations: [
+          { id: "alpha", messages: [{ path: "a", message: `error ${path}` }] }
+        ],
+        warningValidations: []
+      };
+    },
+    { debounce }
+  );
+
+  // we run for 'a', it crashes
+  p.run("a");
+
+  // we now run 'b', should succeed with a message
+  p.run("b");
+
+  jest.runAllTimers();
+
+  await p.isFinished();
+
+  expect(crashy).toBeFalsy();
+  expect(fakeError.mock.calls.length).toEqual(1);
+
+  // these should both be called, in that order
+  expect(requests).toEqual(["a", "b"]);
+  // and we expect the error message to be set
+  expect(p.getError("a")).toEqual("error b");
+});
