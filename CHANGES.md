@@ -2,7 +2,7 @@
 
 -   There is a new `backend` configuration option where you can configure
     interaction with a backend, including dynamic backend-driven validation
-    during editing. See the documentation for more.
+    during editing (the `process` option). See the documentation for more.
 
 -   BREAKING CHANGE: the 'save' hook has changed. Previously you could register
     a `save` function directly as a state option. Now you need to pass it into
