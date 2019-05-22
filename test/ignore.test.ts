@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types } from "mobx-state-tree";
+import { types, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, SubForm, converters } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -75,7 +75,7 @@ test("FormState can be saved ignoring required", async () => {
     return null;
   }
 
-  const state = form.state(o, { save });
+  const state = form.state(o, { backend: { save } });
 
   const field = state.field("foo");
 
@@ -119,8 +119,14 @@ test("FormState can be saved ignoring external errors", async () => {
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return { updates: [], errorValidations: [], warningValidations: [] };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/foo" ? "Wrong!" : undefined)
   });
 
@@ -167,8 +173,14 @@ test("FormState can be saved ignoring non-field external errors", async () => {
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return { updates: [], errorValidations: [], warningValidations: [] };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "" ? "Wrong!" : undefined)
   });
 
@@ -211,8 +223,14 @@ test("ignoreGetError repeating indexed accessor non-field external", async () =>
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return { updates: [], errorValidations: [], warningValidations: [] };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/items/0" ? "Wrong!" : undefined)
   });
 
@@ -251,9 +269,14 @@ test("ignoreGetError repeating accessor non-field external", async () => {
     saved = true;
     return null;
   }
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return { updates: [], errorValidations: [], warningValidations: [] };
+  }
 
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/items" ? "Wrong!" : undefined)
   });
 
@@ -293,8 +316,14 @@ test("ignoreGetError sub form accessor non-field external", async () => {
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return { updates: [], errorValidations: [], warningValidations: [] };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/item" ? "Wrong!" : undefined)
   });
 

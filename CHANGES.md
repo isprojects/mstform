@@ -1,5 +1,55 @@
 # 1.11.0
 
+-   There is a new `backend` configuration option where you can configure
+    interaction with a backend, including dynamic backend-driven validation
+    during editing (the `process` option). See the documentation for more.
+
+-   BREAKING CHANGE: the 'save' hook has changed. Previously you could register
+    a `save` function directly as a state option. Now you need to pass it into
+    `backend`. Previously we had an ill-defined protocol for handling
+    backend-generated errors. This has been completely replaced by the new
+    protocol also used for dynamic backend processing while you edit.
+
+    So:
+
+    ```js
+    async function save(json) {
+        /* do stuff to save */
+        return null;
+    }
+
+    form.state({
+        save
+    });
+    ```
+
+    Should now become:
+
+    ```js
+    async function save(json) {
+        /* do stuff to save */
+        return null;
+    }
+
+    form.state({
+        backend: { save }
+    });
+    ```
+
+    Before you could return a structure of error messages from `save` if
+    the save failed. This is now replaced by a process result structure, where
+    error messages are indicated by paths. See the documentation for more
+    information.
+
+    Previously errors returned from `save` were removed automatically as soon
+    as you start typing. Now they are retained until you press `save` again.
+    Alternatively you can specify a backend `process` function so they can be
+    updated dynamically.
+
+-   BREAKING CHANGE: the `additionalError` and `additionalErrors` methods on
+    state have been removed. Associate additional errors to particular
+    accessors using their path.
+
 -   BREAKING CHANGE: we had a undocumented feature where you could declare
     asynchronous `validators` and `rawValidators` for a field. This was little
     used and complicated the code quite a bit. Now these functions have to be
