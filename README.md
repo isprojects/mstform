@@ -747,7 +747,7 @@ this.formState = form.state(o, {
 ```
 
 The save function should return `undefined` or `null` if the save succeeded and
-there are no server validation errors. It can also returns a special process
+there are no server validation errors. It can also return a special process
 result - we discuss this below.
 
 When you implement a form submit button, you should call `state.save()`:
@@ -981,7 +981,7 @@ const state = form.state(o, {
 ```
 
 To implement warnings, pass a `getWarning` function. It is up to you to decide
-how and when you which to show these warnings in the UI. To check if the form
+how and when you wish to show these warnings in the UI. To check if the form
 contains any warnings, you can use
 
 ```js
