@@ -199,7 +199,7 @@ test("backend process three requests are synced", async () => {
   expect(p.getError("a")).toEqual("error c");
 });
 
-test("backend process hasdoes update", async () => {
+test("backend process does update", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -272,8 +272,56 @@ test("backend process ignores update if path re-modified during processing", asy
   expect(o.foo).toEqual("FOO");
 });
 
-// write a test where I verify that I accept backend changes to a field
-// again once ..when?
+test("backend process stops ignoring update", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+  let called = false;
+  const p = new Backend<typeof M>(
+    o,
+    undefined,
+    async (node: Instance<typeof M>, path: string) => {
+      // we ensure that only the first time we call this we
+      // try to update foo
+      if (!called) {
+        called = true;
+        return {
+          updates: [{ path: "foo", value: "BAR" }],
+          errorValidations: [],
+          warningValidations: []
+        };
+      } else {
+        return {
+          updates: [{ path: "foo", value: "BAR AGAIN" }],
+          errorValidations: [],
+          warningValidations: []
+        };
+      }
+    },
+    { debounce }
+  );
+
+  await p.run("a");
+  jest.runAllTimers();
+  // we change things while we are processing
+  // user input should never be overridden by the backend,
+  // even if timers haven't yet run
+  await p.run("foo");
+
+  await p.isFinished();
+
+  // since only the first change tried to update, and the second change
+  // isn't even triggered yet, the value should
+  // be unchanged
+  expect(o.foo).toEqual("FOO");
+
+  // process the second change now, see it take effect
+  jest.runAllTimers();
+  await p.isFinished();
+  expect(o.foo).toEqual("BAR AGAIN");
+});
 
 test("configuration with state", async () => {
   const M = types.model("M", {
