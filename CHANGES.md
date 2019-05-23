@@ -1,7 +1,7 @@
 # 1.12.0
 
--   Support for a 'processAll' method to trigger a reprocess of everything on
-    the backend explicitly.
+-   Support for a 'processAll' backend function to support explicitly
+    triggering a reprocess of everything on the backend.
 
 # 1.11.1
 
