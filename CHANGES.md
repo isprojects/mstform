@@ -1,3 +1,7 @@
+# 1.12.0
+
+-   Support for a 'revalidate' function to revalidate errors with the backend.
+
 # 1.11.0
 
 -   There is a new `backend` configuration option where you can configure

@@ -26,6 +26,7 @@ test("backend process has error messages", async () => {
         warningValidations: []
       };
     },
+    undefined,
     { debounce }
   );
 
@@ -77,6 +78,7 @@ test("backend process wipes out error messages", async () => {
         };
       }
     },
+    undefined,
     { debounce }
   );
 
@@ -124,6 +126,7 @@ test("backend process two requests are synced", async () => {
         warningValidations: []
       };
     },
+    undefined,
     { debounce }
   );
 
@@ -177,6 +180,7 @@ test("backend process three requests are synced", async () => {
         warningValidations: []
       };
     },
+    undefined,
     { debounce }
   );
 
@@ -215,6 +219,7 @@ test("backend process does update", async () => {
         warningValidations: []
       };
     },
+    undefined,
     { debounce }
   );
 
@@ -254,6 +259,7 @@ test("backend process ignores update if path re-modified during processing", asy
         };
       }
     },
+    undefined,
     { debounce }
   );
 
@@ -300,6 +306,7 @@ test("backend process stops ignoring update", async () => {
         };
       }
     },
+    undefined,
     { debounce }
   );
 
@@ -473,6 +480,7 @@ test("backend process is rejected, recovery", async () => {
         warningValidations: []
       };
     },
+    undefined,
     { debounce }
   );
 
@@ -493,4 +501,66 @@ test("backend process is rejected, recovery", async () => {
   expect(requests).toEqual(["a", "b"]);
   // and we expect the error message to be set
   expect(p.getError("a")).toEqual("error b");
+});
+
+test("backend revalidate", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+  const p = new Backend<typeof M>(
+    o,
+    undefined,
+    undefined,
+    async (node: Instance<typeof M>) => {
+      return {
+        updates: [],
+        errorValidations: [
+          { id: "alpha", messages: [{ path: "a", message: "error" }] }
+        ],
+        warningValidations: []
+      };
+    },
+    { debounce }
+  );
+
+  await p.realRevalidate();
+
+  expect(p.getError("a")).toEqual("error");
+});
+
+test("revalidate configuration with state", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  async function myRevalidate(node: Instance<typeof M>) {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo", message: "error!" }] }
+      ],
+      warningValidations: []
+    };
+  }
+
+  const state = form.state(o, {
+    backend: {
+      debounce: debounce,
+      revalidate: myRevalidate
+    }
+  });
+
+  const field = state.field("foo");
+
+  await state.backendRevalidate();
+
+  expect(field.error).toEqual("error!");
 });

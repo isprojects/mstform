@@ -27,7 +27,13 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
-import { Backend, ProcessorOptions, Process, SaveFunc } from "./backend";
+import {
+  Backend,
+  ProcessorOptions,
+  Process,
+  SaveFunc,
+  Revalidate
+} from "./backend";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -61,6 +67,7 @@ export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 export type BackendOptions<M> = {
   save?: SaveFunc<M>;
   process?: Process<M>;
+  revalidate?: Revalidate<M>;
 };
 
 type ValidationOptions = {
@@ -199,6 +206,7 @@ export class FormState<
         node,
         backend.save,
         backend.process,
+        backend.revalidate,
         backend
       );
       this.processor = processor;
@@ -388,6 +396,15 @@ export class FormState<
     }
 
     return this.processor.realSave();
+  }
+
+  @action
+  async backendRevalidate() {
+    if (this.processor == null) {
+      throw new Error("Cannot revalidate without backend configuration");
+    }
+
+    return this.processor.realRevalidate();
   }
 
   getValue(path: string): any {
