@@ -3,6 +3,12 @@
 -   Support for a 'processAll' method to trigger a reprocess of everything on
     the backend explicitly.
 
+# 1.11.1
+
+-   Fix: it was possible for the change hook to be triggered for a field even
+    if the field actually did not change, at least if that field was required
+    and empty.
+
 # 1.11.0
 
 -   There is a new `backend` configuration option where you can configure
