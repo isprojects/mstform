@@ -1,3 +1,8 @@
+# 1.12.0
+
+-   Support for a 'processAll' backend function to support explicitly
+    triggering a reprocess of everything on the backend.
+
 # 1.11.1
 
 -   Fix: it was possible for the change hook to be triggered for a field even

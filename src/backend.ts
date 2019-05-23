@@ -2,10 +2,6 @@ import { applyPatch, IAnyModelType, Instance } from "mobx-state-tree";
 import { ChangeTracker, DebounceOptions } from "./changeTracker";
 import { ValidationEntries, Message } from "./validationMessages";
 
-export interface SaveFunc<M> {
-  (node: Instance<M>): Promise<Partial<ProcessResult> | undefined | null>;
-}
-
 type Update = {
   path: string;
   value?: any;
@@ -24,8 +20,16 @@ export type ProcessResult = {
   warningValidations: ValidationInfo[];
 };
 
+export interface SaveFunc<M> {
+  (node: Instance<M>): Promise<Partial<ProcessResult> | undefined | null>;
+}
+
 export interface Process<M> {
   (node: Instance<M>, path: string): Promise<ProcessResult>;
+}
+
+export interface ProcessAll<M> {
+  (node: Instance<M>): Promise<Partial<ProcessResult>>;
 }
 
 export interface ApplyUpdate {
@@ -50,6 +54,7 @@ export class Backend<M extends IAnyModelType> {
     public node: Instance<M>,
     public save?: SaveFunc<M>,
     public process?: Process<M>,
+    public processAll?: ProcessAll<M>,
     { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
   ) {
     this.node = node;
@@ -99,6 +104,23 @@ export class Backend<M extends IAnyModelType> {
     };
     this.runProcessResult(completeProcessResult);
     return false;
+  }
+
+  async realProcessAll() {
+    if (this.processAll == null) {
+      throw new Error(
+        "Cannot process all if processAll function is not configured"
+      );
+    }
+    const processResult = await this.processAll(this.node);
+
+    const completeProcessResult: ProcessResult = {
+      updates: [],
+      errorValidations: [],
+      warningValidations: [],
+      ...processResult
+    };
+    this.runProcessResult(completeProcessResult);
   }
 
   async realProcess(path: string) {

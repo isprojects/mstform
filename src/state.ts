@@ -27,7 +27,13 @@ import {
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
-import { Backend, ProcessorOptions, Process, SaveFunc } from "./backend";
+import {
+  Backend,
+  ProcessorOptions,
+  Process,
+  SaveFunc,
+  ProcessAll
+} from "./backend";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -61,6 +67,7 @@ export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 export type BackendOptions<M> = {
   save?: SaveFunc<M>;
   process?: Process<M>;
+  processAll?: ProcessAll<M>;
 };
 
 type ValidationOptions = {
@@ -199,6 +206,7 @@ export class FormState<
         node,
         backend.save,
         backend.process,
+        backend.processAll,
         backend
       );
       this.processor = processor;
@@ -388,6 +396,15 @@ export class FormState<
     }
 
     return this.processor.realSave();
+  }
+
+  @action
+  async processAll() {
+    if (this.processor == null) {
+      throw new Error("Cannot process all without backend configuration");
+    }
+
+    return this.processor.realProcessAll();
   }
 
   getValue(path: string): any {
