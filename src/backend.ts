@@ -28,7 +28,7 @@ export interface Process<M> {
   (node: Instance<M>, path: string): Promise<ProcessResult>;
 }
 
-export interface Revalidate<M> {
+export interface ProcessAll<M> {
   (node: Instance<M>): Promise<Partial<ProcessResult>>;
 }
 
@@ -54,7 +54,7 @@ export class Backend<M extends IAnyModelType> {
     public node: Instance<M>,
     public save?: SaveFunc<M>,
     public process?: Process<M>,
-    public revalidate?: Revalidate<M>,
+    public processAll?: ProcessAll<M>,
     { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
   ) {
     this.node = node;
@@ -106,13 +106,13 @@ export class Backend<M extends IAnyModelType> {
     return false;
   }
 
-  async realRevalidate() {
-    if (this.revalidate == null) {
+  async realProcessAll() {
+    if (this.processAll == null) {
       throw new Error(
-        "Cannot revalidate if revalidate function is not configured"
+        "Cannot process all if processAll function is not configured"
       );
     }
-    const processResult = await this.revalidate(this.node);
+    const processResult = await this.processAll(this.node);
 
     const completeProcessResult: ProcessResult = {
       updates: [],

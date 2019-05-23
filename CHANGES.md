@@ -1,6 +1,7 @@
 # 1.12.0
 
--   Support for a 'revalidate' function to revalidate errors with the backend.
+-   Support for a 'processAll' method to trigger a reprocess of everything on
+    the backend explicitly.
 
 # 1.11.0
 

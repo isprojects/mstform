@@ -32,7 +32,7 @@ import {
   ProcessorOptions,
   Process,
   SaveFunc,
-  Revalidate
+  ProcessAll
 } from "./backend";
 
 export interface AccessorAllows {
@@ -67,7 +67,7 @@ export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 export type BackendOptions<M> = {
   save?: SaveFunc<M>;
   process?: Process<M>;
-  revalidate?: Revalidate<M>;
+  processAll?: ProcessAll<M>;
 };
 
 type ValidationOptions = {
@@ -206,7 +206,7 @@ export class FormState<
         node,
         backend.save,
         backend.process,
-        backend.revalidate,
+        backend.processAll,
         backend
       );
       this.processor = processor;
@@ -399,12 +399,12 @@ export class FormState<
   }
 
   @action
-  async backendRevalidate() {
+  async processAll() {
     if (this.processor == null) {
-      throw new Error("Cannot revalidate without backend configuration");
+      throw new Error("Cannot process all without backend configuration");
     }
 
-    return this.processor.realRevalidate();
+    return this.processor.realProcessAll();
   }
 
   getValue(path: string): any {

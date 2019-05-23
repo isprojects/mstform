@@ -503,7 +503,7 @@ test("backend process is rejected, recovery", async () => {
   expect(p.getError("a")).toEqual("error b");
 });
 
-test("backend revalidate", async () => {
+test("backend process all", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -525,12 +525,12 @@ test("backend revalidate", async () => {
     { debounce }
   );
 
-  await p.realRevalidate();
+  await p.realProcessAll();
 
   expect(p.getError("a")).toEqual("error");
 });
 
-test("revalidate configuration with state", async () => {
+test("process all configuration with state", async () => {
   const M = types.model("M", {
     foo: types.string
   });
@@ -541,7 +541,7 @@ test("revalidate configuration with state", async () => {
 
   const o = M.create({ foo: "FOO" });
 
-  async function myRevalidate(node: Instance<typeof M>) {
+  async function myProcessAll(node: Instance<typeof M>) {
     return {
       updates: [],
       errorValidations: [
@@ -554,13 +554,13 @@ test("revalidate configuration with state", async () => {
   const state = form.state(o, {
     backend: {
       debounce: debounce,
-      revalidate: myRevalidate
+      processAll: myProcessAll
     }
   });
 
   const field = state.field("foo");
 
-  await state.backendRevalidate();
+  await state.processAll();
 
   expect(field.error).toEqual("error!");
 });
