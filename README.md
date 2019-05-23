@@ -720,10 +720,12 @@ the backend. There are two features:
 
 -   You can configure the form to be validated and updated dynamically by the
     backend using a `process` function. This can show messages and update the
-    form while the user is typing, under the control of a backend. This is useful
-    because validation needs to be defined on the backend anyway in order to
-    prevent any incorrect data to be submitted. This way you can integrate this
-    same validation code with the frontend.
+    form while the user is typing, under the control of a backend. This is
+    useful because validation needs to be defined on the backend anyway in
+    order to prevent any incorrect data to be submitted. This way you can
+    integrate this same validation code with the frontend. You can also supply
+    a `processAll` function which runs all validations supported by the
+    backend.
 
 ### Save
 
@@ -733,8 +735,9 @@ You can write a function that defines how to save the underlying MST instance
 ```js
 async function save(node) {
     // we have defined a real 'save' function on the model that knows how
-    // to save the form to the backend
-    await node.save();
+    // to save the form to the backend. Should return a ProcessResult if
+    // there is a problem, or null or undefined if there is no problem.
+    return node.save();
 }
 ```
 
@@ -811,6 +814,25 @@ If you implement the form processing protocol on your backend, your backend can
 control validation messages (error and warning) messages, as well as control
 default values for fields and clear them if they become invalid.
 
+Here is how we configure it (in addition to `save`):
+
+```js
+async function process(node, path) {
+    // we have defined a real 'process' function on the model that knows how
+    // to invoke process on the backend. returns ProcessResult
+    return node.process();
+}
+
+this.formState = form.state(o, {
+    backend: { save, process }
+});
+```
+
+The `node` argument is the underlying node that the form represents. `path` is
+a JSON pointer (aka MST node path) to the field that was just changed by the
+user modifying the form. The function should return a `ProcessResult`
+structure.
+
 The system keeps track of which field paths have been changed by the user. It
 also makes sure that user input is debounced, so that a change in the form only
 gets sent to the backend after the user stops changing the field for a field,
@@ -829,21 +851,37 @@ The system also keeps track of fields that have changed but have not
 yet been processed by the backend. In this case any updates from the backends
 are ignored - new user input takes precedence.
 
-### ProcessResult protocol
+### processAll
 
-You need to implement a `process` function with the following signature:
+The `process` function takes the path of the field that has been changed.
+`save` supports reprocessing of the whole form on the backend during saving. It
+can in some circumstances be useful to explicitly trigger such a reprocess by
+itself: run the backend process for the entire form at once. For this we have
+`processAll`.
+
+Here is how we configure it (in addition to `save` and `process`):
 
 ```js
-async function process(node, path) {
-    // call your backend and eventually return ProcessResult
+async function processAll(node) {
+    // we have defined a real 'processAll' function on the model that knows how
+    // to invoke processAll on the backend. returns ProcessResult
+    return node.processAll();
 }
+
+this.formState = form.state(o, {
+    backend: { save, process, processAll }
+});
 ```
 
-The `node` argument is the underlying node that the form represents. `path` is
-a JSON pointer (aka MST node path) to the field that was just changed by the
-user modifying the form. The function should return a `ProcessResult`
-structure. The form processor debounces user input so that multiple changes to
-the same field in a short time are collapsed into a single call to `process`.
+You can invoke `processAll` on the form state to trigger it:
+
+```js
+formState.processAll();
+```
+
+### ProcessResult protocol
+
+`process`, `processAll` and `saveAll` all return a ProcessResult.
 
 Here is an example `ProcessResult`:
 
@@ -880,8 +918,8 @@ validation functions that match the path that just changed. Other fields that
 are not affected do not have their messages affected - the frontend holds on to
 these validation messages.
 
-Warnings are treated like errors, except that any warning does not make the
-form invalid - saving is still possible.
+Warnings are like errors, but appear on field accessors with the `warning`
+property. They do not make the form invalid - saving is still possible.
 
 ### Configuring backend processing
 
