@@ -163,6 +163,11 @@ export class FieldAccessor<R, V> {
 
   @action
   setValue(value: V) {
+    // if there are no changes, don't do anything
+    if (comparer.structural(this._value, value)) {
+      return;
+    }
+
     this._value = value;
     this.state.setValueWithoutRawUpdate(this.path, value);
     // XXX maybe rename this to 'update' as change might imply onChange
@@ -346,11 +351,6 @@ export class FieldAccessor<R, V> {
     // XXX possible flicker?
     if (typeof extraResult === "string" && extraResult) {
       this.setError(extraResult);
-    }
-
-    // if there are no changes, don't do anything
-    if (comparer.structural(this.value, processResult.value)) {
-      return;
     }
 
     this.setValue(processResult.value);
