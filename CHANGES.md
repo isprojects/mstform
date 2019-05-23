@@ -1,3 +1,8 @@
+# 1.12.1
+
+-   `processAll` did not clear errors and warnings when we ran it, leaving old
+    errors in place. Now it does clear things.
+
 # 1.12.0
 
 -   Support for a 'processAll' backend function to support explicitly

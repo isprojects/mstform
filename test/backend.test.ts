@@ -532,23 +532,38 @@ test("backend process all", async () => {
 
 test("process all configuration with state", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
+    bar: types.string
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
   });
 
-  const o = M.create({ foo: "FOO" });
+  const o = M.create({ foo: "FOO", bar: "BAR" });
 
+  let setting = "a";
   async function myProcessAll(node: Instance<typeof M>) {
-    return {
-      updates: [],
-      errorValidations: [
-        { id: "alpha", messages: [{ path: "/foo", message: "error!" }] }
-      ],
-      warningValidations: []
-    };
+    if (setting === "a") {
+      return {
+        updates: [],
+        errorValidations: [
+          { id: "alpha", messages: [{ path: "/foo", message: "foo error!" }] }
+        ],
+        warningValidations: []
+      };
+    } else if (setting === "b") {
+      return {
+        updates: [],
+        errorValidations: [
+          { id: "beta", messages: [{ path: "/bar", message: "bar error!" }] }
+        ],
+        warningValidations: []
+      };
+    } else {
+      return {};
+    }
   }
 
   const state = form.state(o, {
@@ -558,9 +573,19 @@ test("process all configuration with state", async () => {
     }
   });
 
-  const field = state.field("foo");
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
 
   await state.processAll();
 
-  expect(field.error).toEqual("error!");
+  expect(fooField.error).toEqual("foo error!");
+  expect(barField.error).toBeUndefined();
+
+  // now modify settings so we get different results
+  // it should have wiped out all errors
+  setting = "b";
+  await state.processAll();
+
+  expect(fooField.error).toBeUndefined();
+  expect(barField.error).toEqual("bar error!");
 });
