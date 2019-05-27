@@ -701,6 +701,16 @@ what empty values to display in an add form? The converter actually specifies
 this -- `converters.number` for instance knows that the empty value is the
 empty string.
 
+In case you already have a default value for a field and you do not want it to
+be in add-mode, you can exclude them by including its fieldref in the
+`addModeDefaults` option:
+
+```js
+const state = form.state(node, { addMode: true, addModeDefaults: ["nr"] });
+```
+
+Now the `nr` field is shown with the value `0` in it immediately.
+
 ### Add mode for repeating forms
 
 Consider a repeating sub-form. Adding a new entry to a sub-form is much like
