@@ -34,6 +34,7 @@ import {
   SaveFunc,
   ProcessAll
 } from "./backend";
+import { setAddModeDefaults } from "./addMode";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -204,17 +205,9 @@ export class FormState<
 
     checkConverterOptions(this._converterOptions);
 
-    const fieldrefSet = new Set<string>();
-    addModeDefaults.forEach(fieldref => {
-      fieldrefSet.add(fieldref);
-    });
-    this.accessors.forEach(accessor => {
-      if (accessor instanceof FieldAccessor) {
-        if (fieldrefSet.has(accessor.fieldref)) {
-          accessor.setRawFromValue();
-        }
-      }
-    });
+    if (addMode) {
+      setAddModeDefaults(this.formAccessor, addModeDefaults);
+    }
 
     if (backend != null) {
       const processor = new Backend(
