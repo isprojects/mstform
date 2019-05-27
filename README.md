@@ -720,6 +720,17 @@ you use the `.push` and `.insert` methods on the repeating form accessor, or if
 you manipulate the underlying model directly. Existing records are shown in
 edit mode, unless the whole form is in add mode.
 
+If you use `.push` and `.insert` on the repeating form accessor, you can pass
+in an additional argument with the `addModeDefaults` array. Here is an example:
+
+```js
+repeating.push({ a: 3, b: 5 }, ["b"]);
+```
+
+Here `a` is not mentioned and is considered to be in add-mode; instead of its
+value, the empty raw is shown instead. But `b` is referenced and therefore `5`
+is visible immediately in the form.
+
 ## Backend interaction (save and processing)
 
 When we create the form state, we can pass it options on how to interact with
