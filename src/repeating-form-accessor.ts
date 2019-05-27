@@ -7,7 +7,6 @@ import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor"
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
-import { FieldAccessor } from "./field-accessor";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
