@@ -97,6 +97,8 @@ export interface FormStateOptions<M> {
   context?: any;
   converterOptions?: StateConverterOptions;
   requiredError?: string | ErrorFunc;
+
+  addModeDefaults?: string[];
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -151,7 +153,8 @@ export class FormState<
       update,
       context,
       converterOptions = {},
-      requiredError = "Required"
+      requiredError = "Required",
+      addModeDefaults = []
     }: FormStateOptions<M> = {}
   ) {
     super();
@@ -200,6 +203,18 @@ export class FormState<
     this._requiredError = requiredError;
 
     checkConverterOptions(this._converterOptions);
+
+    const fieldrefSet = new Set<string>();
+    addModeDefaults.forEach(fieldref => {
+      fieldrefSet.add(fieldref);
+    });
+    this.accessors.forEach(accessor => {
+      if (accessor instanceof FieldAccessor) {
+        if (fieldrefSet.has(accessor.fieldref)) {
+          accessor.setRawFromValue();
+        }
+      }
+    });
 
     if (backend != null) {
       const processor = new Backend(

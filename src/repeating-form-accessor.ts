@@ -7,6 +7,7 @@ import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor"
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
+import { FieldAccessor } from "./field-accessor";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
@@ -155,18 +156,19 @@ export class RepeatingFormAccessor<
     return accessor.accessBySteps(rest);
   }
 
-  insert(index: number, node: any) {
+  insert(index: number, node: any, addModeDefaults: string[] = []) {
     const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
-    this.index(index).setAddMode();
+    this.index(index).setAddMode(addModeDefaults);
   }
 
-  push(node: any) {
+  push(node: any, addModeDefaults: string[] = []) {
     const a = this.value;
     const index = a.length;
     const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
-    this.index(index).setAddMode();
+    const indexedAccessor = this.index(index);
+    indexedAccessor.setAddMode(addModeDefaults);
   }
 
   remove(node: any) {
