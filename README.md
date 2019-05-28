@@ -360,7 +360,8 @@ other object:
     With `allowNegative` (boolean, default true) you can specify if negative
     values are allowed. With `normalizedDecimalPlaces` you can set the amount
     of decimal places the converted number has. It should not be lower than
-    `decimalPlaces`, but can be higher.
+    `decimalPlaces`, but can be higher. If it is, the given number is
+    automatically padded with additional decimal places set to 0.
 
     Conversion error types are:
 
