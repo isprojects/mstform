@@ -11,6 +11,10 @@
     If you use `addModeDefaults` with a field that is derived, the derived
     value is calculated right away.
 
+-   Fix: too many accessors were initialized. This was generally not a problem
+    except that if you derived a field from another it would be called
+    excessively often.
+
 # 1.12.1
 
 -   `processAll` did not clear errors and warnings when we ran it, leaving old

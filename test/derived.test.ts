@@ -242,7 +242,7 @@ test("calculated with addModeDefaults", () => {
 
   // we now change a, which should modify the derived value
   sub0.field("a").setRaw("3");
-  //  expect(changeCount).toBe(1);
+  expect(changeCount).toBe(1);
   expect(calculated0.value).toEqual(5);
   expect(calculated0.raw).toEqual("5");
 
@@ -253,7 +253,7 @@ test("calculated with addModeDefaults", () => {
   expect(calculated1.value).toEqual(8);
 
   sub1.field("a").setRaw("6");
-  // expect(changeCount).toBe(2);
+  expect(changeCount).toBe(2);
   // we should have calculated the derived
   expect(calculated1.value).toEqual(9);
   expect(calculated1.raw).toEqual("9");
@@ -265,6 +265,7 @@ test("calculated with addModeDefaults", () => {
   const calculated2 = sub2.field("calculated");
   expect(calculated2.value).toEqual(8);
   expect(calculated2.raw).toEqual("8");
+  expect(changeCount).toBe(2);
 });
 
 test("calculated with context", () => {
@@ -350,10 +351,10 @@ test("dispose", () => {
   // previous state is important to do test dispose
   // happens properly, don't remove!
   const previousState = form.state(o);
-  expect(counter).toBe(2);
+  expect(counter).toBe(1);
 
   const state = form.state(o);
-  expect(counter).toBe(4);
+  expect(counter).toBe(2);
 
   const calculated = state.field("calculated");
   const a = state.field("a");
@@ -369,14 +370,14 @@ test("dispose", () => {
   // this immediately affects the underlying value
   expect(calculated.value).toEqual(4);
 
-  expect(counter).toBe(4);
+  expect(counter).toBe(2);
 
   // we now change a, which should modify the derived value
   a.setRaw("3");
 
   // if we hadn't disposed properly this would have been
   // called more
-  expect(counter).toBe(7);
+  expect(counter).toBe(3);
 
   expect(calculated.raw).toEqual("5");
   // and also the underlying value, immediately

@@ -178,7 +178,6 @@ export class FormState<
       null,
       addMode
     );
-    this.formAccessor.initialize();
 
     this.isDisabledFunc = isDisabled;
     this.isHiddenFunc = isHidden;

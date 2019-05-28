@@ -92,7 +92,6 @@ export class RepeatingFormAccessor<
       index
     );
     this.repeatingFormIndexedAccessors.set(index, result);
-    result.initialize();
   }
 
   index(index: number): RepeatingFormIndexedAccessor<D, G> {
