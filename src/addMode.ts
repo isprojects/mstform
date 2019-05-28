@@ -18,7 +18,7 @@ export function setAddModeDefaults(
         if (accessor.field.derivedFunc == null) {
           accessor.setRawFromValue();
         } else {
-          accessor.setValueAndUpdateRaw(
+          accessor.setValueAndRawWithoutChangeEvent(
             accessor.field.derivedFunc(accessor.node)
           );
         }

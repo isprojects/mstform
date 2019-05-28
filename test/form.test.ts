@@ -214,9 +214,15 @@ test("repeating form push, with default fieldrefs", () => {
     foo: types.array(N)
   });
 
+  let changeCount = 0;
+
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
+      bar: new Field(converters.string, {
+        change: () => {
+          changeCount++;
+        }
+      })
     })
   });
 
@@ -236,6 +242,8 @@ test("repeating form push, with default fieldrefs", () => {
   expect(field.raw).toEqual("QUX");
 
   expect(forms.index(0).field("bar").raw).toEqual("BAR");
+  // no change events
+  expect(changeCount).toBe(0);
 });
 
 test("repeating form insert", () => {

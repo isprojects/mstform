@@ -204,11 +204,15 @@ test("calculated with addModeDefaults", () => {
     foo: types.array(N)
   });
 
+  let changeCount = 0;
   const form = new Form(M, {
     foo: new RepeatingForm({
       calculated: new Field(converters.number, {
         derived: node => {
           return node.sum();
+        },
+        change: () => {
+          changeCount++;
         }
       }),
       a: new Field(converters.number),
@@ -220,7 +224,14 @@ test("calculated with addModeDefaults", () => {
 
   const state = form.state(o);
   const forms = state.repeatingForm("foo");
+
+  expect(changeCount).toBe(0);
+
   forms.push({ calculated: 0, a: 5, b: 3 }, ["calculated", "a", "b"]);
+
+  // this shouldn't have issued a change, as the derived value is
+  // calculated during adding
+  expect(changeCount).toBe(0);
 
   const sub0 = forms.index(0);
   const calculated0 = sub0.field("calculated");
@@ -231,15 +242,18 @@ test("calculated with addModeDefaults", () => {
 
   // we now change a, which should modify the derived value
   sub0.field("a").setRaw("3");
+  //  expect(changeCount).toBe(1);
   expect(calculated0.value).toEqual(5);
   expect(calculated0.raw).toEqual("5");
 
   // we expect the same behavior for the new entry
   const sub1 = forms.index(1);
   const calculated1 = sub1.field("calculated");
+  // but derivation should have run
+  expect(calculated1.value).toEqual(8);
 
   sub1.field("a").setRaw("6");
-
+  // expect(changeCount).toBe(2);
   // we should have calculated the derived
   expect(calculated1.value).toEqual(9);
   expect(calculated1.raw).toEqual("9");
