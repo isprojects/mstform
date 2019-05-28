@@ -206,6 +206,46 @@ test("repeating form push", () => {
   expect(forms.index(0).field("bar").raw).toEqual("BAR");
 });
 
+test("repeating form push, with default fieldrefs", () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  let changeCount = 0;
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string, {
+        change: () => {
+          changeCount++;
+        }
+      })
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  forms.push({ bar: "QUX" }, ["bar"]);
+  expect(forms.length).toBe(2);
+
+  const oneForm = forms.index(1);
+  const field = oneForm.field("bar");
+
+  // not in add mode
+  expect(field.raw).toEqual("QUX");
+
+  expect(forms.index(0).field("bar").raw).toEqual("BAR");
+  // no change events
+  expect(changeCount).toBe(0);
+});
+
 test("repeating form insert", () => {
   const N = types.model("N", {
     bar: types.string
@@ -235,6 +275,42 @@ test("repeating form insert", () => {
   // this thing is in add mode
   expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
+
+  field.setRaw("FLURB");
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("FLURB");
+  expect(field.value).toEqual("FLURB");
+});
+
+test("repeating form insert with default fieldrefs", () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  forms.insert(0, { bar: "QUX" }, ["bar"]);
+  expect(forms.length).toBe(2);
+
+  const oneForm = forms.index(0);
+  const field = oneForm.field("bar");
+
+  // bar is not in add mode
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("QUX");
 
   field.setRaw("FLURB");
   expect(field.addMode).toBeFalsy();
@@ -1222,6 +1298,29 @@ test("add mode for flat form, maybeNull number", () => {
   field.setRaw("");
   expect(field.value).toEqual(null);
   expect(field.addMode).toBeFalsy();
+  field.setRaw("3");
+  expect(field.value).toEqual(3);
+  expect(field.raw).toEqual("3");
+  expect(field.addMode).toBeFalsy();
+});
+
+test("add mode for flat form, number, defaults", () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o, { addMode: true, addModeDefaults: ["foo"] });
+  const field = state.field("foo");
+
+  expect(field.value).toBe(0);
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("0");
   field.setRaw("3");
   expect(field.value).toEqual(3);
   expect(field.raw).toEqual("3");

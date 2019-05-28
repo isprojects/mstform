@@ -34,6 +34,7 @@ import {
   SaveFunc,
   ProcessAll
 } from "./backend";
+import { setAddModeDefaults } from "./addMode";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -97,6 +98,8 @@ export interface FormStateOptions<M> {
   context?: any;
   converterOptions?: StateConverterOptions;
   requiredError?: string | ErrorFunc;
+
+  addModeDefaults?: string[];
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -151,7 +154,8 @@ export class FormState<
       update,
       context,
       converterOptions = {},
-      requiredError = "Required"
+      requiredError = "Required",
+      addModeDefaults = []
     }: FormStateOptions<M> = {}
   ) {
     super();
@@ -174,7 +178,6 @@ export class FormState<
       null,
       addMode
     );
-    this.formAccessor.initialize();
 
     this.isDisabledFunc = isDisabled;
     this.isHiddenFunc = isHidden;
@@ -200,6 +203,10 @@ export class FormState<
     this._requiredError = requiredError;
 
     checkConverterOptions(this._converterOptions);
+
+    if (addMode) {
+      setAddModeDefaults(this.formAccessor, addModeDefaults);
+    }
 
     if (backend != null) {
       const processor = new Backend(

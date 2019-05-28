@@ -3,6 +3,7 @@ import { action, observable, computed } from "mobx";
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
+import { setAddModeDefaults } from "./addMode";
 import { FormAccessorBase } from "./form-accessor-base";
 import { FormAccessor } from "./form-accessor";
 import { pathToFieldref } from "./utils";
@@ -89,8 +90,9 @@ export class RepeatingFormIndexedAccessor<
   }
 
   @action
-  setAddMode() {
+  setAddMode(addModeDefaults: string[]) {
     this._addMode = true;
+    setAddModeDefaults(this.formAccessor, addModeDefaults);
   }
 
   @computed

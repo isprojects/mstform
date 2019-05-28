@@ -273,7 +273,6 @@ export class FormAccessor<
       name as string
     );
     this.subFormAccessors.set(name, result);
-    result.initialize();
   }
 
   subForm<K extends keyof D>(name: K): SubFormAccess<D, K> {

@@ -1,3 +1,20 @@
+# 1.13.0
+
+-   When you `push` or `insert` a new repeating form item you can now pass a
+    third argument which is a list of fieldrefs. Each fieldref indicates a field
+    where you want this field to start outside of add-mode; that field has its
+    raw reflecting that of the value, unlike other fields in add-mode.
+
+    You can give a `addModeDefaults` option when you call `state()`, which can be
+    used to exclude certain items from add-mode in the entire form.
+
+    If you use `addModeDefaults` with a field that is derived, the derived
+    value is calculated right away.
+
+-   Fix: too many accessors were initialized. This was generally not a problem
+    except that if you derived a field from another it would be called
+    excessively often.
+
 # 1.12.1
 
 -   `processAll` did not clear errors and warnings when we ran it, leaving old

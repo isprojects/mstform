@@ -701,6 +701,19 @@ what empty values to display in an add form? The converter actually specifies
 this -- `converters.number` for instance knows that the empty value is the
 empty string.
 
+In case you already have a default value for a field and you do not want it to
+be in add-mode, you can exclude them by including its fieldref in the
+`addModeDefaults` option:
+
+```js
+const state = form.state(node, { addMode: true, addModeDefaults: ["nr"] });
+```
+
+Now the `nr` field is shown with the value `0` in it immediately.
+
+If the field you reference from `addModeDefaults` is configured to be derived,
+this is used to calculate the derived value automatically.
+
 ### Add mode for repeating forms
 
 Consider a repeating sub-form. Adding a new entry to a sub-form is much like
@@ -709,6 +722,17 @@ in add mode, even in edit forms. mstform automatically takes care of this if
 you use the `.push` and `.insert` methods on the repeating form accessor, or if
 you manipulate the underlying model directly. Existing records are shown in
 edit mode, unless the whole form is in add mode.
+
+If you use `.push` and `.insert` on the repeating form accessor, you can pass
+in an additional argument with the `addModeDefaults` array. Here is an example:
+
+```js
+repeating.push({ a: 3, b: 5 }, ["b"]);
+```
+
+Here `a` is not mentioned and is considered to be in add-mode; instead of its
+value, the empty raw is shown instead. But `b` is referenced and therefore `5`
+is visible immediately in the form.
 
 ## Backend interaction (save and processing)
 

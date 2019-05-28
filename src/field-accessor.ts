@@ -102,7 +102,9 @@ export class FieldAccessor<R, V> {
     // try to do any work. This isn't ideal but can happen
     // if the path a node was pointing to has been removed.
     const disposer = reaction(
-      () => (this.node ? derivedFunc(this.node) : undefined),
+      () => {
+        return this.node != null ? derivedFunc(this.node) : undefined;
+      },
       (derivedValue: any) => {
         if (derivedValue === undefined) {
           return;
@@ -181,6 +183,21 @@ export class FieldAccessor<R, V> {
     if (updateFunc != null) {
       updateFunc(this);
     }
+  }
+
+  @action
+  setValueAndRawWithoutChangeEvent(value: V) {
+    // if there are no changes, don't do anything
+    if (comparer.structural(this._value, value)) {
+      return;
+    }
+
+    this._value = value;
+    this.state.setValueWithoutRawUpdate(this.path, value);
+    this._raw = this.field.render(
+      value,
+      this.state.stateConverterOptionsWithContext(this)
+    );
   }
 
   @computed
