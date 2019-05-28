@@ -15,7 +15,13 @@ export function setAddModeDefaults(
   baseAccessor.accessors.forEach(accessor => {
     if (accessor instanceof FieldAccessor) {
       if (fieldrefSet.has(accessor.fieldref)) {
-        accessor.setRawFromValue();
+        if (accessor.field.derivedFunc == null) {
+          accessor.setRawFromValue();
+        } else {
+          accessor.setValueAndUpdateRaw(
+            accessor.field.derivedFunc(accessor.node)
+          );
+        }
       }
     }
   });

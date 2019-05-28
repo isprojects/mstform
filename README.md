@@ -711,6 +711,9 @@ const state = form.state(node, { addMode: true, addModeDefaults: ["nr"] });
 
 Now the `nr` field is shown with the value `0` in it immediately.
 
+If the field you reference from `addModeDefaults` is configured to be derived,
+this is used to calculate the derived value automatically.
+
 ### Add mode for repeating forms
 
 Consider a repeating sub-form. Adding a new entry to a sub-form is much like

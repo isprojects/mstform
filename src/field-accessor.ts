@@ -102,7 +102,9 @@ export class FieldAccessor<R, V> {
     // try to do any work. This isn't ideal but can happen
     // if the path a node was pointing to has been removed.
     const disposer = reaction(
-      () => (this.node ? derivedFunc(this.node) : undefined),
+      () => {
+        return this.node != null ? derivedFunc(this.node) : undefined;
+      },
       (derivedValue: any) => {
         if (derivedValue === undefined) {
           return;

@@ -8,6 +8,9 @@
     You can give a `addModeDefaults` option when you call `state()`, which can be
     used to exclude certain items from add-mode in the entire form.
 
+    If you use `addModeDefaults` with a field that is derived, the derived
+    value is calculated right away.
+
 # 1.12.1
 
 -   `processAll` did not clear errors and warnings when we ran it, leaving old

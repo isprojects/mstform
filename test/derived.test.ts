@@ -187,6 +187,72 @@ test("calculated repeating push and remove", () => {
   expect(touched).toBeTruthy();
 });
 
+test("calculated with addModeDefaults", () => {
+  const N = types
+    .model("N", {
+      calculated: types.number,
+      a: types.number,
+      b: types.number
+    })
+    .views(self => ({
+      sum() {
+        return self.a + self.b;
+      }
+    }));
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      calculated: new Field(converters.number, {
+        derived: node => {
+          return node.sum();
+        }
+      }),
+      a: new Field(converters.number),
+      b: new Field(converters.number)
+    })
+  });
+
+  const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }] });
+
+  const state = form.state(o);
+  const forms = state.repeatingForm("foo");
+  forms.push({ calculated: 0, a: 5, b: 3 }, ["calculated", "a", "b"]);
+
+  const sub0 = forms.index(0);
+  const calculated0 = sub0.field("calculated");
+
+  // derivation shouldn't have run
+  expect(calculated0.value).toEqual(0);
+  expect(calculated0.raw).toEqual("0");
+
+  // we now change a, which should modify the derived value
+  sub0.field("a").setRaw("3");
+  expect(calculated0.value).toEqual(5);
+  expect(calculated0.raw).toEqual("5");
+
+  // we expect the same behavior for the new entry
+  const sub1 = forms.index(1);
+  const calculated1 = sub1.field("calculated");
+
+  sub1.field("a").setRaw("6");
+
+  // we should have calculated the derived
+  expect(calculated1.value).toEqual(9);
+  expect(calculated1.raw).toEqual("9");
+
+  // now add a third entry
+  forms.push({ calculated: 0, a: 5, b: 3 }, ["calculated", "a", "b"]);
+  const sub2 = forms.index(2);
+
+  const calculated2 = sub2.field("calculated");
+  expect(calculated2.value).toEqual(8);
+  expect(calculated2.raw).toEqual("8");
+});
+
 test("calculated with context", () => {
   const M = types
     .model("M", {
