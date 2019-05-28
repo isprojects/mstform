@@ -118,6 +118,23 @@ test("decimalPlaces", () => {
   expect(() => parseDecimal("-123.12345", options)).toThrow();
 });
 
+test("normalizedDecimalPlaces", () => {
+  const options = {
+    maxWholeDigits: 50,
+    decimalPlaces: 2,
+    normalizedDecimalPlaces: 4,
+    allowNegative: true,
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: true,
+    addZeroes: true
+  };
+  expect(parseDecimal("12,345.45", options)).toEqual("12345.4500");
+  expect(parseDecimal(".12", options)).toEqual(".1200");
+  expect(parseDecimal("3", options)).toEqual("3.0000");
+  expect(parseDecimal("-4", options)).toEqual("-4.0000");
+});
+
 test("numbers without thousand separators", () => {
   // as a special case we accept numbers without thousand separators too
   expect(parseDecimal("1000", options)).toEqual("1000");

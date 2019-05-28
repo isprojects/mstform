@@ -15,6 +15,11 @@
     except that if you derived a field from another it would be called
     excessively often.
 
+-   Add a `normalizedDecimalPlaces` option to the `decimal` converter. This
+    ensures that the converted decimal has a fixed number of decimal places.
+    This is useful if your backend delivers a fixed amount of decimal places
+    and you want to display less of them (with `decimalPlaces`) than you store.
+
 # 1.12.1
 
 -   `processAll` did not clear errors and warnings when we ran it, leaving old
