@@ -38,6 +38,7 @@ export type DecimalOptions = {
   decimalPlaces: number;
   addZeroes: boolean;
   allowNegative: boolean;
+  normalizedDecimalPlaces?: number;
 };
 
 type TokenOptions = {
@@ -126,10 +127,21 @@ export function parseDecimal(s: string, options: Options): string {
 
   // note that the tokenizer has replaced the decimal separator
   // with the standard "." at this point.
-  return tokens
+  const converted = tokens
     .filter(token => token.type !== TOKEN_THOUSAND_SEPARATOR)
     .map(token => token.value)
     .join("");
+  if (options.normalizedDecimalPlaces == null) {
+    return converted;
+  }
+  return normalize(converted, options.normalizedDecimalPlaces);
+}
+
+function normalize(decimal: string, amount: number): string {
+  const parts = decimal.split(".");
+  const beforePeriod = parts[0];
+  const decimals = parts.length === 2 ? parts[1] : "";
+  return beforePeriod + "." + addZeroes(decimals, amount);
 }
 
 function getWholeDigitAmount(tokens: Token[]): number {

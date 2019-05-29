@@ -201,6 +201,44 @@ test("decimal converter", () => {
   });
 });
 
+test("decimal converter with normalizedDecimalPlaces", () => {
+  const options = { normalizedDecimalPlaces: 4 };
+
+  check(converters.decimal(options), "3", "3.0000");
+  check(converters.decimal(options), "3.14", "3.1400");
+  check(converters.decimal(options), "43.14", "43.1400");
+  check(converters.decimal(options), "4313", "4313.0000");
+  check(converters.decimal(options), "-3.14", "-3.1400");
+  check(converters.decimal(options), "0", "0.0000");
+  check(converters.decimal(options), ".14", ".1400");
+  check(converters.decimal(options), "14.", "14.0000");
+  checkWithOptions(converters.decimal(options), "43,14", "43.1400", {
+    decimalSeparator: ",",
+    ...baseOptions
+  });
+  checkWithOptions(
+    converters.decimal({ decimalPlaces: 6, normalizedDecimalPlaces: 7 }),
+    "4.000,000000",
+    "4000.0000000",
+    {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      ...baseOptions
+    }
+  );
+  checkWithOptions(
+    converters.decimal({ decimalPlaces: 2, normalizedDecimalPlaces: 4 }),
+    "36.365,21",
+    "36365.2100",
+    {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true,
+      ...baseOptions
+    }
+  );
+});
+
 test("decimal converter with both options", () => {
   checkWithOptions(converters.decimal({}), "4.314.314,31", "4314314.31", {
     decimalSeparator: ",",
