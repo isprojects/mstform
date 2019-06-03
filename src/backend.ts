@@ -97,8 +97,7 @@ export class Backend<M extends IAnyModelType> {
     const processResult = await this.save(this.node);
 
     if (processResult == null) {
-      this.errorValidations.clear();
-      this.warningValidations.clear();
+      this.clearValidations();
       return true;
     }
     const completeProcessResult: ProcessResult = {
@@ -118,8 +117,7 @@ export class Backend<M extends IAnyModelType> {
       );
     }
     const processResult = await this.processAll(this.node, this.getLiveOnly());
-    this.errorValidations.clear();
-    this.warningValidations.clear();
+    this.clearValidations();
 
     const completeProcessResult: ProcessResult = {
       updates: [],
@@ -128,6 +126,11 @@ export class Backend<M extends IAnyModelType> {
       ...processResult
     };
     this.runProcessResult(completeProcessResult);
+  }
+
+  async clearValidations() {
+    this.errorValidations.clear();
+    this.warningValidations.clear();
   }
 
   async realProcess(path: string) {
