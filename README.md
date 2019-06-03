@@ -1094,7 +1094,7 @@ forms even though they have externally defined errors.
 You can cause `save` to not affect the save status when you save::
 
 ```js
-this.formState.save({ ignoreSaveStatus: true});
+this.formState.save({ ignoreSaveStatus: true });
 ```
 
 This causes the save status to remain `before`. Normally the save status is
@@ -1132,6 +1132,11 @@ this.formState = form.state(o, {
 In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
+
+If you use `ignoreSaveStatus` the save status is not affect and remains
+`before`.
+
+You can reset the save status back to `before` with `'resetSaveStatus()`.
 
 ## required fields
 
