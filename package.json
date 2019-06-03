@@ -24,8 +24,6 @@
         "test:debug": "node --nolazy --inspect-brk=9229 ./node_modules/.bin/jest --runInBand",
         "test:prod": "yarn run lint && yarn run test -- --coverage --no-cache",
         "report-coverage": "cat ./coverage/lcov.info | coveralls",
-        "semantic-release": "semantic-release",
-        "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
         "precommit": "lint-staged"
     },
     "lint-staged": {
@@ -86,7 +84,6 @@
         "react": "^16.2.0",
         "react-dom": "^16.2.0",
         "replace-in-file": "^3.0.0-beta.2",
-        "semantic-release": "^15.0.0",
         "ts-jest": "^22.4.1",
         "ts-loader": "^4.4.2",
         "ts-node": "^6.0.0",
