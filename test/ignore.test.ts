@@ -341,3 +341,28 @@ test("ignoreGetError sub form accessor non-field external", async () => {
   const saveResult1 = await state.save();
   expect(saveResult1).toBeFalsy();
 });
+
+test("FormState can be saved without affecting save status", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  async function save(data: any) {
+    return null;
+  }
+
+  const state = form.state(o, {
+    backend: { save },
+    getError: accessor => (accessor.path === "/foo" ? "Wrong!" : undefined)
+  });
+
+  // now we save, ignoring save status
+  await state.save({ ignoreSaveStatus: true });
+  expect(state.saveStatus).toEqual("before");
+});
