@@ -844,7 +844,7 @@ default values for fields and clear them if they become invalid.
 Here is how we configure it (in addition to `save`):
 
 ```js
-async function process(node, path) {
+async function process(node, path, liveOnly) {
     // we have defined a real 'process' function on the model that knows how
     // to invoke process on the backend. returns ProcessResult
     return node.process();
@@ -857,7 +857,10 @@ this.formState = form.state(o, {
 
 The `node` argument is the underlying node that the form represents. `path` is
 a JSON pointer (aka MST node path) to the field that was just changed by the
-user modifying the form. The function should return a `ProcessResult`
+user modifying the form. `liveOnly` is a boolean value and is set to `true`
+before you `invoked` save. This can be used to distinguish between "live
+validations" (which always run) from those that only start running after you
+attempt a save for the first time. The function should return a `ProcessResult`
 structure.
 
 The system keeps track of which field paths have been changed by the user. It
@@ -889,7 +892,7 @@ itself: run the backend process for the entire form at once. For this we have
 Here is how we configure it (in addition to `save` and `process`):
 
 ```js
-async function processAll(node) {
+async function processAll(node, liveOnly) {
     // we have defined a real 'processAll' function on the model that knows how
     // to invoke processAll on the backend. returns ProcessResult
     return node.processAll();
@@ -1085,6 +1088,19 @@ raw value that cannot be successfully converted.
 If you only define a `save` function for your backend and no `process` function
 `ignoreGetError` is enabled automatically. This is to allow you to still save
 forms even though they have externally defined errors.
+
+### Ignoring the `saveStatus`.
+
+You can cause `save` to not affect the save status when you save::
+
+```js
+this.formState.save({ ignoreSaveStatus: true});
+```
+
+This causes the save status to remain `before`. Normally the save status is
+updated to `after` when you save, which can affect the display of validation
+messages and the state of the `liveOnly` flag that is passed to backend
+`process` and `processAll`.
 
 ### Controlling validation messages
 
