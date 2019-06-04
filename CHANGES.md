@@ -1,5 +1,16 @@
 # 1.14.0
 
+-   The `process` and `processAll` functions for the backend now receive a third
+    parameter, `liveOnly`. `liveOnly` is `true` before you save for the first
+    time, and after that it's `false`. This allows you to create backend
+    validation code that only runs after the first save.
+
+-   New method `resetSaveStatus` which resets the save status to `before`.
+
+-   There is a new validation option `ignoreSaveStatus` which you can pass to
+    the `save` method of the form state. This allows a save without updating the
+    save status (leaving it on `before`).
+
 -   Fix development setup so we don't use `fstream` anymore - this was only
     used by development dependencies (`semantic-release`), not directly in
     mstform, so we do not believe mstform is affected by the fstream

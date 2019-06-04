@@ -25,11 +25,11 @@ export interface SaveFunc<M> {
 }
 
 export interface Process<M> {
-  (node: Instance<M>, path: string): Promise<ProcessResult>;
+  (node: Instance<M>, path: string, liveOnly: boolean): Promise<ProcessResult>;
 }
 
 export interface ProcessAll<M> {
-  (node: Instance<M>): Promise<Partial<ProcessResult>>;
+  (node: Instance<M>, liveOnly: boolean): Promise<Partial<ProcessResult>>;
 }
 
 export interface ApplyUpdate {
@@ -55,7 +55,12 @@ export class Backend<M extends IAnyModelType> {
     public save?: SaveFunc<M>,
     public process?: Process<M>,
     public processAll?: ProcessAll<M>,
-    { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
+    {
+      debounce,
+      delay,
+      applyUpdate = defaultApplyUpdate
+    }: ProcessorOptions = {},
+    public getLiveOnly: (() => boolean) = () => false
   ) {
     this.node = node;
     this.errorValidations = new ValidationEntries();
@@ -92,8 +97,7 @@ export class Backend<M extends IAnyModelType> {
     const processResult = await this.save(this.node);
 
     if (processResult == null) {
-      this.errorValidations.clear();
-      this.warningValidations.clear();
+      this.clearValidations();
       return true;
     }
     const completeProcessResult: ProcessResult = {
@@ -112,9 +116,8 @@ export class Backend<M extends IAnyModelType> {
         "Cannot process all if processAll function is not configured"
       );
     }
-    const processResult = await this.processAll(this.node);
-    this.errorValidations.clear();
-    this.warningValidations.clear();
+    const processResult = await this.processAll(this.node, this.getLiveOnly());
+    this.clearValidations();
 
     const completeProcessResult: ProcessResult = {
       updates: [],
@@ -125,13 +128,18 @@ export class Backend<M extends IAnyModelType> {
     this.runProcessResult(completeProcessResult);
   }
 
+  async clearValidations() {
+    this.errorValidations.clear();
+    this.warningValidations.clear();
+  }
+
   async realProcess(path: string) {
     if (this.process == null) {
       return;
     }
     let processResult;
     try {
-      processResult = await this.process(this.node, path);
+      processResult = await this.process(this.node, path, this.getLiveOnly());
     } catch (e) {
       console.error("Unexpected error during process:", e);
       return;

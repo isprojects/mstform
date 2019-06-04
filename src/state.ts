@@ -209,12 +209,17 @@ export class FormState<
     }
 
     if (backend != null) {
+      const getLiveOnly = () => {
+        return this.saveStatus === "before";
+      };
+
       const processor = new Backend(
         node,
         backend.save,
         backend.process,
         backend.processAll,
-        backend
+        backend,
+        getLiveOnly
       );
       this.processor = processor;
       this.getErrorFunc = (accessor: Accessor): string | undefined => {
@@ -374,12 +379,9 @@ export class FormState<
   }
 
   @action
-  async save(options?: ValidateOptions): Promise<boolean> {
+  async save(options: ValidateOptions = {}): Promise<boolean> {
     if (this.processor == null) {
       throw new Error("Cannot save without backend configuration");
-    }
-    if (options == null) {
-      options = {};
     }
     let extraOptions = {};
     if (this.processor.process == null) {
@@ -396,13 +398,19 @@ export class FormState<
       this.validate(extraOptions);
     }
 
-    this.setSaveStatus("rightAfter");
-
+    if (!options.ignoreSaveStatus) {
+      this.setSaveStatus("rightAfter");
+    }
     if (!isValid) {
       return false;
     }
 
     return this.processor.realSave();
+  }
+
+  @action
+  async resetSaveStatus() {
+    this.setSaveStatus("before");
   }
 
   @action

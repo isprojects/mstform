@@ -589,3 +589,244 @@ test("process all configuration with state", async () => {
   expect(fooField.error).toBeUndefined();
   expect(barField.error).toEqual("bar error!");
 });
+
+test("process & live", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const liveSeen: boolean[] = [];
+
+  async function myProcess(
+    node: Instance<typeof M>,
+    path: string,
+    liveOnly: boolean
+  ) {
+    liveSeen.push(liveOnly);
+    return {
+      updates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      save: mySave,
+      debounce: debounce
+    }
+  });
+
+  const fooField = state.field("foo");
+
+  // before a save, we only want the live fields
+  fooField.setRaw("FOO!");
+
+  jest.runAllTimers();
+  await state.processPromise;
+
+  expect(liveSeen).toEqual([true]);
+
+  // a successful save
+  const success = await state.save();
+  expect(success).toBeTruthy();
+
+  fooField.setRaw("FOO!!!");
+
+  jest.runAllTimers();
+  await state.processPromise;
+
+  // now we've seen validation that includes non-live validations
+  expect(liveSeen).toEqual([true, false]);
+});
+
+test("process & live save error", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const liveSeen: boolean[] = [];
+
+  async function myProcess(
+    node: Instance<typeof M>,
+    path: string,
+    liveOnly: boolean
+  ) {
+    liveSeen.push(liveOnly);
+    return {
+      updates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
+  async function mySave(node: Instance<typeof M>) {
+    // this counts as an unsuccessful save
+    return {
+      updates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      save: mySave,
+      debounce: debounce
+    }
+  });
+
+  const fooField = state.field("foo");
+
+  // before a save, we only want the live fields
+  fooField.setRaw("FOO!");
+
+  jest.runAllTimers();
+  await state.processPromise;
+
+  expect(liveSeen).toEqual([true]);
+
+  // an unsuccessful save
+  const success = await state.save();
+  expect(success).toBeFalsy();
+
+  fooField.setRaw("FOO!!!");
+
+  jest.runAllTimers();
+  await state.processPromise;
+
+  // now we've seen validation that includes non-live validations
+  expect(liveSeen).toEqual([true, false]);
+});
+
+test("processAll and liveOnly", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const liveSeen: boolean[] = [];
+
+  async function myProcessAll(node: Instance<typeof M>, liveOnly: boolean) {
+    liveSeen.push(liveOnly);
+    return {
+      updates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+
+  const state = form.state(o, {
+    backend: {
+      processAll: myProcessAll,
+      save: mySave,
+      debounce: debounce
+    }
+  });
+
+  await state.processAll();
+  expect(liveSeen).toEqual([true]);
+
+  await state.save();
+
+  await state.processAll();
+
+  expect(liveSeen).toEqual([true, false]);
+});
+
+test("reset liveOnly status", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const liveSeen: boolean[] = [];
+
+  async function myProcess(
+    node: Instance<typeof M>,
+    path: string,
+    liveOnly: boolean
+  ) {
+    liveSeen.push(liveOnly);
+    return {
+      updates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      save: mySave,
+      debounce: debounce
+    }
+  });
+
+  const fooField = state.field("foo");
+
+  // before a save, we only want the live fields
+  fooField.setRaw("FOO!");
+
+  jest.runAllTimers();
+  await state.processPromise;
+
+  expect(liveSeen).toEqual([true]);
+
+  // a successful save
+  const success = await state.save();
+  expect(success).toBeTruthy();
+
+  fooField.setRaw("FOO!!!");
+
+  jest.runAllTimers();
+  await state.processPromise;
+
+  // now we've seen validation that includes non-live validations
+  expect(liveSeen).toEqual([true, false]);
+
+  // now we reset again to the before save status
+  state.resetSaveStatus();
+
+  fooField.setRaw("FOO???");
+
+  jest.runAllTimers();
+  await state.processPromise;
+  expect(liveSeen).toEqual([true, false, true]);
+});
