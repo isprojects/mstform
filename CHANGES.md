@@ -11,6 +11,11 @@
     the `save` method of the form state. This allows a save without updating the
     save status (leaving it on `before`).
 
+-   Fix development setup so we don't use `fstream` anymore - this was only
+    used by development dependencies (`semantic-release`), not directly in
+    mstform, so we do not believe mstform is affected by the fstream
+    vulnerability. Removed `semantic-release` as we weren't using it anyway.
+
 # 1.13.0
 
 -   When you `push` or `insert` a new repeating form item you can now pass a
