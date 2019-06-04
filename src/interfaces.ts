@@ -1,5 +1,11 @@
 import { ValidateOptions } from "./validate-options";
 import { ExternalMessages } from "./validationMessages";
+import {
+  FieldAccess,
+  RepeatingFormAccess,
+  SubFormAccess,
+  GroupAccess
+} from "./accessor";
 
 export interface IAccessor {
   path: string;
@@ -24,4 +30,15 @@ export interface IAccessor {
 
   dispose(): void;
   clear(): void;
+}
+
+export interface IFormAccessor<D, G> extends IAccessor {
+  access(name: string): IAccessor | undefined;
+
+  field<K extends keyof D>(name: K): FieldAccess<D, K>;
+  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K>;
+  subForm<K extends keyof D>(name: K): SubFormAccess<D, K>;
+  group<K extends keyof G>(name: K): GroupAccess<D>;
+
+  flatAccessors: IAccessor[];
 }

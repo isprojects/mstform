@@ -23,12 +23,12 @@ import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
-import { IAccessor } from "./interfaces";
+import { IAccessor, IFormAccessor } from "./interfaces";
 
 export class FormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> implements IAccessor {
+> implements IFormAccessor<D, G> {
   public keys: (keyof D)[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
