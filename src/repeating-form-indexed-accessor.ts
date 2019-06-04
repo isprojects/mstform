@@ -8,11 +8,12 @@ import { FormAccessorBase } from "./form-accessor-base";
 import { FormAccessor } from "./form-accessor";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
+import { IAccessor } from "./interfaces";
 
 export class RepeatingFormIndexedAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> {
+> extends FormAccessorBase<D, G> implements IAccessor {
   formAccessor: FormAccessor<D, G>;
 
   @observable

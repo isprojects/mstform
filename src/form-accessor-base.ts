@@ -1,7 +1,6 @@
 import { computed } from "mobx";
 import { FormDefinition, GroupDefinition } from "./form";
 import {
-  Accessor,
   FieldAccess,
   RepeatingFormAccess,
   SubFormAccess,
@@ -9,6 +8,7 @@ import {
 } from "./accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
+import { IAccessor } from "./interfaces";
 
 // a base class that delegates to a form accessor
 export abstract class FormAccessorBase<
@@ -55,11 +55,11 @@ export abstract class FormAccessorBase<
     return this.formAccessor.isValid;
   }
 
-  access(name: string): Accessor | undefined {
+  access(name: string): IAccessor | undefined {
     return this.formAccessor.access(name);
   }
 
-  accessBySteps(steps: string[]): Accessor | undefined {
+  accessBySteps(steps: string[]): IAccessor | undefined {
     if (steps.length === 0) {
       if (this.formAccessor.parent == null) {
         throw new Error("Unknown parent");
@@ -86,12 +86,12 @@ export abstract class FormAccessorBase<
   }
 
   @computed
-  get accessors(): Accessor[] {
+  get accessors(): IAccessor[] {
     return this.formAccessor.accessors;
   }
 
   @computed
-  get flatAccessors(): Accessor[] {
+  get flatAccessors(): IAccessor[] {
     return this.formAccessor.flatAccessors;
   }
 }

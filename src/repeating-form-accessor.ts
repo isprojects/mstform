@@ -2,17 +2,17 @@ import { observable, computed } from "mobx";
 import { applyPatch } from "mobx-state-tree";
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { FormState } from "./state";
-import { Accessor } from "./accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
+import { IAccessor } from "./interfaces";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> {
+> implements IAccessor {
   name: string;
 
   @observable
@@ -139,8 +139,8 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get flatAccessors(): Accessor[] {
-    const result: Accessor[] = [];
+  get flatAccessors(): IAccessor[] {
+    const result: IAccessor[] = [];
     this.accessors.forEach(accessor => {
       result.push(...accessor.flatAccessors);
       result.push(accessor);
@@ -148,7 +148,7 @@ export class RepeatingFormAccessor<
     return result;
   }
 
-  accessBySteps(steps: string[]): Accessor | undefined {
+  accessBySteps(steps: string[]): IAccessor | undefined {
     const [first, ...rest] = steps;
     const nr = parseInt(first, 10);
     if (isNaN(nr)) {

@@ -10,7 +10,6 @@ import {
 } from "./form";
 import { FormState } from "./state";
 import {
-  Accessor,
   FieldAccess,
   RepeatingFormAccess,
   SubFormAccess,
@@ -24,11 +23,12 @@ import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
+import { IAccessor } from "./interfaces";
 
 export class FormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> {
+> implements IAccessor {
   public keys: (keyof D)[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
@@ -133,8 +133,8 @@ export class FormAccessor<
   }
 
   @computed
-  get accessors(): Accessor[] {
-    const result: Accessor[] = [];
+  get accessors(): IAccessor[] {
+    const result: IAccessor[] = [];
 
     this.keys.forEach(key => {
       const entry = this.definition[key];
@@ -150,8 +150,8 @@ export class FormAccessor<
   }
 
   @computed
-  get flatAccessors(): Accessor[] {
-    const result: Accessor[] = [];
+  get flatAccessors(): IAccessor[] {
+    const result: IAccessor[] = [];
     this.accessors.forEach(accessor => {
       if (accessor instanceof FieldAccessor) {
         result.push(accessor);
@@ -177,7 +177,7 @@ export class FormAccessor<
     return this.parent.addMode;
   }
 
-  access(name: string): Accessor | undefined {
+  access(name: string): IAccessor | undefined {
     if (!this.keys.includes(name)) {
       return undefined;
     }
@@ -198,7 +198,7 @@ export class FormAccessor<
     }
   }
 
-  accessBySteps(steps: string[]): Accessor | undefined {
+  accessBySteps(steps: string[]): IAccessor | undefined {
     if (steps.length === 0) {
       return this;
     }

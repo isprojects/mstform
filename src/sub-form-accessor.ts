@@ -6,11 +6,12 @@ import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
+import { IAccessor } from "./interfaces";
 
 export class SubFormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> {
+> extends FormAccessorBase<D, G> implements IAccessor {
   formAccessor: FormAccessor<D, G>;
 
   externalErrors = new ExternalMessages();

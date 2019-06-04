@@ -18,12 +18,12 @@ import {
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
 import { currentValidationProps } from "./validation-props";
-import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
+import { IAccessor } from "./interfaces";
 
-export class FieldAccessor<R, V> {
+export class FieldAccessor<R, V> implements IAccessor {
   name: string;
 
   @observable
@@ -471,7 +471,11 @@ export class FieldAccessor<R, V> {
     return currentValidationProps(this);
   }
 
-  accessBySteps(steps: string[]): Accessor {
+  get accessors(): IAccessor[] {
+    return [];
+  }
+
+  accessBySteps(steps: string[]): IAccessor {
     throw new Error("Cannot step through field accessor");
   }
 }
