@@ -7,6 +7,7 @@ import { setAddModeDefaults } from "./addMode";
 import { FormAccessorBase } from "./form-accessor-base";
 import { FormAccessor } from "./form-accessor";
 import { pathToFieldref } from "./utils";
+import { ExternalMessages } from "./validationMessages";
 
 export class RepeatingFormIndexedAccessor<
   D extends FormDefinition<any>,
@@ -19,6 +20,9 @@ export class RepeatingFormIndexedAccessor<
 
   @observable
   _addMode: boolean = false;
+
+  externalErrors = new ExternalMessages();
+  externalWarnings = new ExternalMessages();
 
   constructor(
     public state: FormState<any, any, any>,

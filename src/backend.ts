@@ -1,6 +1,7 @@
 import { applyPatch, IAnyModelType, Instance } from "mobx-state-tree";
 import { ChangeTracker, DebounceOptions } from "./changeTracker";
-import { ValidationEntries, Message } from "./validationMessages";
+import { Message } from "./validationMessages";
+import { FormState } from "./state";
 
 type Update = {
   path: string;
@@ -45,26 +46,17 @@ export type ProcessorOptions = { applyUpdate?: ApplyUpdate } & Partial<
 >;
 
 export class Backend<M extends IAnyModelType> {
-  errorValidations: ValidationEntries;
-  warningValidations: ValidationEntries;
   changeTracker: ChangeTracker;
   applyUpdate: ApplyUpdate;
 
   constructor(
+    public state: FormState<M, any, any>,
     public node: Instance<M>,
     public save?: SaveFunc<M>,
     public process?: Process<M>,
     public processAll?: ProcessAll<M>,
-    {
-      debounce,
-      delay,
-      applyUpdate = defaultApplyUpdate
-    }: ProcessorOptions = {},
-    public getLiveOnly: (() => boolean) = () => false
+    { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
   ) {
-    this.node = node;
-    this.errorValidations = new ValidationEntries();
-    this.warningValidations = new ValidationEntries();
     this.changeTracker = new ChangeTracker(
       (path: string) => this.realProcess(path),
       { debounce, delay }
@@ -86,8 +78,8 @@ export class Backend<M extends IAnyModelType> {
       }
       this.applyUpdate(this.node, update);
     });
-    this.errorValidations.update(errorValidations);
-    this.warningValidations.update(warningValidations);
+    this.state.setExternalValidations(errorValidations, "error");
+    this.state.setExternalValidations(warningValidations, "warning");
   }
 
   async realSave(): Promise<boolean> {
@@ -110,6 +102,10 @@ export class Backend<M extends IAnyModelType> {
     return false;
   }
 
+  getLiveOnly() {
+    return this.state.saveStatus === "before";
+  }
+
   async realProcessAll() {
     if (this.processAll == null) {
       throw new Error(
@@ -129,8 +125,8 @@ export class Backend<M extends IAnyModelType> {
   }
 
   async clearValidations() {
-    this.errorValidations.clear();
-    this.warningValidations.clear();
+    this.state.clearExternalValidations("error");
+    this.state.clearExternalValidations("warning");
   }
 
   async realProcess(path: string) {
@@ -149,12 +145,5 @@ export class Backend<M extends IAnyModelType> {
 
   isFinished() {
     return this.changeTracker.isFinished();
-  }
-
-  getError(path: string): string | undefined {
-    return this.errorValidations.getMessage(path);
-  }
-  getWarning(path: string): string | undefined {
-    return this.warningValidations.getMessage(path);
   }
 }

@@ -5,12 +5,16 @@ import { FormAccessor } from "./form-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
+import { ExternalMessages } from "./validationMessages";
 
 export class SubFormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
 > extends FormAccessorBase<D, G> {
   formAccessor: FormAccessor<D, G>;
+
+  externalErrors = new ExternalMessages();
+  externalWarnings = new ExternalMessages();
 
   constructor(
     public state: FormState<any, any, any>,

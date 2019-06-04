@@ -6,6 +6,9 @@
     form item is inserted or deleted. Instead now we store this information as
     soon as it comes in directly on the accessor.
 
+-   BREAKING CHANGE: if you define an error with `getError` and an external
+    error is also set, that external error now takes precedence.
+
 # 1.14.0
 
 -   The `process` and `processAll` functions for the backend now receive a third
