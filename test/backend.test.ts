@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types, Instance } from "mobx-state-tree";
-import { Backend, Form, Field, converters } from "../src";
+import { Backend, Form, Field, RepeatingForm, converters } from "../src";
 import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
@@ -829,4 +829,62 @@ test("reset liveOnly status", async () => {
   jest.runAllTimers();
   await state.processPromise;
   expect(liveSeen).toEqual([true, false, true]);
+});
+
+test("error messages and repeating form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo/0/bar", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const o = M.create({ foo: [{ bar: "FOO" }] });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.repeatingForm("foo");
+  const bar0 = foo.index(0).field("bar");
+
+  bar0.setRaw("CHANGED!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(bar0.error).toEqual("error");
+
+  // now insert a new entry above the current one
+  foo.insert(0, { bar: "BEFORE" }, ["bar"]);
+
+  const barBefore = foo.index(0).field("bar");
+  expect(barBefore.raw).toEqual("BEFORE");
+  expect(bar0.raw).toEqual("CHANGED!");
+
+  // the error should still be associated with bar0
+  expect(bar0.error).toEqual("error");
+  // and the new entry shouldn't have one
+  expect(barBefore.error).toBeUndefined();
 });
