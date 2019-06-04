@@ -13,6 +13,7 @@ export interface IAccessor {
   externalErrors: ExternalMessages;
   externalWarnings: ExternalMessages;
   value: any;
+  addMode: boolean;
 
   validate(options?: ValidateOptions): boolean;
 
