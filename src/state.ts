@@ -35,7 +35,7 @@ import {
 } from "./backend";
 import { setAddModeDefaults } from "./addMode";
 import { Validation } from "./validationMessages";
-import { IAccessor } from "./interfaces";
+import { IAccessor, IFormAccessor } from "./interfaces";
 
 export interface AccessorAllows {
   (accessor: IAccessor): boolean;
@@ -109,7 +109,7 @@ export class FormState<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> {
+> extends FormAccessorBase<D, G> implements IFormAccessor<D, G> {
   @observable
   saveStatus: SaveStatusOptions = "before";
 

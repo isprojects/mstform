@@ -8,6 +8,7 @@ import {
 } from "./accessor";
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
+import { ExternalMessages } from "./validationMessages";
 import { IAccessor } from "./interfaces";
 
 // a base class that delegates to a form accessor
@@ -53,6 +54,45 @@ export abstract class FormAccessorBase<
   @computed
   get isValid(): boolean {
     return this.formAccessor.isValid;
+  }
+
+  @computed
+  get disabled(): boolean {
+    return this.formAccessor.disabled;
+  }
+
+  @computed
+  get hidden(): boolean {
+    return this.formAccessor.hidden;
+  }
+
+  @computed
+  get readOnly(): boolean {
+    return this.formAccessor.readOnly;
+  }
+
+  @computed
+  get inputAllowed(): boolean {
+    return this.formAccessor.inputAllowed;
+  }
+
+  @computed
+  get externalErrors(): ExternalMessages {
+    return this.formAccessor.externalErrors;
+  }
+
+  @computed
+  get externalWarnings(): ExternalMessages {
+    return this.formAccessor.externalWarnings;
+  }
+
+  @computed
+  get addMode(): boolean {
+    return this.formAccessor.addMode;
+  }
+
+  clear() {
+    return this.formAccessor.clear();
   }
 
   access(name: string): IAccessor | undefined {

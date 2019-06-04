@@ -22,9 +22,6 @@ export class RepeatingFormIndexedAccessor<
   @observable
   _addMode: boolean = false;
 
-  externalErrors = new ExternalMessages();
-  externalWarnings = new ExternalMessages();
-
   constructor(
     public state: FormState<any, any, any>,
     public definition: D,
