@@ -7,7 +7,6 @@ import { setAddModeDefaults } from "./addMode";
 import { FormAccessorBase } from "./form-accessor-base";
 import { FormAccessor } from "./form-accessor";
 import { pathToFieldref } from "./utils";
-import { ExternalMessages } from "./validationMessages";
 import { IFormAccessor } from "./interfaces";
 
 export class RepeatingFormIndexedAccessor<
