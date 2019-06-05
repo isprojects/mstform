@@ -16,7 +16,10 @@ export class RepeatingFormAccessor<
   name: string;
 
   @observable
-  repeatingFormIndexedAccessors: Map<number, any> = observable.map();
+  repeatingFormIndexedAccessors: Map<
+    number,
+    RepeatingFormIndexedAccessor<D, G>
+  > = observable.map();
 
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
@@ -128,13 +131,8 @@ export class RepeatingFormAccessor<
 
   @computed
   get accessors(): RepeatingFormIndexedAccessor<D, G>[] {
-    // we get the entries in this map, in order of index
-    const length = Array.from(this.repeatingFormIndexedAccessors.values())
-      .length;
-    const result = [];
-    for (let i = 0; i < length; i++) {
-      result.push(this.repeatingFormIndexedAccessors.get(i));
-    }
+    const result = Array.from(this.repeatingFormIndexedAccessors.values());
+    result.sort((first, second) => first.index - second.index);
     return result;
   }
 
