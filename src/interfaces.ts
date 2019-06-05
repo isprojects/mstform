@@ -9,6 +9,7 @@ import {
 
 export interface IAccessor {
   path: string;
+  fieldref: string;
   error: string | undefined;
   warning: string | undefined;
   warningValue: string | undefined;
