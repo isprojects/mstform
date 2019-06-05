@@ -210,10 +210,6 @@ export class FormState<
     }
 
     if (backend != null) {
-      const getLiveOnly = () => {
-        return this.saveStatus === "before";
-      };
-
       const processor = new Backend(
         this,
         node,
@@ -268,6 +264,11 @@ export class FormState<
       return Promise.resolve();
     }
     return this.processor.isFinished();
+  }
+
+  @computed
+  get liveOnly(): boolean {
+    return this.saveStatus === "before";
   }
 
   stateConverterOptionsWithContext(

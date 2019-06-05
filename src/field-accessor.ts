@@ -226,21 +226,11 @@ export class FieldAccessor<R, V> implements IAccessor {
   }
 
   @computed
-  get externalError(): string | undefined {
-    return this.externalErrors.message;
-  }
-
-  @computed
   get warningValue(): string | undefined {
     if (this.externalWarnings.message !== undefined) {
       return this.externalWarnings.message;
     }
     return this.state.getWarningFunc(this);
-  }
-
-  @computed
-  get externalWarning(): string | undefined {
-    return this.externalWarnings.message;
   }
 
   // XXX move this method to state

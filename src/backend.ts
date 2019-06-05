@@ -102,17 +102,13 @@ export class Backend<M extends IAnyModelType> {
     return false;
   }
 
-  getLiveOnly() {
-    return this.state.saveStatus === "before";
-  }
-
   async realProcessAll() {
     if (this.processAll == null) {
       throw new Error(
         "Cannot process all if processAll function is not configured"
       );
     }
-    const processResult = await this.processAll(this.node, this.getLiveOnly());
+    const processResult = await this.processAll(this.node, this.state.liveOnly);
     this.clearValidations();
 
     const completeProcessResult: ProcessResult = {
@@ -135,7 +131,7 @@ export class Backend<M extends IAnyModelType> {
     }
     let processResult;
     try {
-      processResult = await this.process(this.node, path, this.getLiveOnly());
+      processResult = await this.process(this.node, path, this.state.liveOnly);
     } catch (e) {
       console.error("Unexpected error during process:", e);
       return;

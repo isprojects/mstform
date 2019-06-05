@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types, Instance } from "mobx-state-tree";
-import { Backend, Form, Field, RepeatingForm, converters } from "../src";
+import { SubForm, Form, Field, RepeatingForm, converters } from "../src";
 import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
@@ -991,4 +991,50 @@ test("error messages and repeating form", async () => {
   expect(bar0.error).toEqual("error");
   // and the new entry shouldn't have one
   expect(barBefore.error).toBeUndefined();
+});
+
+test("error messages and sub form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: N
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo/bar", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const o = M.create({ foo: { bar: "FOO" } });
+
+  const form = new Form(M, {
+    foo: new SubForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.subForm("foo");
+  const bar = foo.field("bar");
+
+  bar.setRaw("CHANGED!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(bar.error).toEqual("error");
 });
