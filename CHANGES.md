@@ -9,10 +9,11 @@
 -   BREAKING CHANGE: if you define an error with `getError` and an external
     error is also set, that external error now takes precedence.
 
--   Introduce a new explicit IAccessor interface that is shared by all
-    accessors.
+-   Introduce a new explicit `IAccessor` interface that is shared by all
+    accessors. Also introduce `IFormAccessor`, which is shared by FormState,
+    RepeatingFormIndexedAccessor, and SubFormAccessor.
 
--   BREAKING CHANGE: Drop the old Accessor union type in favor of IAccessor.
+-   BREAKING CHANGE: Drop the old Accessor union type in favor of `IAccessor`.
 
 # 1.14.0
 
