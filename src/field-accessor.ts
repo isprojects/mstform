@@ -21,6 +21,7 @@ import { currentValidationProps } from "./validation-props";
 import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
+import { ExternalMessages } from "./validationMessages";
 
 export class FieldAccessor<R, V> {
   name: string;
@@ -38,6 +39,9 @@ export class FieldAccessor<R, V> {
   _value: V;
 
   _disposer: IReactionDisposer | undefined;
+
+  externalErrors = new ExternalMessages();
+  externalWarnings = new ExternalMessages();
 
   constructor(
     public state: FormState<any, any, any>,
@@ -212,14 +216,20 @@ export class FieldAccessor<R, V> {
 
   @computed
   get errorValue(): string | undefined {
-    if (this._error === undefined) {
-      return this.state.getErrorFunc(this);
+    if (this._error !== undefined) {
+      return this._error;
     }
-    return this._error;
+    if (this.externalErrors.message !== undefined) {
+      return this.externalErrors.message;
+    }
+    return this.state.getErrorFunc(this);
   }
 
   @computed
   get warningValue(): string | undefined {
+    if (this.externalWarnings.message !== undefined) {
+      return this.externalWarnings.message;
+    }
     return this.state.getWarningFunc(this);
   }
 

@@ -35,6 +35,7 @@ import {
   ProcessAll
 } from "./backend";
 import { setAddModeDefaults } from "./addMode";
+import { Validation } from "./validationMessages";
 
 export interface AccessorAllows {
   (accessor: Accessor): boolean;
@@ -209,33 +210,16 @@ export class FormState<
     }
 
     if (backend != null) {
-      const getLiveOnly = () => {
-        return this.saveStatus === "before";
-      };
-
       const processor = new Backend(
+        this,
         node,
         backend.save,
         backend.process,
         backend.processAll,
-        backend,
-        getLiveOnly
+        backend
       );
       this.processor = processor;
-      this.getErrorFunc = (accessor: Accessor): string | undefined => {
-        const result = getError(accessor);
-        if (result != null) {
-          return result;
-        }
-        return processor.getError(accessor.path);
-      };
-      this.getWarningFunc = (accessor: Accessor): string | undefined => {
-        const result = getWarning(accessor);
-        if (result != null) {
-          return result;
-        }
-        return processor.getWarning(accessor.path);
-      };
+
       this.updateFunc = (accessor: FieldAccessor<any, any>) => {
         if (update != null) {
           update(accessor);
@@ -280,6 +264,11 @@ export class FormState<
       return Promise.resolve();
     }
     return this.processor.isFinished();
+  }
+
+  @computed
+  get liveOnly(): boolean {
+    return this.saveStatus === "before";
   }
 
   stateConverterOptionsWithContext(
@@ -420,6 +409,47 @@ export class FormState<
     }
 
     return this.processor.realProcessAll();
+  }
+
+  @action
+  async setExternalValidations(
+    validations: Validation[],
+    messageType: "error" | "warning"
+  ) {
+    // a map of path to a map of validation_id -> message.
+    const pathToValidations = new Map<string, Map<string, string>>();
+    // which validation ids are touched at all
+    const affectedValidationIds = new Set<string>();
+    validations.forEach(validation => {
+      affectedValidationIds.add(validation.id);
+      validation.messages.forEach(message => {
+        let validationIdToMessage = pathToValidations.get(message.path);
+        if (validationIdToMessage == null) {
+          validationIdToMessage = new Map<string, string>();
+        }
+        pathToValidations.set(message.path, validationIdToMessage);
+        validationIdToMessage.set(validation.id, message.message);
+      });
+    });
+    this.flatAccessors.forEach(accessor => {
+      const validationIdToMessage = pathToValidations.get(accessor.path);
+      const externalMessages =
+        messageType === "error"
+          ? accessor.externalErrors
+          : accessor.externalWarnings;
+      externalMessages.update(validationIdToMessage, affectedValidationIds);
+    });
+  }
+
+  @action
+  async clearExternalValidations(messageType: "error" | "warning") {
+    this.flatAccessors.forEach(accessor => {
+      const externalMessages =
+        messageType === "error"
+          ? accessor.externalErrors
+          : accessor.externalWarnings;
+      externalMessages.clear();
+    });
   }
 
   getValue(path: string): any {

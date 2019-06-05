@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types, Instance } from "mobx-state-tree";
-import { Backend, Form, Field, converters } from "../src";
+import { SubForm, Form, Field, RepeatingForm, converters } from "../src";
 import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
@@ -8,326 +8,411 @@ jest.useFakeTimers();
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
 
-test("backend process has error messages", async () => {
+test("backend process sets error messages", async () => {
   const M = types.model("M", {
     foo: types.string
   });
 
   const o = M.create({ foo: "FOO" });
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      return {
-        updates: [],
-        errorValidations: [
-          { id: "alpha", messages: [{ path: "a", message: "error" }] }
-        ],
-        warningValidations: []
-      };
-    },
-    undefined,
-    { debounce }
-  );
 
-  await p.run("a");
+  const form = new Form(M, { foo: new Field(converters.string) });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const field = state.field("foo");
+
+  field.setRaw("FOO!");
   jest.runAllTimers();
 
-  await p.isFinished();
+  await state.processPromise;
 
-  expect(p.getError("a")).toEqual("error");
+  expect(field.error).toEqual("error");
 });
 
 test("backend process wipes out error messages", async () => {
   const M = types.model("M", {
-    foo: types.string
+    a: types.string,
+    b: types.string
   });
 
-  const o = M.create({ foo: "FOO" });
+  const o = M.create({ a: "A", b: "B" });
+
+  const form = new Form(M, {
+    a: new Field(converters.string),
+    b: new Field(converters.string)
+  });
+
   let called = false;
 
   // the idea is that the form processor only returns errors related
   // to the field that was just touched under an id. if that id is wiped out,
   // those errors are removed. but other error structures (like for 'beta' here)
   // are not affected and remain
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      if (!called) {
-        called = true;
-        return {
-          updates: [],
-          errorValidations: [
-            {
-              id: "alpha",
-              messages: [{ path: "a", message: "error a" }]
-            },
-            {
-              id: "beta",
-              messages: [{ path: "b", message: "error b" }]
-            }
-          ],
-          warningValidations: []
-        };
-      } else {
-        return {
-          updates: [],
-          errorValidations: [{ id: "alpha", messages: [] }],
-          warningValidations: []
-        };
-      }
-    },
-    undefined,
-    { debounce }
-  );
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    if (!called) {
+      called = true;
+      return {
+        updates: [],
+        errorValidations: [
+          {
+            id: "alpha",
+            messages: [{ path: "/a", message: "error a" }]
+          },
+          {
+            id: "beta",
+            messages: [{ path: "/b", message: "error b" }]
+          }
+        ],
+        warningValidations: []
+      };
+    } else {
+      return {
+        updates: [],
+        errorValidations: [{ id: "alpha", messages: [] }],
+        warningValidations: []
+      };
+    }
+  };
 
-  await p.run("a");
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const a = state.field("a");
+  const b = state.field("b");
+
+  a.setRaw("a!");
   jest.runAllTimers();
+  await state.processPromise;
 
-  await p.isFinished();
+  expect(a.error).toEqual("error a");
+  expect(b.error).toEqual("error b");
 
-  expect(p.getError("a")).toEqual("error a");
-  expect(p.getError("b")).toEqual("error b");
-
-  await p.run("a");
+  a.setRaw("a!!");
   jest.runAllTimers();
-  await p.isFinished();
-  expect(p.getError("a")).toBeUndefined();
-  expect(p.getError("b")).toEqual("error b");
+  await state.processPromise;
+
+  expect(a.error).toBeUndefined();
+  expect(b.error).toEqual("error b");
 });
 
 test("backend process two requests are synced", async () => {
   const M = types.model("M", {
-    foo: types.string
+    a: types.string,
+    b: types.string
+  });
+
+  const o = M.create({ a: "A", b: "B" });
+
+  const form = new Form(M, {
+    a: new Field(converters.string),
+    b: new Field(converters.string)
   });
 
   const untilA = until();
 
-  const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      // if the 'a' path is passed, we await a promise
-      // This way we can test a long-duration promise and that
-      // the code ensures the next call to run is only executed after the
-      // first is resolved.
-      if (path === "a") {
-        await untilA.finished;
-      }
-      requests.push(path);
-      return {
-        updates: [],
-        errorValidations: [
-          { id: "alpha", messages: [{ path: "a", message: `error ${path}` }] }
-        ],
-        warningValidations: []
-      };
-    },
-    undefined,
-    { debounce }
-  );
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    // if the 'a' path is passed, we await a promise
+    // This way we can test a long-duration promise and that
+    // the code ensures the next call to run is only executed after the
+    // first is resolved.
+    if (path === "a") {
+      await untilA.finished;
+    }
+    requests.push(path);
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/a", message: `error ${path}` }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const a = state.field("a");
+  const b = state.field("b");
 
   // we run for 'a', it halts until we call resolveA
-  p.run("a");
+  a.setRaw("a!");
   // we now run 'b', which should only run once 'a' is resolved
-  p.run("b");
+  b.setRaw("b!");
 
   jest.runAllTimers();
 
   // we resolve 'a'
   untilA.resolve();
 
-  await p.isFinished();
+  await state.processPromise;
+
   // these should both be called, in that order
-  expect(requests).toEqual(["a", "b"]);
+  expect(requests).toEqual(["/a", "/b"]);
   // and we expect the error message to be set
-  expect(p.getError("a")).toEqual("error b");
+  expect(a.error).toEqual("error /b");
 });
 
 test("backend process three requests are synced", async () => {
   const M = types.model("M", {
-    foo: types.string
+    a: types.string,
+    b: types.string,
+    c: types.string
+  });
+
+  const o = M.create({ a: "A", b: "B", c: "C" });
+
+  const form = new Form(M, {
+    a: new Field(converters.string),
+    b: new Field(converters.string),
+    c: new Field(converters.string)
   });
 
   const untilA = until();
   const untilB = until();
 
-  const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      // if the 'a' path is passed, we await a promise
-      // This way we can test a long-duration promise and that
-      // the code ensures the next call to run is only executed after the
-      // first is resolved.
-      if (path === "a") {
-        await untilA.finished;
-      }
-      if (path === "b") {
-        await untilB.finished;
-      }
-      requests.push(path);
-      return {
-        updates: [],
-        errorValidations: [
-          { id: "alpha", messages: [{ path: "a", message: `error ${path}` }] }
-        ],
-        warningValidations: []
-      };
-    },
-    undefined,
-    { debounce }
-  );
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    // if the 'a' path is passed, we await a promise
+    // This way we can test a long-duration promise and that
+    // the code ensures the next call to run is only executed after the
+    // first is resolved.
+    if (path === "a") {
+      await untilA.finished;
+    }
+    if (path === "b") {
+      await untilB.finished;
+    }
+    requests.push(path);
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/a", message: `error ${path}` }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const a = state.field("a");
+  const b = state.field("b");
+  const c = state.field("c");
 
   // we run for 'a', it halts until we call resolveA
-  p.run("a");
+  a.setRaw("a!");
   // we now run 'b', which should only run once 'b' is resolved
-  p.run("b");
+  b.setRaw("b!");
   // and 'c' which should only run once 'b' is resolved
-  p.run("c");
+  c.setRaw("c!");
+
   jest.runAllTimers();
   // we resolve 'b'
   untilB.resolve();
   // we resolve 'a'
   untilA.resolve();
 
-  await p.isFinished();
+  await state.processPromise;
   // these should all be called, in the right order
-  expect(requests).toEqual(["a", "b", "c"]);
+  expect(requests).toEqual(["/a", "/b", "/c"]);
   // and we expect the error message to be set
-  expect(p.getError("a")).toEqual("error c");
+  expect(a.error).toEqual("error /c");
 });
 
 test("backend process does update", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
+    bar: types.string
   });
 
-  const o = M.create({ foo: "FOO" });
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      return {
-        updates: [{ path: "foo", value: "BAR" }],
-        errorValidations: [],
-        warningValidations: []
-      };
-    },
-    undefined,
-    { debounce }
-  );
+  const o = M.create({ foo: "FOO", bar: "BAR" });
 
-  await p.run("a");
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [{ path: "/foo", value: "BAR" }],
+      errorValidations: [],
+      warningValidations: []
+    };
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const foo = state.field("foo");
+  const bar = state.field("bar");
+
+  bar.setRaw("BAR!");
   jest.runAllTimers();
 
-  await p.isFinished();
+  await state.processPromise;
 
   expect(o.foo).toEqual("BAR");
+  expect(foo.raw).toEqual("BAR");
 });
 
 test("backend process ignores update if path re-modified during processing", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
+    bar: types.string
   });
 
-  const o = M.create({ foo: "FOO" });
-  let called = false;
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      // we ensure that only the first time we call this we
-      // try to update foo
-      if (!called) {
-        called = true;
-        return {
-          updates: [{ path: "foo", value: "BAR" }],
-          errorValidations: [],
-          warningValidations: []
-        };
-      } else {
-        return {
-          updates: [],
-          errorValidations: [],
-          warningValidations: []
-        };
-      }
-    },
-    undefined,
-    { debounce }
-  );
+  const o = M.create({ foo: "FOO", bar: "BAR" });
 
-  await p.run("a");
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  let called = false;
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    // we ensure that only the first time we call this we
+    // try to update foo
+    if (!called) {
+      called = true;
+      return {
+        updates: [{ path: "/foo", value: "BAR" }],
+        errorValidations: [],
+        warningValidations: []
+      };
+    } else {
+      return {
+        updates: [],
+        errorValidations: [],
+        warningValidations: []
+      };
+    }
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const foo = state.field("foo");
+  const bar = state.field("bar");
+
+  // trigger the update of foo
+  bar.setRaw("BAR!");
+
   jest.runAllTimers();
   // we change things while we are processing
   // user input should never be overridden by the backend,
   // even if timers haven't yet run
-  await p.run("foo");
+  foo.setRaw("CHANGED!");
 
-  await p.isFinished();
+  await state.processPromise;
 
   // since only the first change tried to update, and the second change
   // isn't even triggered yet (and doesn't update anyhow), the value should
   // be unchanged
-  expect(o.foo).toEqual("FOO");
+  expect(o.foo).toEqual("CHANGED!");
+  expect(foo.raw).toEqual("CHANGED!");
 });
 
 test("backend process stops ignoring update", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
+    bar: types.string
   });
 
-  const o = M.create({ foo: "FOO" });
-  let called = false;
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      // we ensure that only the first time we call this we
-      // try to update foo
-      if (!called) {
-        called = true;
-        return {
-          updates: [{ path: "foo", value: "BAR" }],
-          errorValidations: [],
-          warningValidations: []
-        };
-      } else {
-        return {
-          updates: [{ path: "foo", value: "BAR AGAIN" }],
-          errorValidations: [],
-          warningValidations: []
-        };
-      }
-    },
-    undefined,
-    { debounce }
-  );
+  const o = M.create({ foo: "FOO", bar: "BAR" });
 
-  await p.run("a");
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  let called = false;
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    // we ensure that only the first time we call this we
+    // try to update foo
+    if (!called) {
+      called = true;
+      return {
+        updates: [{ path: "/foo", value: "IGNORED" }],
+        errorValidations: [],
+        warningValidations: []
+      };
+    } else {
+      return {
+        updates: [{ path: "/foo", value: "NOW REALLY" }],
+        errorValidations: [],
+        warningValidations: []
+      };
+    }
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const foo = state.field("foo");
+  const bar = state.field("bar");
+
+  bar.setRaw("BAR!");
   jest.runAllTimers();
   // we change things while we are processing
   // user input should never be overridden by the backend,
   // even if timers haven't yet run
-  await p.run("foo");
+  foo.setRaw("CHANGED!");
 
-  await p.isFinished();
+  await state.processPromise;
 
   // since only the first change tried to update, and the second change
   // isn't even triggered yet, the value should
   // be unchanged
-  expect(o.foo).toEqual("FOO");
+  expect(o.foo).toEqual("CHANGED!");
+  expect(foo.raw).toEqual("CHANGED!");
 
   // process the second change now, see it take effect
   jest.runAllTimers();
-  await p.isFinished();
-  expect(o.foo).toEqual("BAR AGAIN");
+  await state.processPromise;
+
+  expect(o.foo).toEqual("NOW REALLY");
 });
 
 test("configuration with state", async () => {
@@ -383,7 +468,7 @@ test("configuration other getError", async () => {
     return {
       updates: [],
       errorValidations: [
-        { id: "alpha", messages: [{ path: "/foo", message: "error!" }] }
+        { id: "alpha", messages: [{ path: "/foo", message: "external error" }] }
       ],
       warningValidations: []
     };
@@ -395,18 +480,21 @@ test("configuration other getError", async () => {
       debounce: debounce
     },
     getError() {
-      return "override";
+      return "getError";
     }
   });
 
   const field = state.field("foo");
+
+  expect(field.error).toEqual("getError");
+
   field.setRaw("BAR");
 
   jest.runAllTimers();
 
   await state.processPromise;
 
-  expect(field.error).toEqual("override");
+  expect(field.error).toEqual("external error");
 });
 
 test("update", async () => {
@@ -450,57 +538,67 @@ test("update", async () => {
 
 test("backend process is rejected, recovery", async () => {
   const M = types.model("M", {
-    foo: types.string
+    a: types.string,
+    b: types.string
+  });
+
+  const o = M.create({ a: "A", b: "B" });
+
+  const form = new Form(M, {
+    a: new Field(converters.string),
+    b: new Field(converters.string)
   });
 
   const fakeError = jest.fn();
 
   console.error = fakeError;
 
-  const o = M.create({ foo: "FOO" });
   const requests: string[] = [];
 
   let crashy = true;
 
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    async (node: Instance<typeof M>, path: string) => {
-      requests.push(path);
-      if (crashy) {
-        crashy = false; // crash only the first time
-        throw new Error("We crash out");
-      }
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    requests.push(path);
+    if (crashy) {
+      crashy = false; // crash only the first time
+      throw new Error("We crash out");
+    }
 
-      return {
-        updates: [],
-        errorValidations: [
-          { id: "alpha", messages: [{ path: "a", message: `error ${path}` }] }
-        ],
-        warningValidations: []
-      };
-    },
-    undefined,
-    { debounce }
-  );
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/a", message: `error ${path}` }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const a = state.field("a");
+  const b = state.field("b");
 
   // we run for 'a', it crashes
-  p.run("a");
-
+  a.setRaw("A!");
   // we now run 'b', should succeed with a message
-  p.run("b");
+  b.setRaw("B!");
 
   jest.runAllTimers();
 
-  await p.isFinished();
+  await state.processPromise;
 
   expect(crashy).toBeFalsy();
   expect(fakeError.mock.calls.length).toEqual(1);
 
   // these should both be called, in that order
-  expect(requests).toEqual(["a", "b"]);
+  expect(requests).toEqual(["/a", "/b"]);
   // and we expect the error message to be set
-  expect(p.getError("a")).toEqual("error b");
+  expect(a.error).toEqual("error /b");
 });
 
 test("backend process all", async () => {
@@ -509,25 +607,31 @@ test("backend process all", async () => {
   });
 
   const o = M.create({ foo: "FOO" });
-  const p = new Backend<typeof M>(
-    o,
-    undefined,
-    undefined,
-    async (node: Instance<typeof M>) => {
-      return {
-        updates: [],
-        errorValidations: [
-          { id: "alpha", messages: [{ path: "a", message: "error" }] }
-        ],
-        warningValidations: []
-      };
-    },
-    { debounce }
-  );
 
-  await p.realProcessAll();
+  const myProcessAll = async (node: Instance<typeof M>) => {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
 
-  expect(p.getError("a")).toEqual("error");
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const state = form.state(o, {
+    backend: {
+      processAll: myProcessAll,
+      debounce
+    }
+  });
+
+  await state.processAll();
+
+  expect(state.field("foo").error).toEqual("error");
 });
 
 test("process all configuration with state", async () => {
@@ -829,4 +933,108 @@ test("reset liveOnly status", async () => {
   jest.runAllTimers();
   await state.processPromise;
   expect(liveSeen).toEqual([true, false, true]);
+});
+
+test("error messages and repeating form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo/0/bar", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const o = M.create({ foo: [{ bar: "FOO" }] });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.repeatingForm("foo");
+  const bar0 = foo.index(0).field("bar");
+
+  bar0.setRaw("CHANGED!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(bar0.error).toEqual("error");
+
+  // now insert a new entry above the current one
+  foo.insert(0, { bar: "BEFORE" }, ["bar"]);
+
+  const barBefore = foo.index(0).field("bar");
+  expect(barBefore.raw).toEqual("BEFORE");
+  expect(bar0.raw).toEqual("CHANGED!");
+
+  // the error should still be associated with bar0
+  expect(bar0.error).toEqual("error");
+  // and the new entry shouldn't have one
+  expect(barBefore.error).toBeUndefined();
+});
+
+test("error messages and sub form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: N
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo/bar", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const o = M.create({ foo: { bar: "FOO" } });
+
+  const form = new Form(M, {
+    foo: new SubForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.subForm("foo");
+  const bar = foo.field("bar");
+
+  bar.setRaw("CHANGED!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(bar.error).toEqual("error");
 });

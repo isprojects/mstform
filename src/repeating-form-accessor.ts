@@ -7,6 +7,7 @@ import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor"
 import { FormAccessor } from "./form-accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
+import { ExternalMessages } from "./validationMessages";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
@@ -16,6 +17,9 @@ export class RepeatingFormAccessor<
 
   @observable
   repeatingFormIndexedAccessors: Map<number, any> = observable.map();
+
+  externalErrors = new ExternalMessages();
+  externalWarnings = new ExternalMessages();
 
   constructor(
     public state: FormState<any, any, any>,
@@ -240,6 +244,9 @@ export class RepeatingFormAccessor<
 
   @computed
   get errorValue(): string | undefined {
+    if (this.externalErrors.message != null) {
+      return this.externalErrors.message;
+    }
     return this.state.getErrorFunc(this);
   }
 
@@ -250,6 +257,9 @@ export class RepeatingFormAccessor<
 
   @computed
   get warningValue(): string | undefined {
+    if (this.externalWarnings.message != null) {
+      return this.externalWarnings.message;
+    }
     return this.state.getWarningFunc(this);
   }
 

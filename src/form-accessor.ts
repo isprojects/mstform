@@ -23,6 +23,7 @@ import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor"
 import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
+import { ExternalMessages } from "./validationMessages";
 
 export class FormAccessor<
   D extends FormDefinition<any>,
@@ -39,6 +40,9 @@ export class FormAccessor<
 
   @observable
   _addMode: boolean;
+
+  externalErrors = new ExternalMessages();
+  externalWarnings = new ExternalMessages();
 
   constructor(
     public state: FormState<any, D, G>,
@@ -302,6 +306,9 @@ export class FormAccessor<
 
   @computed
   get errorValue(): string | undefined {
+    if (this.externalErrors.message) {
+      return this.externalErrors.message;
+    }
     return this.state.getErrorFunc(this);
   }
 
@@ -312,6 +319,9 @@ export class FormAccessor<
 
   @computed
   get warningValue(): string | undefined {
+    if (this.externalWarnings.message) {
+      return this.externalWarnings.message;
+    }
     return this.state.getWarningFunc(this);
   }
 
