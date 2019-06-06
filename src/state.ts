@@ -6,7 +6,6 @@ import {
   IAnyModelType,
   Instance
 } from "mobx-state-tree";
-import { Accessor } from "./accessor";
 import {
   Form,
   FormDefinition,
@@ -36,13 +35,14 @@ import {
 } from "./backend";
 import { setAddModeDefaults } from "./addMode";
 import { Validation } from "./validationMessages";
+import { IAccessor, IFormAccessor } from "./interfaces";
 
 export interface AccessorAllows {
-  (accessor: Accessor): boolean;
+  (accessor: IAccessor): boolean;
 }
 
 export interface ErrorOrWarning {
-  (accessor: Accessor): string | undefined;
+  (accessor: IAccessor): string | undefined;
 }
 
 export interface ExtraValidation {
@@ -109,7 +109,7 @@ export class FormState<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> {
+> extends FormAccessorBase<D, G> implements IFormAccessor<D, G> {
   @observable
   saveStatus: SaveStatusOptions = "before";
 
@@ -456,12 +456,12 @@ export class FormState<
     return resolvePath(this.node, path);
   }
 
-  accessByPath(path: string): Accessor | undefined {
+  accessByPath(path: string): IAccessor | undefined {
     const steps = pathToSteps(path);
     return this.accessBySteps(steps);
   }
 
-  accessBySteps(steps: string[]): Accessor | undefined {
+  accessBySteps(steps: string[]): IAccessor | undefined {
     return this.formAccessor.accessBySteps(steps);
   }
 

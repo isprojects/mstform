@@ -2,6 +2,7 @@ export * from "./form";
 export * from "./converter";
 export * from "./converters";
 export * from "./accessor";
+export * from "./interfaces";
 export * from "./field-accessor";
 export * from "./form-accessor";
 export * from "./repeating-form-accessor";
