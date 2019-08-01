@@ -89,7 +89,7 @@ test("FormState can be saved ignoring required", async () => {
   // we still see the message, even though save succeeded
   // XXX is this really the desired behavior? don't we want
   // the required error until we save without ignoreRequired?
-  expect(field.error).toEqual("Required");
+  expect(field.error).toEqual(undefined);
   // but saving actually succeeded
   expect(o.foo).toEqual("");
   expect(saveResult).toBeTruthy();
