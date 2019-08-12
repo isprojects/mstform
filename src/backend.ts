@@ -10,6 +10,14 @@ type Update = {
   model_key?: string;
 };
 
+export type AccessUpdate = {
+  path: string;
+  readOnly?: boolean;
+  disabled?: boolean;
+  hidden?: boolean;
+  required?: boolean;
+};
+
 type ValidationInfo = {
   id: string;
   messages: Message[];
@@ -17,6 +25,7 @@ type ValidationInfo = {
 
 export type ProcessResult = {
   updates: Update[];
+  accessUpdates: AccessUpdate[];
   errorValidations: ValidationInfo[];
   warningValidations: ValidationInfo[];
 };
@@ -69,7 +78,12 @@ export class Backend<M extends IAnyModelType> {
   }
 
   runProcessResult(processResult: ProcessResult) {
-    const { updates, errorValidations, warningValidations } = processResult;
+    const {
+      updates,
+      accessUpdates,
+      errorValidations,
+      warningValidations
+    } = processResult;
     updates.forEach(update => {
       // anything that has changed by the user in the mean time shouldn't
       // be updated, as the user input takes precedence
@@ -78,6 +92,10 @@ export class Backend<M extends IAnyModelType> {
       }
       this.applyUpdate(this.node, update);
     });
+    accessUpdates.forEach(accessUpdate => {
+      this.state.setAccessUpdate(accessUpdate);
+    });
+
     this.state.setExternalValidations(errorValidations, "error");
     this.state.setExternalValidations(warningValidations, "warning");
   }
@@ -94,6 +112,7 @@ export class Backend<M extends IAnyModelType> {
     }
     const completeProcessResult: ProcessResult = {
       updates: [],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: [],
       ...processResult
@@ -113,6 +132,7 @@ export class Backend<M extends IAnyModelType> {
 
     const completeProcessResult: ProcessResult = {
       updates: [],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: [],
       ...processResult

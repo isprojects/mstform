@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { computed, action } from "mobx";
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { FormAccessor } from "./form-accessor";
@@ -6,6 +6,7 @@ import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { IFormAccessor } from "./interfaces";
+import { AccessUpdate } from "./backend";
 
 export class SubFormAccessor<
   D extends FormDefinition<any>,
@@ -86,5 +87,10 @@ export class SubFormAccessor<
   @computed
   get addMode(): boolean {
     return this.parent.addMode;
+  }
+
+  @action
+  setAccess(update: AccessUpdate) {
+    // nothing yet
   }
 }

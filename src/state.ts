@@ -31,7 +31,8 @@ import {
   ProcessorOptions,
   Process,
   SaveFunc,
-  ProcessAll
+  ProcessAll,
+  AccessUpdate
 } from "./backend";
 import { setAddModeDefaults } from "./addMode";
 import { Validation } from "./validationMessages";
@@ -412,7 +413,7 @@ export class FormState<
   }
 
   @action
-  async setExternalValidations(
+  setExternalValidations(
     validations: Validation[],
     messageType: "error" | "warning"
   ) {
@@ -442,7 +443,7 @@ export class FormState<
   }
 
   @action
-  async clearExternalValidations(messageType: "error" | "warning") {
+  clearExternalValidations(messageType: "error" | "warning") {
     this.flatAccessors.forEach(accessor => {
       const externalMessages =
         messageType === "error"
@@ -450,6 +451,15 @@ export class FormState<
           : accessor.externalWarnings;
       externalMessages.clear();
     });
+  }
+
+  @action
+  setAccessUpdate(accessUpdate: AccessUpdate) {
+    const accessor = this.accessByPath(accessUpdate.path);
+    if (accessor === undefined) {
+      return;
+    }
+    accessor.setAccess(accessUpdate);
   }
 
   getValue(path: string): any {
@@ -473,5 +483,10 @@ export class FormState<
     return !this.flatAccessors.some(
       accessor => (accessor ? accessor.warningValue !== undefined : false)
     );
+  }
+
+  @action
+  setAccess(update: AccessUpdate) {
+    // nothing yet
   }
 }

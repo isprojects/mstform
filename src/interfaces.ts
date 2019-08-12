@@ -6,6 +6,7 @@ import {
   SubFormAccess,
   GroupAccess
 } from "./accessor";
+import { AccessUpdate } from "./backend";
 
 export interface IAccessor {
   path: string;
@@ -31,6 +32,8 @@ export interface IAccessor {
 
   dispose(): void;
   clear(): void;
+
+  setAccess(update: AccessUpdate): void;
 }
 
 export interface IFormAccessor<D, G> extends IAccessor {

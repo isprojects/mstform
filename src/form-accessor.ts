@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 
 import {
   SubForm,
@@ -24,6 +24,7 @@ import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
 import { IAccessor, IFormAccessor } from "./interfaces";
+import { AccessUpdate } from "./backend";
 
 export class FormAccessor<
   D extends FormDefinition<any>,
@@ -328,5 +329,10 @@ export class FormAccessor<
   @computed
   get warning(): string | undefined {
     return this.warningValue;
+  }
+
+  @action
+  setAccess(update: AccessUpdate) {
+    // nothing yet
   }
 }

@@ -8,6 +8,7 @@ import { FormAccessorBase } from "./form-accessor-base";
 import { FormAccessor } from "./form-accessor";
 import { pathToFieldref } from "./utils";
 import { IFormAccessor } from "./interfaces";
+import { AccessUpdate } from "./backend";
 
 export class RepeatingFormIndexedAccessor<
   D extends FormDefinition<any>,
@@ -99,5 +100,10 @@ export class RepeatingFormIndexedAccessor<
   @computed
   get addMode(): boolean {
     return this._addMode || this.parent.addMode;
+  }
+
+  @action
+  setAccess(update: AccessUpdate) {
+    // nothing yet
   }
 }

@@ -22,6 +22,7 @@ import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
 import { IAccessor } from "./interfaces";
+import { AccessUpdate } from "./backend";
 
 export class FieldAccessor<R, V> implements IAccessor {
   name: string;
@@ -37,6 +38,18 @@ export class FieldAccessor<R, V> implements IAccessor {
 
   @observable
   _value: V;
+
+  @observable
+  _isReadOnly: boolean = false;
+
+  @observable
+  _isDisabled: boolean = false;
+
+  @observable
+  _isHidden: boolean = false;
+
+  @observable
+  _isRequired: boolean = false;
 
   _disposer: IReactionDisposer | undefined;
 
@@ -277,17 +290,27 @@ export class FieldAccessor<R, V> implements IAccessor {
 
   @computed
   get disabled(): boolean {
-    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
+    return (
+      this.parent.disabled ||
+      this._isDisabled ||
+      this.state.isDisabledFunc(this)
+    );
   }
 
   @computed
   get hidden(): boolean {
-    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
+    return (
+      this.parent.hidden || this._isHidden || this.state.isHiddenFunc(this)
+    );
   }
 
   @computed
   get readOnly(): boolean {
-    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
+    return (
+      this.parent.readOnly ||
+      this._isReadOnly ||
+      this.state.isReadOnlyFunc(this)
+    );
   }
 
   @computed
@@ -297,11 +320,11 @@ export class FieldAccessor<R, V> implements IAccessor {
 
   @computed
   get required(): boolean {
-    // if the field is required, ignore dynamic required logic
-    // if the field isn't required, we can dynamically influence whether it is
     return (
       !this.field.converter.neverRequired &&
-      (this.field.required || this.state.isRequiredFunc(this))
+      (this.field.required ||
+        this._isRequired ||
+        this.state.isRequiredFunc(this))
     );
   }
 
@@ -467,5 +490,21 @@ export class FieldAccessor<R, V> implements IAccessor {
 
   accessBySteps(steps: string[]): IAccessor {
     throw new Error("Cannot step through field accessor");
+  }
+
+  @action
+  setAccess(update: AccessUpdate) {
+    if (update.readOnly != null) {
+      this._isReadOnly = update.readOnly;
+    }
+    if (update.disabled != null) {
+      this._isDisabled = update.disabled;
+    }
+    if (update.hidden != null) {
+      this._isHidden = update.hidden;
+    }
+    if (update.required != null) {
+      this._isRequired = update.required;
+    }
   }
 }

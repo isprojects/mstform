@@ -20,6 +20,7 @@ test("backend process sets error messages", async () => {
   const myProcess = async (node: Instance<typeof M>, path: string) => {
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/foo", message: "error" }] }
       ],
@@ -68,6 +69,7 @@ test("backend process wipes out error messages", async () => {
       called = true;
       return {
         updates: [],
+        accessUpdates: [],
         errorValidations: [
           {
             id: "alpha",
@@ -83,6 +85,7 @@ test("backend process wipes out error messages", async () => {
     } else {
       return {
         updates: [],
+        accessUpdates: [],
         errorValidations: [{ id: "alpha", messages: [] }],
         warningValidations: []
       };
@@ -141,6 +144,7 @@ test("backend process two requests are synced", async () => {
     requests.push(path);
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/a", message: `error ${path}` }] }
       ],
@@ -210,6 +214,7 @@ test("backend process three requests are synced", async () => {
     requests.push(path);
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/a", message: `error ${path}` }] }
       ],
@@ -264,6 +269,7 @@ test("backend process does update", async () => {
   const myProcess = async (node: Instance<typeof M>, path: string) => {
     return {
       updates: [{ path: "/foo", value: "BAR" }],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: []
     };
@@ -310,12 +316,14 @@ test("backend process ignores update if path re-modified during processing", asy
       called = true;
       return {
         updates: [{ path: "/foo", value: "BAR" }],
+        accessUpdates: [],
         errorValidations: [],
         warningValidations: []
       };
     } else {
       return {
         updates: [],
+        accessUpdates: [],
         errorValidations: [],
         warningValidations: []
       };
@@ -371,12 +379,14 @@ test("backend process stops ignoring update", async () => {
       called = true;
       return {
         updates: [{ path: "/foo", value: "IGNORED" }],
+        accessUpdates: [],
         errorValidations: [],
         warningValidations: []
       };
     } else {
       return {
         updates: [{ path: "/foo", value: "NOW REALLY" }],
+        accessUpdates: [],
         errorValidations: [],
         warningValidations: []
       };
@@ -429,6 +439,7 @@ test("configuration with state", async () => {
   async function myProcess(node: Instance<typeof M>, path: string) {
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/foo", message: "error!" }] }
       ],
@@ -467,6 +478,7 @@ test("configuration other getError", async () => {
   async function myProcess(node: Instance<typeof M>, path: string) {
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/foo", message: "external error" }] }
       ],
@@ -513,6 +525,7 @@ test("update", async () => {
   async function myProcess(node: Instance<typeof M>, path: string) {
     return {
       updates: [{ path: "bar", value: "BAR" }],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: []
     };
@@ -566,6 +579,7 @@ test("backend process is rejected, recovery", async () => {
 
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/a", message: `error ${path}` }] }
       ],
@@ -715,6 +729,7 @@ test("process & live", async () => {
     liveSeen.push(liveOnly);
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: []
     };
@@ -776,6 +791,7 @@ test("process & live save error", async () => {
     liveSeen.push(liveOnly);
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: []
     };
@@ -785,6 +801,7 @@ test("process & live save error", async () => {
     // this counts as an unsuccessful save
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: []
     };
@@ -886,6 +903,7 @@ test("reset liveOnly status", async () => {
     liveSeen.push(liveOnly);
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [],
       warningValidations: []
     };
@@ -947,6 +965,7 @@ test("error messages and repeating form", async () => {
   const myProcess = async (node: Instance<typeof M>, path: string) => {
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/foo/0/bar", message: "error" }] }
       ],
@@ -1005,6 +1024,7 @@ test("error messages and sub form", async () => {
   const myProcess = async (node: Instance<typeof M>, path: string) => {
     return {
       updates: [],
+      accessUpdates: [],
       errorValidations: [
         { id: "alpha", messages: [{ path: "/foo/bar", message: "error" }] }
       ],
@@ -1037,4 +1057,55 @@ test("error messages and sub form", async () => {
   await state.processPromise;
 
   expect(bar.error).toEqual("error");
+});
+
+test("backend process controls field access", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      accessUpdates: [
+        {
+          path: "/foo",
+          readOnly: true,
+          disabled: false,
+          required: false,
+          hidden: false
+        }
+      ],
+      errorValidations: [],
+      warningValidations: []
+    };
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const foo = state.field("foo");
+  const bar = state.field("bar");
+
+  expect(foo.readOnly).toBeFalsy();
+
+  bar.setRaw("BAR!");
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(foo.readOnly).toBeTruthy();
+  expect(bar.readOnly).toBeFalsy();
 });

@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 import { applyPatch } from "mobx-state-tree";
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { FormState } from "./state";
@@ -8,6 +8,7 @@ import { ValidateOptions } from "./validate-options";
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
 import { IAccessor } from "./interfaces";
+import { AccessUpdate } from "./backend";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
@@ -264,5 +265,10 @@ export class RepeatingFormAccessor<
   @computed
   get warning(): string | undefined {
     return this.warningValue;
+  }
+
+  @action
+  setAccess(update: AccessUpdate) {
+    // nothing yet
   }
 }
