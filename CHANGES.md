@@ -6,11 +6,12 @@
     form item is inserted or deleted. Instead now we store this information as
     soon as it comes in directly on the accessor.
 
--   Repeating forms never worked quite well for this, due to the nature of
-    paths. By passing them back in backend processing, we can start to track
-    this in the accessors themselves, which is more resilient. It also allows
-    the backend to control which fields are accessible in response to changes
-    in the form.
+-   Repeating forms never worked quite well for access
+    (readOnly/disabled/hidden/required) as the system relied on paths. By
+    passing this information in backend processing, we can start to track this
+    in the accessors themselves, which is more resilient. It also allows the
+    backend to control which fields are accessible in response to changes in
+    the form.
 
 -   BREAKING CHANGE: if you define an error with `getError` and an external
     error is also set, that external error now takes precedence.
