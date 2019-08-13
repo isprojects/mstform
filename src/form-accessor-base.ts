@@ -26,7 +26,7 @@ import {
 } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
 
-export abstract class FormAccessor<
+export abstract class FormAccessorBase<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
 > extends AccessorBase implements IFormAccessor<D, G> {
@@ -206,7 +206,7 @@ export abstract class FormAccessor<
   ) {
     const result = this.state.createRepeatingFormAccessor(
       repeatingForm,
-      this as FormAccessor<any, any>,
+      this as FormAccessorBase<any, any>,
       name as string
     );
     this.repeatingFormAccessors.set(name, result);
@@ -224,7 +224,7 @@ export abstract class FormAccessor<
     const result = this.state.createSubFormAccessor(
       subForm.definition,
       subForm.groupDefinition,
-      this as FormAccessor<any, any>,
+      this as FormAccessorBase<any, any>,
       name as string
     );
     this.subFormAccessors.set(name, result);

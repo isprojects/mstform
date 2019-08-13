@@ -4,7 +4,7 @@ import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
 import { FormState } from "./state";
 import { ValidateOptions } from "./validate-options";
-import { IAccessor, IFormAccessor, IParentAccessor } from "./interfaces";
+import { IAccessor, IParentAccessor } from "./interfaces";
 import { AccessUpdate } from "./backend";
 
 export abstract class AccessorBase implements IAccessor {

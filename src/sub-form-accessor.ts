@@ -2,13 +2,13 @@ import { computed } from "mobx";
 
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
-import { FormAccessor } from "./form-accessor";
+import { FormAccessorBase } from "./form-accessor-base";
 import { ISubFormAccessor, IFormAccessor } from "./interfaces";
 
 export class SubFormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> extends FormAccessor<D, G> implements ISubFormAccessor<D, G> {
+> extends FormAccessorBase<D, G> implements ISubFormAccessor<D, G> {
   constructor(
     public state: FormState<any, any, any>,
     definition: D,

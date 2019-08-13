@@ -4,7 +4,6 @@ import { applyPatch } from "mobx-state-tree";
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { FormState } from "./state";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
-import { FormAccessor } from "./form-accessor";
 import { AccessorBase } from "./accessor-base";
 import { ValidateOptions } from "./validate-options";
 import { ExternalMessages } from "./validationMessages";

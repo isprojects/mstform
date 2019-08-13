@@ -2,8 +2,7 @@ import { action, observable, computed } from "mobx";
 
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
-import { RepeatingFormAccessor } from "./repeating-form-accessor";
-import { FormAccessor } from "./form-accessor";
+import { FormAccessorBase } from "./form-accessor-base";
 import {
   IRepeatingFormIndexedAccessor,
   IRepeatingFormAccessor
@@ -12,7 +11,8 @@ import {
 export class RepeatingFormIndexedAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> extends FormAccessor<D, G> implements IRepeatingFormIndexedAccessor<D, G> {
+> extends FormAccessorBase<D, G>
+  implements IRepeatingFormIndexedAccessor<D, G> {
   @observable
   index: number;
 

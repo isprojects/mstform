@@ -1,13 +1,13 @@
 import { computed } from "mobx";
 import { FormDefinition, Group } from "./form";
 import { FormState } from "./state";
-import { FormAccessor } from "./form-accessor";
+import { FormAccessorBase } from "./form-accessor-base";
 
 export class GroupAccessor<D extends FormDefinition<any>> {
   constructor(
     public state: FormState<any, any, any>,
     public definition: D,
-    public parent: FormAccessor<any, any>,
+    public parent: FormAccessorBase<any, any>,
     public group: Group<D>
   ) {}
 

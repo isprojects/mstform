@@ -17,7 +17,7 @@ import {
   errorMessage
 } from "./form";
 import { FormState } from "./state";
-import { FormAccessor } from "./form-accessor";
+import { FormAccessorBase } from "./form-accessor-base";
 import { currentValidationProps } from "./validation-props";
 import { ValidateOptions } from "./validate-options";
 import { IAccessor, IFormAccessor } from "./interfaces";
@@ -45,7 +45,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   @computed
   get path(): string {
-    return (this.parent as FormAccessor<any, any>).path + "/" + this.name;
+    return (this.parent as FormAccessorBase<any, any>).path + "/" + this.name;
   }
 
   dispose() {
@@ -106,7 +106,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     // XXX it's possible for this to be called for a node that has since
     // been removed. It's not ideal but we return undefined in such a case.
     try {
-      return this.state.getValue((this.parent as FormAccessor<any, any>).path);
+      return this.state.getValue(
+        (this.parent as FormAccessorBase<any, any>).path
+      );
     } catch {
       return undefined;
     }
@@ -118,7 +120,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
       return false;
     }
     // field accessor overrides this to look at raw value
-    return this._addMode || (this.parent as FormAccessor<any, any>).addMode;
+    return this._addMode || (this.parent as FormAccessorBase<any, any>).addMode;
   }
 
   @computed

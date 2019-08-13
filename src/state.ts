@@ -18,7 +18,7 @@ import {
 } from "./form";
 import { pathToSteps, stepsToPath } from "./utils";
 import { FieldAccessor } from "./field-accessor";
-import { FormAccessor } from "./form-accessor";
+import { FormAccessorBase } from "./form-accessor-base";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
 import { SubFormAccessor } from "./sub-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
@@ -116,7 +116,7 @@ export class FormState<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
-> extends FormAccessor<D, G> implements IFormAccessor<D, G> {
+> extends FormAccessorBase<D, G> implements IFormAccessor<D, G> {
   @observable
   saveStatus: SaveStatusOptions = "before";
 
