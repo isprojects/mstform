@@ -489,4 +489,27 @@ export class FormState<
   setAccess(update: AccessUpdate) {
     // nothing yet
   }
+
+  @computed
+  get canShowValidationMessages(): boolean {
+    // immediately after a save we always want messages
+    if (this.saveStatus === "rightAfter") {
+      return true;
+    }
+    const policy =
+      this.saveStatus === "before"
+        ? this.validationBeforeSave
+        : this.validationAfterSave;
+    if (policy === "immediate") {
+      return true;
+    }
+    if (policy === "no") {
+      return false;
+    }
+    // not implemented yet
+    if (policy === "blur" || policy === "pause") {
+      return false;
+    }
+    return true;
+  }
 }
