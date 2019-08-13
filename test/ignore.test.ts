@@ -122,7 +122,12 @@ test("FormState can be saved ignoring external errors", async () => {
   // we need to define a process as ignoreGetError is enabled automatically
   // otherwise
   async function process(node: Instance<typeof M>, path: string) {
-    return { updates: [], errorValidations: [], warningValidations: [] };
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
   }
 
   const state = form.state(o, {
@@ -176,7 +181,12 @@ test("FormState can be saved ignoring non-field external errors", async () => {
   // we need to define a process as ignoreGetError is enabled automatically
   // otherwise
   async function process(node: Instance<typeof M>, path: string) {
-    return { updates: [], errorValidations: [], warningValidations: [] };
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
   }
 
   const state = form.state(o, {
@@ -226,7 +236,12 @@ test("ignoreGetError repeating indexed accessor non-field external", async () =>
   // we need to define a process as ignoreGetError is enabled automatically
   // otherwise
   async function process(node: Instance<typeof M>, path: string) {
-    return { updates: [], errorValidations: [], warningValidations: [] };
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
   }
 
   const state = form.state(o, {
@@ -272,7 +287,12 @@ test("ignoreGetError repeating accessor non-field external", async () => {
   // we need to define a process as ignoreGetError is enabled automatically
   // otherwise
   async function process(node: Instance<typeof M>, path: string) {
-    return { updates: [], errorValidations: [], warningValidations: [] };
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
   }
 
   const state = form.state(o, {
@@ -319,7 +339,12 @@ test("ignoreGetError sub form accessor non-field external", async () => {
   // we need to define a process as ignoreGetError is enabled automatically
   // otherwise
   async function process(node: Instance<typeof M>, path: string) {
-    return { updates: [], errorValidations: [], warningValidations: [] };
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
   }
 
   const state = form.state(o, {
