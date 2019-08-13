@@ -4,12 +4,15 @@ import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
 import { FormState } from "./state";
 import { ValidateOptions } from "./validate-options";
-import { IAccessor, IFormAccessor } from "./interfaces";
+import { IAccessor, IFormAccessor, IParentAccessor } from "./interfaces";
 import { AccessUpdate } from "./backend";
 
-export class AccessorBase implements IAccessor {
+export abstract class AccessorBase implements IAccessor {
   @observable
-  private _error?: string;
+  protected _error?: string;
+
+  @observable
+  protected _addMode: boolean = false;
 
   @observable
   private _isReadOnly: boolean = false;
@@ -21,23 +24,25 @@ export class AccessorBase implements IAccessor {
   private _isHidden: boolean = false;
 
   @observable
-  private _isRequired: boolean = false;
-
-  @observable
-  private _addMode: boolean = false;
+  protected _isRequired: boolean = false;
 
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
 
-  constructor(
-    public state: FormState<any, any, any>,
-    public name: string,
-    public parent: IFormAccessor<any, any>
-  ) {}
+  abstract state: FormState<any, any, any>;
+
+  abstract path: string;
+  abstract addMode: boolean;
+  abstract value: any;
+  abstract isValid: boolean;
+  abstract accessBySteps(steps: string[]): IAccessor | undefined;
+  abstract validate(options?: ValidateOptions): boolean;
+
+  constructor(public parent: IParentAccessor) {}
 
   @computed
-  get path(): string {
-    return this.parent.path + "/" + this.name;
+  get context(): any {
+    return this.state.context;
   }
 
   @computed
@@ -83,9 +88,19 @@ export class AccessorBase implements IAccessor {
   }
 
   @computed
+  get isWarningFree(): boolean {
+    if (this.warningValue !== undefined) {
+      return false;
+    }
+    return !this.flatAccessors.some(
+      accessor => (accessor ? accessor.warningValue !== undefined : false)
+    );
+  }
+
+  @computed
   get readOnly(): boolean {
     return (
-      this.parent.readOnly ||
+      (this.parent != null && this.parent.readOnly) ||
       this._isReadOnly ||
       this.state.isReadOnlyFunc(this)
     );
@@ -94,7 +109,7 @@ export class AccessorBase implements IAccessor {
   @computed
   get disabled(): boolean {
     return (
-      this.parent.disabled ||
+      (this.parent != null && this.parent.disabled) ||
       this._isDisabled ||
       this.state.isDisabledFunc(this)
     );
@@ -103,7 +118,9 @@ export class AccessorBase implements IAccessor {
   @computed
   get hidden(): boolean {
     return (
-      this.parent.hidden || this._isHidden || this.state.isHiddenFunc(this)
+      (this.parent != null && this.parent.hidden) ||
+      this._isHidden ||
+      this.state.isHiddenFunc(this)
     );
   }
 
@@ -119,32 +136,18 @@ export class AccessorBase implements IAccessor {
     return !this.disabled && !this.hidden && !this.readOnly;
   }
 
-  @computed
-  get addMode(): boolean {
-    // field accessor overrides this to look at raw value
-    return this._addMode || this.parent.addMode;
-  }
-
-  @computed
-  get value(): any {
-    throw new Error("Not implemented");
-  }
-
-  validate(options?: ValidateOptions): boolean {
-    throw new Error("Not implemented");
-  }
-
-  @computed
-  get isValid(): boolean {
-    throw new Error("Not implemented");
-  }
-
   get accessors(): IAccessor[] {
     return [];
   }
 
-  accessBySteps(steps: string[]): IAccessor {
-    throw new Error("Not implemented");
+  @computed
+  get flatAccessors(): IAccessor[] {
+    const result: IAccessor[] = [];
+    this.accessors.forEach(accessor => {
+      result.push(...accessor.flatAccessors);
+      result.push(accessor);
+    });
+    return result;
   }
 
   dispose() {

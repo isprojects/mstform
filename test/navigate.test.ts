@@ -1,6 +1,13 @@
 import { configure } from "mobx";
 import { types, getType } from "mobx-state-tree";
-import { Field, Form, SubForm, RepeatingForm, converters } from "../src";
+import {
+  Field,
+  Form,
+  SubForm,
+  RepeatingForm,
+  converters,
+  IFormAccessor
+} from "../src";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -49,7 +56,7 @@ test("value for sub form", () => {
   expect(sub.value).toBe(o.foo);
   expect(getType(sub.value)).toBe(N);
   expect(sub.value.something()).toEqual("BARX");
-  expect(getType(sub.parent.value)).toBe(M);
+  expect(getType((sub.parent as IFormAccessor<any, any>).value)).toBe(M);
 });
 
 test("value for repeating form", () => {
@@ -85,6 +92,8 @@ test("value for repeating form", () => {
   expect(first.value).toBe(o.foo[0]);
   expect(getType(first.value)).toBe(N);
   expect(first.value.something()).toEqual("BARX");
-  expect(getType(first.parent.value)).toEqual(types.array(N));
-  expect(getType(first.parent.parent.value)).toBe(M);
+  const parent = first.parent as IFormAccessor<any, any>;
+  const parentParent = parent.parent as IFormAccessor<any, any>;
+  expect(getType(parent.value)).toEqual(types.array(N));
+  expect(getType(parentParent.value)).toBe(M);
 });

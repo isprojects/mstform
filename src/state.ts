@@ -6,20 +6,22 @@ import {
   IAnyModelType,
   Instance
 } from "mobx-state-tree";
+
 import {
   Form,
   FormDefinition,
   ValidationResponse,
   GroupDefinition,
   ErrorFunc,
-  IDisposer
+  IDisposer,
+  RepeatingForm
 } from "./form";
-import { pathToSteps, stepsToPath, pathToFieldref } from "./utils";
+import { pathToSteps, stepsToPath } from "./utils";
 import { FieldAccessor } from "./field-accessor";
 import { FormAccessor } from "./form-accessor";
 import { RepeatingFormAccessor } from "./repeating-form-accessor";
+import { SubFormAccessor } from "./sub-form-accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
-import { FormAccessorBase } from "./form-accessor-base";
 import { ValidateOptions } from "./validate-options";
 import {
   StateConverterOptions,
@@ -34,9 +36,13 @@ import {
   ProcessAll,
   AccessUpdate
 } from "./backend";
-import { setAddModeDefaults } from "./addMode";
 import { Validation } from "./validationMessages";
-import { IAccessor, IFormAccessor } from "./interfaces";
+import {
+  IAccessor,
+  IFormAccessor,
+  IRepeatingFormAccessor,
+  ISubFormAccessor
+} from "./interfaces";
 
 export interface AccessorAllows {
   (accessor: IAccessor): boolean;
@@ -110,11 +116,10 @@ export class FormState<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> implements IFormAccessor<D, G> {
+> extends FormAccessor<D, G> implements IFormAccessor<D, G> {
   @observable
   saveStatus: SaveStatusOptions = "before";
 
-  formAccessor: FormAccessor<D, G>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
@@ -160,7 +165,8 @@ export class FormState<
       addModeDefaults = []
     }: FormStateOptions<M> = {}
   ) {
-    super();
+    super(form.definition, form.groupDefinition, undefined, addMode);
+
     this.noRawUpdate = false;
 
     this._onPatchDisposer = onPatch(node, patch => {
@@ -172,14 +178,6 @@ export class FormState<
         this.replacePath(patch.path);
       }
     });
-
-    this.formAccessor = new FormAccessor(
-      this,
-      this.form.definition,
-      this.form.groupDefinition,
-      null,
-      addMode
-    );
 
     this.isDisabledFunc = isDisabled;
     this.isHiddenFunc = isHidden;
@@ -206,10 +204,6 @@ export class FormState<
 
     checkConverterOptions(this._converterOptions);
 
-    if (addMode) {
-      setAddModeDefaults(this.formAccessor, addModeDefaults);
-    }
-
     if (backend != null) {
       const processor = new Backend(
         this,
@@ -228,30 +222,56 @@ export class FormState<
         processor.run(accessor.path);
       };
     }
+    this.initialize();
+
+    // this has to happen after initialization
+    if (addMode) {
+      this.setAddModeDefaults(addModeDefaults);
+    }
+  }
+
+  // needed by FormAccessor base
+  get state() {
+    return this;
+  }
+
+  // normally context is determined from state, but state owns it
+  @computed
+  get context(): any {
+    return this._context;
   }
 
   dispose(): void {
     // clean up onPatch
     this._onPatchDisposer();
     // do dispose on all accessors, cleaning up
-    this.formAccessor.flatAccessors.forEach(accessor => {
+    this.flatAccessors.forEach(accessor => {
       accessor.dispose();
     });
   }
 
-  @computed
-  get context(): any {
-    return this._context;
+  // we delegate the creation to here to avoid circular dependencies
+  // between form accessor and its subclasses
+  createRepeatingFormAccessor(
+    repeatingForm: RepeatingForm<any, any>,
+    parent: IFormAccessor<any, any>,
+    name: string
+  ): IRepeatingFormAccessor<any, any> {
+    return new RepeatingFormAccessor(this, repeatingForm, parent, name);
+  }
+
+  createSubFormAccessor(
+    definition: any,
+    groupDefinition: any,
+    parent: IFormAccessor<any, any>,
+    name: string
+  ): ISubFormAccessor<any, any> {
+    return new SubFormAccessor(this, definition, groupDefinition, parent, name);
   }
 
   @computed
   get path(): string {
-    return "/";
-  }
-
-  @computed
-  get fieldref(): string {
-    return pathToFieldref(this.path);
+    return "";
   }
 
   @computed
@@ -469,25 +489,6 @@ export class FormState<
   accessByPath(path: string): IAccessor | undefined {
     const steps = pathToSteps(path);
     return this.accessBySteps(steps);
-  }
-
-  accessBySteps(steps: string[]): IAccessor | undefined {
-    return this.formAccessor.accessBySteps(steps);
-  }
-
-  @computed
-  get isWarningFree(): boolean {
-    if (this.formAccessor.warningValue !== undefined) {
-      return false;
-    }
-    return !this.flatAccessors.some(
-      accessor => (accessor ? accessor.warningValue !== undefined : false)
-    );
-  }
-
-  @action
-  setAccess(update: AccessUpdate) {
-    // nothing yet
   }
 
   @computed

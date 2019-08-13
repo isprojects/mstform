@@ -8,7 +8,6 @@ import {
   GroupDefinition,
   Group
 } from "./form";
-import { FormState } from "./state";
 import {
   FieldAccess,
   RepeatingFormAccess,
@@ -16,50 +15,41 @@ import {
   GroupAccess
 } from "./accessor";
 import { FieldAccessor } from "./field-accessor";
-import { SubFormAccessor } from "./sub-form-accessor";
-import { RepeatingFormAccessor } from "./repeating-form-accessor";
-import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { GroupAccessor } from "./group-accessor";
 import { ValidateOptions } from "./validate-options";
-import { pathToFieldref } from "./utils";
-import { ExternalMessages } from "./validationMessages";
-import { IAccessor, IFormAccessor } from "./interfaces";
-import { AccessUpdate } from "./backend";
+import {
+  IAccessor,
+  IFormAccessor,
+  ISubFormAccessor,
+  IRepeatingFormAccessor,
+  IParentAccessor
+} from "./interfaces";
+import { AccessorBase } from "./accessor-base";
 
-export class FormAccessor<
+export abstract class FormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> implements IFormAccessor<D, G> {
+> extends AccessorBase implements IFormAccessor<D, G> {
   public keys: (keyof D)[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
     keyof D,
-    RepeatingFormAccessor<any, any>
+    IRepeatingFormAccessor<any, any>
   > = observable.map();
-  subFormAccessors: Map<keyof D, SubFormAccessor<any, any>> = observable.map();
+  subFormAccessors: Map<keyof D, ISubFormAccessor<any, any>> = observable.map();
   groupAccessors: Map<keyof G, GroupAccessor<any>> = observable.map();
 
-  @observable
-  _addMode: boolean;
-
-  externalErrors = new ExternalMessages();
-  externalWarnings = new ExternalMessages();
+  abstract path: string;
 
   constructor(
-    public state: FormState<any, D, G>,
     public definition: any,
     public groupDefinition: any,
-    public parent:
-      | FormAccessor<any, any>
-      | SubFormAccessor<any, any>
-      | RepeatingFormAccessor<any, any>
-      | RepeatingFormIndexedAccessor<any, any>
-      | null,
+    parent: IParentAccessor,
     addMode: boolean
   ) {
+    super(parent);
     this.keys = Object.keys(this.definition);
     this._addMode = addMode;
-    this.initialize();
   }
 
   validate(options?: ValidateOptions): boolean {
@@ -75,57 +65,9 @@ export class FormAccessor<
     // no op
   }
 
-  clear() {
-    // no op
-  }
-
-  @computed
-  get disabled(): boolean {
-    return this.parent != null && this.parent.disabled
-      ? true
-      : this.state.isDisabledFunc(this);
-  }
-
-  @computed
-  get hidden(): boolean {
-    return this.parent != null && this.parent.hidden
-      ? true
-      : this.state.isHiddenFunc(this);
-  }
-
-  @computed
-  get readOnly(): boolean {
-    return this.parent != null && this.parent.readOnly
-      ? true
-      : this.state.isReadOnlyFunc(this);
-  }
-
-  @computed
-  get inputAllowed(): boolean {
-    return !this.disabled && !this.hidden && !this.readOnly;
-  }
-
-  @computed
-  get path(): string {
-    if (this.parent == null) {
-      return "";
-    }
-    return this.parent.path;
-  }
-
-  @computed
-  get fieldref(): string {
-    return pathToFieldref(this.path);
-  }
-
   @computed
   get value(): any {
     return this.state.getValue(this.path);
-  }
-
-  @computed
-  get context(): any {
-    return this.state.context;
   }
 
   @computed
@@ -150,21 +92,27 @@ export class FormAccessor<
     return result;
   }
 
-  @computed
-  get flatAccessors(): IAccessor[] {
-    const result: IAccessor[] = [];
+  @action
+  setAddModeDefaults(addModeDefaults: string[]) {
+    const fieldrefSet = new Set<string>();
+    const fieldrefPrefix = this.fieldref !== "" ? this.fieldref + "." : "";
+
+    addModeDefaults.forEach(fieldref => {
+      fieldrefSet.add(fieldrefPrefix + fieldref);
+    });
     this.accessors.forEach(accessor => {
       if (accessor instanceof FieldAccessor) {
-        result.push(accessor);
-      } else if (accessor instanceof RepeatingFormAccessor) {
-        result.push(...accessor.flatAccessors);
-        result.push(accessor);
-      } else if (accessor instanceof SubFormAccessor) {
-        result.push(...accessor.flatAccessors);
-        result.push(accessor);
+        if (fieldrefSet.has(accessor.fieldref)) {
+          if (accessor.field.derivedFunc == null) {
+            accessor.setRawFromValue();
+          } else {
+            accessor.setValueAndRawWithoutChangeEvent(
+              accessor.field.derivedFunc(accessor.node)
+            );
+          }
+        }
       }
     });
-    return result;
   }
 
   @computed
@@ -235,7 +183,12 @@ export class FormAccessor<
   }
 
   createField<K extends keyof D>(name: K, field: Field<any, any>) {
-    const result = new FieldAccessor(this.state, field, this, name as string);
+    const result = new FieldAccessor(
+      this.state,
+      field,
+      this as IFormAccessor<D, G>,
+      name as string
+    );
     this.fieldAccessors.set(name, result);
   }
 
@@ -251,14 +204,12 @@ export class FormAccessor<
     name: K,
     repeatingForm: RepeatingForm<any, any>
   ) {
-    const result = new RepeatingFormAccessor(
-      this.state,
+    const result = this.state.createRepeatingFormAccessor(
       repeatingForm,
-      this,
+      this as FormAccessor<any, any>,
       name as string
     );
     this.repeatingFormAccessors.set(name, result);
-    result.initialize();
   }
 
   repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K> {
@@ -270,11 +221,10 @@ export class FormAccessor<
   }
 
   createSubForm<K extends keyof D>(name: K, subForm: SubForm<any, any>) {
-    const result = new SubFormAccessor(
-      this.state,
+    const result = this.state.createSubFormAccessor(
       subForm.definition,
       subForm.groupDefinition,
-      this,
+      this as FormAccessor<any, any>,
       name as string
     );
     this.subFormAccessors.set(name, result);
@@ -303,36 +253,5 @@ export class FormAccessor<
 
   repeatingField(name: string): any {
     // not implemented yet
-  }
-
-  @computed
-  get errorValue(): string | undefined {
-    if (this.externalErrors.message) {
-      return this.externalErrors.message;
-    }
-    return this.state.getErrorFunc(this);
-  }
-
-  @computed
-  get error(): string | undefined {
-    return this.errorValue;
-  }
-
-  @computed
-  get warningValue(): string | undefined {
-    if (this.externalWarnings.message) {
-      return this.externalWarnings.message;
-    }
-    return this.state.getWarningFunc(this);
-  }
-
-  @computed
-  get warning(): string | undefined {
-    return this.warningValue;
-  }
-
-  @action
-  setAccess(update: AccessUpdate) {
-    // nothing yet
   }
 }

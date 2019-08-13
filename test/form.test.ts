@@ -2345,7 +2345,7 @@ test("field disabled when form disabled", () => {
     isDisabled: accessor => accessor.path === ""
   });
 
-  const formAccessor = state.formAccessor;
+  const formAccessor = state;
   const foo = state.field("foo");
 
   expect(formAccessor.disabled).toBeTruthy();
@@ -2384,7 +2384,7 @@ test("inputAllowed", () => {
     isReadOnly: accessor => accessor.path === "/readOnlyField"
   });
 
-  const formAccessor = state.formAccessor;
+  const formAccessor = state;
   const disabledField = state.field("disabledField");
   const readOnlyField = state.field("readOnlyField");
   const repeatingForm = state.repeatingForm("repeatingForm");
