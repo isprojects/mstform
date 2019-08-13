@@ -13,6 +13,9 @@
     backend to control which fields are accessible in response to changes in
     the form.
 
+-   Major internal refactoring making the accessors more consistent and reuse
+    more code.
+
 -   BREAKING CHANGE: if you define an error with `getError` and an external
     error is also set, that external error now takes precedence.
 
