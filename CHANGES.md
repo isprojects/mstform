@@ -11,7 +11,8 @@
     passing this information in backend processing, we can start to track this
     in the accessors themselves, which is more resilient. It also allows the
     backend to control which fields are accessible in response to changes in
-    the form.
+    the form. You can control access by passing `accessUpdates` with the
+    backend `process`.
 
 -   Major internal refactoring making the accessors more consistent and reuse
     more code.

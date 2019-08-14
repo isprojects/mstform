@@ -1286,3 +1286,53 @@ test("backend process controls field access for sub form", async () => {
 
   expect(bar.hidden).toBeTruthy();
 });
+
+test("backend process required", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: N
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      accessUpdates: [
+        {
+          path: "foo",
+          required: true
+        }
+      ],
+      errorValidations: [],
+      warningValidations: []
+    };
+  };
+
+  const o = M.create({ foo: { bar: "FOO" } });
+
+  const form = new Form(M, {
+    foo: new SubForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.subForm("foo");
+  const bar = foo.field("bar");
+
+  bar.setRaw("CHANGED!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(bar.required).toBeFalsy();
+});
