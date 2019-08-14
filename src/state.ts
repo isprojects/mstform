@@ -137,6 +137,8 @@ export class FormState<
 
   processor: Backend<M> | undefined;
 
+  generation: number = 0;
+
   _context: any;
   _converterOptions: StateConverterOptions;
   _requiredError: string | ErrorFunc;
@@ -309,6 +311,7 @@ export class FormState<
 
   @action
   setValueWithoutRawUpdate(path: string, value: any) {
+    this.generation += 1;
     this.noRawUpdate = true;
     applyPatch(this.node, [{ op: "replace", path, value }]);
     this.noRawUpdate = false;
@@ -328,6 +331,7 @@ export class FormState<
       // as there is no raw
       return;
     }
+    this.generation += 1;
     // set raw from value directly without re-converting
     fieldAccessor.setRawFromValue();
   }
@@ -353,6 +357,7 @@ export class FormState<
       // if this isn't a repeating indexed accessor we don't need to react
       return;
     }
+    this.generation += 1;
     accessor.clear();
   }
 
@@ -380,7 +385,7 @@ export class FormState<
       // if this isn't a repeating indexed accessor we don't need to react
       return;
     }
-
+    this.generation += 1;
     accessor.addIndex(index);
 
     // we cannot set it into add mode here, as this can be triggered

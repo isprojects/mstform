@@ -1344,7 +1344,7 @@ test("backend process required", async () => {
   expect(bar.required).toBeFalsy();
 });
 
-test.only("repeating form path changes", async () => {
+test("repeating form path changes", async () => {
   const N = types.model("N", {
     bar: types.string
   });
@@ -1356,7 +1356,12 @@ test.only("repeating form path changes", async () => {
   const untilProcessed = until();
   const untilSerialized = until();
 
-  const myProcess = async (node: Instance<typeof M>, path: string) => {
+  const myProcess = async (
+    node: Instance<typeof M>,
+    path: string,
+    liveOnly: boolean,
+    generation: number
+  ) => {
     // we serialize first, so that modifications to node don't
     // affect us anymore
     const serialized = toJS(node);
@@ -1378,6 +1383,7 @@ test.only("repeating form path changes", async () => {
     ) as Message[];
 
     const result = {
+      generation: generation,
       updates: [],
       accessUpdates: [],
       errorValidations: [
@@ -1421,6 +1427,8 @@ test.only("repeating form path changes", async () => {
 
   // now we wait until processing it done
   untilProcessed.resolve();
+  await state.processPromise;
+  jest.runAllTimers();
   await state.processPromise;
 
   const newBar = foo.index(0).field("bar");

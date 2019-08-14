@@ -25,6 +25,7 @@ type ValidationInfo = {
 };
 
 export type ProcessResult = {
+  generation?: number;
   updates: Update[];
   accessUpdates: AccessUpdate[];
   errorValidations: ValidationInfo[];
@@ -32,15 +33,24 @@ export type ProcessResult = {
 };
 
 export interface SaveFunc<M> {
-  (node: Instance<M>): Promise<Partial<ProcessResult> | undefined | null>;
+  (node: Instance<M>, generation: number): Promise<
+    Partial<ProcessResult> | undefined | null
+  >;
 }
 
 export interface Process<M> {
-  (node: Instance<M>, path: string, liveOnly: boolean): Promise<ProcessResult>;
+  (
+    node: Instance<M>,
+    path: string,
+    liveOnly: boolean,
+    generation: number
+  ): Promise<ProcessResult>;
 }
 
 export interface ProcessAll<M> {
-  (node: Instance<M>, liveOnly: boolean): Promise<Partial<ProcessResult>>;
+  (node: Instance<M>, liveOnly: boolean, generation: number): Promise<
+    Partial<ProcessResult>
+  >;
 }
 
 export interface ApplyUpdate {
@@ -78,13 +88,18 @@ export class Backend<M extends IAnyModelType> {
     this.changeTracker.change(path);
   }
 
-  runProcessResult(processResult: ProcessResult) {
+  runProcessResult(processResult: ProcessResult): boolean {
     const {
+      generation,
       updates,
       accessUpdates,
       errorValidations,
       warningValidations
     } = processResult;
+    // refuse to process data of the wrong generation
+    if (generation !== undefined && generation !== this.state.generation) {
+      return false;
+    }
     updates.forEach(update => {
       // anything that has changed by the user in the mean time shouldn't
       // be updated, as the user input takes precedence
@@ -99,19 +114,21 @@ export class Backend<M extends IAnyModelType> {
 
     this.state.setExternalValidations(errorValidations, "error");
     this.state.setExternalValidations(warningValidations, "warning");
+    return true;
   }
 
   async realSave(): Promise<boolean> {
     if (this.save == null) {
       throw new Error("Cannot save if save function is not configured");
     }
-    const processResult = await this.save(this.node);
+    const processResult = await this.save(this.node, this.state.generation);
 
     if (processResult == null) {
       this.clearValidations();
       return true;
     }
     const completeProcessResult: ProcessResult = {
+      generation: undefined,
       updates: [],
       accessUpdates: [],
       errorValidations: [],
@@ -128,10 +145,15 @@ export class Backend<M extends IAnyModelType> {
         "Cannot process all if processAll function is not configured"
       );
     }
-    const processResult = await this.processAll(this.node, this.state.liveOnly);
+    const processResult = await this.processAll(
+      this.node,
+      this.state.liveOnly,
+      this.state.generation
+    );
     this.clearValidations();
 
     const completeProcessResult: ProcessResult = {
+      generation: undefined,
       updates: [],
       accessUpdates: [],
       errorValidations: [],
@@ -152,12 +174,21 @@ export class Backend<M extends IAnyModelType> {
     }
     let processResult;
     try {
-      processResult = await this.process(this.node, path, this.state.liveOnly);
+      processResult = await this.process(
+        this.node,
+        path,
+        this.state.liveOnly,
+        this.state.generation
+      );
     } catch (e) {
       console.error("Unexpected error during process:", e);
       return;
     }
-    this.runProcessResult(processResult);
+    const success = this.runProcessResult(processResult);
+    if (!success) {
+      // try again as soon as possible
+      this.changeTracker.change(path);
+    }
   }
 
   isFinished() {

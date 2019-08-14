@@ -35,6 +35,58 @@ test("FormState can be saved", async () => {
   expect(o.foo).toEqual("");
   // now communicate with the server by doing the save
   const saveResult0 = await state.save();
+
+  expect(saveResult0).toBe(false);
+  expect(field.error).toEqual("Wrong");
+
+  // correct things
+  field.setRaw("BAR");
+  expect(o.foo).toEqual("BAR");
+  // editing does not wipe out external errors
+  expect(field.error).toEqual("Wrong");
+
+  const saveResult1 = await state.save();
+  expect(saveResult1).toBe(true);
+
+  expect(field.error).toBeUndefined();
+});
+
+test("FormState can be saved with generation", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {})
+  });
+
+  async function save(node: Instance<typeof M>, generation: number) {
+    if (node.foo === "") {
+      return {
+        generation: generation,
+        errorValidations: [
+          { id: "dummy", messages: [{ path: "/foo", message: "Wrong" }] }
+        ]
+      };
+    }
+    return null;
+  }
+
+  const state = form.state(o, { backend: { save } });
+
+  const field = state.field("foo");
+
+  // do something not allowed
+  field.setRaw("");
+
+  // we don't see any client-side validation errors
+  expect(field.error).toBeUndefined();
+  expect(o.foo).toEqual("");
+  // now communicate with the server by doing the save
+  const saveResult0 = await state.save();
+
   expect(saveResult0).toBe(false);
   expect(field.error).toEqual("Wrong");
 
