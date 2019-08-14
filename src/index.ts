@@ -10,3 +10,4 @@ export * from "./validation-props";
 export * from "./controlled";
 export * from "./state";
 export * from "./backend";
+export { Message } from "./validationMessages";

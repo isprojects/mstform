@@ -1,6 +1,13 @@
-import { configure } from "mobx";
+import { configure, toJS } from "mobx";
 import { types, Instance } from "mobx-state-tree";
-import { SubForm, Form, Field, RepeatingForm, converters } from "../src";
+import {
+  SubForm,
+  Form,
+  Field,
+  RepeatingForm,
+  converters,
+  Message
+} from "../src";
 import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
@@ -1335,4 +1342,90 @@ test("backend process required", async () => {
   await state.processPromise;
 
   expect(bar.required).toBeFalsy();
+});
+
+test.only("repeating form path changes", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const untilProcessed = until();
+  const untilSerialized = until();
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    // we serialize first, so that modifications to node don't
+    // affect us anymore
+    const serialized = toJS(node);
+    // tell the system we're done serializing
+    untilSerialized.resolve();
+    // make any entry with 'wrong' for bar an error
+    const errorMessages = serialized.foo.map((entry, index) => {
+      if (entry.bar === "wrong") {
+        return {
+          path: `/foo/${index}/bar`,
+          message: "error"
+        };
+      } else {
+        return undefined;
+      }
+    });
+    const messages: Message[] = errorMessages.filter(
+      entry => entry !== undefined
+    ) as Message[];
+
+    const result = {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [
+        {
+          id: "alpha",
+          messages
+        }
+      ],
+      warningValidations: []
+    };
+    await untilProcessed.finished;
+    return result;
+  };
+
+  const o = M.create({ foo: [{ bar: "right 1" }] });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.repeatingForm("foo");
+  const bar0 = foo.index(0).field("bar");
+
+  bar0.setRaw("wrong");
+  jest.runAllTimers();
+
+  // wait until we're just done serializing before we modify anything
+  await untilSerialized.finished;
+  // insert another entry in place 0, which should not be affected by
+  // error, while the backend is processing
+  foo.insert(0, { bar: "right 2" }, ["bar"]);
+
+  // now we wait until processing it done
+  untilProcessed.resolve();
+  await state.processPromise;
+
+  const newBar = foo.index(0).field("bar");
+  expect(newBar.error).toBeUndefined();
+  expect(newBar.value).toEqual("right 2");
+  expect(bar0.error).toEqual("error");
+  expect(bar0.value).toEqual("wrong");
 });
