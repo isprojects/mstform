@@ -1109,3 +1109,180 @@ test("backend process controls field access", async () => {
   expect(foo.readOnly).toBeTruthy();
   expect(bar.readOnly).toBeFalsy();
 });
+
+test("backend process controls field access, omission", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string)
+  });
+
+  let counter = 0;
+  const accessUpdates = [
+    {
+      path: "/foo",
+      readOnly: true,
+      disabled: false,
+      required: false,
+      hidden: false
+    },
+    {
+      path: "/foo",
+      disabled: true
+    }
+  ];
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    const result = {
+      updates: [],
+      accessUpdates: [accessUpdates[counter]],
+      errorValidations: [],
+      warningValidations: []
+    };
+    counter++;
+    return result;
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const foo = state.field("foo");
+  const bar = state.field("bar");
+
+  expect(foo.readOnly).toBeFalsy();
+
+  bar.setRaw("BAR!");
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(foo.readOnly).toBeTruthy();
+  expect(foo.disabled).toBeFalsy();
+
+  bar.setRaw("BAR!!");
+  jest.runAllTimers();
+
+  await state.processPromise;
+  expect(foo.readOnly).toBeTruthy();
+  expect(foo.disabled).toBeTruthy();
+});
+
+test("backend process controls field access for repeating form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      accessUpdates: [
+        {
+          path: "/foo/0",
+          readOnly: false,
+          disabled: true,
+          required: false,
+          hidden: false
+        }
+      ],
+      errorValidations: [],
+      warningValidations: []
+    };
+  };
+
+  const o = M.create({ foo: [{ bar: "FOO" }] });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.repeatingForm("foo");
+  const bar0 = foo.index(0).field("bar");
+
+  expect(bar0.disabled).toBeFalsy();
+
+  bar0.setRaw("CHANGED!");
+  jest.runAllTimers();
+  await state.processPromise;
+
+  expect(bar0.disabled).toBeTruthy();
+
+  // now insert a new entry above the current one
+  foo.insert(0, { bar: "BEFORE" }, ["bar"]);
+
+  const barBefore = foo.index(0).field("bar");
+  expect(barBefore.disabled).toBeFalsy();
+  expect(bar0.disabled).toBeTruthy();
+});
+
+test("backend process controls field access for sub form", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: N
+  });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      accessUpdates: [
+        {
+          path: "foo/bar",
+          hidden: true
+        }
+      ],
+      errorValidations: [],
+      warningValidations: []
+    };
+  };
+
+  const o = M.create({ foo: { bar: "FOO" } });
+
+  const form = new Form(M, {
+    foo: new SubForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce: debounce
+    }
+  });
+
+  const foo = state.subForm("foo");
+  const bar = foo.field("bar");
+
+  bar.setRaw("CHANGED!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(bar.hidden).toBeTruthy();
+});
