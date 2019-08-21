@@ -276,9 +276,6 @@ test("warning on repeating form", () => {
 
   const state = form.state(o, {
     getWarning: (accessor: any) => {
-      if (accessor instanceof RepeatingFormAccessor) {
-        expect(accessor.path).toEqual("/foo");
-      }
       return accessor instanceof RepeatingFormAccessor && accessor.length === 0
         ? "Empty"
         : undefined;

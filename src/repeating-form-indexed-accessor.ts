@@ -103,8 +103,16 @@ export class RepeatingFormIndexedAccessor<
 
   @computed
   get isWarningFree(): boolean {
-    return this.formAccessor.flatAccessors.every(accessor => {
-      accessor.isWarningFree;
-    });
+    console.log(
+      "AAAAAAAAAAAAA",
+      this.warning,
+      this.warningValue,
+      this.state.getValue(this.path)
+    );
+    return (
+      this.formAccessor.flatAccessors.every(accessor => {
+        accessor.isWarningFree;
+      }) && this.warning == null
+    );
   }
 }
