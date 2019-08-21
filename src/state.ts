@@ -467,16 +467,11 @@ export class FormState<
 
   @computed
   get isWarningFree(): boolean {
-    if (this.formAccessor.warningValue !== undefined) {
+    if (this.formAccessor.isWarningFree) {
       return false;
     }
     return !this.flatAccessors.some(
       accessor => (accessor ? accessor.warningValue !== undefined : false)
     );
-  }
-
-  @computed
-  get hasWarning(): boolean {
-    return this.isWarningFree;
   }
 }

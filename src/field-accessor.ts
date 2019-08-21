@@ -327,8 +327,8 @@ export class FieldAccessor<R, V> implements IAccessor {
   }
 
   @computed
-  get hasWarning(): boolean {
-    return this.warningValue != null;
+  get isWarningFree(): boolean {
+    return this.warningValue == null;
   }
 
   @computed

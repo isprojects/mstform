@@ -57,7 +57,7 @@ export class GroupAccessor<D extends FormDefinition<any>> {
       if (accessor == null) {
         return true;
       }
-      return !accessor.hasWarning;
+      return accessor.isWarningFree;
     });
   }
 }

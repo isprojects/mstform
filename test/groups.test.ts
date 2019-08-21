@@ -379,9 +379,9 @@ test("groups with warnings", () => {
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
 
-  expect(a.hasWarning).toBeTruthy();
-  expect(b.hasWarning).toBeFalsy();
-  expect(state.isWarningFree).toBeFalsy();
+  expect(a.isWarningFree).toBeFalsy();
+  expect(b.isWarningFree).toBeTruthy();
   expect(one.isWarningFree).toBeFalsy();
   expect(two.isWarningFree).toBeTruthy();
+  expect(state.isWarningFree).toBeFalsy();
 });

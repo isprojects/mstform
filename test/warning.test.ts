@@ -36,7 +36,7 @@ test("a simple warning", async () => {
   const barField = state.field("bar");
 
   expect(fooField.raw).toEqual("FOO");
-  expect(fooField.hasWarning).toBeTruthy();
+  expect(fooField.isWarningFree).toBeFalsy();
   expect(fooField.warning).toEqual("Please reconsider");
   expect(barField.raw).toEqual("BAR");
   expect(barField.warning).toBeUndefined();
@@ -178,7 +178,7 @@ test("warning in repeating form", () => {
   expect(barField1.raw).toEqual("correct");
   expect(barField1.warning).toBeUndefined();
   expect(barField2.raw).toEqual("incorrect");
-  expect(barField2.hasWarning).toBeTruthy();
+  expect(barField2.isWarningFree).toBeFalsy();
   expect(barField2.warning).toEqual("Please reconsider");
   expect(forms.isWarningFree).toBeFalsy();
   expect(state.isWarningFree).toBeFalsy();
@@ -214,7 +214,7 @@ test("warning in subform field", () => {
   expect(fooField.raw).toEqual("FOO");
   expect(fooField.warning).toBeUndefined();
   expect(barField.raw).toEqual("BAR");
-  expect(barField.hasWarning).toBeTruthy();
+  expect(barField.isWarningFree).toBeFalsy();
   expect(barField.warning).toEqual("Please reconsider");
   expect(subForm.isWarningFree).toBeFalsy();
   expect(state.isWarningFree).toBeFalsy();

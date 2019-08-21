@@ -84,7 +84,7 @@ export class RepeatingFormAccessor<
   @computed
   get isWarningFree(): boolean {
     return (
-      this.accessors.every(accessor => !accessor.isWarningFree) &&
+      this.accessors.every(accessor => accessor.isWarningFree) &&
       this.warning == null
     );
   }

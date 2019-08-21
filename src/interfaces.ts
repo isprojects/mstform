@@ -25,7 +25,7 @@ export interface IAccessor {
   validate(options?: ValidateOptions): boolean;
 
   isValid: boolean;
-  hasWarning?: boolean;
+  isWarningFree: boolean;
 
   accessors: IAccessor[];
   accessBySteps(steps: string[]): IAccessor | undefined;
