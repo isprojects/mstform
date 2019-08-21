@@ -81,6 +81,14 @@ export class RepeatingFormAccessor<
     return this.accessors.every(accessor => accessor.isValid);
   }
 
+  @computed
+  get isWarningFree(): boolean {
+    return (
+      this.accessors.every(accessor => !accessor.isWarningFree) &&
+      this.warning == null
+    );
+  }
+
   initialize() {
     const entries = this.state.getValue(this.path);
     let i = 0;

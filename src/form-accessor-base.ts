@@ -57,6 +57,11 @@ export abstract class FormAccessorBase<
   }
 
   @computed
+  get isWarningFree(): boolean {
+    return this.warning != null;
+  }
+
+  @computed
   get disabled(): boolean {
     return this.formAccessor.disabled;
   }

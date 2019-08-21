@@ -100,4 +100,11 @@ export class RepeatingFormIndexedAccessor<
   get addMode(): boolean {
     return this._addMode || this.parent.addMode;
   }
+
+  @computed
+  get isWarningFree(): boolean {
+    return this.formAccessor.flatAccessors.every(accessor => {
+      !accessor.hasWarning;
+    });
+  }
 }

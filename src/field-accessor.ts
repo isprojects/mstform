@@ -327,6 +327,11 @@ export class FieldAccessor<R, V> implements IAccessor {
   }
 
   @computed
+  get hasWarning(): boolean {
+    return this.warningValue != null;
+  }
+
+  @computed
   get requiredError(): string {
     const requiredError = this.field.requiredError || this.state._requiredError;
     return errorMessage(requiredError, this.state.context);

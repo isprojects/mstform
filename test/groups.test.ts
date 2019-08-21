@@ -340,3 +340,48 @@ test("groups repeating form exclude", () => {
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
 });
+
+test("groups with warnings", () => {
+  const M = types.model("M", {
+    a: types.number,
+    b: types.number,
+    c: types.number,
+    d: types.number
+  });
+
+  const form = new Form(
+    M,
+    {
+      a: new Field(converters.number),
+      b: new Field(converters.number),
+      c: new Field(converters.number),
+      d: new Field(converters.number)
+    },
+    {
+      one: new Group({ include: ["a", "b"] }),
+      two: new Group({ include: ["c", "d"] })
+    }
+  );
+
+  const o = M.create({ a: 1, b: 2, c: 3, d: 4 });
+
+  const state = form.state(o, {
+    getWarning: (accessor: any) =>
+      accessor.path === "/a" ? "Please reconsider" : undefined
+  });
+  const a = state.field("a");
+  const b = state.field("b");
+  const c = state.field("c");
+  const d = state.field("d");
+  const one = state.group("one");
+  const two = state.group("two");
+
+  expect(one.isValid).toBeTruthy();
+  expect(two.isValid).toBeTruthy();
+
+  expect(a.hasWarning).toBeTruthy();
+  expect(b.hasWarning).toBeFalsy();
+  expect(state.isWarningFree).toBeFalsy();
+  expect(one.isWarningFree).toBeFalsy();
+  expect(two.isWarningFree).toBeTruthy();
+});

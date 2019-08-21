@@ -329,4 +329,9 @@ export class FormAccessor<
   get warning(): string | undefined {
     return this.warningValue;
   }
+
+  @computed
+  get isWarningFree(): boolean {
+    return this.warning != null;
+  }
 }

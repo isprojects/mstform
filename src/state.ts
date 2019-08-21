@@ -474,4 +474,9 @@ export class FormState<
       accessor => (accessor ? accessor.warningValue !== undefined : false)
     );
   }
+
+  @computed
+  get hasWarning(): boolean {
+    return this.isWarningFree;
+  }
 }

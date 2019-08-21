@@ -27,6 +27,15 @@ export class GroupAccessor<D extends FormDefinition<any>> {
     throw new Error("Must include or exclude some fields");
   }
 
+  @computed
+  get isWarningFree(): boolean {
+    const include = this.group.options.include;
+    if (include != null) {
+      return this.isWarningFreeForNames(include);
+    }
+    throw new Error("Must include fields to determine warnings");
+  }
+
   notExcluded(names: (keyof D)[]): (keyof D)[] {
     const keys = this.parent.keys as (keyof D)[];
     return keys.filter(name => !names.includes(name));
@@ -39,6 +48,16 @@ export class GroupAccessor<D extends FormDefinition<any>> {
         return true;
       }
       return accessor.isValid;
+    });
+  }
+
+  isWarningFreeForNames(names: (keyof D)[]): boolean {
+    return names.every(key => {
+      const accessor = this.parent.access(key as string);
+      if (accessor == null) {
+        return true;
+      }
+      return !accessor.hasWarning;
     });
   }
 }
