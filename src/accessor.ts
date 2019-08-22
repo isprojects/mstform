@@ -8,9 +8,8 @@ import {
   ValueType
 } from "./form";
 import { FieldAccessor } from "./field-accessor";
-import { RepeatingFormAccessor } from "./repeating-form-accessor";
-import { SubFormAccessor } from "./sub-form-accessor";
 import { GroupAccessor } from "./group-accessor";
+import { ISubFormAccessor, IRepeatingFormAccessor } from "./interfaces";
 
 export type FieldAccess<
   D extends FormDefinition<any>,
@@ -20,7 +19,7 @@ export type FieldAccess<
 export type RepeatingFormAccess<
   D extends FormDefinition<any>,
   K extends keyof D
-> = RepeatingFormAccessor<
+> = IRepeatingFormAccessor<
   RepeatingFormDefinitionType<D[K]>,
   RepeatingFormGroupDefinitionType<D[K]>
 >;
@@ -28,7 +27,7 @@ export type RepeatingFormAccess<
 export type SubFormAccess<
   D extends FormDefinition<any>,
   K extends keyof D
-> = SubFormAccessor<
+> = ISubFormAccessor<
   SubFormDefinitionType<D[K]>,
   SubFormGroupDefinitionType<D[K]>
 >;

@@ -3,7 +3,7 @@ import { types, Instance } from "mobx-state-tree";
 import {
   Field,
   Form,
-  FormAccessor,
+  IFormAccessor,
   FieldAccessor,
   RepeatingForm,
   RepeatingFormAccessor,
@@ -66,7 +66,12 @@ test("a simple error", async () => {
   // we need to define a process as ignoreGetError is enabled automatically
   // otherwise
   async function process(node: Instance<typeof M>, path: string) {
-    return { updates: [], errorValidations: [], warningValidations: [] };
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
   }
 
   const state = form.state(o, {
@@ -428,14 +433,12 @@ test("error on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
+  let usedAccessor: IFormAccessor<any, any> | undefined = undefined;
+
   const state = form.state(o, {
     getError: (accessor: any) => {
-      if (accessor instanceof FormAccessor) {
-        expect(accessor.path).toEqual("");
-        return "Error";
-      } else {
-        return undefined;
-      }
+      usedAccessor = accessor;
+      return "Error";
     }
   });
 
@@ -444,6 +447,7 @@ test("error on formstate", () => {
   expect(state.error).toEqual("Error");
   expect(state.isWarningFree).toBeTruthy();
   expect(result).toBeFalsy();
+  expect(usedAccessor).toBe(state);
 });
 
 test("warning on formstate", () => {
@@ -457,17 +461,16 @@ test("warning on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
+  let usedAccessor: IFormAccessor<any, any> | undefined = undefined;
+
   const state = form.state(o, {
     getWarning: (accessor: any) => {
-      if (accessor instanceof FormAccessor) {
-        expect(accessor.path).toEqual("");
-        return "Warning";
-      } else {
-        return undefined;
-      }
+      usedAccessor = accessor;
+      return "Warning";
     }
   });
 
   expect(state.warning).toEqual("Warning");
   expect(state.isWarningFree).toBeFalsy();
+  expect(usedAccessor).toBe(state);
 });
