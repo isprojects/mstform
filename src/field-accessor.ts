@@ -312,11 +312,6 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     this._error = error;
   }
 
-  @action
-  clearError() {
-    this._error = undefined;
-  }
-
   // backward compatibility -- use setRaw instead
   handleChange = (...args: any[]) => {
     const raw = this.field.getRaw(...args);

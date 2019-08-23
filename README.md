@@ -938,8 +938,7 @@ by `path`. The rest of the structure updates whether a field is `disabled`,
 `readOnly`, `hidden` and `required`. Not passing a particular boolean results
 in no change for that field. You can also use paths for accessors that aren't
 fields, such as a repeating form, in which case for
-`disabled,`readOnly`and`hidden` the information is inherited by all fields in
-it. Setting `required` only has meaning on the field accessor itself and is
+`disabled,`readOnly`and`hidden`the information is inherited by all fields in it. Setting`required` only has meaning on the field accessor itself and is
 not inherited.
 
 Both `errorValidations` and `warningValidations` are lists of validation
@@ -1146,7 +1145,10 @@ is filling in the form.
 If you use `ignoreSaveStatus` the save status is not affect and remains
 `before`.
 
-You can reset the save status back to `before` with `'resetSaveStatus()`.
+You can reset the save status back to `before` with `state.resetSaveStatus()`.
+
+You can remove all internal and external errors and warnings by calling
+`state.clearAllValidations()`.
 
 ## required fields
 
