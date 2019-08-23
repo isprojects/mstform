@@ -340,3 +340,125 @@ test("groups repeating form exclude", () => {
   expect(one.isValid).toBeTruthy();
   expect(two.isValid).toBeTruthy();
 });
+
+test("groups with warnings", () => {
+  const M = types.model("M", {
+    a: types.number,
+    b: types.number,
+    c: types.number,
+    d: types.number
+  });
+
+  const form = new Form(
+    M,
+    {
+      a: new Field(converters.number),
+      b: new Field(converters.number),
+      c: new Field(converters.number),
+      d: new Field(converters.number)
+    },
+    {
+      one: new Group({ include: ["a", "b"] }),
+      two: new Group({ include: ["c", "d"] })
+    }
+  );
+
+  const o = M.create({ a: 1, b: 2, c: 3, d: 4 });
+
+  const state = form.state(o, {
+    getWarning: (accessor: any) =>
+      accessor.path === "/a" ? "Please reconsider" : undefined
+  });
+  const a = state.field("a");
+  const b = state.field("b");
+  const c = state.field("c");
+  const d = state.field("d");
+  const one = state.group("one");
+  const two = state.group("two");
+
+  expect(one.isValid).toBeTruthy();
+  expect(two.isValid).toBeTruthy();
+
+  expect(a.isWarningFree).toBeFalsy();
+  expect(b.isWarningFree).toBeTruthy();
+  expect(one.isWarningFree).toBeFalsy();
+  expect(two.isWarningFree).toBeTruthy();
+  expect(state.isWarningFree).toBeFalsy();
+});
+
+test("groups with warnings in subform", () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+
+  const M = types.model("M", {
+    foo: types.string,
+    sub: N
+  });
+
+  const form = new Form(
+    M,
+    {
+      foo: new Field(converters.string),
+      sub: new SubForm({
+        bar: new Field(converters.string)
+      })
+    },
+    {
+      one: new Group({ include: ["sub"] })
+    }
+  );
+
+  const o = M.create({ foo: "FOO", sub: { bar: "BAR" } });
+
+  const state = form.state(o, {
+    getWarning: (accessor: any) =>
+      accessor.path === "/sub" ? "SubWarning" : undefined
+  });
+
+  const subForm = state.subForm("sub");
+  const group = state.group("one");
+
+  expect(subForm.isWarningFree).toBeFalsy();
+  expect(subForm.warning).toEqual("SubWarning");
+  expect(state.isWarningFree).toBeFalsy();
+  expect(group.isWarningFree).toBeFalsy();
+});
+
+test("groups with warnings in repeatingform", () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(
+    M,
+    {
+      foo: new RepeatingForm({
+        bar: new Field(converters.string)
+      })
+    },
+    {
+      one: new Group({ include: ["foo"] })
+    }
+  );
+
+  const o = M.create({ foo: [{ bar: "correct" }, { bar: "incorrect" }] });
+
+  const state = form.state(o, {
+    getWarning: (accessor: any) =>
+      accessor.path === "/foo/1/bar" ? "Warning" : undefined
+  });
+
+  const repeatingForm = state.repeatingForm("foo");
+  const repeatingFormEntry1 = repeatingForm.accessors[0];
+  const repeatingFormEntry2 = repeatingForm.accessors[1];
+  const group = state.group("one");
+
+  expect(repeatingForm.isWarningFree).toBeFalsy();
+  expect(repeatingFormEntry1.isWarningFree).toBeTruthy();
+  expect(repeatingFormEntry2.isWarningFree).toBeFalsy();
+  expect(group.isWarningFree).toBeFalsy();
+});

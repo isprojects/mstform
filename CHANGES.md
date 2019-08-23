@@ -26,6 +26,8 @@
 
 -   BREAKING CHANGE: Drop the old Accessor union type in favor of `IAccessor`.
 
+-   Add an `isWarningFree` value to GroupAccessors.
+
 # 1.14.0
 
 -   The `process` and `processAll` functions for the backend now receive a third
