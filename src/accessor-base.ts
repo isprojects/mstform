@@ -173,4 +173,9 @@ export abstract class AccessorBase implements IAccessor {
       this._isRequired = update.required;
     }
   }
+
+  @action
+  clearError() {
+    this._error = undefined;
+  }
 }

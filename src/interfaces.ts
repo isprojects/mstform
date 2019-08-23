@@ -38,6 +38,7 @@ export interface IAccessor {
   clear(): void;
 
   setAccess(update: AccessUpdate): void;
+  clearError(): void;
 }
 
 export interface IFormAccessor<D, G> extends IAccessor {
