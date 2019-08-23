@@ -1336,3 +1336,42 @@ test("backend process required", async () => {
 
   expect(bar.required).toBeFalsy();
 });
+
+test("backend clearAllValidations", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, { foo: new Field(converters.string) });
+
+  const myProcess = async (node: Instance<typeof M>, path: string) => {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "/foo", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
+
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce
+    }
+  });
+
+  const field = state.field("foo");
+
+  field.setRaw("FOO!");
+  jest.runAllTimers();
+
+  await state.processPromise;
+
+  expect(field.error).toEqual("error");
+  state.clearAllValidations();
+  expect(field.error).toBeUndefined();
+});

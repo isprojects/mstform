@@ -2624,3 +2624,27 @@ test("isEmptyAndRequired on fields", () => {
   requiredDecimalField.setRaw("123.0");
   expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
 });
+
+test("clearAllValidations", () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [value => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  field.setRaw("BAR");
+  expect(field.raw).toEqual("BAR");
+  expect(field.error).toEqual("Wrong");
+  state.clearAllValidations();
+  expect(field.error).toBeUndefined();
+});
