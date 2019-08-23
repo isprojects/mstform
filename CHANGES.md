@@ -28,6 +28,9 @@
 
 -   Add an `isWarningFree` value to GroupAccessors.
 
+-   Add a `clearAllValidation` method to formState. We can use it to manually clear
+    all internal and external error and warning messages.
+
 # 1.14.0
 
 -   The `process` and `processAll` functions for the backend now receive a third
