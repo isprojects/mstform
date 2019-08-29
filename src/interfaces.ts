@@ -7,6 +7,7 @@ import {
   GroupAccess
 } from "./accessor";
 import { AccessUpdate } from "./backend";
+import { FormState } from "./state";
 
 export interface IAccessor {
   path: string;
@@ -25,6 +26,7 @@ export interface IAccessor {
   addMode: boolean;
   context: any;
   parent: IParentAccessor;
+  state: FormState<any, any, any>;
 
   validate(options?: ValidateOptions): boolean;
 
