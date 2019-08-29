@@ -157,7 +157,14 @@ export class Backend<M extends IAnyModelType> {
       console.error("Unexpected error during process:", e);
       return;
     }
-    this.runProcessResult(processResult);
+    const completeProcessResult: ProcessResult = {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: [],
+      ...processResult
+    };
+    this.runProcessResult(completeProcessResult);
   }
 
   isFinished() {

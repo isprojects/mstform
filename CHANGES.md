@@ -1,3 +1,8 @@
+# 1.15.2
+
+-   Backend process would crash if it had a missing `accessUpdates`. Now it
+    should not do so anymore.
+
 # 1.15.1
 
 -   Expose `state` on `IAccessor`.
