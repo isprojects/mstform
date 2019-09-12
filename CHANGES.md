@@ -1,3 +1,8 @@
+# 1.16.0
+
+-   BREAKING CHANGE: Required errors now disappear after saving with
+    `ignoreRequired` turned on.
+
 # 1.15.2
 
 -   Backend process would crash if it had a missing `accessUpdates`. Now it
