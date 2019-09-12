@@ -399,20 +399,6 @@ export class FormState<
     }
     const isValid = this.validate({ ...extraOptions, ...options });
 
-    // XXX Either remove or uncomment after making a decision.
-    // We're testing if we want to ignore all validation messages when saving.
-    // This means the messages that were already there will disappear when
-    // saving.
-
-    // // if we ignored required, we need to re-validate to restore
-    // // the required messages (if any)
-    // // XXX does this make sense to move this to validate itself?
-    // if (options != null && options.ignoreRequired) {
-    //   // we don't care about the answer, only about updating the messages
-    //   // in the UI
-    //   this.validate(extraOptions);
-    // }
-
     if (!options.ignoreSaveStatus) {
       this.setSaveStatus("rightAfter");
     }
