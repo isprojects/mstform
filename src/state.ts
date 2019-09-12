@@ -6,20 +6,22 @@ import {
   IAnyModelType,
   Instance
 } from "mobx-state-tree";
+
 import {
   Form,
   FormDefinition,
   ValidationResponse,
   GroupDefinition,
   ErrorFunc,
-  IDisposer
+  IDisposer,
+  RepeatingForm
 } from "./form";
-import { pathToSteps, stepsToPath, pathToFieldref } from "./utils";
+import { pathToSteps, stepsToPath } from "./utils";
 import { FieldAccessor } from "./field-accessor";
-import { FormAccessor } from "./form-accessor";
-import { RepeatingFormAccessor } from "./repeating-form-accessor";
-import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
+import { RepeatingFormAccessor } from "./repeating-form-accessor";
+import { SubFormAccessor } from "./sub-form-accessor";
+import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { ValidateOptions } from "./validate-options";
 import {
   StateConverterOptions,
@@ -31,11 +33,16 @@ import {
   ProcessorOptions,
   Process,
   SaveFunc,
-  ProcessAll
+  ProcessAll,
+  AccessUpdate
 } from "./backend";
-import { setAddModeDefaults } from "./addMode";
 import { Validation } from "./validationMessages";
-import { IAccessor, IFormAccessor } from "./interfaces";
+import {
+  IAccessor,
+  IFormAccessor,
+  IRepeatingFormAccessor,
+  ISubFormAccessor
+} from "./interfaces";
 
 export interface AccessorAllows {
   (accessor: IAccessor): boolean;
@@ -113,7 +120,6 @@ export class FormState<
   @observable
   saveStatus: SaveStatusOptions = "before";
 
-  formAccessor: FormAccessor<D, G>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
@@ -159,7 +165,8 @@ export class FormState<
       addModeDefaults = []
     }: FormStateOptions<M> = {}
   ) {
-    super();
+    super(form.definition, form.groupDefinition, undefined, addMode);
+
     this.noRawUpdate = false;
 
     this._onPatchDisposer = onPatch(node, patch => {
@@ -171,14 +178,6 @@ export class FormState<
         this.replacePath(patch.path);
       }
     });
-
-    this.formAccessor = new FormAccessor(
-      this,
-      this.form.definition,
-      this.form.groupDefinition,
-      null,
-      addMode
-    );
 
     this.isDisabledFunc = isDisabled;
     this.isHiddenFunc = isHidden;
@@ -205,10 +204,6 @@ export class FormState<
 
     checkConverterOptions(this._converterOptions);
 
-    if (addMode) {
-      setAddModeDefaults(this.formAccessor, addModeDefaults);
-    }
-
     if (backend != null) {
       const processor = new Backend(
         this,
@@ -227,30 +222,56 @@ export class FormState<
         processor.run(accessor.path);
       };
     }
+    this.initialize();
+
+    // this has to happen after initialization
+    if (addMode) {
+      this.setAddModeDefaults(addModeDefaults);
+    }
+  }
+
+  // needed by FormAccessor base
+  get state() {
+    return this;
+  }
+
+  // normally context is determined from state, but state owns it
+  @computed
+  get context(): any {
+    return this._context;
   }
 
   dispose(): void {
     // clean up onPatch
     this._onPatchDisposer();
     // do dispose on all accessors, cleaning up
-    this.formAccessor.flatAccessors.forEach(accessor => {
+    this.flatAccessors.forEach(accessor => {
       accessor.dispose();
     });
   }
 
-  @computed
-  get context(): any {
-    return this._context;
+  // we delegate the creation to here to avoid circular dependencies
+  // between form accessor and its subclasses
+  createRepeatingFormAccessor(
+    repeatingForm: RepeatingForm<any, any>,
+    parent: IFormAccessor<any, any>,
+    name: string
+  ): IRepeatingFormAccessor<any, any> {
+    return new RepeatingFormAccessor(this, repeatingForm, parent, name);
+  }
+
+  createSubFormAccessor(
+    definition: any,
+    groupDefinition: any,
+    parent: IFormAccessor<any, any>,
+    name: string
+  ): ISubFormAccessor<any, any> {
+    return new SubFormAccessor(this, definition, groupDefinition, parent, name);
   }
 
   @computed
   get path(): string {
-    return "/";
-  }
-
-  @computed
-  get fieldref(): string {
-    return pathToFieldref(this.path);
+    return "";
   }
 
   @computed
@@ -417,7 +438,7 @@ export class FormState<
   }
 
   @action
-  async setExternalValidations(
+  setExternalValidations(
     validations: Validation[],
     messageType: "error" | "warning"
   ) {
@@ -447,7 +468,7 @@ export class FormState<
   }
 
   @action
-  async clearExternalValidations(messageType: "error" | "warning") {
+  clearExternalValidations(messageType: "error" | "warning") {
     this.flatAccessors.forEach(accessor => {
       const externalMessages =
         messageType === "error"
@@ -455,6 +476,24 @@ export class FormState<
           : accessor.externalWarnings;
       externalMessages.clear();
     });
+  }
+
+  @action
+  clearAllValidations() {
+    this.clearExternalValidations("error");
+    this.clearExternalValidations("warning");
+    this.flatAccessors.forEach(accessor => {
+      accessor.clearError();
+    });
+  }
+
+  @action
+  setAccessUpdate(accessUpdate: AccessUpdate) {
+    const accessor = this.accessByPath(accessUpdate.path);
+    if (accessor === undefined) {
+      return;
+    }
+    accessor.setAccess(accessUpdate);
   }
 
   getValue(path: string): any {
@@ -466,17 +505,26 @@ export class FormState<
     return this.accessBySteps(steps);
   }
 
-  accessBySteps(steps: string[]): IAccessor | undefined {
-    return this.formAccessor.accessBySteps(steps);
-  }
-
   @computed
-  get isWarningFree(): boolean {
-    if (this.formAccessor.warningValue !== undefined) {
+  get canShowValidationMessages(): boolean {
+    // immediately after a save we always want messages
+    if (this.saveStatus === "rightAfter") {
+      return true;
+    }
+    const policy =
+      this.saveStatus === "before"
+        ? this.validationBeforeSave
+        : this.validationAfterSave;
+    if (policy === "immediate") {
+      return true;
+    }
+    if (policy === "no") {
       return false;
     }
-    return !this.flatAccessors.some(
-      accessor => (accessor ? accessor.warningValue !== undefined : false)
-    );
+    // not implemented yet
+    if (policy === "blur" || policy === "pause") {
+      return false;
+    }
+    return true;
   }
 }

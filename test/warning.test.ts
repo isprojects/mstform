@@ -3,7 +3,7 @@ import { types, Instance } from "mobx-state-tree";
 import {
   Field,
   Form,
-  FormAccessor,
+  IFormAccessor,
   FieldAccessor,
   RepeatingForm,
   RepeatingFormAccessor,
@@ -36,8 +36,10 @@ test("a simple warning", async () => {
   const barField = state.field("bar");
 
   expect(fooField.raw).toEqual("FOO");
+  expect(fooField.isWarningFree).toBeFalsy();
   expect(fooField.warning).toEqual("Please reconsider");
   expect(barField.raw).toEqual("BAR");
+  expect(barField.isWarningFree).toBeTruthy();
   expect(barField.warning).toBeUndefined();
   expect(state.isWarningFree).toBeFalsy();
 
@@ -66,7 +68,12 @@ test("a simple error", async () => {
   // we need to define a process as ignoreGetError is enabled automatically
   // otherwise
   async function process(node: Instance<typeof M>, path: string) {
-    return { updates: [], errorValidations: [], warningValidations: [] };
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
   }
 
   const state = form.state(o, {
@@ -146,6 +153,7 @@ test("both errors and warnings", () => {
   expect(fooField.raw).toEqual("FOO");
   expect(fooField.error).toEqual("Wrong");
   expect(fooField.warning).toEqual("Please reconsider");
+  expect(fooField.isWarningFree).toBeFalsy();
   expect(state.isWarningFree).toBeFalsy();
 });
 
@@ -175,9 +183,12 @@ test("warning in repeating form", () => {
   const barField2 = forms.index(1).field("bar");
 
   expect(barField1.raw).toEqual("correct");
+  expect(barField1.isWarningFree).toBeTruthy();
   expect(barField1.warning).toBeUndefined();
   expect(barField2.raw).toEqual("incorrect");
+  expect(barField2.isWarningFree).toBeFalsy();
   expect(barField2.warning).toEqual("Please reconsider");
+  expect(forms.isWarningFree).toBeFalsy();
   expect(state.isWarningFree).toBeFalsy();
 });
 
@@ -206,11 +217,15 @@ test("warning in subform field", () => {
   });
 
   const fooField = state.field("foo");
+  const subForm = state.subForm("sub");
   const barField = state.subForm("sub").field("bar");
   expect(fooField.raw).toEqual("FOO");
+  expect(fooField.isWarningFree).toBeTruthy();
   expect(fooField.warning).toBeUndefined();
   expect(barField.raw).toEqual("BAR");
+  expect(barField.isWarningFree).toBeFalsy();
   expect(barField.warning).toEqual("Please reconsider");
+  expect(subForm.isWarningFree).toBeFalsy();
   expect(state.isWarningFree).toBeFalsy();
 });
 
@@ -281,12 +296,14 @@ test("warning on repeating form", () => {
 
   const repeatingForms = state.repeatingForm("foo");
 
+  expect(repeatingForms.isWarningFree).toBeFalsy();
   expect(repeatingForms.warning).toEqual("Empty");
   expect(state.isWarningFree).toBeFalsy();
 
   repeatingForms.push({ bar: "BAR" });
   state.validate();
 
+  expect(repeatingForms.isWarningFree).toBeTruthy();
   expect(repeatingForms.warning).toBeUndefined();
   expect(state.isWarningFree).toBeTruthy();
 });
@@ -349,8 +366,11 @@ test("warning on indexed repeating form", () => {
   const fooForm1 = forms.index(0);
   const fooForm2 = forms.index(1);
 
+  expect(fooForm1.isWarningFree).toBeTruthy();
   expect(fooForm1.warning).toBeUndefined();
+  expect(fooForm2.isWarningFree).toBeFalsy();
   expect(fooForm2.warning).toEqual("Warning");
+  expect(forms.isWarningFree).toBeFalsy();
   expect(state.isWarningFree).toBeFalsy();
 });
 
@@ -414,6 +434,7 @@ test("warning on subform", () => {
   const subform = state.subForm("sub");
 
   expect(subform.warning).toEqual("Warning");
+  expect(subform.isWarningFree).toBeFalsy();
   expect(state.isWarningFree).toBeFalsy();
 });
 
@@ -428,14 +449,12 @@ test("error on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
+  let usedAccessor: IFormAccessor<any, any> | undefined = undefined;
+
   const state = form.state(o, {
     getError: (accessor: any) => {
-      if (accessor instanceof FormAccessor) {
-        expect(accessor.path).toEqual("");
-        return "Error";
-      } else {
-        return undefined;
-      }
+      usedAccessor = accessor;
+      return "Error";
     }
   });
 
@@ -444,6 +463,7 @@ test("error on formstate", () => {
   expect(state.error).toEqual("Error");
   expect(state.isWarningFree).toBeTruthy();
   expect(result).toBeFalsy();
+  expect(usedAccessor).toBe(state);
 });
 
 test("warning on formstate", () => {
@@ -457,17 +477,16 @@ test("warning on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
+  let usedAccessor: IFormAccessor<any, any> | undefined = undefined;
+
   const state = form.state(o, {
     getWarning: (accessor: any) => {
-      if (accessor instanceof FormAccessor) {
-        expect(accessor.path).toEqual("");
-        return "Warning";
-      } else {
-        return undefined;
-      }
+      usedAccessor = accessor;
+      return "Warning";
     }
   });
 
   expect(state.warning).toEqual("Warning");
   expect(state.isWarningFree).toBeFalsy();
+  expect(usedAccessor).toBe(state);
 });

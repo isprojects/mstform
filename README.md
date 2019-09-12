@@ -297,8 +297,8 @@ mstform defines a bunch of accessors:
 
 -   `GroupAccessor`. You define this in a second argument on forms. You can
     access it via the `group()` method on any form accessor. This is a special
-    kind of accessor that only implements an `isValid` method. It's a way to
-    aggregate validation results from other accessors.
+    kind of accessor that only implements the `isValid` and `isWarningFree` methods.
+    It's a way to aggregate validation results from other accessors.
 
 -   Finally there is the `FormState` itself, which is the accessor at the root of
     all things. You get it with `form.state()`.
@@ -918,6 +918,7 @@ Here is an example `ProcessResult`:
 ```js
 const result = {
     updates: [{ path: "/a", value: "Alpha" }],
+    accessUpdates: [{path: '/c', disabled: true }]
     errorValidations: [
         { id: "one", messages: [{ path: "/b", message: "This is wrong" }] }
     ],
@@ -925,12 +926,20 @@ const result = {
 };
 ```
 
-`updates` is a list of fields to update. Each field is indicated by the field
-path. The rest of the structure is up to the developer and defines the update
+`updates` is a list of fields to update. Each field is indicated by `path`. The
+rest of the structure is up to the developer and defines the update
 information. By default, you need to supply a `value` with the new value to put
 in the form there, but you can implement by your custom update procedure based
 on other information if you pass an `applyUpdate` function (to be described
 later).
+
+`accessUpdates` is a list of fields to update as well. Each field is indicated
+by `path`. The rest of the structure updates whether a field is `disabled`,
+`readOnly`, `hidden` and `required`. Not passing a particular boolean results
+in no change for that field. You can also use paths for accessors that aren't
+fields, such as a repeating form, in which case for
+`disabled,`readOnly`and`hidden`the information is inherited by all fields in it. Setting`required` only has meaning on the field accessor itself and is
+not inherited.
 
 Both `errorValidations` and `warningValidations` are lists of validation
 structures. These validation structures each have an `id` -- if a new
@@ -1136,7 +1145,10 @@ is filling in the form.
 If you use `ignoreSaveStatus` the save status is not affect and remains
 `before`.
 
-You can reset the save status back to `before` with `'resetSaveStatus()`.
+You can reset the save status back to `before` with `state.resetSaveStatus()`.
+
+You can remove all internal and external errors and warnings by calling
+`state.clearAllValidations()`.
 
 ## required fields
 
@@ -1331,12 +1343,15 @@ Here we define two groups, `one` and `two`. Group `one` is valid only if `a`
 and `b` are valid. Group `two` is valid only if `c` is valid.
 
 You can access a group on the state or form accessor and check its `isValid`
-property:
+or `isWarningFree` property:
 
 ```js
 const first = state.group("first");
 if (first.isValid) {
     // only executed if a and b are valid
+}
+if (first.isWarningFree) {
+    // only executed if none of the group members have warnings
 }
 ```
 

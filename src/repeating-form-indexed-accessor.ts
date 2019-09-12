@@ -2,82 +2,43 @@ import { action, observable, computed } from "mobx";
 
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
-import { RepeatingFormAccessor } from "./repeating-form-accessor";
-import { setAddModeDefaults } from "./addMode";
 import { FormAccessorBase } from "./form-accessor-base";
-import { FormAccessor } from "./form-accessor";
-import { pathToFieldref } from "./utils";
-import { IFormAccessor } from "./interfaces";
+import {
+  IRepeatingFormIndexedAccessor,
+  IRepeatingFormAccessor
+} from "./interfaces";
 
 export class RepeatingFormIndexedAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> implements IFormAccessor<D, G> {
-  formAccessor: FormAccessor<D, G>;
-
+> extends FormAccessorBase<D, G>
+  implements IRepeatingFormIndexedAccessor<D, G> {
   @observable
   index: number;
 
-  @observable
-  _addMode: boolean = false;
-
   constructor(
     public state: FormState<any, any, any>,
-    public definition: D,
-    public groupDefinition: G | undefined,
-    public parent: RepeatingFormAccessor<D, G>,
+    definition: D,
+    groupDefinition: G | undefined,
+    public parent: IRepeatingFormAccessor<D, G>,
     index: number
   ) {
-    super();
+    super(definition, groupDefinition, parent, false);
     this.index = index;
-    this.formAccessor = new FormAccessor(
-      state,
-      definition,
-      groupDefinition,
-      this,
-      false
-    );
-  }
-
-  dispose() {
-    // no op
+    this.initialize();
   }
 
   clear() {
-    this.formAccessor.flatAccessors.forEach(accessor => {
+    this.flatAccessors.forEach(accessor => {
       accessor.clear();
     });
-    return this.parent.removeIndex(this.index);
-  }
-
-  @computed
-  get disabled(): boolean {
-    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
-  }
-
-  @computed
-  get hidden(): boolean {
-    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
-  }
-
-  @computed
-  get readOnly(): boolean {
-    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
-  }
-
-  @computed
-  get inputAllowed(): boolean {
-    return !this.disabled && !this.hidden && !this.readOnly;
+    this.parent.removeIndex(this.index);
+    this.dispose();
   }
 
   @computed
   get path(): string {
     return this.parent.path + "/" + this.index;
-  }
-
-  @computed
-  get fieldref(): string {
-    return pathToFieldref(this.path);
   }
 
   @computed
@@ -93,7 +54,7 @@ export class RepeatingFormIndexedAccessor<
   @action
   setAddMode(addModeDefaults: string[]) {
     this._addMode = true;
-    setAddModeDefaults(this.formAccessor, addModeDefaults);
+    this.setAddModeDefaults(addModeDefaults);
   }
 
   @computed
