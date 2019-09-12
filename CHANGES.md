@@ -3,6 +3,9 @@
 -   BREAKING CHANGE: Required errors now disappear after saving with
     `ignoreRequired` turned on.
 
+-   Bugfix: The form accessor was missing from the flat accessors that track
+    the error and warning messages. This is now fixed
+
 # 1.15.2
 
 -   Backend process would crash if it had a missing `accessUpdates`. Now it

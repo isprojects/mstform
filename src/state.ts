@@ -443,7 +443,7 @@ export class FormState<
         validationIdToMessage.set(validation.id, message.message);
       });
     });
-    this.flatAccessors.forEach(accessor => {
+    [this, ...this.flatAccessors].forEach(accessor => {
       const validationIdToMessage = pathToValidations.get(accessor.path);
       const externalMessages =
         messageType === "error"

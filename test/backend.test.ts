@@ -1375,3 +1375,30 @@ test("backend clearAllValidations", async () => {
   state.clearAllValidations();
   expect(field.error).toBeUndefined();
 });
+
+test("backend process all global error", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+  const o = M.create({ foo: "FOO" });
+  const myProcessAll = async (node: Instance<typeof M>) => {
+    return {
+      updates: [],
+      errorValidations: [
+        { id: "alpha", messages: [{ path: "", message: "error" }] }
+      ],
+      warningValidations: []
+    };
+  };
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+  const state = form.state(o, {
+    backend: {
+      processAll: myProcessAll,
+      debounce
+    }
+  });
+  await state.processAll();
+  expect(state.error).toEqual("error");
+});
