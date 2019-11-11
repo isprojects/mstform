@@ -20,7 +20,7 @@ import { FormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
 import { currentValidationProps } from "./validation-props";
 import { ValidateOptions } from "./validate-options";
-import { References } from "./references";
+import { References, NoReferences, IReferences } from "./references";
 import { pathToFieldref } from "./utils";
 import { IAccessor, IFormAccessor } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
@@ -34,7 +34,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   _disposer: IReactionDisposer | undefined;
 
-  _references?: References<any, any>;
+  references: IReferences<any, any>;
 
   constructor(
     public state: FormState<any, any, any>,
@@ -48,12 +48,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (field.options && field.options.references) {
       const options = field.options.references;
       const dependentQuery = options.dependentQuery || (() => ({}));
-      this._references = new References(
-        this,
-        options.source,
-        dependentQuery,
-        !!options.autoLoad
-      );
+      this.references = new References(this, options.source, dependentQuery);
+    } else {
+      this.references = new NoReferences(this);
     }
   }
 
@@ -81,27 +78,6 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @computed
   get context(): any {
     return this.state.context;
-  }
-
-  async loadReferences(q?: any) {
-    if (this._references == null) {
-      return undefined;
-    }
-    return this._references.load(q);
-  }
-
-  references(q?: any) {
-    if (this._references == null) {
-      return undefined;
-    }
-    return this._references.references(q);
-  }
-
-  getReferenceById(id: any) {
-    if (this._references == null) {
-      return undefined;
-    }
-    return this._references.getById(id);
   }
 
   @computed

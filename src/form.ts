@@ -85,7 +85,6 @@ export interface DependentQuery<DQ> {
 export interface ReferenceOptions<SQ, DQ> {
   source: Source<SQ & DQ>;
   dependentQuery?: DependentQuery<DQ>;
-  autoLoad?: boolean;
 }
 
 export type ConversionErrors = {

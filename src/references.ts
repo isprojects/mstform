@@ -1,52 +1,77 @@
-import { reaction } from "mobx";
+import { reaction, IReactionDisposer } from "mobx";
+import { Instance, IAnyComplexType } from "mobx-state-tree";
 import { FieldAccessor } from "./field-accessor";
 import { Source } from "./source";
 import { DependentQuery } from "./form";
 
 export type Query = {};
 
-export class References<SQ extends Query, DQ extends Query> {
+export interface IReferences<SQ extends Query, DQ extends Query> {
+  autoLoadReaction(): IReactionDisposer;
+  load(searchQuery?: SQ): Promise<Instance<any>[]>;
+  references(searchQuery?: SQ): Instance<any>[] | undefined;
+  getById(id: any): Instance<any>;
+}
+
+export class References<SQ extends Query, DQ extends Query>
+  implements IReferences<SQ, DQ> {
   constructor(
     public accessor: FieldAccessor<any, any>,
     public source: Source<SQ & DQ>,
-    public dependentQuery: DependentQuery<DQ>,
-    public autoLoad: boolean
-  ) {
-    if (autoLoad) {
-      // XXX dispose?
-      reaction(
-        () => {
-          return dependentQuery(accessor);
-        },
-        () => {
-          this.load();
-        }
-      );
-    }
+    public dependentQuery: DependentQuery<DQ>
+  ) {}
+
+  autoLoadReaction(): IReactionDisposer {
+    return reaction(
+      () => {
+        return this.dependentQuery(this.accessor);
+      },
+      () => {
+        this.load();
+      }
+    );
   }
 
   getFullQuery(searchQuery?: SQ): SQ & DQ {
     if (searchQuery == null) {
       searchQuery = {} as SQ;
     }
-    // it may be we don't need to do the 'as object' story anymore
-    // in TS 3.2
-    // https://github.com/Microsoft/TypeScript/wiki/What's-new-in-TypeScript#generic-spread-expressions-in-object-literals
     return {
-      ...(searchQuery as object),
-      ...(this.dependentQuery(this.accessor) as object)
-    } as SQ & DQ;
+      ...searchQuery,
+      ...this.dependentQuery(this.accessor)
+    };
   }
 
-  async load(searchQuery?: SQ): Promise<any[]> {
+  async load(searchQuery?: SQ): Promise<Instance<any>[]> {
     return this.source.load(this.getFullQuery(searchQuery));
   }
 
-  references(searchQuery?: SQ): any[] | undefined {
+  references(searchQuery?: SQ): Instance<any>[] | undefined {
     return this.source.references(this.getFullQuery(searchQuery));
   }
 
-  getById(id: any) {
+  getById(id: any): Instance<any> {
     return this.source.getById(id);
+  }
+}
+
+export class NoReferences<SQ extends Query, DQ extends Query>
+  implements IReferences<SQ, DQ> {
+  constructor(public accessor: FieldAccessor<any, any>) {}
+
+  autoLoadReaction(): IReactionDisposer {
+    throw new Error(`No references defined for field: ${this.accessor.path}`);
+  }
+
+  async load(searchQuery?: SQ): Promise<Instance<any>[]> {
+    throw new Error(`No references defined for field: ${this.accessor.path}`);
+  }
+
+  references(searchQuery?: SQ): Instance<any>[] | undefined {
+    throw new Error(`No references defined for field: ${this.accessor.path}`);
+  }
+
+  getById(id: any): Instance<any> {
+    throw new Error(`No references defined for field: ${this.accessor.path}`);
   }
 }

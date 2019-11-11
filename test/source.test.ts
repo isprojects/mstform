@@ -160,18 +160,19 @@ describe("source accessor in fields", () => {
 
     // we must trigger a load before we can access references
     // synchronously
-    await fieldA.loadReferences();
+    await fieldA.references.load();
 
-    const refsA = fieldA.references();
+    const refsA = fieldA.references.references();
     expect(refSnapshots(refsA)).toEqual([
       { id: 1, text: "AOne" },
       { id: 2, text: "ATwo" }
     ]);
 
-    await fieldB.loadReferences();
+    await fieldB.references.load();
+
     // when we haven't selected A yet, this will be empty - no choices
     // are possible
-    const refsB = fieldB.references();
+    const refsB = fieldB.references.references();
     expect(refSnapshots(refsB)).toEqual([]);
 
     // now we make a selection in A
@@ -182,14 +183,14 @@ describe("source accessor in fields", () => {
     fieldA.setRaw(item1);
 
     // now we reload B
-    fieldB.loadReferences();
+    await fieldB.references.load();
 
     // this will automatically trigger a reload of b, as a is dependent on b
     // and we turn on autoReload
     await resolveReactions();
 
     // refs for B should now be a different list that fits A
-    const refsB2 = fieldB.references();
+    const refsB2 = fieldB.references.references();
 
     expect(refSnapshots(refsB2)).toEqual([
       { id: 3, text: "BThree" },
@@ -227,10 +228,7 @@ describe("source accessor in fields", () => {
           // should be sent whenever a load is issued
           dependentQuery: accessor => {
             return { a: accessor.node.a };
-          },
-          // this source should automatically reload if the query output
-          // changes because of a data change
-          autoLoad: true
+          }
         }
       })
     });
@@ -239,21 +237,23 @@ describe("source accessor in fields", () => {
 
     const fieldA = state.field("a");
     const fieldB = state.field("b");
+    const disposeA = fieldA.references.autoLoadReaction();
+    const disposeB = fieldB.references.autoLoadReaction();
 
     // we must trigger a load before we can access references
     // synchronously
-    await fieldA.loadReferences();
+    await fieldA.references.load();
 
-    const refsA = fieldA.references();
+    const refsA = fieldA.references.references();
     expect(refSnapshots(refsA)).toEqual([
       { id: 1, text: "AOne" },
       { id: 2, text: "ATwo" }
     ]);
 
-    await fieldB.loadReferences();
+    await fieldB.references.load();
     // when we haven't selected A yet, this will be empty - no choices
     // are possible
-    const refsB = fieldB.references();
+    const refsB = fieldB.references.references();
     expect(refSnapshots(refsB)).toEqual([]);
 
     // now we make a selection in A
@@ -268,11 +268,14 @@ describe("source accessor in fields", () => {
     await resolveReactions();
 
     // refs for B should now be a different list that fits A
-    const refsB2 = fieldB.references();
+    const refsB2 = fieldB.references.references();
 
     expect(refSnapshots(refsB2)).toEqual([
       { id: 3, text: "BThree" },
       { id: 4, text: "BFour" }
     ]);
+
+    disposeA();
+    disposeB();
   });
 });
