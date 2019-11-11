@@ -11,6 +11,7 @@ export interface IReferences<SQ extends Query, DQ extends Query> {
   load(searchQuery?: SQ): Promise<Instance<any>[]>;
   references(searchQuery?: SQ): Instance<any>[] | undefined;
   getById(id: any): Instance<any>;
+  isEnabled(): boolean;
 }
 
 export class References<SQ extends Query, DQ extends Query>
@@ -53,6 +54,10 @@ export class References<SQ extends Query, DQ extends Query>
   getById(id: any): Instance<any> {
     return this.source.getById(id);
   }
+
+  isEnabled(): boolean {
+    return true;
+  }
 }
 
 export class NoReferences<SQ extends Query, DQ extends Query>
@@ -73,5 +78,9 @@ export class NoReferences<SQ extends Query, DQ extends Query>
 
   getById(id: any): Instance<any> {
     throw new Error(`No references defined for field: ${this.accessor.path}`);
+  }
+
+  isEnabled(): boolean {
+    return false;
   }
 }

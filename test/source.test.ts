@@ -146,9 +146,6 @@ describe("source accessor in fields", () => {
           dependentQuery: accessor => {
             return { a: accessor.node.a };
           }
-          // this source should automatically reload if the query output
-          // changes because of a data change
-          //  autoLoad: true
         }
       })
     });
@@ -157,6 +154,7 @@ describe("source accessor in fields", () => {
 
     const fieldA = state.field("a");
     const fieldB = state.field("b");
+    expect(fieldA.references.isEnabled()).toBeTruthy();
 
     // we must trigger a load before we can access references
     // synchronously
@@ -277,5 +275,29 @@ describe("source accessor in fields", () => {
 
     disposeA();
     disposeB();
+  });
+
+  test("no references", async () => {
+    const r = R.create({
+      m: {
+        a: undefined
+      },
+      containerA: { items: {} },
+      containerB: { items: {} }
+    });
+
+    const o = r.m;
+
+    const form = new Form(M, {
+      a: new Field(converters.maybe(converters.model(ItemA)))
+    });
+
+    const state = form.state(o);
+
+    const fieldA = state.field("a");
+
+    expect(fieldA.references.isEnabled()).toBeFalsy();
+
+    expect(() => fieldA.references.references()).toThrow();
   });
 });
