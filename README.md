@@ -935,11 +935,11 @@ later).
 
 `accessUpdates` is a list of fields to update as well. Each field is indicated
 by `path`. The rest of the structure updates whether a field is `disabled`,
-`readOnly`, `hidden` and `required`. Not passing a particular boolean results
-in no change for that field. You can also use paths for accessors that aren't
-fields, such as a repeating form, in which case for
-`disabled,`readOnly`and`hidden`the information is inherited by all fields in it. Setting`required` only has meaning on the field accessor itself and is
-not inherited.
+`readOnly`, `hidden` and `required`. Not passing a particular boolean results in
+no change for that field. You can also use paths for accessors that aren't
+fields, such as a repeating form, in which case for `disabled`, `readOnly` and
+`hidden` the information is inherited by all fields in it. Setting `required`
+only has meaning on the field accessor itself and is not inherited.
 
 Both `errorValidations` and `warningValidations` are lists of validation
 structures. These validation structures each have an `id` -- if a new
@@ -1592,10 +1592,10 @@ autocomplete, we must load the references:
 const state = this.formState;
 const user = state.field("user");
 
-await user.loadReferences();
+await user.references.load();
 ```
 
-`loadReferences` can contain an object argument -- these are additional
+`references.load()` can contain an object argument -- these are additional
 search parameters to pass through `loadUser`, such as what the user typed in
 an autocomplete field.
 
@@ -1606,11 +1606,11 @@ Once references are loaded, we can access them in the UI (inside a React
 const state = this.formState;
 const user = state.field("user");
 
-const references = user.references();
-// display references somewhere
+const values = user.references.values();
+// display values somewhere
 ```
 
-The source caches search requests, so that any future `loadReferences` with
+The source caches search requests, so that any future `references.load()` with
 the same parameters resolve immediately without even hitting the backend. For
 this reason, the search query accepted by `load` must be either JSON
 serializable or alternatively you can provide a `keyForQuery` function to
@@ -1651,7 +1651,6 @@ const form = new Form(M, {
             dependentQuery: accessor => {
                 return { user: accessor.node.user };
             }
-            autoLoad: true
         }
     })
 });
@@ -1661,11 +1660,11 @@ The `dependentQuery` bit here makes sure that when you load references for
 `friend` the `user` is included automatically in this case the `user`
 field.
 
-`autoLoad` makes the friend references automatically reload whenever `user` is
-modified. This is useful for select widgets, which may need to refresh their
-list of options based on the values in other fields. If you leave it off (the
-default) then you are responsible for this yourself. This is useful for
-autocomplete widgets which only reload when the user interacts with them.
+Select widgets may need to refresh their list of options based on the values in
+other fields. If you want to enable this you can call `autoLoadReaction()` on
+`references`. If you don't call it (the default) then you are responsible for
+this yourself. This is useful for autocomplete widgets which only reload when
+the user interacts with them.
 
 Note: mstform does not yet not implement any cache eviction facilities, either
 from the container or from the search results.
