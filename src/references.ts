@@ -9,7 +9,7 @@ export type Query = {};
 export interface IReferences<SQ extends Query, DQ extends Query> {
   autoLoadReaction(): IReactionDisposer;
   load(searchQuery?: SQ): Promise<Instance<any>[]>;
-  references(searchQuery?: SQ): Instance<any>[] | undefined;
+  values(searchQuery?: SQ): Instance<any>[] | undefined;
   getById(id: any): Instance<any>;
   isEnabled(): boolean;
 }
@@ -47,7 +47,7 @@ export class References<SQ extends Query, DQ extends Query>
     return this.source.load(this.getFullQuery(searchQuery));
   }
 
-  references(searchQuery?: SQ): Instance<any>[] | undefined {
+  values(searchQuery?: SQ): Instance<any>[] | undefined {
     return this.source.references(this.getFullQuery(searchQuery));
   }
 
@@ -72,7 +72,7 @@ export class NoReferences<SQ extends Query, DQ extends Query>
     throw new Error(`No references defined for field: ${this.accessor.path}`);
   }
 
-  references(searchQuery?: SQ): Instance<any>[] | undefined {
+  values(searchQuery?: SQ): Instance<any>[] | undefined {
     throw new Error(`No references defined for field: ${this.accessor.path}`);
   }
 

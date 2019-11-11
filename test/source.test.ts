@@ -160,7 +160,7 @@ describe("source accessor in fields", () => {
     // synchronously
     await fieldA.references.load();
 
-    const refsA = fieldA.references.references();
+    const refsA = fieldA.references.values();
     expect(refSnapshots(refsA)).toEqual([
       { id: 1, text: "AOne" },
       { id: 2, text: "ATwo" }
@@ -170,7 +170,7 @@ describe("source accessor in fields", () => {
 
     // when we haven't selected A yet, this will be empty - no choices
     // are possible
-    const refsB = fieldB.references.references();
+    const refsB = fieldB.references.values();
     expect(refSnapshots(refsB)).toEqual([]);
 
     // now we make a selection in A
@@ -188,7 +188,7 @@ describe("source accessor in fields", () => {
     await resolveReactions();
 
     // refs for B should now be a different list that fits A
-    const refsB2 = fieldB.references.references();
+    const refsB2 = fieldB.references.values();
 
     expect(refSnapshots(refsB2)).toEqual([
       { id: 3, text: "BThree" },
@@ -242,7 +242,7 @@ describe("source accessor in fields", () => {
     // synchronously
     await fieldA.references.load();
 
-    const refsA = fieldA.references.references();
+    const refsA = fieldA.references.values();
     expect(refSnapshots(refsA)).toEqual([
       { id: 1, text: "AOne" },
       { id: 2, text: "ATwo" }
@@ -251,7 +251,7 @@ describe("source accessor in fields", () => {
     await fieldB.references.load();
     // when we haven't selected A yet, this will be empty - no choices
     // are possible
-    const refsB = fieldB.references.references();
+    const refsB = fieldB.references.values();
     expect(refSnapshots(refsB)).toEqual([]);
 
     // now we make a selection in A
@@ -266,7 +266,7 @@ describe("source accessor in fields", () => {
     await resolveReactions();
 
     // refs for B should now be a different list that fits A
-    const refsB2 = fieldB.references.references();
+    const refsB2 = fieldB.references.values();
 
     expect(refSnapshots(refsB2)).toEqual([
       { id: 3, text: "BThree" },
@@ -298,6 +298,6 @@ describe("source accessor in fields", () => {
 
     expect(fieldA.references.isEnabled()).toBeFalsy();
 
-    expect(() => fieldA.references.references()).toThrow();
+    expect(() => fieldA.references.values()).toThrow();
   });
 });
