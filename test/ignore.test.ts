@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types } from "mobx-state-tree";
+import { types, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, SubForm, converters } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -75,7 +75,7 @@ test("FormState can be saved ignoring required", async () => {
     return null;
   }
 
-  const state = form.state(o, { save });
+  const state = form.state(o, { backend: { save } });
 
   const field = state.field("foo");
 
@@ -86,11 +86,9 @@ test("FormState can be saved ignoring required", async () => {
 
   // now we save, ignoring required
   const saveResult = await state.save({ ignoreRequired: true });
-  // we still see the message, even though save succeeded
-  // XXX is this really the desired behavior? don't we want
-  // the required error until we save without ignoreRequired?
-  expect(field.error).toEqual("Required");
-  // but saving actually succeeded
+  // we expect the required message to be gone after save with ignoreRequired
+  expect(field.error).toEqual(undefined);
+  // saving actually succeeded
   expect(o.foo).toEqual("");
   expect(saveResult).toBeTruthy();
   expect(saved).toBeTruthy();
@@ -119,8 +117,19 @@ test("FormState can be saved ignoring external errors", async () => {
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/foo" ? "Wrong!" : undefined)
   });
 
@@ -167,8 +176,19 @@ test("FormState can be saved ignoring non-field external errors", async () => {
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "" ? "Wrong!" : undefined)
   });
 
@@ -211,8 +231,19 @@ test("ignoreGetError repeating indexed accessor non-field external", async () =>
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/items/0" ? "Wrong!" : undefined)
   });
 
@@ -251,9 +282,19 @@ test("ignoreGetError repeating accessor non-field external", async () => {
     saved = true;
     return null;
   }
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
 
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/items" ? "Wrong!" : undefined)
   });
 
@@ -293,8 +334,19 @@ test("ignoreGetError sub form accessor non-field external", async () => {
     return null;
   }
 
+  // we need to define a process as ignoreGetError is enabled automatically
+  // otherwise
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
   const state = form.state(o, {
-    save,
+    backend: { save, process },
     getError: accessor => (accessor.path === "/item" ? "Wrong!" : undefined)
   });
 
@@ -311,4 +363,29 @@ test("ignoreGetError sub form accessor non-field external", async () => {
   // but saving again without ignoreGetError will be an error
   const saveResult1 = await state.save();
   expect(saveResult1).toBeFalsy();
+});
+
+test("FormState can be saved without affecting save status", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  async function save(data: any) {
+    return null;
+  }
+
+  const state = form.state(o, {
+    backend: { save },
+    getError: accessor => (accessor.path === "/foo" ? "Wrong!" : undefined)
+  });
+
+  // now we save, ignoring save status
+  await state.save({ ignoreSaveStatus: true });
+  expect(state.saveStatus).toEqual("before");
 });

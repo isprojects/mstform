@@ -8,6 +8,7 @@ import {
   comparer,
   IReactionDisposer
 } from "mobx";
+
 import {
   Field,
   ProcessValue,
@@ -16,24 +17,17 @@ import {
   errorMessage
 } from "./form";
 import { FormState } from "./state";
-import { FormAccessor } from "./form-accessor";
+import { FormAccessorBase } from "./form-accessor-base";
 import { currentValidationProps } from "./validation-props";
-import { Accessor } from "./accessor";
 import { ValidateOptions } from "./validate-options";
 import { References } from "./references";
 import { pathToFieldref } from "./utils";
+import { IAccessor, IFormAccessor } from "./interfaces";
+import { AccessorBase } from "./accessor-base";
 
-export class FieldAccessor<R, V> {
-  name: string;
-
+export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @observable
   _raw: R | undefined;
-
-  @observable
-  _error: string | undefined;
-
-  @observable
-  _addMode: boolean = false;
 
   @observable
   _value: V;
@@ -45,10 +39,10 @@ export class FieldAccessor<R, V> {
   constructor(
     public state: FormState<any, any, any>,
     public field: Field<R, V>,
-    public parent: FormAccessor<any, any>,
-    name: string
+    parent: IFormAccessor<any, any>,
+    public name: string
   ) {
-    this.name = name;
+    super(parent);
     this.createDerivedReaction();
     this._value = state.getValue(this.path);
     if (field.options && field.options.references) {
@@ -63,6 +57,11 @@ export class FieldAccessor<R, V> {
     }
   }
 
+  @computed
+  get path(): string {
+    return (this.parent as FormAccessorBase<any, any>).path + "/" + this.name;
+  }
+
   dispose() {
     if (this._disposer == null) {
       return;
@@ -72,11 +71,6 @@ export class FieldAccessor<R, V> {
 
   clear() {
     this.dispose();
-  }
-
-  @computed
-  get path(): string {
-    return this.parent.path + "/" + this.name;
   }
 
   @computed
@@ -136,7 +130,9 @@ export class FieldAccessor<R, V> {
     // try to do any work. This isn't ideal but can happen
     // if the path a node was pointing to has been removed.
     const disposer = reaction(
-      () => (this.node ? derivedFunc(this.node) : undefined),
+      () => {
+        return this.node != null ? derivedFunc(this.node) : undefined;
+      },
       (derivedValue: any) => {
         if (derivedValue === undefined) {
           return;
@@ -159,7 +155,9 @@ export class FieldAccessor<R, V> {
     // XXX it's possible for this to be called for a node that has since
     // been removed. It's not ideal but we return undefined in such a case.
     try {
-      return this.state.getValue(this.parent.path);
+      return this.state.getValue(
+        (this.parent as FormAccessorBase<any, any>).path
+      );
     } catch {
       return undefined;
     }
@@ -170,7 +168,8 @@ export class FieldAccessor<R, V> {
     if (this._raw !== undefined) {
       return false;
     }
-    return this._addMode || this.parent.addMode;
+    // field accessor overrides this to look at raw value
+    return this._addMode || (this.parent as FormAccessorBase<any, any>).addMode;
   }
 
   @computed
@@ -197,6 +196,11 @@ export class FieldAccessor<R, V> {
 
   @action
   setValue(value: V) {
+    // if there are no changes, don't do anything
+    if (comparer.structural(this._value, value)) {
+      return;
+    }
+
     this._value = value;
     this.state.setValueWithoutRawUpdate(this.path, value);
     // XXX maybe rename this to 'update' as change might imply onChange
@@ -212,6 +216,21 @@ export class FieldAccessor<R, V> {
     }
   }
 
+  @action
+  setValueAndRawWithoutChangeEvent(value: V) {
+    // if there are no changes, don't do anything
+    if (comparer.structural(this._value, value)) {
+      return;
+    }
+
+    this._value = value;
+    this.state.setValueWithoutRawUpdate(this.path, value);
+    this._raw = this.field.render(
+      value,
+      this.state.stateConverterOptionsWithContext(this)
+    );
+  }
+
   @computed
   get value(): V {
     if (this.addMode) {
@@ -223,87 +242,12 @@ export class FieldAccessor<R, V> {
   }
 
   @computed
-  get errorValue(): string | undefined {
-    if (this._error === undefined) {
-      return this.state.getErrorFunc(this);
-    }
-    return this._error;
-  }
-
-  @computed
-  get warningValue(): string | undefined {
-    return this.state.getWarningFunc(this);
-  }
-
-  // XXX move this method to state
-  @computed
-  get canShowValidationMessages(): boolean {
-    // immediately after a save we always want messages
-    if (this.state.saveStatus === "rightAfter") {
-      return true;
-    }
-    const policy =
-      this.state.saveStatus === "before"
-        ? this.state.validationBeforeSave
-        : this.state.validationAfterSave;
-    if (policy === "immediate") {
-      return true;
-    }
-    if (policy === "no") {
-      return false;
-    }
-    // not implemented yet
-    if (policy === "blur" || policy === "pause") {
-      return false;
-    }
-    return true;
-  }
-
-  @computed
-  get error(): string | undefined {
-    if (this.canShowValidationMessages) {
-      return this.errorValue;
-    } else {
-      return undefined;
-    }
-  }
-
-  @computed
-  get warning(): string | undefined {
-    if (this.canShowValidationMessages) {
-      return this.warningValue;
-    } else {
-      return undefined;
-    }
-  }
-
-  @computed
-  get disabled(): boolean {
-    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
-  }
-
-  @computed
-  get hidden(): boolean {
-    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
-  }
-
-  @computed
-  get readOnly(): boolean {
-    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
-  }
-
-  @computed
-  get inputAllowed(): boolean {
-    return !this.disabled && !this.hidden && !this.readOnly;
-  }
-
-  @computed
   get required(): boolean {
-    // if the field is required, ignore dynamic required logic
-    // if the field isn't required, we can dynamically influence whether it is
     return (
       !this.field.converter.neverRequired &&
-      (this.field.required || this.state.isRequiredFunc(this))
+      (this.field.required ||
+        this._isRequired ||
+        this.state.isRequiredFunc(this))
     );
   }
 
@@ -317,6 +261,7 @@ export class FieldAccessor<R, V> {
     return this.isValid;
   }
 
+  // XXX move into interface
   @computed
   get isInternallyValid(): boolean {
     // is internally valid even if getError gives an error
@@ -382,11 +327,6 @@ export class FieldAccessor<R, V> {
       this.setError(extraResult);
     }
 
-    // if there are no changes, don't do anything
-    if (comparer.structural(this.value, processResult.value)) {
-      return;
-    }
-
     this.setValue(processResult.value);
   }
 
@@ -415,14 +355,10 @@ export class FieldAccessor<R, V> {
     this.setRawFromValue();
   }
 
+  // XXX should these go into interface / base class?
   @action
   setError(error: string) {
     this._error = error;
-  }
-
-  @action
-  clearError() {
-    this._error = undefined;
   }
 
   // backward compatibility -- use setRaw instead
@@ -468,7 +404,7 @@ export class FieldAccessor<R, V> {
     return currentValidationProps(this);
   }
 
-  accessBySteps(steps: string[]): Accessor {
+  accessBySteps(steps: string[]): IAccessor {
     throw new Error("Cannot step through field accessor");
   }
 }

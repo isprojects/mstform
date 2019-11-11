@@ -6,41 +6,50 @@ import {
   IAnyModelType,
   Instance
 } from "mobx-state-tree";
-import { Accessor } from "./accessor";
+
 import {
   Form,
   FormDefinition,
   ValidationResponse,
   GroupDefinition,
   ErrorFunc,
-  IDisposer
+  IDisposer,
+  RepeatingForm
 } from "./form";
-import {
-  deepCopy,
-  deleteByPath,
-  getByPath,
-  pathToSteps,
-  stepsToPath,
-  pathToFieldref
-} from "./utils";
+import { pathToSteps, stepsToPath } from "./utils";
 import { FieldAccessor } from "./field-accessor";
-import { FormAccessor } from "./form-accessor";
-import { RepeatingFormAccessor } from "./repeating-form-accessor";
-import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { FormAccessorBase } from "./form-accessor-base";
+import { RepeatingFormAccessor } from "./repeating-form-accessor";
+import { SubFormAccessor } from "./sub-form-accessor";
+import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { ValidateOptions } from "./validate-options";
 import {
   StateConverterOptions,
   StateConverterOptionsWithContext
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
+import {
+  Backend,
+  ProcessorOptions,
+  Process,
+  SaveFunc,
+  ProcessAll,
+  AccessUpdate
+} from "./backend";
+import { Validation } from "./validationMessages";
+import {
+  IAccessor,
+  IFormAccessor,
+  IRepeatingFormAccessor,
+  ISubFormAccessor
+} from "./interfaces";
 
 export interface AccessorAllows {
-  (accessor: Accessor): boolean;
+  (accessor: IAccessor): boolean;
 }
 
 export interface ErrorOrWarning {
-  (accessor: Accessor): string | undefined;
+  (accessor: IAccessor): string | undefined;
 }
 
 export interface ExtraValidation {
@@ -49,10 +58,6 @@ export interface ExtraValidation {
 
 export interface RepeatingFormAccessorAllows {
   (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
-}
-
-export interface SaveFunc<M> {
-  (node: Instance<M>): any;
 }
 
 export interface EventFunc<R, V> {
@@ -68,14 +73,21 @@ export interface UpdateFunc<R, V> {
 // pause would show validation after the user stops input for a while
 export type ValidationOption = "immediate" | "no"; //  | "blur" | "pause";
 
-export interface FormStateOptions<M> {
+export type BackendOptions<M> = {
   save?: SaveFunc<M>;
+  process?: Process<M>;
+  processAll?: ProcessAll<M>;
+};
+
+type ValidationOptions = {
+  beforeSave: ValidationOption;
+  afterSave: ValidationOption;
+  pauseDuration: number;
+};
+
+export interface FormStateOptions<M> {
   addMode?: boolean;
-  validation?: {
-    beforeSave?: ValidationOption;
-    afterSave?: ValidationOption;
-    pauseDuration?: number;
-  };
+  validation?: Partial<ValidationOptions>;
   isDisabled?: AccessorAllows;
   isHidden?: AccessorAllows;
   isReadOnly?: AccessorAllows;
@@ -83,6 +95,8 @@ export interface FormStateOptions<M> {
 
   getError?: ErrorOrWarning;
   getWarning?: ErrorOrWarning;
+
+  backend?: BackendOptions<M> & ProcessorOptions;
 
   extraValidation?: ExtraValidation;
   focus?: EventFunc<any, any>;
@@ -92,6 +106,8 @@ export interface FormStateOptions<M> {
   context?: any;
   converterOptions?: StateConverterOptions;
   requiredError?: string | ErrorFunc;
+
+  addModeDefaults?: string[];
 }
 
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
@@ -100,15 +116,10 @@ export class FormState<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> {
-  @observable
-  additionalErrorTree: any;
-
+> extends FormAccessorBase<D, G> implements IFormAccessor<D, G> {
   @observable
   saveStatus: SaveStatusOptions = "before";
 
-  formAccessor: FormAccessor<D, G>;
-  saveFunc: SaveFunc<M>;
   validationBeforeSave: ValidationOption;
   validationAfterSave: ValidationOption;
   validationPauseDuration: number;
@@ -120,9 +131,11 @@ export class FormState<
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
-  focusFunc: EventFunc<any, any> | null;
-  blurFunc: EventFunc<any, any> | null;
-  updateFunc: UpdateFunc<any, any> | null;
+  focusFunc: EventFunc<any, any> | undefined;
+  blurFunc: EventFunc<any, any> | undefined;
+  updateFunc: UpdateFunc<any, any> | undefined;
+
+  processor: Backend<M> | undefined;
 
   _context: any;
   _converterOptions: StateConverterOptions;
@@ -132,10 +145,28 @@ export class FormState<
   constructor(
     public form: Form<M, D, G>,
     public node: Instance<M>,
-    options?: FormStateOptions<M>
+    {
+      addMode = false,
+      isDisabled = () => false,
+      isHidden = () => false,
+      isReadOnly = () => false,
+      isRequired = () => false,
+      getError = () => undefined,
+      getWarning = () => undefined,
+      backend = undefined,
+      extraValidation = () => false,
+      validation = {},
+      focus,
+      blur,
+      update,
+      context,
+      converterOptions = {},
+      requiredError = "Required",
+      addModeDefaults = []
+    }: FormStateOptions<M> = {}
   ) {
-    super();
-    this.additionalErrorTree = {};
+    super(form.definition, form.groupDefinition, undefined, addMode);
+
     this.noRawUpdate = false;
 
     this._onPatchDisposer = onPatch(node, patch => {
@@ -148,96 +179,117 @@ export class FormState<
       }
     });
 
-    const addMode: boolean = options != null ? options.addMode || false : false;
+    this.isDisabledFunc = isDisabled;
+    this.isHiddenFunc = isHidden;
+    this.isReadOnlyFunc = isReadOnly;
+    this.isRequiredFunc = isRequired;
+    this.getErrorFunc = getError;
+    this.getWarningFunc = getWarning;
+    this.extraValidationFunc = extraValidation;
+    const validationOptions: ValidationOptions = {
+      beforeSave: "immediate",
+      afterSave: "immediate",
+      pauseDuration: 0,
+      ...validation
+    };
+    this.validationBeforeSave = validationOptions.beforeSave;
+    this.validationAfterSave = validationOptions.afterSave;
+    this.validationPauseDuration = validationOptions.pauseDuration;
+    this.focusFunc = focus;
+    this.blurFunc = blur;
+    this.updateFunc = update;
+    this._context = context;
+    this._converterOptions = converterOptions;
+    this._requiredError = requiredError;
 
-    this.formAccessor = new FormAccessor(
-      this,
-      this.form.definition,
-      this.form.groupDefinition,
-      null,
-      addMode
-    );
-    this.formAccessor.initialize();
+    checkConverterOptions(this._converterOptions);
 
-    if (options == null) {
-      this.saveFunc = defaultSaveFunc;
-      this.isDisabledFunc = () => false;
-      this.isHiddenFunc = () => false;
-      this.isReadOnlyFunc = () => false;
-      this.isRequiredFunc = () => false;
-      this.getErrorFunc = () => undefined;
-      this.getWarningFunc = () => undefined;
-      this.blurFunc = () => undefined;
-      this.extraValidationFunc = () => false;
-      this.validationBeforeSave = "immediate";
-      this.validationAfterSave = "immediate";
-      this.validationPauseDuration = 0;
-      this.focusFunc = null;
-      this.blurFunc = null;
-      this.updateFunc = null;
-      this._context = undefined;
-      this._converterOptions = {};
-      this._requiredError = "Required";
-    } else {
-      this.saveFunc = options.save ? options.save : defaultSaveFunc;
-      this.isDisabledFunc = options.isDisabled
-        ? options.isDisabled
-        : () => false;
-      this.isHiddenFunc = options.isHidden ? options.isHidden : () => false;
-      this.isReadOnlyFunc = options.isReadOnly
-        ? options.isReadOnly
-        : () => false;
-      this.isRequiredFunc = options.isRequired
-        ? options.isRequired
-        : () => false;
-      this.getErrorFunc = options.getError ? options.getError : () => undefined;
-      this.getWarningFunc = options.getWarning
-        ? options.getWarning
-        : () => undefined;
-      this.extraValidationFunc = options.extraValidation
-        ? options.extraValidation
-        : () => false;
-      const validation = options.validation || {};
-      this.validationBeforeSave = validation.beforeSave || "immediate";
-      this.validationAfterSave = validation.afterSave || "immediate";
-      this.validationPauseDuration = validation.pauseDuration || 0;
-      this.focusFunc = options.focus ? options.focus : null;
-      this.blurFunc = options.blur ? options.blur : null;
-      this.updateFunc = options.update ? options.update : null;
-      this._context = options.context;
-      this._converterOptions = options.converterOptions || {};
-      checkConverterOptions(this._converterOptions);
-      this._requiredError = options.requiredError || "Required";
+    if (backend != null) {
+      const processor = new Backend(
+        this,
+        node,
+        backend.save,
+        backend.process,
+        backend.processAll,
+        backend
+      );
+      this.processor = processor;
+
+      this.updateFunc = (accessor: FieldAccessor<any, any>) => {
+        if (update != null) {
+          update(accessor);
+        }
+        processor.run(accessor.path);
+      };
     }
+    this.initialize();
+
+    // this has to happen after initialization
+    if (addMode) {
+      this.setAddModeDefaults(addModeDefaults);
+    }
+  }
+
+  // needed by FormAccessor base
+  get state() {
+    return this;
+  }
+
+  // normally context is determined from state, but state owns it
+  @computed
+  get context(): any {
+    return this._context;
   }
 
   dispose(): void {
     // clean up onPatch
     this._onPatchDisposer();
     // do dispose on all accessors, cleaning up
-    this.formAccessor.flatAccessors.forEach(accessor => {
+    this.flatAccessors.forEach(accessor => {
       accessor.dispose();
     });
   }
 
-  @computed
-  get context(): any {
-    return this._context;
+  // we delegate the creation to here to avoid circular dependencies
+  // between form accessor and its subclasses
+  createRepeatingFormAccessor(
+    repeatingForm: RepeatingForm<any, any>,
+    parent: IFormAccessor<any, any>,
+    name: string
+  ): IRepeatingFormAccessor<any, any> {
+    return new RepeatingFormAccessor(this, repeatingForm, parent, name);
+  }
+
+  createSubFormAccessor(
+    definition: any,
+    groupDefinition: any,
+    parent: IFormAccessor<any, any>,
+    name: string
+  ): ISubFormAccessor<any, any> {
+    return new SubFormAccessor(this, definition, groupDefinition, parent, name);
   }
 
   @computed
   get path(): string {
-    return "/";
-  }
-
-  @computed
-  get fieldref(): string {
-    return pathToFieldref(this.path);
+    return "";
   }
 
   @computed
   get value(): Instance<M> {
     return this.node;
+  }
+
+  @computed
+  get processPromise(): Promise<void> {
+    if (this.processor == null) {
+      return Promise.resolve();
+    }
+    return this.processor.isFinished();
+  }
+
+  @computed
+  get liveOnly(): boolean {
+    return this.saveStatus === "before";
   }
 
   stateConverterOptionsWithContext(
@@ -337,114 +389,128 @@ export class FormState<
   }
 
   @action
-  async save(options?: ValidateOptions): Promise<boolean> {
-    const isValid = this.validate(options);
-
-    // if we ignored required, we need to re-validate to restore
-    // the required messages (if any)
-    // XXX does this make sense to move this to validate itself?
-    if (options != null && options.ignoreRequired) {
-      // we don't care about the answer, only about updating the messages
-      // in the UI
-      this.validate();
+  async save(options: ValidateOptions = {}): Promise<boolean> {
+    if (this.processor == null) {
+      throw new Error("Cannot save without backend configuration");
     }
+    let extraOptions = {};
+    if (this.processor.process == null) {
+      extraOptions = { ignoreGetError: true };
+    }
+    const isValid = this.validate({ ...extraOptions, ...options });
 
-    this.setSaveStatus("rightAfter");
-
+    if (!options.ignoreSaveStatus) {
+      this.setSaveStatus("rightAfter");
+    }
     if (!isValid) {
       return false;
     }
 
-    const errors = await this.saveFunc(this.node);
+    return this.processor.realSave();
+  }
 
-    if (errors != null) {
-      this.setErrors(errors);
-      return false;
+  @action
+  async resetSaveStatus() {
+    this.setSaveStatus("before");
+  }
+
+  @action
+  async processAll() {
+    if (this.processor == null) {
+      throw new Error("Cannot process all without backend configuration");
     }
-    this.clearAdditionalErrors();
 
-    return true;
+    return this.processor.realProcessAll();
   }
 
   @action
-  setErrors(errors: any) {
-    const additionalErrors = deepCopy(errors);
-    this.flatAccessors.map(accessor => {
-      const error = getByPath(errors, accessor.path);
-      if (accessor instanceof FieldAccessor) {
-        if (error != null) {
-          accessor.setError(error);
-          // this.errors.set(accessor.path, error);
-          // delete from remaining structure
-          deleteByPath(additionalErrors, accessor.path);
+  setExternalValidations(
+    validations: Validation[],
+    messageType: "error" | "warning"
+  ) {
+    // a map of path to a map of validation_id -> message.
+    const pathToValidations = new Map<string, Map<string, string>>();
+    // which validation ids are touched at all
+    const affectedValidationIds = new Set<string>();
+    validations.forEach(validation => {
+      affectedValidationIds.add(validation.id);
+      validation.messages.forEach(message => {
+        let validationIdToMessage = pathToValidations.get(message.path);
+        if (validationIdToMessage == null) {
+          validationIdToMessage = new Map<string, string>();
         }
-      }
+        pathToValidations.set(message.path, validationIdToMessage);
+        validationIdToMessage.set(validation.id, message.message);
+      });
     });
-    this.additionalErrorTree = additionalErrors;
+    [this, ...this.flatAccessors].forEach(accessor => {
+      const validationIdToMessage = pathToValidations.get(accessor.path);
+      const externalMessages =
+        messageType === "error"
+          ? accessor.externalErrors
+          : accessor.externalWarnings;
+      externalMessages.update(validationIdToMessage, affectedValidationIds);
+    });
   }
 
   @action
-  clearErrors() {
-    this.additionalErrorTree = {};
-    this.flatAccessors.map(accessor => {
-      if (accessor instanceof FieldAccessor) {
-        accessor.clearError();
-      }
+  clearExternalValidations(messageType: "error" | "warning") {
+    this.flatAccessors.forEach(accessor => {
+      const externalMessages =
+        messageType === "error"
+          ? accessor.externalErrors
+          : accessor.externalWarnings;
+      externalMessages.clear();
     });
   }
 
   @action
-  clearAdditionalErrors() {
-    this.additionalErrorTree = {};
+  clearAllValidations() {
+    this.clearExternalValidations("error");
+    this.clearExternalValidations("warning");
+    this.flatAccessors.forEach(accessor => {
+      accessor.clearError();
+    });
+  }
+
+  @action
+  setAccessUpdate(accessUpdate: AccessUpdate) {
+    const accessor = this.accessByPath(accessUpdate.path);
+    if (accessor === undefined) {
+      return;
+    }
+    accessor.setAccess(accessUpdate);
   }
 
   getValue(path: string): any {
     return resolvePath(this.node, path);
   }
 
-  accessByPath(path: string): Accessor | undefined {
+  accessByPath(path: string): IAccessor | undefined {
     const steps = pathToSteps(path);
     return this.accessBySteps(steps);
   }
 
-  accessBySteps(steps: string[]): Accessor | undefined {
-    return this.formAccessor.accessBySteps(steps);
-  }
-
-  additionalError(name: string): string | undefined {
-    const result = this.additionalErrorTree[name];
-    if (typeof result !== "string") {
-      return undefined;
+  @computed
+  get canShowValidationMessages(): boolean {
+    // immediately after a save we always want messages
+    if (this.saveStatus === "rightAfter") {
+      return true;
     }
-    return result;
-  }
-
-  @computed
-  get additionalErrors(): string[] {
-    const result: string[] = [];
-    Object.keys(this.additionalErrorTree).forEach(key => {
-      const value = this.additionalErrorTree[key];
-      if (typeof value !== "string") {
-        return;
-      }
-      result.push(value);
-    });
-    result.sort();
-    return result;
-  }
-
-  @computed
-  get isWarningFree(): boolean {
-    if (this.formAccessor.warningValue !== undefined) {
+    const policy =
+      this.saveStatus === "before"
+        ? this.validationBeforeSave
+        : this.validationAfterSave;
+    if (policy === "immediate") {
+      return true;
+    }
+    if (policy === "no") {
       return false;
     }
-    return !this.flatAccessors.some(
-      accessor => (accessor ? accessor.warningValue !== undefined : false)
-    );
+    // not implemented yet
+    if (policy === "blur" || policy === "pause") {
+      return false;
+    }
+    return true;
   }
-}
-
-async function defaultSaveFunc() {
-  console.warn("No mstform save function configured");
-  return null;
 }

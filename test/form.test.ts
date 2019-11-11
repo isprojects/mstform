@@ -1,11 +1,5 @@
 import { configure, autorun } from "mobx";
-import {
-  getSnapshot,
-  types,
-  applySnapshot,
-  onPatch,
-  Instance
-} from "mobx-state-tree";
+import { types, applySnapshot, onPatch, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -212,6 +206,46 @@ test("repeating form push", () => {
   expect(forms.index(0).field("bar").raw).toEqual("BAR");
 });
 
+test("repeating form push, with default fieldrefs", () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  let changeCount = 0;
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string, {
+        change: () => {
+          changeCount++;
+        }
+      })
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  forms.push({ bar: "QUX" }, ["bar"]);
+  expect(forms.length).toBe(2);
+
+  const oneForm = forms.index(1);
+  const field = oneForm.field("bar");
+
+  // not in add mode
+  expect(field.raw).toEqual("QUX");
+
+  expect(forms.index(0).field("bar").raw).toEqual("BAR");
+  // no change events
+  expect(changeCount).toBe(0);
+});
+
 test("repeating form insert", () => {
   const N = types.model("N", {
     bar: types.string
@@ -241,6 +275,42 @@ test("repeating form insert", () => {
   // this thing is in add mode
   expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
+
+  field.setRaw("FLURB");
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("FLURB");
+  expect(field.value).toEqual("FLURB");
+});
+
+test("repeating form insert with default fieldrefs", () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  expect(forms.length).toBe(1);
+  forms.insert(0, { bar: "QUX" }, ["bar"]);
+  expect(forms.length).toBe(2);
+
+  const oneForm = forms.index(0);
+  const field = oneForm.field("bar");
+
+  // bar is not in add mode
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("QUX");
 
   field.setRaw("FLURB");
   expect(field.addMode).toBeFalsy();
@@ -539,47 +609,6 @@ test("repeating form multiple entries validate", () => {
     .setRaw("correct");
   const result3 = state.validate();
   expect(result3).toBeTruthy();
-});
-
-test("setErrors", () => {
-  const M = types.model("M", {
-    foo: types.string
-  });
-
-  const form = new Form(M, {
-    foo: new Field(converters.string)
-  });
-
-  const o = M.create({ foo: "FOO" });
-
-  const state = form.state(o);
-  state.setErrors({ foo: "WRONG" });
-
-  const field = state.field("foo");
-  expect(field.error).toEqual("WRONG");
-});
-
-test("setErrors repeating", () => {
-  const N = types.model("N", {
-    bar: types.string
-  });
-  const M = types.model("M", {
-    foo: types.array(N)
-  });
-
-  const form = new Form(M, {
-    foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
-  });
-
-  const o = M.create({ foo: [{ bar: "FOOO" }] });
-
-  const state = form.state(o);
-  state.setErrors({ foo: [{ bar: "WRONG" }] });
-
-  const field = state.repeatingForm("foo").accessors[0].field("bar");
-  expect(field.error).toBe("WRONG");
 });
 
 test("not required with maybe", () => {
@@ -1269,6 +1298,29 @@ test("add mode for flat form, maybeNull number", () => {
   field.setRaw("");
   expect(field.value).toEqual(null);
   expect(field.addMode).toBeFalsy();
+  field.setRaw("3");
+  expect(field.value).toEqual(3);
+  expect(field.raw).toEqual("3");
+  expect(field.addMode).toBeFalsy();
+});
+
+test("add mode for flat form, number, defaults", () => {
+  const M = types.model("M", {
+    foo: types.number
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.number)
+  });
+
+  const o = M.create({ foo: 0 });
+
+  const state = form.state(o, { addMode: true, addModeDefaults: ["foo"] });
+  const field = state.field("foo");
+
+  expect(field.value).toBe(0);
+  expect(field.addMode).toBeFalsy();
+  expect(field.raw).toEqual("0");
   field.setRaw("3");
   expect(field.value).toEqual(3);
   expect(field.raw).toEqual("3");
@@ -2293,7 +2345,7 @@ test("field disabled when form disabled", () => {
     isDisabled: accessor => accessor.path === ""
   });
 
-  const formAccessor = state.formAccessor;
+  const formAccessor = state;
   const foo = state.field("foo");
 
   expect(formAccessor.disabled).toBeTruthy();
@@ -2332,7 +2384,7 @@ test("inputAllowed", () => {
     isReadOnly: accessor => accessor.path === "/readOnlyField"
   });
 
-  const formAccessor = state.formAccessor;
+  const formAccessor = state;
   const disabledField = state.field("disabledField");
   const readOnlyField = state.field("readOnlyField");
   const repeatingForm = state.repeatingForm("repeatingForm");
@@ -2571,4 +2623,28 @@ test("isEmptyAndRequired on fields", () => {
 
   requiredDecimalField.setRaw("123.0");
   expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
+});
+
+test("clearAllValidations", () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      validators: [value => value !== "correct" && "Wrong"]
+    })
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  field.setRaw("BAR");
+  expect(field.raw).toEqual("BAR");
+  expect(field.error).toEqual("Wrong");
+  state.clearAllValidations();
+  expect(field.error).toBeUndefined();
 });

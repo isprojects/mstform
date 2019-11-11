@@ -155,3 +155,79 @@ test("changehook with null", () => {
   expect(b.raw).toEqual("");
   expect(b.value).toEqual(null);
 });
+
+test("changehook doesn't fire if nothing changed", () => {
+  const M = types
+    .model("M", {
+      c: types.number,
+      b: types.number
+    })
+    .actions(self => ({
+      setB(value: number) {
+        self.b = value;
+      }
+    }));
+
+  const touched: boolean[] = [];
+
+  const form = new Form(M, {
+    c: new Field(converters.number, {
+      change: (node, value) => {
+        touched.push(true);
+        node.setB(value);
+      }
+    }),
+    b: new Field(converters.number)
+  });
+
+  const o = M.create({ c: 1, b: 2 });
+
+  const state = form.state(o);
+  const c = state.field("c");
+  const b = state.field("b");
+
+  // we set it to 1 explicitly
+  c.setRaw("1");
+  expect(b.raw).toEqual("2");
+  expect(touched.length).toEqual(0);
+});
+
+test("changehook doesn't fire if nothing changed with required", () => {
+  const M = types
+    .model("M", {
+      c: types.string,
+      b: types.string
+    })
+    .actions(self => ({
+      setB(value: string) {
+        self.b = value;
+      }
+    }));
+
+  const touched: boolean[] = [];
+
+  const form = new Form(M, {
+    c: new Field(converters.string, {
+      change: (node, value) => {
+        touched.push(true);
+        node.setB("touched");
+      },
+      required: true
+    }),
+    b: new Field(converters.string)
+  });
+
+  const o = M.create({ c: "", b: "B" });
+
+  const state = form.state(o);
+  const c = state.field("c");
+  const b = state.field("b");
+  // confirm we start with B
+  expect(b.raw).toEqual("B");
+
+  // we set it to same value explicitly
+  c.setRaw("");
+  // the value should be untouched
+  expect(b.raw).toEqual("B");
+  expect(touched.length).toEqual(0);
+});

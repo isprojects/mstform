@@ -1,37 +1,43 @@
 import { observable, computed } from "mobx";
 import { applyPatch } from "mobx-state-tree";
+
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { FormState } from "./state";
-import { Accessor } from "./accessor";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
-import { FormAccessor } from "./form-accessor";
+import { AccessorBase } from "./accessor-base";
 import { ValidateOptions } from "./validate-options";
-import { pathToFieldref } from "./utils";
+import { ExternalMessages } from "./validationMessages";
+import {
+  IAccessor,
+  IRepeatingFormIndexedAccessor,
+  IRepeatingFormAccessor,
+  IFormAccessor
+} from "./interfaces";
 
 export class RepeatingFormAccessor<
   D extends FormDefinition<any>,
   G extends GroupDefinition<D>
-> {
+> extends AccessorBase implements IRepeatingFormAccessor<D, G> {
   name: string;
 
   @observable
-  repeatingFormIndexedAccessors: Map<number, any> = observable.map();
+  repeatingFormIndexedAccessors: Map<
+    number,
+    IRepeatingFormIndexedAccessor<D, G>
+  > = observable.map();
+
+  externalErrors = new ExternalMessages();
+  externalWarnings = new ExternalMessages();
 
   constructor(
     public state: FormState<any, any, any>,
     public repeatingForm: RepeatingForm<D, G>,
-    public parent: FormAccessor<any, any>,
+    public parent: IFormAccessor<any, any>,
     name: string
   ) {
+    super(parent);
     this.name = name;
-  }
-
-  dispose() {
-    // no op
-  }
-
-  clear() {
-    // no op
+    this.initialize();
   }
 
   @computed
@@ -40,20 +46,11 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get fieldref(): string {
-    return pathToFieldref(this.path);
-  }
-
-  @computed
   get value(): any {
     return this.state.getValue(this.path);
   }
 
-  @computed
-  get context(): any {
-    return this.state.context;
-  }
-
+  // XXX validate and isValid should be implemented on accessor?
   validate(options?: ValidateOptions): boolean {
     const values = this.accessors.map(accessor => accessor.validate(options));
     // appending possible error on the repeatingform itself
@@ -65,13 +62,13 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get addMode(): boolean {
-    return this.parent.addMode;
+  get isValid(): boolean {
+    return this.accessors.every(accessor => accessor.isValid);
   }
 
   @computed
-  get isValid(): boolean {
-    return this.accessors.every(accessor => accessor.isValid);
+  get addMode(): boolean {
+    return this.parent.addMode;
   }
 
   initialize() {
@@ -92,10 +89,9 @@ export class RepeatingFormAccessor<
       index
     );
     this.repeatingFormIndexedAccessors.set(index, result);
-    result.initialize();
   }
 
-  index(index: number): RepeatingFormIndexedAccessor<D, G> {
+  index(index: number): IRepeatingFormIndexedAccessor<D, G> {
     const accessor = this.repeatingFormIndexedAccessors.get(index);
     if (accessor == null) {
       throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
@@ -104,48 +100,13 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get disabled(): boolean {
-    return this.parent.disabled ? true : this.state.isDisabledFunc(this);
-  }
-
-  @computed
-  get hidden(): boolean {
-    return this.parent.hidden ? true : this.state.isHiddenFunc(this);
-  }
-
-  @computed
-  get readOnly(): boolean {
-    return this.parent.readOnly ? true : this.state.isReadOnlyFunc(this);
-  }
-
-  @computed
-  get inputAllowed(): boolean {
-    return !this.disabled && !this.hidden && !this.readOnly;
-  }
-
-  @computed
-  get accessors(): RepeatingFormIndexedAccessor<D, G>[] {
-    // we get the entries in this map, in order of index
-    const length = Array.from(this.repeatingFormIndexedAccessors.values())
-      .length;
-    const result = [];
-    for (let i = 0; i < length; i++) {
-      result.push(this.repeatingFormIndexedAccessors.get(i));
-    }
+  get accessors(): IRepeatingFormIndexedAccessor<D, G>[] {
+    const result = Array.from(this.repeatingFormIndexedAccessors.values());
+    result.sort((first, second) => first.index - second.index);
     return result;
   }
 
-  @computed
-  get flatAccessors(): Accessor[] {
-    const result: Accessor[] = [];
-    this.accessors.forEach(accessor => {
-      result.push(...accessor.flatAccessors);
-      result.push(accessor);
-    });
-    return result;
-  }
-
-  accessBySteps(steps: string[]): Accessor | undefined {
+  accessBySteps(steps: string[]): IAccessor | undefined {
     const [first, ...rest] = steps;
     const nr = parseInt(first, 10);
     if (isNaN(nr)) {
@@ -155,18 +116,19 @@ export class RepeatingFormAccessor<
     return accessor.accessBySteps(rest);
   }
 
-  insert(index: number, node: any) {
+  insert(index: number, node: any, addModeDefaults: string[] = []) {
     const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
-    this.index(index).setAddMode();
+    this.index(index).setAddMode(addModeDefaults);
   }
 
-  push(node: any) {
+  push(node: any, addModeDefaults: string[] = []) {
     const a = this.value;
     const index = a.length;
     const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
-    this.index(index).setAddMode();
+    const indexedAccessor = this.index(index);
+    indexedAccessor.setAddMode(addModeDefaults);
   }
 
   remove(node: any) {
@@ -187,7 +149,7 @@ export class RepeatingFormAccessor<
       return;
     }
     const toDelete: number[] = [];
-    const toInsert: RepeatingFormIndexedAccessor<any, any>[] = [];
+    const toInsert: IRepeatingFormIndexedAccessor<any, any>[] = [];
 
     accessors.forEach((accessor, i) => {
       if (i <= index) {
@@ -204,7 +166,7 @@ export class RepeatingFormAccessor<
     const accessors = this.repeatingFormIndexedAccessors;
 
     const toDelete: number[] = [];
-    const toInsert: RepeatingFormIndexedAccessor<any, any>[] = [];
+    const toInsert: IRepeatingFormIndexedAccessor<any, any>[] = [];
     accessors.forEach((accessor, i) => {
       if (i < index) {
         return;
@@ -219,7 +181,7 @@ export class RepeatingFormAccessor<
 
   private executeRenumber(
     toDelete: number[],
-    toInsert: RepeatingFormIndexedAccessor<any, any>[]
+    toInsert: IRepeatingFormIndexedAccessor<any, any>[]
   ) {
     const accessors = this.repeatingFormIndexedAccessors;
 
@@ -236,25 +198,5 @@ export class RepeatingFormAccessor<
   @computed
   get length(): number {
     return this.value.length;
-  }
-
-  @computed
-  get errorValue(): string | undefined {
-    return this.state.getErrorFunc(this);
-  }
-
-  @computed
-  get error(): string | undefined {
-    return this.errorValue;
-  }
-
-  @computed
-  get warningValue(): string | undefined {
-    return this.state.getWarningFunc(this);
-  }
-
-  @computed
-  get warning(): string | undefined {
-    return this.warningValue;
   }
 }

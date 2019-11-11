@@ -23,7 +23,7 @@ It doesn't put any requirements on your widgets. It works with any React
     instance in code as well and the form is automatically updated.
 -   Thanks to MST it's easy to convert form contents to JSON and back again.
 -   It knows about types. If you use vscode for instance, your editor tells you
-    if you do something wrong. This works even in plain Javascript if you enable
+    if you do something wrong. This works even in plain JavaScript if you enable
     `ts-check`.
 
 ## Philosophy
@@ -161,8 +161,8 @@ a form we need to initialize its _form state_. We create the form state with
 `form.state` and store it on `this` in the constructor.
 
 The form state maintains form-related state, such as errors to display. It also
-can take state specific configuration (for instance how to save the form), but
-in this case we don't supply any.
+can take state specific configuration (for instance how to save the form to a
+backend), but in this case we don't supply any.
 
 The form state needs a MST instance; this is the MST instance that you modify
 with the form. When the user changes the form and it passes validation, the MST
@@ -297,8 +297,8 @@ mstform defines a bunch of accessors:
 
 -   `GroupAccessor`. You define this in a second argument on forms. You can
     access it via the `group()` method on any form accessor. This is a special
-    kind of accessor that only implements an `isValid` method. It's a way to
-    aggregate validation results from other accessors.
+    kind of accessor that only implements the `isValid` and `isWarningFree` methods.
+    It's a way to aggregate validation results from other accessors.
 
 -   Finally there is the `FormState` itself, which is the accessor at the root of
     all things. You get it with `form.state()`.
@@ -326,7 +326,7 @@ have some properties in common:
 -   `isValid`: Is true if the accessor (and all its sub-accessors) is valid.
 
 -   `error`: An error message (or `undefined`). Note that errors on non-field
-    accessors can only be set by external means such as with the `getERror`
+    accessors can only be set by external means such as with the `getError`
     hook.
 
 -   `warning`: A warning message (or `undefined`). Warning messages can only
@@ -358,7 +358,10 @@ other object:
     `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
     the number of decimals that is initially rendered when opening the form.
     With `allowNegative` (boolean, default true) you can specify if negative
-    values are allowed.
+    values are allowed. With `normalizedDecimalPlaces` you can set the amount
+    of decimal places the converted number has. It should not be lower than
+    `decimalPlaces`, but can be higher. If it is, the given number is
+    automatically padded with additional decimal places set to 0.
 
     Conversion error types are:
 
@@ -701,6 +704,19 @@ what empty values to display in an add form? The converter actually specifies
 this -- `converters.number` for instance knows that the empty value is the
 empty string.
 
+In case you already have a default value for a field and you do not want it to
+be in add-mode, you can exclude them by including its fieldref in the
+`addModeDefaults` option:
+
+```js
+const state = form.state(node, { addMode: true, addModeDefaults: ["nr"] });
+```
+
+Now the `nr` field is shown with the value `0` in it immediately.
+
+If the field you reference from `addModeDefaults` is configured to be derived,
+this is used to calculate the derived value automatically.
+
 ### Add mode for repeating forms
 
 Consider a repeating sub-form. Adding a new entry to a sub-form is much like
@@ -710,27 +726,61 @@ you use the `.push` and `.insert` methods on the repeating form accessor, or if
 you manipulate the underlying model directly. Existing records are shown in
 edit mode, unless the whole form is in add mode.
 
-## Saving
+If you use `.push` and `.insert` on the repeating form accessor, you can pass
+in an additional argument with the `addModeDefaults` array. Here is an example:
 
-When we create the form state, we can pass it some options. One is a function
-that explains how to save the MST instance, for instance by sending JSON
-to a backend:
+```js
+repeating.push({ a: 3, b: 5 }, ["b"]);
+```
+
+Here `a` is not mentioned and is considered to be in add-mode; instead of its
+value, the empty raw is shown instead. But `b` is referenced and therefore `5`
+is visible immediately in the form.
+
+## Backend interaction (save and processing)
+
+When we create the form state, we can pass it options on how to interact with
+the backend. There are two features:
+
+-   You can save the form by specifying a save function. This save function can
+    return error messages in case the backend could not save successfully.
+
+-   You can configure the form to be validated and updated dynamically by the
+    backend using a `process` function. This can show messages and update the
+    form while the user is typing, under the control of a backend. This is
+    useful because validation needs to be defined on the backend anyway in
+    order to prevent any incorrect data to be submitted. This way you can
+    integrate this same validation code with the frontend. You can also supply
+    a `processAll` function which runs all validations supported by the
+    backend.
+
+### Save
+
+You can write a function that defines how to save the underlying MST instance
+(node), for instance by sending JSON to a backend:
+
+```js
+async function save(node) {
+    // we have defined a real 'save' function on the model that knows how
+    // to save the form to the backend. Should return a ProcessResult if
+    // there is a problem, or null or undefined if there is no problem.
+    return node.save();
+}
+```
+
+Here is how we configure it:
 
 ```js
 this.formState = form.state(o, {
-    save: async node => {
-        // we call the real save function that actually knows
-        // how to save the form.
-        return node.save();
-    }
+    backend: { save }
 });
 ```
 
-The save function should return `null` if the save succeeded and there are no
-server validation errors. It can also returns a special `errors` object in case
-saving failed -- we discuss this in a bit.
+The save function should return `undefined` or `null` if the save succeeded and
+there are no server validation errors. It can also return a special process
+result - we discuss this below.
 
-Then when you implement a form submit button, you should call `state.save()`:
+When you implement a form submit button, you should call `state.save()`:
 
 ```js
 @observer
@@ -739,9 +789,7 @@ export class MyForm extends Component {
         super(props);
         // we create a form state for this model
         this.formState = form.state(o, {
-            save: async node => {
-                return node.save();
-            }
+            backend: { save }
         });
     }
 
@@ -769,77 +817,204 @@ export class MyForm extends Component {
 
 `state.save()` does the following:
 
--   Makes sure the form is completely valid before it's submitted to the server,
-    otherwise displays client-side validation errors.
+-   Makes sure the form is completely valid before it's submitted to the
+    server. If not, the save is canceled and validation errors are displayed.
 
 -   Uses your supplied `save` function do to the actual saving.
 
--   Processes any additional validation errors returned by the server.
+-   Processes the process result returned by the server.
 
 -   Returns `true` if saving succeeded, and `false` if not due to validation
-    errors.
+    errors or server processing problems.
 
-If you don't specify your own `save` you can still call `state.save()`, but
-it gives you a warning on the console that no actual saving could take place.
-This is handy during development when you haven't wired up your
-backend logic yet.
+If you don't specify your own `save` you get an exception when you call
+`state.save()`.
 
-### Save errors
+### Backend form processing during user interaction
 
-When you save form content to some backend it may result in additional
-validation errors that are generated there. It is easier to detect
-some errors on the backend. It's a good idea to do server-side validation
-in any case, and it can be useful to reuse those errors in the frontend.
+Sometimes the backend knows more than the frontend, and you want to implement
+some form behavior on the backend. Besides the low-level hooks (such as
+`getError`) where you can integrate external behavior by hand, you can also
+configure this behavior at a higher level.
 
-As we said above, if your `save` function doesn't return `null` it should
-return a custom object that contains server validation errors.
+If you implement the form processing protocol on your backend, your backend can
+control validation messages (error and warning) messages, as well as control
+default values for fields and clear them if they become invalid.
 
-This can contain a description of the error, for instance:
+Here is how we configure it (in addition to `save`):
 
 ```js
-{
-    myError: "We cannot accept this data";
+async function process(node, path, liveOnly) {
+    // we have defined a real 'process' function on the model that knows how
+    // to invoke process on the backend. returns ProcessResult
+    return node.process();
 }
-```
 
-You can access these errors (so you can render them to the end user):
-
-```js
-state.additionalError("myError");
-```
-
-Or you can get a list of all of them with `state.additionalErrors()`.
-
-You can also specify errors for particular fields, by naming the error key the
-same as the name of the field. So, if you have an MST model like this:
-
-```js
-const M = types.model("M", {
-    name: types.string()
+this.formState = form.state(o, {
+    backend: { save, process }
 });
 ```
 
-And you want to display a specific backend-generated error for `name`, the
-error structure returned by `save()` needs to be:
+The `node` argument is the underlying node that the form represents. `path` is
+a JSON pointer (aka MST node path) to the field that was just changed by the
+user modifying the form. `liveOnly` is a boolean value and is set to `true`
+before you `invoked` save. This can be used to distinguish between "live
+validations" (which always run) from those that only start running after you
+attempt a save for the first time. The function should return a `ProcessResult`
+structure.
+
+The system keeps track of which field paths have been changed by the user. It
+also makes sure that user input is debounced, so that a change in the form only
+gets sent to the backend after the user stops changing the field for a field,
+or when a set time has passed.
+
+Once a field path has been changed, the node is sent to an asynchronous
+"process" function, along with the field path that changed. You should
+implement this function to define backend processing. It should send back a
+structure with error messages, warning messages, and field updates.
+
+The backend processing system ensures that the process function only runs one
+at the time, and in sequence (in the order in which they were triggered). This
+way, the consistency of updates is ensured.
+
+The system also keeps track of fields that have changed but have not
+yet been processed by the backend. In this case any updates from the backends
+are ignored - new user input takes precedence.
+
+### processAll
+
+The `process` function takes the path of the field that has been changed.
+`save` supports reprocessing of the whole form on the backend during saving. It
+can in some circumstances be useful to explicitly trigger such a reprocess by
+itself: run the backend process for the entire form at once. For this we have
+`processAll`.
+
+Here is how we configure it (in addition to `save` and `process`):
 
 ```js
-{
-    name: "Could not be matched in the database";
+async function processAll(node, liveOnly) {
+    // we have defined a real 'processAll' function on the model that knows how
+    // to invoke processAll on the backend. returns ProcessResult
+    return node.processAll();
 }
+
+this.formState = form.state(o, {
+    backend: { save, process, processAll }
+});
 ```
 
-Every `Field` can have an error entry. This also works for repeating forms; if
-you have a repeating structure `entries` and there is an error in `name` of the
-second entry, the error structure should look like this:
+You can invoke `processAll` on the form state to trigger it:
 
 ```js
-{
-    entries: [{}, { name: "We couldn't handle this" }];
-}
+formState.processAll();
 ```
 
-Additionally you can also assign errors to a field that are managed outside of
-mstform:
+### ProcessResult protocol
+
+`process`, `processAll` and `saveAll` all return a ProcessResult.
+
+Here is an example `ProcessResult`:
+
+```js
+const result = {
+    updates: [{ path: "/a", value: "Alpha" }],
+    accessUpdates: [{path: '/c', disabled: true }]
+    errorValidations: [
+        { id: "one", messages: [{ path: "/b", message: "This is wrong" }] }
+    ],
+    warningValidations: []
+};
+```
+
+`updates` is a list of fields to update. Each field is indicated by `path`. The
+rest of the structure is up to the developer and defines the update
+information. By default, you need to supply a `value` with the new value to put
+in the form there, but you can implement by your custom update procedure based
+on other information if you pass an `applyUpdate` function (to be described
+later).
+
+`accessUpdates` is a list of fields to update as well. Each field is indicated
+by `path`. The rest of the structure updates whether a field is `disabled`,
+`readOnly`, `hidden` and `required`. Not passing a particular boolean results
+in no change for that field. You can also use paths for accessors that aren't
+fields, such as a repeating form, in which case for
+`disabled,`readOnly`and`hidden`the information is inherited by all fields in it. Setting`required` only has meaning on the field accessor itself and is
+not inherited.
+
+Both `errorValidations` and `warningValidations` are lists of validation
+structures. These validation structures each have an `id` -- if a new
+validation structure comes in, the previous validation structure with that id
+(if it exists) is removed. A validation structure contains a list of validation
+messages, each have a `path`. The `path` may be a path to a non-field such as a
+sub-form, or repeating form as well, in case the validation error applies to
+this.
+
+The idea is that the backend associates validation functions with one or more
+patterns of field paths (such as using the fieldref mechanism). Each validation
+function has a unique id and can generate messages for arbitrary field paths in
+the form. When a process request comes in, the backend only has to re-run
+validation functions that match the path that just changed. Other fields that
+are not affected do not have their messages affected - the frontend holds on to
+these validation messages.
+
+Warnings are like errors, but appear on field accessors with the `warning`
+property. They do not make the form invalid - saving is still possible.
+
+### Configuring backend processing
+
+Here is how we hook our `process` function into the backend.
+
+```js
+const M = types.model("M", {
+    foo: types.string
+});
+
+const o = M.create({ foo: "FOO" });
+
+async function myProcess(node, path) {
+    // call the backend, turn into ProcessResult and return it
+}
+
+form.state(o, { backend: { process: myProcess } });
+```
+
+This causes `myProcess` to be called whenever a field changes in the form
+(debounced). You can control the debounce delay by passing `delay` (default
+`500`):
+
+```js
+form.state(o, { backend: { process: myProcess, delay: 300 } });
+```
+
+As mentioned before you can also configure the `applyUpdate` function with
+a custom one:
+
+```js
+import { applyPatch } from "mobx-state-tree";
+
+function myApplyUpdate(node, update) {
+    // same behavior as the default
+    applyPatch(node, [
+        { op: "replace", path: update.path, value: update.value }
+    ]);
+}
+
+form.state(o, { backend: { process: myProcess, applyUpdate: myApplyUpdate } });
+```
+
+### Save errors
+
+Before we described how to dynamically update validation information during
+user interaction. We can also send back validation information when the user
+saves the form. If the save failed to pass backend validation, we can also also
+send back a `ProcessResult` instead of `undefined` or `null` (which both mean
+success). This `ProcessResult` may be partial - if you don't include a
+property, it is assumed to be the empty list.
+
+### Low level getError hook
+
+If you retrieve your errors in another way than using the process function, you
+can use the `getError` hook:
 
 ```js
 this.formState = form.state(o, {
@@ -854,10 +1029,10 @@ via `getError`, the internally generated message trumps the one returned by the
 `getError` hook.
 
 Other accessors in mstform - `SubForm`, `RepeatingForm` and `Form` - also use
-this error hook, allowing you to set errors on the complete form - or any accessor
-within it. Indexed entries within repeating forms can also be set with an error.
-If, for example, we want to raise an error when a `RepeatingForm` is empty, we
-can raise an error on the repeating form accessor like this
+this error hook, allowing you to set errors on the complete form - or any
+accessor within it. Indexed entries within repeating forms can also be set with
+an error. If, for example, we want to raise an error when a `RepeatingForm` is
+empty, we can raise an error on the repeating form accessor like this
 
 ```js
 this.formState = form.state(o, {
@@ -868,36 +1043,26 @@ this.formState = form.state(o, {
 });
 ```
 
-To help implement the error (and warning) hooks, you can use the
-`resolveMessage` function. This takes a messages structure and a path as
-argument and returns either a message string or undefined. The messages
-structure is an object that has the same structure as the form: if there's an
-error message for field "foo" then there's a message structure:
+### Low level getWarning hook
+
+mstform has a hook which allows you to include `warning` messages in its
+accessors. Warnings are similar to errors, but don't make the form invalid. The
+idea is that you can show warnings for certain fields in your form as a
+notification to the user.
 
 ```js
-{
-    foo: "Error message";
-}
+const state = form.state(o, {
+    getWarning: accessor =>
+        accessor.raw < 0 ? "This value is negative" : undefined
+});
 ```
 
-Sub forms are represented by sub objects in the messages structure, repeating
-forms by arrays with object entries. Besides this you can also hook up an error
-message to objects with the special key `__error__`:
+To implement warnings, pass a `getWarning` function. It is up to you to decide
+how and when you wish to show these warnings in the UI. To check if the form
+contains any warnings, you can use
 
 ```js
-{
-    "__message__": "Object specific error message"
-}
-```
-
-This way you can associate messages with `FormState`, `SubFormAccessor` and
-`RepeatingFormIndexedAccessor` when you use . You can also associate a message
-with `RepeatingFormAccessor`, i.e. the array itself, with `__message__<name>`:
-
-```js
-{
-    "__message__foo": "Array specific error message"
-}
+state.isWarningFree; // true or false
 ```
 
 ### Ignoring the required validation
@@ -929,7 +1094,24 @@ This lets `save` proceed even though there are still external validation
 errors. `save` still is blocked when you have an internal validation error -- a
 raw value that cannot be successfully converted.
 
-## Controlling validation messages
+If you only define a `save` function for your backend and no `process` function
+`ignoreGetError` is enabled automatically. This is to allow you to still save
+forms even though they have externally defined errors.
+
+### Ignoring the `saveStatus`.
+
+You can cause `save` to not affect the save status when you save::
+
+```js
+this.formState.save({ ignoreSaveStatus: true });
+```
+
+This causes the save status to remain `before`. Normally the save status is
+updated to `after` when you save, which can affect the display of validation
+messages and the state of the `liveOnly` flag that is passed to backend
+`process` and `processAll`.
+
+### Controlling validation messages
 
 By default, mstform displays inline validation errors as soon as you
 make a mistake. This may not be desirable. You can turn it off by
@@ -959,6 +1141,14 @@ this.formState = form.state(o, {
 In this case the user only sees updated validation errors once they press the
 button that triggers `state.save()` and no errors are generated when the user
 is filling in the form.
+
+If you use `ignoreSaveStatus` the save status is not affect and remains
+`before`.
+
+You can reset the save status back to `before` with `state.resetSaveStatus()`.
+
+You can remove all internal and external errors and warnings by calling
+`state.clearAllValidations()`.
 
 ## required fields
 
@@ -1096,28 +1286,6 @@ const state = form.state(o, {
 });
 ```
 
-## Warnings
-
-mstform has a hook which allows you to include `warning` messages in its accessors.
-Warnings are similar to errors, but don't make the form invalid. The idea is
-that you can show warnings for certain fields in your form as a notification to
-the user.
-
-```js
-const state = form.state(o, {
-    getWarning: accessor =>
-        accessor.raw < 0 ? "This value is negative" : undefined
-});
-```
-
-To implement warnings, pass a `getWarning` function. It is up to you to decide
-how and when you which to show these warnings in the UI. To check if the form
-contains any warnings, you can use
-
-```js
-state.isWarningFree; // true or false
-```
-
 ## Extra validation
 
 Sometimes the information needed to validate the form cannot be known in
@@ -1175,12 +1343,15 @@ Here we define two groups, `one` and `two`. Group `one` is valid only if `a`
 and `b` are valid. Group `two` is valid only if `c` is valid.
 
 You can access a group on the state or form accessor and check its `isValid`
-property:
+or `isWarningFree` property:
 
 ```js
 const first = state.group("first");
 if (first.isValid) {
     // only executed if a and b are valid
+}
+if (first.isWarningFree) {
+    // only executed if none of the group members have warnings
 }
 ```
 
@@ -1300,7 +1471,7 @@ etc. When you define the hook, `inputProps` on the field accessor contains an
 `onFocus`/`onBlur` handler, so if you use that with the field it is there
 automatically.
 
-In addition, you can set a field to rerender itself when you blur out of it,
+In addition, you can set a field to re-render itself when you blur out of it,
 using the `postprocess` option on fields. An example use case is rendering
 extra zeroes in decimal fields, like so:
 

@@ -187,6 +187,87 @@ test("calculated repeating push and remove", () => {
   expect(touched).toBeTruthy();
 });
 
+test("calculated with addModeDefaults", () => {
+  const N = types
+    .model("N", {
+      calculated: types.number,
+      a: types.number,
+      b: types.number
+    })
+    .views(self => ({
+      sum() {
+        return self.a + self.b;
+      }
+    }));
+
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  let changeCount = 0;
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      calculated: new Field(converters.number, {
+        derived: node => {
+          return node.sum();
+        },
+        change: () => {
+          changeCount++;
+        }
+      }),
+      a: new Field(converters.number),
+      b: new Field(converters.number)
+    })
+  });
+
+  const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }] });
+
+  const state = form.state(o);
+  const forms = state.repeatingForm("foo");
+
+  expect(changeCount).toBe(0);
+
+  forms.push({ calculated: 0, a: 5, b: 3 }, ["calculated", "a", "b"]);
+
+  // this shouldn't have issued a change, as the derived value is
+  // calculated during adding
+  expect(changeCount).toBe(0);
+
+  const sub0 = forms.index(0);
+  const calculated0 = sub0.field("calculated");
+
+  // derivation shouldn't have run
+  expect(calculated0.value).toEqual(0);
+  expect(calculated0.raw).toEqual("0");
+
+  // we now change a, which should modify the derived value
+  sub0.field("a").setRaw("3");
+  expect(changeCount).toBe(1);
+  expect(calculated0.value).toEqual(5);
+  expect(calculated0.raw).toEqual("5");
+
+  // we expect the same behavior for the new entry
+  const sub1 = forms.index(1);
+  const calculated1 = sub1.field("calculated");
+  // but derivation should have run
+  expect(calculated1.value).toEqual(8);
+
+  sub1.field("a").setRaw("6");
+  expect(changeCount).toBe(2);
+  // we should have calculated the derived
+  expect(calculated1.value).toEqual(9);
+  expect(calculated1.raw).toEqual("9");
+
+  // now add a third entry
+  forms.push({ calculated: 0, a: 5, b: 3 }, ["calculated", "a", "b"]);
+  const sub2 = forms.index(2);
+
+  const calculated2 = sub2.field("calculated");
+  expect(calculated2.value).toEqual(8);
+  expect(calculated2.raw).toEqual("8");
+  expect(changeCount).toBe(2);
+});
+
 test("calculated with context", () => {
   const M = types
     .model("M", {
@@ -270,10 +351,10 @@ test("dispose", () => {
   // previous state is important to do test dispose
   // happens properly, don't remove!
   const previousState = form.state(o);
-  expect(counter).toBe(2);
+  expect(counter).toBe(1);
 
   const state = form.state(o);
-  expect(counter).toBe(4);
+  expect(counter).toBe(2);
 
   const calculated = state.field("calculated");
   const a = state.field("a");
@@ -289,14 +370,14 @@ test("dispose", () => {
   // this immediately affects the underlying value
   expect(calculated.value).toEqual(4);
 
-  expect(counter).toBe(4);
+  expect(counter).toBe(2);
 
   // we now change a, which should modify the derived value
   a.setRaw("3");
 
   // if we hadn't disposed properly this would have been
   // called more
-  expect(counter).toBe(7);
+  expect(counter).toBe(3);
 
   expect(calculated.raw).toEqual("5");
   // and also the underlying value, immediately

@@ -1,6 +1,6 @@
 {
     "name": "mstform",
-    "version": "1.10.0",
+    "version": "1.16.0",
     "description": "mobx-state-tree powered forms",
     "main": "dist/mstform.js",
     "typings": "dist/src/index.d.ts",
@@ -24,8 +24,6 @@
         "test:debug": "node --nolazy --inspect-brk=9229 ./node_modules/.bin/jest --runInBand",
         "test:prod": "yarn run lint && yarn run test -- --coverage --no-cache",
         "report-coverage": "cat ./coverage/lcov.info | coveralls",
-        "semantic-release": "semantic-release",
-        "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
         "precommit": "lint-staged"
     },
     "lint-staged": {
@@ -65,6 +63,7 @@
     },
     "devDependencies": {
         "@types/jest": "^22.2.0",
+        "@types/lodash.debounce": "^4.0.6",
         "@types/mobx-devtools-mst": "^0.9.0",
         "@types/node": "^10.0.3",
         "@types/react": "^16.2.0",
@@ -85,7 +84,6 @@
         "react": "^16.2.0",
         "react-dom": "^16.2.0",
         "replace-in-file": "^3.0.0-beta.2",
-        "semantic-release": "^15.0.0",
         "ts-jest": "^22.4.1",
         "ts-loader": "^4.4.2",
         "ts-node": "^6.0.0",
@@ -111,5 +109,7 @@
         "repeating",
         "state management"
     ],
-    "dependencies": {}
+    "dependencies": {
+        "lodash.debounce": "^4.0.8"
+    }
 }
