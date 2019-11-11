@@ -9,6 +9,10 @@ export type Query = {};
 export interface IReferences<SQ extends Query, DQ extends Query> {
   autoLoadReaction(): IReactionDisposer;
   load(searchQuery?: SQ): Promise<Instance<any>[]>;
+  loadWithTimestamp(
+    timestamp: number,
+    searchQuery?: SQ
+  ): Promise<Instance<any>[]>;
   values(searchQuery?: SQ): Instance<any>[] | undefined;
   getById(id: any): Instance<any>;
   isEnabled(): boolean;
@@ -43,12 +47,19 @@ export class References<SQ extends Query, DQ extends Query>
     };
   }
 
+  async loadWithTimestamp(
+    timestamp: number,
+    searchQuery?: SQ
+  ): Promise<Instance<any>[]> {
+    return this.source.load(timestamp, this.getFullQuery(searchQuery));
+  }
+
   async load(searchQuery?: SQ): Promise<Instance<any>[]> {
-    return this.source.load(this.getFullQuery(searchQuery));
+    return this.loadWithTimestamp(new Date().getTime(), searchQuery);
   }
 
   values(searchQuery?: SQ): Instance<any>[] | undefined {
-    return this.source.references(this.getFullQuery(searchQuery));
+    return this.source.values(this.getFullQuery(searchQuery));
   }
 
   getById(id: any): Instance<any> {
@@ -65,6 +76,13 @@ export class NoReferences<SQ extends Query, DQ extends Query>
   constructor(public accessor: FieldAccessor<any, any>) {}
 
   autoLoadReaction(): IReactionDisposer {
+    throw new Error(`No references defined for field: ${this.accessor.path}`);
+  }
+
+  async loadWithTimestamp(
+    timestamp: number,
+    searchQuery?: SQ
+  ): Promise<Instance<any>[]> {
     throw new Error(`No references defined for field: ${this.accessor.path}`);
   }
 

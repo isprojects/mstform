@@ -38,31 +38,34 @@ test("source", async () => {
     return data.filter(entry => entry.feature === feature);
   };
 
-  const source = new Source({ container, load });
+  const source = new Source({ container, load, cacheDuration: 2 });
 
-  await source.load({ feature: "x" });
+  await source.load(0, { feature: "x" });
+  expect(source.getById(1)).toEqual({ id: 1, text: "A" });
 
-  const refs = source.references({ feature: "x" });
-  expect(refs).not.toBeUndefined();
-  expect(refSnapshots(refs)).toEqual([
+  const values = source.values({ feature: "x" });
+  expect(values).not.toBeUndefined();
+  expect(refSnapshots(values)).toEqual([
     { id: 1, text: "A" },
     { id: 2, text: "B" }
   ]);
   expect(loadHit).toEqual(["x"]);
 
   // when we try to reload with the same feature, we don't get a hit for load
-  await source.load({ feature: "x" });
+  await source.load(0, { feature: "x" });
   expect(loadHit).toEqual(["x"]);
 
   // and we still get the same results
-  const refs2 = source.references({ feature: "x" });
-  expect(refs2).not.toBeUndefined();
-  expect(refSnapshots(refs2)).toEqual([
+  const values2 = source.values({ feature: "x" });
+  expect(values2).not.toBeUndefined();
+  expect(refSnapshots(values2)).toEqual([
     { id: 1, text: "A" },
     { id: 2, text: "B" }
   ]);
 
-  expect(source.getById(1)).toEqual({ id: 1, text: "A" });
+  // when the cache duration has expired we expect another load.
+  await source.load(3 * 1000, { feature: "x" });
+  expect(loadHit).toEqual(["x", "x"]);
 });
 
 describe("source accessor in fields", () => {

@@ -1,5 +1,5 @@
 import { observable } from "mobx";
-import { applySnapshot, applyPatch } from "mobx-state-tree";
+import { applySnapshot, applyPatch, Instance } from "mobx-state-tree";
 
 interface GetId {
   (o: object): string;
@@ -13,26 +13,34 @@ interface KeyForQuery<Q> {
   (q: Q): string;
 }
 
+interface CacheEntry {
+  timestamp: number;
+  values: Instance<any>[];
+}
+
 export class Source<Q> {
   _container: any;
   _load: Load<Q>;
   _getId: GetId;
+  _keyForQuery: KeyForQuery<Q>;
+  _cacheDuration: number;
+
   // XXX this grows indefinitely with cached results...
   @observable
-  _cache = new Map();
-
-  _keyForQuery: KeyForQuery<Q>;
+  _cache = new Map<string, CacheEntry>();
 
   constructor({
     container,
     load,
     getId,
-    keyForQuery
+    keyForQuery,
+    cacheDuration
   }: {
     container: any;
     load: Load<Q>;
     getId?: GetId;
     keyForQuery?: KeyForQuery<Q>;
+    cacheDuration?: number;
   }) {
     // XXX make it to we can get the container dynamically
     this._container = container;
@@ -45,6 +53,8 @@ export class Source<Q> {
       keyForQuery = (q: Q) => JSON.stringify(q);
     }
     this._keyForQuery = keyForQuery;
+    this._cacheDuration =
+      (cacheDuration != null ? cacheDuration : 5 * 60) * 1000;
   }
 
   getById(id: any) {
@@ -68,19 +78,27 @@ export class Source<Q> {
     }
   }
 
-  async load(q: Q): Promise<any[]> {
+  async load(timestamp: number, q: Q): Promise<Instance<any>[]> {
     const key = this._keyForQuery(q);
     const result = this._cache.get(key);
-    if (result !== undefined) {
-      return result;
+    if (
+      result !== undefined &&
+      timestamp < result.timestamp + this._cacheDuration
+    ) {
+      return result.values;
     }
     const items = await this._load(q);
-    const references = items.map((item: any) => this.addOrUpdate(item));
-    this._cache.set(key, references);
-    return references;
+    const values = items.map((item: any) => this.addOrUpdate(item));
+    this._cache.set(key, { values: values, timestamp: timestamp });
+    return values;
   }
 
-  references(q: Q): any[] | undefined {
-    return this._cache.get(this._keyForQuery(q));
+  values(q: Q): any[] | undefined {
+    const result = this._cache.get(this._keyForQuery(q));
+    if (result == null) {
+      return undefined;
+    }
+
+    return result.values;
   }
 }
