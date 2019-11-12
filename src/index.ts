@@ -11,4 +11,4 @@ export * from "./controlled";
 export * from "./state";
 export * from "./source";
 export * from "./backend";
-export { IReferences, References } from "./references";
+export { IReferences, References, NoReferences } from "./references";

@@ -1,6 +1,5 @@
 import { reaction, IReactionDisposer } from "mobx";
 import { Instance, IAnyModelType } from "mobx-state-tree";
-import { FieldAccessor } from "./field-accessor";
 import { Source } from "./source";
 
 export type Query = {};
@@ -75,29 +74,27 @@ export class References<SQ extends Query, DQ extends Query>
 
 export class NoReferences<SQ extends Query, DQ extends Query>
   implements IReferences<SQ, DQ> {
-  constructor(public accessor: FieldAccessor<any, any>) {}
-
   autoLoadReaction(): IReactionDisposer {
-    throw new Error(`No references defined for field: ${this.accessor.path}`);
+    throw new Error(`No references defined`);
   }
 
   async loadWithTimestamp(
     timestamp: number,
     searchQuery?: SQ
   ): Promise<Instance<IAnyModelType>[]> {
-    throw new Error(`No references defined for field: ${this.accessor.path}`);
+    throw new Error(`No references defined`);
   }
 
   async load(searchQuery?: SQ): Promise<Instance<IAnyModelType>[]> {
-    throw new Error(`No references defined for field: ${this.accessor.path}`);
+    throw new Error(`No references defined`);
   }
 
   values(searchQuery?: SQ): Instance<IAnyModelType>[] | undefined {
-    throw new Error(`No references defined for field: ${this.accessor.path}`);
+    throw new Error(`No references defined`);
   }
 
   getById(id: any): Instance<IAnyModelType> {
-    throw new Error(`No references defined for field: ${this.accessor.path}`);
+    throw new Error(`No references defined`);
   }
 
   isEnabled(): boolean {

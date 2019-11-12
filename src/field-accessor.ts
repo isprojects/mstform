@@ -52,7 +52,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
         dependentQuery(this)
       );
     } else {
-      this.references = new NoReferences(this);
+      this.references = new NoReferences();
     }
   }
 
