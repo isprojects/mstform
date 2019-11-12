@@ -48,7 +48,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (field.options && field.options.references) {
       const options = field.options.references;
       const dependentQuery = options.dependentQuery || (() => ({}));
-      this.references = new References(this, options.source, dependentQuery);
+      this.references = new References(options.source, () =>
+        dependentQuery(this)
+      );
     } else {
       this.references = new NoReferences(this);
     }

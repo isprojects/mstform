@@ -78,13 +78,13 @@ export interface ErrorFunc {
   (context: any): string;
 }
 
-export interface DependentQuery<DQ> {
+export interface AccessorDependentQuery<DQ> {
   (accessor: FieldAccessor<any, any>): DQ;
 }
 
 export interface ReferenceOptions<SQ, DQ> {
   source: Source<SQ & DQ>;
-  dependentQuery?: DependentQuery<DQ>;
+  dependentQuery?: AccessorDependentQuery<DQ>;
 }
 
 export type ConversionErrors = {

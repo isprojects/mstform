@@ -2,7 +2,6 @@ import { reaction, IReactionDisposer } from "mobx";
 import { Instance, IAnyModelType } from "mobx-state-tree";
 import { FieldAccessor } from "./field-accessor";
 import { Source } from "./source";
-import { DependentQuery } from "./form";
 
 export type Query = {};
 
@@ -18,18 +17,21 @@ export interface IReferences<SQ extends Query, DQ extends Query> {
   isEnabled(): boolean;
 }
 
+export interface DependentQuery<DQ> {
+  (): DQ;
+}
+
 export class References<SQ extends Query, DQ extends Query>
   implements IReferences<SQ, DQ> {
   constructor(
-    public accessor: FieldAccessor<any, any>,
     public source: Source<SQ & DQ>,
-    public dependentQuery: DependentQuery<DQ>
+    public dependentQuery: DependentQuery<DQ> = () => ({} as DQ)
   ) {}
 
   autoLoadReaction(): IReactionDisposer {
     return reaction(
       () => {
-        return this.dependentQuery(this.accessor);
+        return this.dependentQuery();
       },
       () => {
         this.load();
@@ -43,7 +45,7 @@ export class References<SQ extends Query, DQ extends Query>
     }
     return {
       ...searchQuery,
-      ...this.dependentQuery(this.accessor)
+      ...this.dependentQuery()
     };
   }
 
