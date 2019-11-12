@@ -1,5 +1,10 @@
 import { observable } from "mobx";
-import { applySnapshot, applyPatch, Instance } from "mobx-state-tree";
+import {
+  applySnapshot,
+  applyPatch,
+  Instance,
+  IAnyModelType
+} from "mobx-state-tree";
 
 interface GetId {
   (o: object): string;
@@ -15,7 +20,7 @@ interface KeyForQuery<Q> {
 
 interface CacheEntry {
   timestamp: number;
-  values: Instance<any>[];
+  values: Instance<IAnyModelType>[];
 }
 
 export class Source<Q> {
@@ -78,7 +83,7 @@ export class Source<Q> {
     }
   }
 
-  async load(timestamp: number, q: Q): Promise<Instance<any>[]> {
+  async load(timestamp: number, q: Q): Promise<Instance<IAnyModelType>[]> {
     const key = this._keyForQuery(q);
     const result = this._cache.get(key);
     if (
@@ -93,7 +98,7 @@ export class Source<Q> {
     return values;
   }
 
-  values(q: Q): any[] | undefined {
+  values(q: Q): Instance<IAnyModelType>[] | undefined {
     const result = this._cache.get(this._keyForQuery(q));
     if (result == null) {
       return undefined;
