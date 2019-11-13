@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, computed } from "mobx";
 import {
   applySnapshot,
   applyPatch,
@@ -62,13 +62,18 @@ export class Source<Q> {
       (cacheDuration != null ? cacheDuration : 5 * 60) * 1000;
   }
 
+  @computed
+  get items() {
+    return this._container.items;
+  }
+
   getById(id: any) {
-    return this._container.items.get(id);
+    return this.items.get(id);
   }
 
   addOrUpdate(item: any) {
     const id = this._getId(item);
-    const items = this._container.items;
+    const items = this.items;
     const existing = items.get(id);
     if (existing !== undefined) {
       applySnapshot(existing, item);
