@@ -1515,7 +1515,7 @@ const User = types.model("User", {
 });
 
 const UserContainer = types.model("UserContainer", {
-    items: types.map(User)
+    entryMap: types.map(User)
 });
 ```
 

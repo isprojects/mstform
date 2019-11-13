@@ -20,10 +20,10 @@ test("source", async () => {
   });
 
   const Container = types.model("Container", {
-    items: types.map(Item)
+    entryMap: types.map(Item)
   });
 
-  const container = Container.create({ items: {} });
+  const container = Container.create({ entryMap: {} });
 
   const data = [
     { id: 1, text: "A", feature: "x" },
@@ -75,7 +75,7 @@ describe("source accessor in fields", () => {
   });
 
   const ContainerA = types.model("ContainerA", {
-    items: types.map(ItemA)
+    entryMap: types.map(ItemA)
   });
 
   const ItemB = types.model("ItemB", {
@@ -84,7 +84,7 @@ describe("source accessor in fields", () => {
   });
 
   const ContainerB = types.model("ContainerB", {
-    items: types.map(ItemB)
+    entryMap: types.map(ItemB)
   });
 
   const M = types.model("M", {
@@ -124,8 +124,8 @@ describe("source accessor in fields", () => {
         a: undefined,
         b: undefined
       },
-      containerA: { items: {} },
-      containerB: { items: {} }
+      containerA: { entryMap: {} },
+      containerB: { entryMap: {} }
     });
 
     const o = r.m;
@@ -177,7 +177,7 @@ describe("source accessor in fields", () => {
     expect(refSnapshots(refsB)).toEqual([]);
 
     // now we make a selection in A
-    const item1 = containerA.items.get("1");
+    const item1 = containerA.entryMap.get("1");
     if (item1 === undefined) {
       throw new Error("item1 should exist");
     }
@@ -205,8 +205,8 @@ describe("source accessor in fields", () => {
         a: undefined,
         b: undefined
       },
-      containerA: { items: {} },
-      containerB: { items: {} }
+      containerA: { entryMap: {} },
+      containerB: { entryMap: {} }
     });
 
     const o = r.m;
@@ -258,7 +258,7 @@ describe("source accessor in fields", () => {
     expect(refSnapshots(refsB)).toEqual([]);
 
     // now we make a selection in A
-    const item1 = containerA.items.get("1");
+    const item1 = containerA.entryMap.get("1");
     if (item1 === undefined) {
       throw new Error("item1 should exist");
     }
@@ -285,8 +285,8 @@ describe("source accessor in fields", () => {
       m: {
         a: undefined
       },
-      containerA: { items: {} },
-      containerB: { items: {} }
+      containerA: { entryMap: {} },
+      containerB: { entryMap: {} }
     });
 
     const o = r.m;

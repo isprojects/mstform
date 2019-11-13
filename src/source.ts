@@ -29,6 +29,7 @@ export class Source<Q> {
   _getId: GetId;
   _keyForQuery: KeyForQuery<Q>;
   _cacheDuration: number;
+  _mapPropertyName: string;
 
   // XXX this grows indefinitely with cached results...
   @observable
@@ -39,13 +40,15 @@ export class Source<Q> {
     load,
     getId,
     keyForQuery,
-    cacheDuration
+    cacheDuration,
+    mapPropertyName
   }: {
     container: any;
     load: Load<Q>;
     getId?: GetId;
     keyForQuery?: KeyForQuery<Q>;
     cacheDuration?: number;
+    mapPropertyName?: string;
   }) {
     // XXX make it to we can get the container dynamically
     this._container = container;
@@ -60,11 +63,15 @@ export class Source<Q> {
     this._keyForQuery = keyForQuery;
     this._cacheDuration =
       (cacheDuration != null ? cacheDuration : 5 * 60) * 1000;
+    if (mapPropertyName == null) {
+      mapPropertyName = "entryMap";
+    }
+    this._mapPropertyName = mapPropertyName;
   }
 
   @computed
   get items() {
-    return this._container.items;
+    return this._container[this._mapPropertyName];
   }
 
   getById(id: any) {
