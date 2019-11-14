@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 import {
   applySnapshot,
   applyPatch,
@@ -95,6 +95,11 @@ export class Source<Q> {
     }
   }
 
+  @action
+  setCache(key: string, values: string[], timestamp: number) {
+    this._cache.set(key, { values: values, timestamp: timestamp });
+  }
+
   async load(timestamp: number, q: Q): Promise<Instance<IAnyModelType>[]> {
     const key = this._keyForQuery(q);
     const result = this._cache.get(key);
@@ -106,7 +111,7 @@ export class Source<Q> {
     }
     const items = await this._load(q);
     const values = items.map((item: any) => this.addOrUpdate(item));
-    this._cache.set(key, { values: values, timestamp: timestamp });
+    this.setCache(key, values, timestamp);
     return values;
   }
 
