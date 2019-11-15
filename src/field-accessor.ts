@@ -20,6 +20,8 @@ import { FormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
 import { currentValidationProps } from "./validation-props";
 import { ValidateOptions } from "./validate-options";
+import { References, NoReferences, IReferences } from "./references";
+import { pathToFieldref } from "./utils";
 import { IAccessor, IFormAccessor } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
 
@@ -32,6 +34,8 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   _disposer: IReactionDisposer | undefined;
 
+  references: IReferences<any, any>;
+
   constructor(
     public state: FormState<any, any, any>,
     public field: Field<R, V>,
@@ -41,6 +45,15 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     super(parent);
     this.createDerivedReaction();
     this._value = state.getValue(this.path);
+    if (field.options && field.options.references) {
+      const options = field.options.references;
+      const dependentQuery = options.dependentQuery || (() => ({}));
+      this.references = new References(options.source, () =>
+        dependentQuery(this)
+      );
+    } else {
+      this.references = new NoReferences();
+    }
   }
 
   @computed
@@ -53,6 +66,20 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
       return;
     }
     this._disposer();
+  }
+
+  clear() {
+    this.dispose();
+  }
+
+  @computed
+  get fieldref(): string {
+    return pathToFieldref(this.path);
+  }
+
+  @computed
+  get context(): any {
+    return this.state.context;
   }
 
   @computed

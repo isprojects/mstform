@@ -9,4 +9,6 @@ export * from "./sub-form-accessor";
 export * from "./validation-props";
 export * from "./controlled";
 export * from "./state";
+export * from "./source";
 export * from "./backend";
+export { IReferences, References, NoReferences } from "./references";

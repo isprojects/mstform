@@ -1,3 +1,10 @@
+# 1.17.0
+
+-   Add a source and reference system to mstform. This allows you to build
+    widgets that use this information in order to populate a select box or make
+    autocomplete work. References can also be dependent on the state of other
+    fields in the form.
+
 # 1.16.0
 
 -   BREAKING CHANGE: Required errors now disappear after saving with

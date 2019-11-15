@@ -12,6 +12,8 @@ import {
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
 import { identity, getNodeId } from "./utils";
+import { Source } from "./source";
+import { FieldAccessor } from "./field-accessor";
 
 export type ArrayEntryType<T> = T extends IMSTArray<infer A> ? A : never;
 
@@ -76,6 +78,15 @@ export interface ErrorFunc {
   (context: any): string;
 }
 
+export interface AccessorDependentQuery<DQ> {
+  (accessor: FieldAccessor<any, any>): DQ;
+}
+
+export interface ReferenceOptions<SQ, DQ> {
+  source: Source<SQ & DQ>;
+  dependentQuery?: AccessorDependentQuery<DQ>;
+}
+
 export type ConversionErrors = {
   default: string | ErrorFunc;
   [key: string]: string | ErrorFunc;
@@ -83,7 +94,7 @@ export type ConversionErrors = {
 
 export type ConversionErrorType = string | ErrorFunc | ConversionErrors;
 
-export interface FieldOptions<R, V> {
+export interface FieldOptions<R, V, SQ, DQ> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
@@ -94,6 +105,7 @@ export interface FieldOptions<R, V> {
   derived?: Derived<V>;
   change?: Change<V>;
   controlled?: Controlled;
+  references?: ReferenceOptions<SQ, DQ>;
   postprocess?: boolean;
 }
 
@@ -173,7 +185,7 @@ export class Field<R, V> {
 
   constructor(
     public converter: IConverter<R, V>,
-    public options?: FieldOptions<R, V>
+    public options?: FieldOptions<R, V, any, any>
   ) {
     if (!options) {
       this.rawValidators = [];
