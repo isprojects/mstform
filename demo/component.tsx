@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { observer } from "mobx-react";
 import { types, getSnapshot } from "mobx-state-tree";
-import makeInspectable from "mobx-devtools-mst";
 import { Field, Form, converters, FieldAccessor } from "../src/index";
 
 // we have a MST model with a string field foo,
@@ -22,8 +21,6 @@ const M = types
 
 // we create an instance of the model
 const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4, textarea: [] });
-
-makeInspectable(o);
 
 // we expose this field in our form
 const form = new Form(M, {
