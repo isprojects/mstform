@@ -2,7 +2,8 @@ import {
   IMSTArray,
   IAnyModelType,
   ModelInstanceTypeProps,
-  Instance
+  Instance,
+  getNodeId
 } from "mobx-state-tree";
 import {
   ConversionError,
@@ -11,7 +12,7 @@ import {
 } from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
-import { identity, getNodeId } from "./utils";
+import { identity } from "./utils";
 import { Source } from "./source";
 import { FieldAccessor } from "./field-accessor";
 
