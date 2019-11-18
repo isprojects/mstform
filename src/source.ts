@@ -88,7 +88,7 @@ export class Source<Q> {
     } else {
       applyPatch(items, {
         op: "add",
-        path: id.toString(),
+        path: "/" + id.toString(),
         value: item
       });
       return items.get(id);
