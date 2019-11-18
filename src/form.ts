@@ -1,7 +1,7 @@
 import {
   IMSTArray,
   IAnyModelType,
-  ModelInstanceType,
+  ModelInstanceTypeProps,
   Instance
 } from "mobx-state-tree";
 import {
@@ -15,7 +15,9 @@ import { identity, getNodeId } from "./utils";
 import { Source } from "./source";
 import { FieldAccessor } from "./field-accessor";
 
-export type ArrayEntryType<T> = T extends IMSTArray<infer A> ? A : never;
+export type ArrayEntryType<T> = T extends IMSTArray<infer A>
+  ? (A extends IAnyModelType ? A : never)
+  : never;
 
 export type RawType<F> = F extends Field<infer R, any> ? R : never;
 
@@ -47,10 +49,10 @@ export type FormDefinition<M extends IAnyModelType> = InstanceFormDefinition<
   Instance<M>
 >;
 
-export type InstanceFormDefinition<M extends ModelInstanceType<any, any>> = {
+export type InstanceFormDefinition<M extends ModelInstanceTypeProps<any>> = {
   [K in keyof M]?:
     | Field<any, M[K]>
-    | RepeatingForm<InstanceFormDefinition<ArrayEntryType<M[K]>>, any>
+    | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any>
     | SubForm<FormDefinition<M[K]>, any>
 };
 
