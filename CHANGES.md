@@ -1,3 +1,7 @@
+# 1.18.0
+
+-   Compatibility with the latest version of mobx-state-tree and mobx.
+
 # 1.17.0
 
 -   Add a source and reference system to mstform. This allows you to build
