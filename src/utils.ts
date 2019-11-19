@@ -62,25 +62,6 @@ export function deepCopy(o: any): any {
   return JSON.parse(JSON.stringify(o));
 }
 
-// see discussion on https://github.com/mobxjs/mobx-state-tree/issues/1168
-// I tried declaring the type as  Instance<IAnyModelType> but this
-// resulted in a type any so that wasn't very useful.
-
-let nodeId = 0;
-const nodeMap = new WeakMap<any, number>();
-
-export function getNodeId(node: any): number {
-  // XXX we should have a sanity check to determine whether node is a state tree
-  // node. This requires an update to mobx-state-tree as isModelType has
-  // the wrong signature in the version we depend on
-  let id = nodeMap.get(node);
-  if (id === undefined) {
-    id = nodeId++;
-    nodeMap.set(node, id);
-  }
-  return id;
-}
-
 // convert a JSON pointer, AKA a mobx-state-tree node path,
 // to a fieldref
 export function pathToFieldref(path: string): string {
