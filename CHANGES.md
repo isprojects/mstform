@@ -1,3 +1,8 @@
+# 1.18.1
+
+-   Define an ISource interface so that it's possible to define custom
+    source implementations that work with the reference system.
+
 # 1.18.0
 
 -   Compatibility with the latest version of mobx-state-tree and mobx.
