@@ -1,3 +1,8 @@
+# 1.17.1
+
+-   Define an ISource interface so that it's possible to define custom
+    source implementations that work with the reference system.
+
 # 1.17.0
 
 -   Add a source and reference system to mstform. This allows you to build
