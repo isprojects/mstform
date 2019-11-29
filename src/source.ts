@@ -6,6 +6,16 @@ import {
   IAnyModelType
 } from "mobx-state-tree";
 
+// XXX need to make things implement this type, and export it to the outside world
+export interface ISource<T extends IAnyModelType> {
+  load(
+    timestamp: number,
+    query: { [key: string]: any }
+  ): Promise<Instance<T>[]>;
+  values(query: { [key: string]: any }): Instance<T>[] | undefined;
+  getById(id: any): Instance<T>;
+}
+
 interface GetId {
   (o: object): string;
 }
@@ -23,7 +33,7 @@ interface CacheEntry {
   values: Instance<IAnyModelType>[];
 }
 
-export class Source<Q> {
+export class Source<Q> implements ISource<any> {
   _container: any;
   _load: Load<Q>;
   _getId: GetId;

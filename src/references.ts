@@ -1,6 +1,6 @@
 import { reaction, IReactionDisposer } from "mobx";
 import { Instance, IAnyModelType } from "mobx-state-tree";
-import { Source } from "./source";
+import { ISource } from "./source";
 
 export type Query = {};
 
@@ -23,7 +23,7 @@ export interface DependentQuery<DQ> {
 export class References<SQ extends Query, DQ extends Query>
   implements IReferences<SQ, DQ> {
   constructor(
-    public source: Source<SQ & DQ>,
+    public source: ISource<any>,
     public dependentQuery: DependentQuery<DQ> = () => ({} as DQ)
   ) {}
 
