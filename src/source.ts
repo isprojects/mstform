@@ -81,7 +81,11 @@ export class Source<Q> implements ISource<any> {
 
   @computed
   get items() {
-    return this._container[this._mapPropertyName];
+    const container =
+      typeof this._container === "function"
+        ? this._container()
+        : this._container;
+    return container[this._mapPropertyName];
   }
 
   getById(id: any) {

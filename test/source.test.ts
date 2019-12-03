@@ -68,6 +68,65 @@ test("source", async () => {
   expect(loadHit).toEqual(["x", "x"]);
 });
 
+test("source container function", async () => {
+  const Item = types.model("Item", {
+    id: types.identifierNumber,
+    text: types.string
+  });
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  const loadHit: string[] = [];
+
+  const load = async ({ feature }: { feature: string }) => {
+    loadHit.push(feature);
+    return data.filter(entry => entry.feature === feature);
+  };
+
+  const source = new Source({
+    container: () => container,
+    load,
+    cacheDuration: 2
+  });
+
+  await source.load(0, { feature: "x" });
+  expect(source.getById(1)).toEqual({ id: 1, text: "A" });
+
+  const values = source.values({ feature: "x" });
+  expect(values).not.toBeUndefined();
+  expect(refSnapshots(values)).toEqual([
+    { id: 1, text: "A" },
+    { id: 2, text: "B" }
+  ]);
+  expect(loadHit).toEqual(["x"]);
+
+  // when we try to reload with the same feature, we don't get a hit for load
+  await source.load(0, { feature: "x" });
+  expect(loadHit).toEqual(["x"]);
+
+  // and we still get the same results
+  const values2 = source.values({ feature: "x" });
+  expect(values2).not.toBeUndefined();
+  expect(refSnapshots(values2)).toEqual([
+    { id: 1, text: "A" },
+    { id: 2, text: "B" }
+  ]);
+
+  // when the cache duration has expired we expect another load.
+  await source.load(3 * 1000, { feature: "x" });
+  expect(loadHit).toEqual(["x", "x"]);
+});
+
 describe("source accessor in fields", () => {
   const ItemA = types.model("ItemA", {
     id: types.identifierNumber,
