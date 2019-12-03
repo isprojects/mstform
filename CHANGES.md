@@ -1,3 +1,9 @@
+# 1.17.2
+
+-   Specifying a `container` argument for a `Source` can also be a function.
+    This is convenient to avoid import-time side-effects, which sometimes can
+    result in difficult import initialization issues.
+
 # 1.17.1
 
 -   Define an ISource interface so that it's possible to define custom
