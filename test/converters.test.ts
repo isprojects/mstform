@@ -56,6 +56,11 @@ test("string converter", () => {
   check(converters.string, "", "");
 });
 
+test("string converter with options", () => {
+  check(converters.stringWithOptions({ maxLength: 32 }), "foo", "foo");
+  fails(converters.stringWithOptions({ maxLength: 2 }), "foo");
+});
+
 test("number converter", () => {
   check(converters.number, "3", 3);
   check(converters.number, "3.14", 3.14);

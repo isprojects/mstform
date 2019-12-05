@@ -25,13 +25,18 @@ export class StringConverter<V> extends Converter<string, V> {
   defaultControlled = controlled.value;
 }
 
-type StringOptions = {};
+type StringOptions = {
+  maxLength: number;
+};
 
 function stringWithOptions(options?: StringOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyValue: "",
     convert(raw) {
+      if (options != null && options.maxLength < raw.length) {
+        throw new ConversionError("exceedsMaxLength");
+      }
       return raw;
     },
     render(value) {
@@ -328,6 +333,9 @@ const object = new Converter<any, any>({
 
 export const converters = {
   string,
+  stringWithOptions: withDefaults(stringWithOptions, {
+    maxLength: 255
+  }),
   number,
   integer,
   decimal: withDefaults(decimal, {
