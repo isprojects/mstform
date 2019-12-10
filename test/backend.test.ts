@@ -524,7 +524,7 @@ test("update", async () => {
 
   async function myProcess(node: Instance<typeof M>, path: string) {
     return {
-      updates: [{ path: "bar", value: "BAR" }],
+      updates: [{ path: "/bar", value: "BAR" }],
       accessUpdates: [],
       errorValidations: [],
       warningValidations: []

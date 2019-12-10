@@ -1,13 +1,22 @@
-# 1.17.2
+# 1.20.0
+
+-   Expose a `clear` method on a source. This can be used to clear it,
+    including the MST container it points to and all references. This should
+    only be used if all references to items in its container are MST
+    `safeReference`.
+
+# 1.19.0
 
 -   Specifying a `container` argument for a `Source` can also be a function.
     This is convenient to avoid import-time side-effects, which sometimes can
     result in difficult import initialization issues.
 
-# 1.17.1
-
 -   Define an ISource interface so that it's possible to define custom
     source implementations that work with the reference system.
+
+# 1.18.0
+
+-   Compatibility with the latest version of mobx-state-tree and mobx.
 
 # 1.17.0
 
