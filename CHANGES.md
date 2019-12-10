@@ -1,3 +1,10 @@
+# 1.20.0
+
+-   Expose a `clear` method on a source. This can be used to clear it,
+    including the MST container it points to and all references. This should
+    only be used if all references to items in its container are MST
+    `safeReference`.
+
 # 1.19.0
 
 -   Specifying a `container` argument for a `Source` can also be a function.
