@@ -4,11 +4,11 @@ import {
   ConversionValue,
   Field,
   Form,
-  IConverter,
   converters,
   StateConverterOptionsWithContext,
   FieldAccessor
 } from "../src";
+import { ConverterOrFactory, makeConverter } from "../src/converter";
 
 const baseOptions = {
   // a BIG lie. but we don't really have an accessor in these
@@ -17,7 +17,12 @@ const baseOptions = {
   accessor: (null as unknown) as FieldAccessor<any, any>
 };
 
-function check(converter: IConverter<any, any>, value: any, expected: any) {
+function check(
+  converter: ConverterOrFactory<any, any>,
+  value: any,
+  expected: any
+) {
+  converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, baseOptions);
   const r = converter.convert(processedValue, baseOptions);
   expect(r).toBeInstanceOf(ConversionValue);
@@ -25,27 +30,30 @@ function check(converter: IConverter<any, any>, value: any, expected: any) {
 }
 
 function checkWithOptions(
-  converter: IConverter<any, any>,
+  converter: ConverterOrFactory<any, any>,
   value: any,
   expected: any,
   options: StateConverterOptionsWithContext
 ) {
+  converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, options);
   const r = converter.convert(processedValue, options);
   expect(r).toBeInstanceOf(ConversionValue);
   expect((r as ConversionValue<any>).value).toEqual(expected);
 }
 
-function fails(converter: IConverter<any, any>, value: any) {
+function fails(converter: ConverterOrFactory<any, any>, value: any) {
+  converter = makeConverter(converter);
   const r = converter.convert(value, baseOptions);
   expect(r).toBeInstanceOf(ConversionError);
 }
 
 function failsWithOptions(
-  converter: IConverter<any, any>,
+  converter: ConverterOrFactory<any, any>,
   value: any,
   options: StateConverterOptionsWithContext
 ) {
+  converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, options);
   const r = converter.convert(processedValue, options);
   expect(r).toBeInstanceOf(ConversionError);
@@ -57,8 +65,8 @@ test("string converter", () => {
 });
 
 test("string converter with options", () => {
-  check(converters.stringWithOptions({ maxLength: 32 }), "foo", "foo");
-  fails(converters.stringWithOptions({ maxLength: 2 }), "foo");
+  check(converters.string({ maxLength: 32 }), "foo", "foo");
+  fails(converters.string({ maxLength: 2 }), "foo");
 });
 
 test("number converter", () => {
@@ -130,15 +138,15 @@ test("integer converter", () => {
 });
 
 test("decimal converter", () => {
-  check(converters.decimal({}), "3", "3");
-  check(converters.decimal({}), "3.14", "3.14");
-  check(converters.decimal({}), "43.14", "43.14");
-  check(converters.decimal({}), "4313", "4313");
-  check(converters.decimal({}), "-3.14", "-3.14");
-  check(converters.decimal({}), "0", "0");
-  check(converters.decimal({}), ".14", ".14");
-  check(converters.decimal({}), "14.", "14.");
-  checkWithOptions(converters.decimal({}), "43,14", "43.14", {
+  check(converters.decimal, "3", "3");
+  check(converters.decimal, "3.14", "3.14");
+  check(converters.decimal, "43.14", "43.14");
+  check(converters.decimal, "4313", "4313");
+  check(converters.decimal, "-3.14", "-3.14");
+  check(converters.decimal, "0", "0");
+  check(converters.decimal, ".14", ".14");
+  check(converters.decimal, "14.", "14.");
+  checkWithOptions(converters.decimal, "43,14", "43.14", {
     decimalSeparator: ",",
     ...baseOptions
   });
@@ -163,42 +171,42 @@ test("decimal converter", () => {
       ...baseOptions
     }
   );
-  fails(converters.decimal({}), "foo");
-  fails(converters.decimal({}), "1foo");
-  fails(converters.decimal({}), "");
-  fails(converters.decimal({}), ".");
+  fails(converters.decimal, "foo");
+  fails(converters.decimal, "1foo");
+  fails(converters.decimal, "");
+  fails(converters.decimal, ".");
   fails(converters.decimal({ maxWholeDigits: 4 }), "12345.34");
   fails(converters.decimal({ decimalPlaces: 2 }), "12.444");
   fails(converters.decimal({ allowNegative: false }), "-45.34");
-  failsWithOptions(converters.decimal({}), "1,23.45", {
+  failsWithOptions(converters.decimal, "1,23.45", {
     decimalSeparator: ".",
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal({}), ",12345", {
+  failsWithOptions(converters.decimal, ",12345", {
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal({}), "1234,567", {
+  failsWithOptions(converters.decimal, "1234,567", {
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal({}), "12.3,456", {
+  failsWithOptions(converters.decimal, "12.3,456", {
     decimalSeparator: ".",
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal({}), "1.1,1", {
+  failsWithOptions(converters.decimal, "1.1,1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal({}), "1,1.1", {
+  failsWithOptions(converters.decimal, "1,1.1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal({}), "1234.56", {
+  failsWithOptions(converters.decimal, "1234.56", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     renderThousands: true,
@@ -245,7 +253,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
 });
 
 test("decimal converter with both options", () => {
-  checkWithOptions(converters.decimal({}), "4.314.314,31", "4314314.31", {
+  checkWithOptions(converters.decimal, "4.314.314,31", "4314314.31", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     ...baseOptions

@@ -2,10 +2,12 @@ import { IObservableArray, observable } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 import {
   Converter,
+  ConverterOrFactory,
   IConverter,
   StateConverterOptionsWithContext,
   ConversionError,
-  withDefaults
+  withDefaults,
+  makeConverter
 } from "./converter";
 import { controlled } from "./controlled";
 import { dynamic } from "./dynamic-converter";
@@ -26,15 +28,15 @@ export class StringConverter<V> extends Converter<string, V> {
 }
 
 type StringOptions = {
-  maxLength: number;
+  maxLength?: number;
 };
 
-function stringWithOptions(options?: StringOptions) {
+function string(options: StringOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyValue: "",
     convert(raw) {
-      if (options != null && options.maxLength < raw.length) {
+      if (options.maxLength != null && options.maxLength < raw.length) {
         throw new ConversionError("exceedsMaxLength");
       }
       return raw;
@@ -48,11 +50,9 @@ function stringWithOptions(options?: StringOptions) {
   });
 }
 
-const string = stringWithOptions();
-
 type NumberOptions = {};
 
-function numberWithOptions(options?: NumberOptions) {
+function number(options?: NumberOptions) {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -95,11 +95,9 @@ function numberWithOptions(options?: NumberOptions) {
   });
 }
 
-const number = numberWithOptions();
-
 type IntegerOptions = {};
 
-function integerWithOptions(options?: IntegerOptions) {
+function integer(options?: IntegerOptions) {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -118,11 +116,9 @@ function integerWithOptions(options?: IntegerOptions) {
   });
 }
 
-const integer = integerWithOptions();
-
 type BooleanOptions = {};
 
-function booleanWithOptions(options?: BooleanOptions) {
+function boolean(options?: BooleanOptions) {
   return new Converter<boolean, boolean>({
     emptyRaw: false,
     emptyImpossible: true,
@@ -136,8 +132,6 @@ function booleanWithOptions(options?: BooleanOptions) {
     neverRequired: true
   });
 }
-
-const boolean = booleanWithOptions();
 
 function decimal(options: DecimalOptions) {
   return new StringConverter<string>({
@@ -178,7 +172,7 @@ function decimal(options: DecimalOptions) {
 type StringArrayOptions = {};
 
 // XXX create a way to create arrays with mobx state tree types
-function stringArrayWithOptions(options?: StringArrayOptions) {
+function stringArray(options?: StringArrayOptions) {
   return new Converter<string[], IObservableArray<string>>({
     emptyRaw: [],
     emptyValue: observable.array([]),
@@ -191,11 +185,9 @@ function stringArrayWithOptions(options?: StringArrayOptions) {
   });
 }
 
-const stringArray = stringArrayWithOptions();
-
 type TextStringArrayOptions = {};
 
-function textStringArrayWithOptions(options?: TextStringArrayOptions) {
+function textStringArray(options?: TextStringArrayOptions) {
   return new Converter<string, IObservableArray<string>>({
     emptyRaw: "",
     emptyValue: observable.array([]),
@@ -213,17 +205,16 @@ function textStringArrayWithOptions(options?: TextStringArrayOptions) {
   });
 }
 
-const textStringArray = textStringArrayWithOptions();
-
 function maybe<R, V>(
-  converter: StringConverter<V>
+  converter: StringConverter<V> | (() => StringConverter<V>)
 ): IConverter<string, V | undefined>;
 function maybe<M>(
-  converter: IConverter<M | null, M | undefined>
+  converter: ConverterOrFactory<M | null, M | undefined>
 ): IConverter<M | null, M | undefined>;
 function maybe<R, V>(
-  converter: IConverter<R, V>
+  converter: ConverterOrFactory<R, V>
 ): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
+  converter = makeConverter(converter);
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
     return stringMaybe(
@@ -239,14 +230,15 @@ function maybe<R, V>(
 }
 
 function maybeNull<R, V>(
-  converter: StringConverter<V>
+  converter: StringConverter<V> | (() => StringConverter<V>)
 ): IConverter<string, V | null>;
 function maybeNull<M>(
-  converter: IConverter<M | null, M | null>
+  converter: ConverterOrFactory<M | null, M | null>
 ): IConverter<M | null, M | null>;
 function maybeNull<R, V>(
-  converter: IConverter<R, V>
+  converter: ConverterOrFactory<R, V>
 ): IConverter<string, V | null> | IConverter<R | null, V | null> {
+  converter = makeConverter(converter);
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
     return stringMaybe(
@@ -332,10 +324,7 @@ const object = new Converter<any, any>({
 });
 
 export const converters = {
-  string,
-  stringWithOptions: withDefaults(stringWithOptions, {
-    maxLength: 255
-  }),
+  string: withDefaults(string, {}),
   number,
   integer,
   decimal: withDefaults(decimal, {

@@ -120,3 +120,16 @@ export function withDefaults<O, R, V>(
     return converterFactory({ ...defaults, ...partialOptions });
   };
 }
+
+export type ConverterOrFactory<R, V> =
+  | IConverter<R, V>
+  | (() => IConverter<R, V>);
+
+export function makeConverter<R, V>(
+  converter: ConverterOrFactory<R, V>
+): IConverter<R, V> {
+  if (typeof converter === "function") {
+    return converter();
+  }
+  return converter;
+}
