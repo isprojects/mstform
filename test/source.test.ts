@@ -363,3 +363,43 @@ describe("source accessor in fields", () => {
     expect(() => fieldA.references.values()).toThrow();
   });
 });
+
+test("source clear", async () => {
+  const Item = types.model("Item", {
+    id: types.identifierNumber,
+    text: types.string
+  });
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  const load = async () => {
+    return data;
+  };
+
+  const source = new Source({ container, load, cacheDuration: 2 });
+
+  await source.load(0, {});
+  expect(source.getById(1)).toEqual({ id: 1, text: "A" });
+
+  const values = source.values({});
+  expect(values).not.toBeUndefined();
+  expect(refSnapshots(values)).toEqual([
+    { id: 1, text: "A" },
+    { id: 2, text: "B" },
+    { id: 3, text: "C" }
+  ]);
+
+  source.clear();
+  expect(Array.from(source.items.keys()).length).toBe(0);
+  expect(source.values({})).toBeUndefined();
+});

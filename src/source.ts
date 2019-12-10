@@ -1,4 +1,4 @@
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, ObservableMap } from "mobx";
 import {
   applySnapshot,
   applyPatch,
@@ -80,12 +80,15 @@ export class Source<Q> implements ISource<any> {
   }
 
   @computed
-  get items() {
-    const container =
-      typeof this._container === "function"
-        ? this._container()
-        : this._container;
-    return container[this._mapPropertyName];
+  get container(): any {
+    return typeof this._container === "function"
+      ? this._container()
+      : this._container;
+  }
+
+  @computed
+  get items(): ObservableMap<any> {
+    return this.container[this._mapPropertyName];
   }
 
   getById(id: any) {
@@ -136,5 +139,17 @@ export class Source<Q> implements ISource<any> {
     }
 
     return result.values;
+  }
+
+  // calling this only makes sense if you use safeReference
+  // to refer to values
+  @action
+  clear() {
+    this._cache.clear();
+    applyPatch(this.container, {
+      op: "replace",
+      path: "/" + this._mapPropertyName,
+      value: {}
+    });
   }
 }
