@@ -7,8 +7,10 @@ import {
 } from "mobx-state-tree";
 import {
   ConversionError,
+  ConverterOrFactory,
   IConverter,
-  StateConverterOptionsWithContext
+  StateConverterOptionsWithContext,
+  makeConverter
 } from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
@@ -183,11 +185,13 @@ export class Field<R, V> {
   changeFunc?: Change<V>;
   controlled: Controlled;
   postprocess: boolean;
+  _converter: ConverterOrFactory<R, V>;
 
   constructor(
-    public converter: IConverter<R, V>,
+    converter: ConverterOrFactory<R, V>,
     public options?: FieldOptions<R, V, any, any>
   ) {
+    this._converter = converter;
     if (!options) {
       this.rawValidators = [];
       this.validators = [];
@@ -218,6 +222,10 @@ export class Field<R, V> {
       this.controlled = options.controlled || this.createDefaultControlled();
       this.postprocess = !!options.postprocess;
     }
+  }
+
+  get converter(): IConverter<R, V> {
+    return makeConverter(this._converter);
   }
 
   createDefaultControlled(): Controlled {
