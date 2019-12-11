@@ -1,3 +1,7 @@
+# 1.21.0
+
+-   Update a few dependencies.
+
 # 1.20.0
 
 -   Expose a `clear` method on a source. This can be used to clear it,
