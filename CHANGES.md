@@ -6,6 +6,8 @@
 -   All converters can now be called as either an instance with options as
     arguments, or as a factory.
 
+-   Update a few dependencies.
+
 # 1.20.0
 
 -   Expose a `clear` method on a source. This can be used to clear it,
