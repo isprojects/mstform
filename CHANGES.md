@@ -1,10 +1,12 @@
-# 1.21.0
+# 1.22.0
 
 -   The string converter can now take the option `maxLength`, which validates
     your string on if it contains too many characters.
 
 -   All converters can now be called as either an instance with options as
     arguments, or as a factory.
+
+# 1.21.0
 
 -   Update a few dependencies.
 
