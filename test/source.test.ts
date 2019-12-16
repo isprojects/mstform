@@ -40,7 +40,7 @@ test("source", async () => {
 
   const source = new Source({ container, load, cacheDuration: 2 });
 
-  await source.load(0, { feature: "x" });
+  await source.load({ feature: "x" }, 0);
   expect(source.getById(1)).toEqual({ id: 1, text: "A" });
 
   const values = source.values({ feature: "x" });
@@ -52,7 +52,7 @@ test("source", async () => {
   expect(loadHit).toEqual(["x"]);
 
   // when we try to reload with the same feature, we don't get a hit for load
-  await source.load(0, { feature: "x" });
+  await source.load({ feature: "x" }, 0);
   expect(loadHit).toEqual(["x"]);
 
   // and we still get the same results
@@ -64,7 +64,7 @@ test("source", async () => {
   ]);
 
   // when the cache duration has expired we expect another load.
-  await source.load(3 * 1000, { feature: "x" });
+  await source.load({ feature: "x" }, 3 * 1000);
   expect(loadHit).toEqual(["x", "x"]);
 });
 
@@ -99,7 +99,7 @@ test("source container function", async () => {
     cacheDuration: 2
   });
 
-  await source.load(0, { feature: "x" });
+  await source.load({ feature: "x" }, 0);
   expect(source.getById(1)).toEqual({ id: 1, text: "A" });
 
   const values = source.values({ feature: "x" });
@@ -111,7 +111,7 @@ test("source container function", async () => {
   expect(loadHit).toEqual(["x"]);
 
   // when we try to reload with the same feature, we don't get a hit for load
-  await source.load(0, { feature: "x" });
+  await source.load({ feature: "x" }, 0);
   expect(loadHit).toEqual(["x"]);
 
   // and we still get the same results
@@ -123,7 +123,7 @@ test("source container function", async () => {
   ]);
 
   // when the cache duration has expired we expect another load.
-  await source.load(3 * 1000, { feature: "x" });
+  await source.load({ feature: "x" }, 3 * 1000);
   expect(loadHit).toEqual(["x", "x"]);
 });
 
@@ -388,7 +388,7 @@ test("source clear", async () => {
 
   const source = new Source({ container, load, cacheDuration: 2 });
 
-  await source.load(0, {});
+  await source.load({}, 0);
   expect(source.getById(1)).toEqual({ id: 1, text: "A" });
 
   const values = source.values({});

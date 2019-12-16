@@ -52,7 +52,7 @@ export class References<SQ extends Query, DQ extends Query>
     timestamp: number,
     searchQuery?: SQ
   ): Promise<Instance<IAnyModelType>[]> {
-    return this.source.load(timestamp, this.getFullQuery(searchQuery));
+    return this.source.load(this.getFullQuery(searchQuery), timestamp);
   }
 
   async load(searchQuery?: SQ): Promise<Instance<IAnyModelType>[]> {
