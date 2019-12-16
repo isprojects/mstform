@@ -438,3 +438,72 @@ test("source default timestamp", async () => {
   // implicitly.
   expect(loadHit).toEqual(["x"]);
 });
+
+test("source default query", async () => {
+  const Item = types.model("Item", {
+    id: types.identifierNumber,
+    text: types.string
+  });
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  const loadHit: (string | undefined)[] = [];
+
+  const load = async ({ feature }: { feature?: string }) => {
+    loadHit.push(feature);
+    return data.filter(entry => entry.feature === feature);
+  };
+
+  const source = new Source({
+    container,
+    load,
+    cacheDuration: 2,
+    defaultQuery: () => ({})
+  });
+
+  await source.load();
+  expect(loadHit).toEqual([undefined]);
+  await source.load();
+  // we should still get it from the cache, as timestamp was sent
+  // implicitly.
+  expect(loadHit).toEqual([undefined]);
+});
+
+test("source no default query", async () => {
+  const Item = types.model("Item", {
+    id: types.identifierNumber,
+    text: types.string
+  });
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  const loadHit: (string | undefined)[] = [];
+
+  const load = async ({ feature }: { feature?: string }) => {
+    loadHit.push(feature);
+    return data.filter(entry => entry.feature === feature);
+  };
+
+  const source = new Source({ container, load, cacheDuration: 2 });
+  expect(source.load()).rejects.toThrowError(Error);
+});

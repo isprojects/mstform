@@ -8,10 +8,10 @@ import {
 
 export interface ISource<T extends IAnyModelType> {
   load(
-    query: { [key: string]: any },
+    query?: { [key: string]: any },
     timestamp?: number
   ): Promise<Instance<T>[]>;
-  values(query: { [key: string]: any }): Instance<T>[] | undefined;
+  values(query?: { [key: string]: any }): Instance<T>[] | undefined;
   getById(id: any): Instance<T>;
 }
 
@@ -39,6 +39,7 @@ export class Source<Q> implements ISource<any> {
   _keyForQuery: KeyForQuery<Q>;
   _cacheDuration: number;
   _mapPropertyName: string;
+  _defaultQuery?: () => Q;
 
   // XXX this grows indefinitely with cached results...
   @observable
@@ -50,7 +51,8 @@ export class Source<Q> implements ISource<any> {
     getId,
     keyForQuery,
     cacheDuration,
-    mapPropertyName
+    mapPropertyName,
+    defaultQuery
   }: {
     container: any;
     load: Load<Q>;
@@ -58,6 +60,7 @@ export class Source<Q> implements ISource<any> {
     keyForQuery?: KeyForQuery<Q>;
     cacheDuration?: number;
     mapPropertyName?: string;
+    defaultQuery?: () => Q;
   }) {
     this._container = container;
     this._load = load;
@@ -75,6 +78,7 @@ export class Source<Q> implements ISource<any> {
       mapPropertyName = "entryMap";
     }
     this._mapPropertyName = mapPropertyName;
+    this._defaultQuery = defaultQuery;
   }
 
   @computed
@@ -115,10 +119,23 @@ export class Source<Q> implements ISource<any> {
     this._cache.set(key, { values: values, timestamp: timestamp });
   }
 
+  queryOrDefault(q?: Q): Q {
+    if (q == null) {
+      if (this._defaultQuery == null) {
+        throw new Error(
+          "Cannot construct default query for load. Please provide defaultQuery to source"
+        );
+      }
+      return this._defaultQuery();
+    }
+    return q;
+  }
+
   async load(
-    q: Q,
+    q?: Q,
     timestamp: number = new Date().getTime()
   ): Promise<Instance<IAnyModelType>[]> {
+    q = this.queryOrDefault(q);
     const key = this._keyForQuery(q);
     const result = this._cache.get(key);
     if (
@@ -133,8 +150,8 @@ export class Source<Q> implements ISource<any> {
     return values;
   }
 
-  values(q: Q): Instance<IAnyModelType>[] | undefined {
-    const result = this._cache.get(this._keyForQuery(q));
+  values(q?: Q): Instance<IAnyModelType>[] | undefined {
+    const result = this._cache.get(this._keyForQuery(this.queryOrDefault(q)));
     if (result == null) {
       return undefined;
     }
