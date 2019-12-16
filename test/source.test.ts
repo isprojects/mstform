@@ -403,3 +403,38 @@ test("source clear", async () => {
   expect(Array.from(source.items.keys()).length).toBe(0);
   expect(source.values({})).toBeUndefined();
 });
+
+test("source default timestamp", async () => {
+  const Item = types.model("Item", {
+    id: types.identifierNumber,
+    text: types.string
+  });
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  const loadHit: string[] = [];
+
+  const load = async ({ feature }: { feature: string }) => {
+    loadHit.push(feature);
+    return data.filter(entry => entry.feature === feature);
+  };
+
+  const source = new Source({ container, load, cacheDuration: 2 });
+
+  await source.load({ feature: "x" });
+  expect(loadHit).toEqual(["x"]);
+  await source.load({ feature: "x" });
+  // we should still get it from the cache, as timestamp was sent
+  // implicitly.
+  expect(loadHit).toEqual(["x"]);
+});

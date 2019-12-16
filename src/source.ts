@@ -6,11 +6,10 @@ import {
   IAnyModelType
 } from "mobx-state-tree";
 
-// XXX need to make things implement this type, and export it to the outside world
 export interface ISource<T extends IAnyModelType> {
   load(
     query: { [key: string]: any },
-    timestamp: number
+    timestamp?: number
   ): Promise<Instance<T>[]>;
   values(query: { [key: string]: any }): Instance<T>[] | undefined;
   getById(id: any): Instance<T>;
@@ -60,7 +59,6 @@ export class Source<Q> implements ISource<any> {
     cacheDuration?: number;
     mapPropertyName?: string;
   }) {
-    // XXX make it to we can get the container dynamically
     this._container = container;
     this._load = load;
     if (getId == null) {
@@ -117,7 +115,10 @@ export class Source<Q> implements ISource<any> {
     this._cache.set(key, { values: values, timestamp: timestamp });
   }
 
-  async load(q: Q, timestamp: number): Promise<Instance<IAnyModelType>[]> {
+  async load(
+    q: Q,
+    timestamp: number = new Date().getTime()
+  ): Promise<Instance<IAnyModelType>[]> {
     const key = this._keyForQuery(q);
     const result = this._cache.get(key);
     if (
