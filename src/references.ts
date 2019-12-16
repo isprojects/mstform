@@ -23,7 +23,7 @@ export interface DependentQuery<DQ> {
 export class References<SQ extends Query, DQ extends Query>
   implements IReferences<SQ, DQ> {
   constructor(
-    public source: ISource<any>,
+    public source: ISource<any, SQ & DQ>,
     public dependentQuery: DependentQuery<DQ> = () => ({} as DQ)
   ) {}
 
