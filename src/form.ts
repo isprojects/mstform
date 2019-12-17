@@ -86,7 +86,7 @@ export interface AccessorDependentQuery<DQ> {
 }
 
 export interface ReferenceOptions<SQ, DQ> {
-  source: Source<SQ & DQ>;
+  source: Source<any, SQ & DQ>;
   dependentQuery?: AccessorDependentQuery<DQ>;
 }
 
