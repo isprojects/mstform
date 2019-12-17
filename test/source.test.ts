@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types, getSnapshot, SnapshotIn } from "mobx-state-tree";
+import { types, getSnapshot } from "mobx-state-tree";
 import { Source, Form, converters, Field } from "../src";
 import { resolveReactions } from "./util";
 
@@ -393,7 +393,7 @@ test("source clear", async () => {
 
   const container = Container.create({ entryMap: {} });
 
-  const data: SnapshotIn<typeof Item>[] = [
+  const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
     { id: 3, text: "C", feature: "y" }
@@ -443,7 +443,7 @@ test("source default timestamp", async () => {
 
   const container = Container.create({ entryMap: {} });
 
-  const data: SnapshotIn<typeof Item>[] = [
+  const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
     { id: 3, text: "C", feature: "y" }
@@ -483,7 +483,7 @@ test("source default query", async () => {
 
   const container = Container.create({ entryMap: {} });
 
-  const data: SnapshotIn<typeof Item>[] = [
+  const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
     { id: 3, text: "C", feature: "y" }
@@ -524,7 +524,7 @@ test("source no default query", async () => {
 
   const container = Container.create({ entryMap: {} });
 
-  const data: SnapshotIn<typeof Item>[] = [
+  const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
     { id: 3, text: "C", feature: "y" }
