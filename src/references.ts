@@ -1,8 +1,6 @@
 import { reaction, IReactionDisposer } from "mobx";
 import { Instance, IAnyModelType } from "mobx-state-tree";
-import { ISource } from "./source";
-
-export type Query = {};
+import { ISource, Query } from "./source";
 
 export interface IReferences<
   T extends IAnyModelType,

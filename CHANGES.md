@@ -1,3 +1,20 @@
+# 1.23.0
+
+-   BREAKING CHANGE: Change the way sources work: `load` now takes the query as
+    the first argument, and the timestamp as the second argument. If you leave
+    out the timestamp, it generates the current timestamp. If you leave out the
+    query it falls back on an empty `{}`.
+
+    For `values` you can also leave out the first argument.
+
+    This makes the behavior of source more consistent with that of references.
+
+-   BREAKING CHANGE: instead of passing `container` to the source (which then
+    should have an `entryMap` property), you pass through `types.map` property
+    directly. `entryMapName` is not needed anymore so has been removed. Sources
+    now know about their types better -- unfortunately `references` on field
+    accessor still lose this information but this may be a future improvement.
+
 # 1.22.0
 
 -   The string converter can now take the option `maxLength`, which validates

@@ -11,7 +11,9 @@ import {
   getRoot
 } from "mobx-state-tree";
 
-export interface ISource<T extends IAnyModelType, Q> {
+export type Query = {};
+
+export interface ISource<T extends IAnyModelType, Q extends Query> {
   load(query?: Q, timestamp?: number): Promise<Instance<T>[]>;
   values(query?: Q): Instance<T>[] | undefined;
   getById(id: any): Instance<T> | undefined;
@@ -21,11 +23,11 @@ interface GetId<T> {
   (o: SnapshotIn<T>): string;
 }
 
-interface Load<T, Q> {
+interface Load<T, Q extends Query> {
   (q: Q): Promise<SnapshotIn<T>[]>;
 }
 
-interface KeyForQuery<Q> {
+interface KeyForQuery<Q extends Query> {
   (q: Q): string;
 }
 
@@ -42,13 +44,13 @@ interface EntryMapFunc<T extends IAnyModelType> {
 
 type GetEntryMap<T extends IAnyModelType> = EntryMap<T> | EntryMapFunc<T>;
 
-export class Source<T extends IAnyModelType, Q> implements ISource<T, Q> {
+export class Source<T extends IAnyModelType, Q extends Query>
+  implements ISource<T, Q> {
   _entryMap: GetEntryMap<T>;
   _load: Load<T, Q>;
   _getId: GetId<T>;
   _keyForQuery: KeyForQuery<Q>;
   _cacheDuration: number;
-  _defaultQuery?: () => Q;
 
   // XXX this grows indefinitely with cached results...
   @observable
@@ -59,8 +61,7 @@ export class Source<T extends IAnyModelType, Q> implements ISource<T, Q> {
     load,
     getId,
     keyForQuery,
-    cacheDuration,
-    defaultQuery
+    cacheDuration
   }: {
     entryMap: GetEntryMap<T>;
     load: Load<T, Q>;
@@ -82,7 +83,6 @@ export class Source<T extends IAnyModelType, Q> implements ISource<T, Q> {
     this._keyForQuery = keyForQuery;
     this._cacheDuration =
       (cacheDuration != null ? cacheDuration : 5 * 60) * 1000;
-    this._defaultQuery = defaultQuery;
   }
 
   @computed
@@ -118,14 +118,9 @@ export class Source<T extends IAnyModelType, Q> implements ISource<T, Q> {
     this._cache.set(key, { values: values, timestamp: timestamp });
   }
 
-  queryOrDefault(q?: Q): Q {
+  getFullQuery(q?: Q): Q {
     if (q == null) {
-      if (this._defaultQuery == null) {
-        throw new Error(
-          "Cannot construct default query for load. Please provide defaultQuery to source"
-        );
-      }
-      return this._defaultQuery();
+      return {} as Q;
     }
     return q;
   }
@@ -134,7 +129,7 @@ export class Source<T extends IAnyModelType, Q> implements ISource<T, Q> {
     q?: Q,
     timestamp: number = new Date().getTime()
   ): Promise<Instance<T>[]> {
-    q = this.queryOrDefault(q);
+    q = this.getFullQuery(q);
     const key = this._keyForQuery(q);
     const result = this._cache.get(key);
     if (
@@ -150,7 +145,7 @@ export class Source<T extends IAnyModelType, Q> implements ISource<T, Q> {
   }
 
   values(q?: Q): Instance<T>[] | undefined {
-    const result = this._cache.get(this._keyForQuery(this.queryOrDefault(q)));
+    const result = this._cache.get(this._keyForQuery(this.getFullQuery(q)));
     if (result == null) {
       return undefined;
     }
