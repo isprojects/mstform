@@ -12,7 +12,7 @@ test("conversion failure with multiple messages", () => {
 
   const form = new Form(M, {
     foo: new Field(
-      converters.decimal({
+      converters.stringDecimal({
         allowNegative: false,
         decimalPlaces: 4,
         maxWholeDigits: 4
@@ -63,7 +63,7 @@ test("conversion failure with multiple messages, context", () => {
 
   const form = new Form(M, {
     foo: new Field(
-      converters.decimal({
+      converters.stringDecimal({
         allowNegative: false,
         decimalPlaces: 4,
         maxWholeDigits: 4

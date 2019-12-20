@@ -306,7 +306,7 @@ test("converter options in decimal converter in convert", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal())
+    foo: new Field(converters.stringDecimal())
   });
 
   const o = M.create({ foo: "4300.20" });
@@ -328,7 +328,7 @@ test("converter options in decimal converter in render", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal())
+    foo: new Field(converters.stringDecimal())
   });
 
   const o = M.create({ foo: "1234567.89" });
