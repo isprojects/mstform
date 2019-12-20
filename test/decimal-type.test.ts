@@ -1,6 +1,6 @@
-import { decimal } from "../src/";
 import { Decimal } from "decimal.js-light";
 import { types, getSnapshot, typecheck } from "mobx-state-tree";
+import { decimal } from "../src/";
 
 test("decimal reading and writing", () => {
   const M = types
