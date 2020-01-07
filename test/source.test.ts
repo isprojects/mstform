@@ -14,10 +14,17 @@ function refSnapshots(refs: any[] | undefined): any[] {
 }
 
 test("source", async () => {
-  const Item = types.model("Item", {
-    id: types.identifierNumber,
-    text: types.string
-  });
+  const Item = types
+    .model("Item", {
+      id: types.identifierNumber,
+      text: types.string,
+      feature: types.string
+    })
+    .views(self => ({
+      get displayText() {
+        return "Display " + self.text;
+      }
+    }));
 
   const Container = types.model("Container", {
     entryMap: types.map(Item)
@@ -38,33 +45,42 @@ test("source", async () => {
     return data.filter(entry => entry.feature === feature);
   };
 
-  const source = new Source({ container, load, cacheDuration: 2 });
+  const source = new Source({
+    entryMap: container.entryMap,
+    load,
+    cacheDuration: 2
+  });
 
-  await source.load(0, { feature: "x" });
-  expect(source.getById(1)).toEqual({ id: 1, text: "A" });
+  await source.load({ feature: "x" }, 0);
+  expect(source.getById(1)).toEqual({ id: 1, text: "A", feature: "x" });
 
   const values = source.values({ feature: "x" });
   expect(values).not.toBeUndefined();
+  if (values == null) {
+    throw new Error("shouldn't happen");
+  }
   expect(refSnapshots(values)).toEqual([
-    { id: 1, text: "A" },
-    { id: 2, text: "B" }
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" }
   ]);
+
+  expect(values[0].displayText).toEqual("Display A");
   expect(loadHit).toEqual(["x"]);
 
   // when we try to reload with the same feature, we don't get a hit for load
-  await source.load(0, { feature: "x" });
+  await source.load({ feature: "x" }, 0);
   expect(loadHit).toEqual(["x"]);
 
   // and we still get the same results
   const values2 = source.values({ feature: "x" });
   expect(values2).not.toBeUndefined();
   expect(refSnapshots(values2)).toEqual([
-    { id: 1, text: "A" },
-    { id: 2, text: "B" }
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" }
   ]);
 
   // when the cache duration has expired we expect another load.
-  await source.load(3 * 1000, { feature: "x" });
+  await source.load({ feature: "x" }, 3 * 1000);
   expect(loadHit).toEqual(["x", "x"]);
 });
 
@@ -94,12 +110,12 @@ test("source container function", async () => {
   };
 
   const source = new Source({
-    container: () => container,
+    entryMap: () => container.entryMap,
     load,
     cacheDuration: 2
   });
 
-  await source.load(0, { feature: "x" });
+  await source.load({ feature: "x" }, 0);
   expect(source.getById(1)).toEqual({ id: 1, text: "A" });
 
   const values = source.values({ feature: "x" });
@@ -111,7 +127,7 @@ test("source container function", async () => {
   expect(loadHit).toEqual(["x"]);
 
   // when we try to reload with the same feature, we don't get a hit for load
-  await source.load(0, { feature: "x" });
+  await source.load({ feature: "x" }, 0);
   expect(loadHit).toEqual(["x"]);
 
   // and we still get the same results
@@ -123,7 +139,7 @@ test("source container function", async () => {
   ]);
 
   // when the cache duration has expired we expect another load.
-  await source.load(3 * 1000, { feature: "x" });
+  await source.load({ feature: "x" }, 3 * 1000);
   expect(loadHit).toEqual(["x", "x"]);
 });
 
@@ -191,8 +207,8 @@ describe("source accessor in fields", () => {
     const containerA = r.containerA;
     const containerB = r.containerB;
 
-    const sourceA = new Source({ container: containerA, load: loadA });
-    const sourceB = new Source({ container: containerB, load: loadB });
+    const sourceA = new Source({ entryMap: containerA.entryMap, load: loadA });
+    const sourceB = new Source({ entryMap: containerB.entryMap, load: loadB });
 
     const form = new Form(M, {
       a: new Field(converters.maybe(converters.model(ItemA)), {
@@ -272,8 +288,8 @@ describe("source accessor in fields", () => {
     const containerA = r.containerA;
     const containerB = r.containerB;
 
-    const sourceA = new Source({ container: containerA, load: loadA });
-    const sourceB = new Source({ container: containerB, load: loadB });
+    const sourceA = new Source({ entryMap: containerA.entryMap, load: loadA });
+    const sourceB = new Source({ entryMap: containerB.entryMap, load: loadB });
 
     const form = new Form(M, {
       a: new Field(converters.maybe(converters.model(ItemA)), {
@@ -367,7 +383,8 @@ describe("source accessor in fields", () => {
 test("source clear", async () => {
   const Item = types.model("Item", {
     id: types.identifierNumber,
-    text: types.string
+    text: types.string,
+    feature: types.string
   });
 
   const Container = types.model("Container", {
@@ -386,20 +403,109 @@ test("source clear", async () => {
     return data;
   };
 
-  const source = new Source({ container, load, cacheDuration: 2 });
+  const source = new Source<typeof Item, any>({
+    entryMap: container.entryMap,
+    load,
+    cacheDuration: 2
+  });
 
-  await source.load(0, {});
-  expect(source.getById(1)).toEqual({ id: 1, text: "A" });
+  await source.load({}, 0);
+  expect(source.getById(1)).toEqual({ id: 1, text: "A", feature: "x" });
 
   const values = source.values({});
+  expect(values).toBeDefined();
+  if (values == null) {
+    throw new Error("This shouldn't happen");
+  }
+
   expect(values).not.toBeUndefined();
   expect(refSnapshots(values)).toEqual([
-    { id: 1, text: "A" },
-    { id: 2, text: "B" },
-    { id: 3, text: "C" }
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
   ]);
 
   source.clear();
-  expect(Array.from(source.items.keys()).length).toBe(0);
+  expect(Array.from(source.entryMap.keys()).length).toBe(0);
   expect(source.values({})).toBeUndefined();
+});
+
+test("source default timestamp", async () => {
+  const Item = types.model("Item", {
+    id: types.identifierNumber,
+    text: types.string,
+    feature: types.string
+  });
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  const loadHit: string[] = [];
+
+  const load = async ({ feature }: { feature: string }) => {
+    loadHit.push(feature);
+    return data.filter(entry => entry.feature === feature);
+  };
+
+  const source = new Source({
+    entryMap: container.entryMap,
+    load,
+    cacheDuration: 2
+  });
+
+  await source.load({ feature: "x" });
+  expect(loadHit).toEqual(["x"]);
+  await source.load({ feature: "x" });
+  // we should still get it from the cache, as timestamp was sent
+  // implicitly.
+  expect(loadHit).toEqual(["x"]);
+});
+
+test("source default query", async () => {
+  const Item = types.model("Item", {
+    id: types.identifierNumber,
+    text: types.string,
+    feature: types.string
+  });
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  const loadHit: (string | undefined)[] = [];
+
+  const load = async ({ feature }: { feature?: string }) => {
+    loadHit.push(feature);
+    return data.filter(entry => entry.feature === feature);
+  };
+
+  const source = new Source({
+    entryMap: container.entryMap,
+    load,
+    cacheDuration: 2
+  });
+
+  await source.load();
+  expect(loadHit).toEqual([undefined]);
+  await source.load();
+  // we should still get it from the cache, as timestamp was sent
+  // implicitly.
+  expect(loadHit).toEqual([undefined]);
 });

@@ -34,7 +34,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   _disposer: IReactionDisposer | undefined;
 
-  references: IReferences<any, any>;
+  references: IReferences<any, any, any>;
 
   constructor(
     public state: FormState<any, any, any>,

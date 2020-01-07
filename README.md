@@ -1559,7 +1559,19 @@ way to load users::
 import { Source } from "mstform";
 
 const userSource = new Source({
-    container: root.userContainer,
+    entryMap: root.userContainer.entryMap,
+    load: loadUsers
+});
+```
+
+Note that you can also make `entryMap` a function that returns the
+`entryMap`:
+
+```js
+import { Source } from "mstform";
+
+const userSource = new Source({
+    entryMap: () => root.userContainer.entryMap,
     load: loadUsers
 });
 ```
@@ -1592,10 +1604,10 @@ autocomplete, we must load the references:
 const state = this.formState;
 const user = state.field("user");
 
-await user.references.load();
+await user.references.load({{}});
 ```
 
-`references.load()` can contain an object argument -- these are additional
+`references.load()` contains an query argument -- these are additional
 search parameters to pass through `loadUser`, such as what the user typed in
 an autocomplete field.
 
@@ -1606,15 +1618,15 @@ Once references are loaded, we can access them in the UI (inside a React
 const state = this.formState;
 const user = state.field("user");
 
-const values = user.references.values();
+const values = user.references.values({});
 // display values somewhere
 ```
 
 The source caches search requests, so that any future `references.load()` with
-the same parameters resolve immediately without even hitting the backend. For
-this reason, the search query accepted by `load` must be either JSON
-serializable or alternatively you can provide a `keyForQuery` function to
-`Source` which turns the search parameters into a unique cache key.
+the same query resolve immediately without even hitting the backend. For this
+reason, the search query accepted by `load` must be either JSON serializable or
+alternatively you can provide a `keyForQuery` function to `Source` which turns
+the search parameters into a unique cache key.
 
 You can also make a field depend on another. Let's imagine that we have
 a way to look for users that are friends of a user:
@@ -1665,6 +1677,16 @@ other fields. If you want to enable this you can call `autoLoadReaction()` on
 `references`. If you don't call it (the default) then you are responsible for
 this yourself. This is useful for autocomplete widgets which only reload when
 the user interacts with them.
+
+You can configure sources to use a defaultQuery if invoked without
+arguments.
+
+You can call `load` and `values` on sources directly too. If you don't
+pass the query argument, it defaults to `{}` like for references.
+
+You can call `clear()` on the source to remove _everything_ in it -- you should
+only do this if you have nothing pointing to entries in its underlying
+`entryMap`, or if all references are mobx-state-tree `safeReference`.
 
 Note: mstform does not yet not implement any cache eviction facilities, either
 from the container or from the search results.
