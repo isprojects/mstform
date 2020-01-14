@@ -15,7 +15,7 @@
     Its JSON representation is a string, but the property will be a `Decimal`
     instance.
 
-*   BREAKING CHANGE: the `converters.decimal` converter used have a string as
+*   BREAKING CHANGE: the `converters.decimal` converter used to have a string as
     both its value and its raw. It's been changed to have the `Decimal` object
     as a value and can thus be used with the `decimal` type. To get the old
     behavior you need to use `converters.stringDecimal`, so you can convert
