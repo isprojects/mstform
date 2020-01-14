@@ -353,15 +353,16 @@ other object:
 -   `converters.integer`: value is an integer.
 
 -   `converters.decimal({maxWholeDigits:x, decimalPlaces:y, allowNegative:z})`:
-    value is a string (not a number) that contains a decimal number with a
-    maximum `maxWholeDigits` (default 10) before the period and a maximum of
-    `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
-    the number of decimals that is initially rendered when opening the form.
-    With `allowNegative` (boolean, default true) you can specify if negative
-    values are allowed. With `normalizedDecimalPlaces` you can set the amount
-    of decimal places the converted number has. It should not be lower than
-    `decimalPlaces`, but can be higher. If it is, the given number is
-    automatically padded with additional decimal places set to 0.
+    value is a `Decimal` instance (from `decimal.js-light`) that contains a
+    decimal number with a maximum `maxWholeDigits` (default 10) before the
+    period and a maximum of `decimalPlaces` (default 2) after the period.
+    `decimalPlaces` also controls the number of decimals that is initially
+    rendered when opening the form. With `allowNegative` (boolean, default
+    true) you can specify if negative values are allowed. With
+    `normalizedDecimalPlaces` you can set the amount of decimal places the
+    converted number has. It should not be lower than `decimalPlaces`, but can
+    be higher. If it is, the given number is automatically padded with
+    additional decimal places set to 0.
 
     Conversion error types are:
 
@@ -375,6 +376,9 @@ other object:
 
     -   `cannotBeNegative`: you entered a negative number where this wasn't
         allowed.
+
+-   `converters.decimalString(maxWholeDigits: x, decimalPlaces: y, allowNegative: z})`: like `converters.decimal` but has a `string` as its value with a
+    normalized representation of the decimal.
 
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to

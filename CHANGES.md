@@ -1,3 +1,15 @@
+# 1.24.0
+
+-   Better support for Decimals. Previously decimals were understood as
+    strings, but we now have a peer dependency on `decimal.js-light` which has
+    a `Decimal` object. `converters.decimal` has been changed to deliver such a
+    `Decimal` instance as a value.
+
+-   BREAKING CHANGE: the `converters.decimal` converter used have a string as
+    both its value and its raw. It's been changed to have the `Decimal` object
+    as a value. To get the old behavior you need to use
+    `converters.stringDecimal`.
+
 # 1.23.0
 
 -   BREAKING CHANGE: Change the way sources work: `load` now takes the query as
