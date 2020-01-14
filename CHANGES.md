@@ -1,14 +1,24 @@
 # 1.24.0
 
--   Better support for Decimals. Previously decimals were understood as
-    strings, but we now have a peer dependency on `decimal.js-light` which has
-    a `Decimal` object. `converters.decimal` has been changed to deliver such a
-    `Decimal` instance as a value.
+-   We now have a peer dependency on `decimal.js-light` which defines a `Decimal`
+    object. We support this with a MST type and a converter (read on).
 
--   BREAKING CHANGE: the `converters.decimal` converter used have a string as
+-   We introduced a new `decimal` mobx-state-tree type you can import and use
+    within a MST model:
+
+    ```js
+    const M = types.model({
+        d: decimal
+    });
+    ```
+
+    Its JSON representation is a string, but the property will be a `Decimal`
+    instance.
+
+*   BREAKING CHANGE: the `converters.decimal` converter used have a string as
     both its value and its raw. It's been changed to have the `Decimal` object
-    as a value. To get the old behavior you need to use
-    `converters.stringDecimal`.
+    as a value and can thus be used with the `decimal` type. To get the old
+    behavior you need to use `converters.stringDecimal`.
 
 # 1.23.0
 
