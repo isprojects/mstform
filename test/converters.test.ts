@@ -241,7 +241,6 @@ test("decimal converter", () => {
 });
 
 test("decimal converter for decimal type", () => {
-  ``;
   checkDecimal(converters.decimal, "3", new Decimal("3"));
   checkDecimal(converters.decimal, "3.14", new Decimal("3.14"));
   checkDecimal(converters.decimal, "-3.14", new Decimal("-3.14"));
