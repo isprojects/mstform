@@ -2097,7 +2097,7 @@ test("form with thousandSeparator . and empty decimalSeparator invalid", () => {
   const o = M.create({ foo: "3000" });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal())
+    foo: new Field(converters.stringDecimal())
   });
 
   expect(() => {
@@ -2115,7 +2115,7 @@ test("form with thousandSeparator and decimalSeparator same value invalid", () =
   const o = M.create({ foo: "3000" });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal())
+    foo: new Field(converters.stringDecimal())
   });
 
   expect(() => {
@@ -2135,9 +2135,12 @@ test("blur hook with postprocess", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
-      postprocess: true
-    }),
+    foo: new Field(
+      converters.stringDecimal({ decimalPlaces: 2, addZeroes: true }),
+      {
+        postprocess: true
+      }
+    ),
     bar: new Field(converters.string)
   });
 
@@ -2167,9 +2170,12 @@ test("blur hook no postprocess with error", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
-      postprocess: true
-    })
+    foo: new Field(
+      converters.stringDecimal({ decimalPlaces: 2, addZeroes: true }),
+      {
+        postprocess: true
+      }
+    )
   });
 
   const o = M.create({ foo: "4314314" });
@@ -2197,7 +2203,7 @@ test("blur hook with postprocess maybe field", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.decimal({ decimalPlaces: 2, addZeroes: true })
+        converters.stringDecimal({ decimalPlaces: 2, addZeroes: true })
       ),
       {
         postprocess: true
@@ -2230,7 +2236,7 @@ test("setValueAndUpdateRaw", () => {
   const o = M.create({ foo: "" });
 
   const form = new Form(M, {
-    foo: new Field(converters.decimal())
+    foo: new Field(converters.stringDecimal())
   });
 
   const state = form.state(o, {
@@ -2413,7 +2419,7 @@ test("isEmpty on fields", () => {
     maybeNullString: new Field(converters.maybeNull(converters.string)),
     boolean: new Field(converters.boolean),
     textStringArray: new Field(converters.textStringArray),
-    decimal: new Field(converters.decimal({ decimalPlaces: 2 }))
+    decimal: new Field(converters.stringDecimal({ decimalPlaces: 2 }))
   });
 
   const o = M.create({
@@ -2493,7 +2499,7 @@ test("isEmptyAndRequired on fields", () => {
     maybeNullString: new Field(converters.maybeNull(converters.string)),
     boolean: new Field(converters.boolean),
     textStringArray: new Field(converters.textStringArray),
-    decimal: new Field(converters.decimal({ decimalPlaces: 2 })),
+    decimal: new Field(converters.stringDecimal({ decimalPlaces: 2 })),
     requiredString: new Field(converters.string, {
       required: true
     }),
@@ -2509,7 +2515,7 @@ test("isEmptyAndRequired on fields", () => {
     requiredTextStringArray: new Field(converters.textStringArray, {
       required: true
     }),
-    requiredDecimal: new Field(converters.decimal({ decimalPlaces: 2 }), {
+    requiredDecimal: new Field(converters.stringDecimal({ decimalPlaces: 2 }), {
       required: true
     })
   });

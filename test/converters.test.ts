@@ -1,4 +1,5 @@
 import { types } from "mobx-state-tree";
+import { Decimal } from "decimal.js-light";
 import {
   ConversionError,
   ConversionValue,
@@ -29,6 +30,18 @@ function check(
   expect((r as ConversionValue<any>).value).toEqual(expected);
 }
 
+function checkDecimal(
+  converter: ConverterOrFactory<any, any>,
+  value: string,
+  expected: Decimal
+) {
+  converter = makeConverter(converter);
+  const processedValue = converter.preprocessRaw(value, baseOptions);
+  const r = converter.convert(processedValue, baseOptions);
+  expect(r).toBeInstanceOf(ConversionValue);
+  expect((r as ConversionValue<Decimal>).value.equals(expected));
+}
+
 function checkWithOptions(
   converter: ConverterOrFactory<any, any>,
   value: any,
@@ -40,6 +53,19 @@ function checkWithOptions(
   const r = converter.convert(processedValue, options);
   expect(r).toBeInstanceOf(ConversionValue);
   expect((r as ConversionValue<any>).value).toEqual(expected);
+}
+
+function checkDecimalWithOptions(
+  converter: ConverterOrFactory<any, any>,
+  value: string,
+  expected: Decimal,
+  options: StateConverterOptionsWithContext
+) {
+  converter = makeConverter(converter);
+  const processedValue = converter.preprocessRaw(value, options);
+  const r = converter.convert(processedValue, options);
+  expect(r).toBeInstanceOf(ConversionValue);
+  expect((r as ConversionValue<Decimal>).value.equals(expected));
 }
 
 function fails(converter: ConverterOrFactory<any, any>, value: any) {
@@ -138,20 +164,20 @@ test("integer converter", () => {
 });
 
 test("decimal converter", () => {
-  check(converters.decimal, "3", "3");
-  check(converters.decimal, "3.14", "3.14");
-  check(converters.decimal, "43.14", "43.14");
-  check(converters.decimal, "4313", "4313");
-  check(converters.decimal, "-3.14", "-3.14");
-  check(converters.decimal, "0", "0");
-  check(converters.decimal, ".14", ".14");
-  check(converters.decimal, "14.", "14.");
-  checkWithOptions(converters.decimal, "43,14", "43.14", {
+  check(converters.stringDecimal, "3", "3");
+  check(converters.stringDecimal, "3.14", "3.14");
+  check(converters.stringDecimal, "43.14", "43.14");
+  check(converters.stringDecimal, "4313", "4313");
+  check(converters.stringDecimal, "-3.14", "-3.14");
+  check(converters.stringDecimal, "0", "0");
+  check(converters.stringDecimal, ".14", ".14");
+  check(converters.stringDecimal, "14.", "14.");
+  checkWithOptions(converters.stringDecimal, "43,14", "43.14", {
     decimalSeparator: ",",
     ...baseOptions
   });
   checkWithOptions(
-    converters.decimal({ decimalPlaces: 6 }),
+    converters.stringDecimal({ decimalPlaces: 6 }),
     "4.000,000000",
     "4000.000000",
     {
@@ -161,7 +187,7 @@ test("decimal converter", () => {
     }
   );
   checkWithOptions(
-    converters.decimal({ decimalPlaces: 2 }),
+    converters.stringDecimal({ decimalPlaces: 2 }),
     "36.365,21",
     "36365.21",
     {
@@ -171,42 +197,42 @@ test("decimal converter", () => {
       ...baseOptions
     }
   );
-  fails(converters.decimal, "foo");
-  fails(converters.decimal, "1foo");
-  fails(converters.decimal, "");
-  fails(converters.decimal, ".");
-  fails(converters.decimal({ maxWholeDigits: 4 }), "12345.34");
-  fails(converters.decimal({ decimalPlaces: 2 }), "12.444");
-  fails(converters.decimal({ allowNegative: false }), "-45.34");
-  failsWithOptions(converters.decimal, "1,23.45", {
+  fails(converters.stringDecimal, "foo");
+  fails(converters.stringDecimal, "1foo");
+  fails(converters.stringDecimal, "");
+  fails(converters.stringDecimal, ".");
+  fails(converters.stringDecimal({ maxWholeDigits: 4 }), "12345.34");
+  fails(converters.stringDecimal({ decimalPlaces: 2 }), "12.444");
+  fails(converters.stringDecimal({ allowNegative: false }), "-45.34");
+  failsWithOptions(converters.stringDecimal, "1,23.45", {
     decimalSeparator: ".",
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal, ",12345", {
+  failsWithOptions(converters.stringDecimal, ",12345", {
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal, "1234,567", {
+  failsWithOptions(converters.stringDecimal, "1234,567", {
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal, "12.3,456", {
+  failsWithOptions(converters.stringDecimal, "12.3,456", {
     decimalSeparator: ".",
     thousandSeparator: ",",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal, "1.1,1", {
+  failsWithOptions(converters.stringDecimal, "1.1,1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal, "1,1.1", {
+  failsWithOptions(converters.stringDecimal, "1,1.1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     ...baseOptions
   });
-  failsWithOptions(converters.decimal, "1234.56", {
+  failsWithOptions(converters.stringDecimal, "1234.56", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     renderThousands: true,
@@ -214,23 +240,37 @@ test("decimal converter", () => {
   });
 });
 
+test("decimal converter for decimal type", () => {
+  checkDecimal(converters.decimal, "3", new Decimal("3"));
+  checkDecimal(converters.decimal, "3.14", new Decimal("3.14"));
+  checkDecimal(converters.decimal, "-3.14", new Decimal("-3.14"));
+  checkDecimalWithOptions(converters.decimal, "43,14", new Decimal("43.14"), {
+    decimalSeparator: ",",
+    ...baseOptions
+  });
+  fails(converters.decimal, "foo");
+  fails(converters.decimal, "1foo");
+  fails(converters.decimal, "");
+  fails(converters.decimal, ".");
+});
+
 test("decimal converter with normalizedDecimalPlaces", () => {
   const options = { normalizedDecimalPlaces: 4 };
 
-  check(converters.decimal(options), "3", "3.0000");
-  check(converters.decimal(options), "3.14", "3.1400");
-  check(converters.decimal(options), "43.14", "43.1400");
-  check(converters.decimal(options), "4313", "4313.0000");
-  check(converters.decimal(options), "-3.14", "-3.1400");
-  check(converters.decimal(options), "0", "0.0000");
-  check(converters.decimal(options), ".14", ".1400");
-  check(converters.decimal(options), "14.", "14.0000");
-  checkWithOptions(converters.decimal(options), "43,14", "43.1400", {
+  check(converters.stringDecimal(options), "3", "3.0000");
+  check(converters.stringDecimal(options), "3.14", "3.1400");
+  check(converters.stringDecimal(options), "43.14", "43.1400");
+  check(converters.stringDecimal(options), "4313", "4313.0000");
+  check(converters.stringDecimal(options), "-3.14", "-3.1400");
+  check(converters.stringDecimal(options), "0", "0.0000");
+  check(converters.stringDecimal(options), ".14", ".1400");
+  check(converters.stringDecimal(options), "14.", "14.0000");
+  checkWithOptions(converters.stringDecimal(options), "43,14", "43.1400", {
     decimalSeparator: ",",
     ...baseOptions
   });
   checkWithOptions(
-    converters.decimal({ decimalPlaces: 6, normalizedDecimalPlaces: 7 }),
+    converters.stringDecimal({ decimalPlaces: 6, normalizedDecimalPlaces: 7 }),
     "4.000,000000",
     "4000.0000000",
     {
@@ -240,7 +280,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
     }
   );
   checkWithOptions(
-    converters.decimal({ decimalPlaces: 2, normalizedDecimalPlaces: 4 }),
+    converters.stringDecimal({ decimalPlaces: 2, normalizedDecimalPlaces: 4 }),
     "36.365,21",
     "36365.2100",
     {
@@ -253,7 +293,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
 });
 
 test("decimal converter with both options", () => {
-  checkWithOptions(converters.decimal, "4.314.314,31", "4314314.31", {
+  checkWithOptions(converters.stringDecimal, "4.314.314,31", "4314314.31", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     ...baseOptions
@@ -261,7 +301,7 @@ test("decimal converter with both options", () => {
 });
 
 test("decimal converter render with renderThousands false", () => {
-  const converter = converters.decimal({});
+  const converter = converters.stringDecimal({});
   const options = {
     decimalSeparator: ",",
     thousandSeparator: ".",
@@ -279,7 +319,7 @@ test("decimal converter render with renderThousands false", () => {
 });
 
 test("decimal converter render with six decimals", () => {
-  const converter = converters.decimal({ decimalPlaces: 6 });
+  const converter = converters.stringDecimal({ decimalPlaces: 6 });
   const options = {
     decimalSeparator: ".",
     thousandSeparator: ",",
@@ -297,7 +337,7 @@ test("decimal converter render with six decimals", () => {
 });
 
 test("decimal converter render with six decimals and thousand separators", () => {
-  const converter = converters.decimal({ decimalPlaces: 6 });
+  const converter = converters.stringDecimal({ decimalPlaces: 6 });
   const options = {
     decimalSeparator: ".",
     thousandSeparator: ",",
@@ -315,7 +355,7 @@ test("decimal converter render with six decimals and thousand separators", () =>
 });
 
 test("decimal converter render with six decimals, only showing three", () => {
-  const converter = converters.decimal({ decimalPlaces: 3 });
+  const converter = converters.stringDecimal({ decimalPlaces: 3 });
   const options = {
     decimalSeparator: ",",
     thousandSeparator: ".",
@@ -329,7 +369,7 @@ test("decimal converter render with six decimals, only showing three", () => {
 
 test("decimal converter with thousandSeparator . and no decimalSeparator can't convert", () => {
   let message = false;
-  const converter = converters.decimal();
+  const converter = converters.stringDecimal();
   const options = {
     thousandSeparator: ".",
     renderThousands: true,
@@ -368,16 +408,16 @@ test("maybeNull number converter", () => {
 });
 
 test("maybe decimal converter", () => {
-  check(converters.maybe(converters.decimal()), "3.14", "3.14");
-  check(converters.maybe(converters.decimal()), "", undefined);
-  const c = converters.maybe(converters.decimal());
+  check(converters.maybe(converters.stringDecimal()), "3.14", "3.14");
+  check(converters.maybe(converters.stringDecimal()), "", undefined);
+  const c = converters.maybe(converters.stringDecimal());
   expect(c.render(undefined, baseOptions)).toEqual("");
 });
 
 test("maybeNull decimal converter", () => {
-  check(converters.maybeNull(converters.decimal()), "3.14", "3.14");
-  check(converters.maybeNull(converters.decimal()), "", null);
-  const c = converters.maybeNull(converters.decimal());
+  check(converters.maybeNull(converters.stringDecimal()), "3.14", "3.14");
+  check(converters.maybeNull(converters.stringDecimal()), "", null);
+  const c = converters.maybeNull(converters.stringDecimal());
   expect(c.render(null, baseOptions)).toEqual("");
 });
 
@@ -463,7 +503,7 @@ test("dynamic decimal converter", () => {
 
   const form = new Form(M, {
     foo: new Field(
-      converters.dynamic(converters.decimal, context => context.options)
+      converters.dynamic(converters.stringDecimal, context => context.options)
     )
   });
 
@@ -541,7 +581,7 @@ test("render decimal number without decimals with decimal separator", () => {
 
   const form = new Form(M, {
     foo: new Field(
-      converters.dynamic(converters.decimal, context => ({
+      converters.dynamic(converters.stringDecimal, context => ({
         allowNegative: false,
         decimalPlaces: getCurrencyDecimals(context.getCurrency())
       }))
@@ -599,7 +639,7 @@ test("obey addZeroes false", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.decimal({ decimalPlaces: 6, addZeroes: false })
+        converters.stringDecimal({ decimalPlaces: 6, addZeroes: false })
       )
     )
   });
@@ -620,7 +660,7 @@ test("obey addZeroes true", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.decimal({ decimalPlaces: 6, addZeroes: true })
+        converters.stringDecimal({ decimalPlaces: 6, addZeroes: true })
       )
     )
   });
@@ -641,7 +681,7 @@ test("maybe decimal converter/render for empty", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.decimal({ decimalPlaces: 6, addZeroes: false })
+        converters.stringDecimal({ decimalPlaces: 6, addZeroes: false })
       )
     )
   });

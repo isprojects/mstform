@@ -1,5 +1,6 @@
 import { IObservableArray, observable } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
+import { Decimal } from "decimal.js-light";
 import {
   Converter,
   ConverterOrFactory,
@@ -133,7 +134,41 @@ function boolean(options?: BooleanOptions) {
   });
 }
 
-function decimal(options: DecimalOptions) {
+function decimalConvert(
+  raw: string,
+  options: DecimalOptions,
+  converterOptions: StateConverterOptionsWithContext
+): string {
+  checkConverterOptions(converterOptions);
+  try {
+    return parseDecimal(raw, {
+      ...options,
+      decimalSeparator: converterOptions.decimalSeparator || ".",
+      thousandSeparator: converterOptions.thousandSeparator || ",",
+      renderThousands: converterOptions.renderThousands || false
+    });
+  } catch (e) {
+    if (e instanceof DecimalParserError) {
+      throw new ConversionError(e.type);
+    }
+    throw e;
+  }
+}
+
+function decimalRender(
+  value: string,
+  options: DecimalOptions,
+  converterOptions: StateConverterOptionsWithContext
+): string {
+  return renderDecimal(value, {
+    ...options,
+    decimalSeparator: converterOptions.decimalSeparator || ".",
+    thousandSeparator: converterOptions.thousandSeparator || ",",
+    renderThousands: converterOptions.renderThousands || false
+  });
+}
+
+function stringDecimal(options: DecimalOptions) {
   return new StringConverter<string>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -143,28 +178,28 @@ function decimal(options: DecimalOptions) {
       return raw.trim();
     },
     convert(raw, converterOptions) {
-      checkConverterOptions(converterOptions);
-      try {
-        return parseDecimal(raw, {
-          ...options,
-          decimalSeparator: converterOptions.decimalSeparator || ".",
-          thousandSeparator: converterOptions.thousandSeparator || ",",
-          renderThousands: converterOptions.renderThousands || false
-        });
-      } catch (e) {
-        if (e instanceof DecimalParserError) {
-          throw new ConversionError(e.type);
-        }
-        throw e;
-      }
+      return decimalConvert(raw, options, converterOptions);
     },
     render(value, converterOptions) {
-      return renderDecimal(value, {
-        ...options,
-        decimalSeparator: converterOptions.decimalSeparator || ".",
-        thousandSeparator: converterOptions.thousandSeparator || ",",
-        renderThousands: converterOptions.renderThousands || false
-      });
+      return decimalRender(value, options, converterOptions);
+    }
+  });
+}
+
+function decimal(options: DecimalOptions) {
+  return new Converter<string, Decimal>({
+    emptyRaw: "",
+    emptyImpossible: true,
+    defaultControlled: controlled.value,
+    neverRequired: false,
+    preprocessRaw(raw: string): string {
+      return raw.trim();
+    },
+    convert(raw, converterOptions): Decimal {
+      return new Decimal(decimalConvert(raw, options, converterOptions));
+    },
+    render(value, converterOptions) {
+      return decimalRender(value.toString(), options, converterOptions);
     }
   });
 }
@@ -327,6 +362,12 @@ export const converters = {
   string: withDefaults(string, {}),
   number,
   integer,
+  stringDecimal: withDefaults(stringDecimal, {
+    maxWholeDigits: 10,
+    decimalPlaces: 2,
+    allowNegative: true,
+    addZeroes: true
+  }),
   decimal: withDefaults(decimal, {
     maxWholeDigits: 10,
     decimalPlaces: 2,

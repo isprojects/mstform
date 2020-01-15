@@ -70,7 +70,7 @@ test("converter maybeNull with converter options", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybeNull(converters.decimal()))
+    foo: new Field(converters.maybeNull(converters.stringDecimal()))
   });
 
   const o = M.create({ foo: "36365.21" });

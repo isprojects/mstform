@@ -11,4 +11,5 @@ export * from "./controlled";
 export * from "./state";
 export * from "./source";
 export * from "./backend";
+export * from "./decimal-type";
 export { IReferences, References, NoReferences } from "./references";

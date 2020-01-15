@@ -16,8 +16,8 @@ test("dynamic based on accessor", () => {
   };
 
   const form = new Form(M, {
-    foo: new Field(converters.dynamic(converters.decimal, getOptions)),
-    bar: new Field(converters.dynamic(converters.decimal, getOptions))
+    foo: new Field(converters.dynamic(converters.stringDecimal, getOptions)),
+    bar: new Field(converters.dynamic(converters.stringDecimal, getOptions))
   });
 
   const o = M.create({ foo: "1.2", bar: "3.4" });
@@ -44,7 +44,7 @@ test("dynamic converter with maybe", () => {
 
   const form = new Form(M, {
     foo: new Field(
-      converters.maybe(converters.dynamic(converters.decimal, getOptions))
+      converters.maybe(converters.dynamic(converters.stringDecimal, getOptions))
     )
   });
 
@@ -72,7 +72,9 @@ test("dynamic converter with maybeNull", () => {
 
   const form = new Form(M, {
     foo: new Field(
-      converters.maybeNull(converters.dynamic(converters.decimal, getOptions))
+      converters.maybeNull(
+        converters.dynamic(converters.stringDecimal, getOptions)
+      )
     )
   });
 
