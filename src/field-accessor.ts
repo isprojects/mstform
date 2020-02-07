@@ -62,6 +62,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   }
 
   dispose() {
+    if (this.references.isEnabled()) {
+      this.references.clearAutoLoadReaction();
+    }
     if (this._disposer == null) {
       return;
     }
