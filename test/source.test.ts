@@ -379,6 +379,8 @@ describe("source accessor in fields", () => {
     const sourceA = new Source({ entryMap: containerA.entryMap, load: loadA });
     const sourceB = new Source({ entryMap: containerB.entryMap, load: loadB });
 
+    let dependentQueryCounter = 0;
+
     const form = new Form(n, {
       foo: new RepeatingForm({
         a: new Field(converters.maybe(converters.model(ItemA)), {
@@ -392,6 +394,7 @@ describe("source accessor in fields", () => {
             // this source is dependent on state. This information
             // should be sent whenever a load is issued
             dependentQuery: accessor => {
+              dependentQueryCounter += 1;
               return { a: accessor.node.a, c: accessor.node.c };
             }
           }
@@ -407,7 +410,11 @@ describe("source accessor in fields", () => {
     fieldA.references.autoLoadReaction();
     fieldB.references.autoLoadReaction();
 
+    expect(dependentQueryCounter).toEqual(1);
+
     repeating.remove(r.foo[0]);
+
+    expect(dependentQueryCounter).toEqual(1);
   });
 
   test("no references", async () => {
