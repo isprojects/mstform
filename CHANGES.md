@@ -1,3 +1,9 @@
+# 1.24.1
+
+-   We now dispose the `autoLoadReaction` for references when a node is
+    removed. This is needed to prevent the `autoLoadReaction` from being
+    triggered while the node is no longer present.
+
 # 1.24.0
 
 -   We now have a peer dependency on `decimal.js-light` which defines a `Decimal`

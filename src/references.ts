@@ -8,6 +8,7 @@ export interface IReferences<
   DQ extends Query
 > {
   autoLoadReaction(): IReactionDisposer;
+  clearAutoLoadReaction(): void;
   load(searchQuery?: SQ): Promise<Instance<T>[]>;
   loadWithTimestamp(
     timestamp: number,
@@ -32,8 +33,10 @@ export class References<
     public dependentQuery: DependentQuery<DQ> = () => ({} as DQ)
   ) {}
 
+  _autoLoadDisposer: IReactionDisposer | undefined;
+
   autoLoadReaction(): IReactionDisposer {
-    return reaction(
+    this._autoLoadDisposer = reaction(
       () => {
         return this.dependentQuery();
       },
@@ -41,6 +44,14 @@ export class References<
         this.load();
       }
     );
+    return this._autoLoadDisposer;
+  }
+
+  clearAutoLoadReaction(): void {
+    if (this._autoLoadDisposer === undefined) {
+      return;
+    }
+    this._autoLoadDisposer();
   }
 
   getFullQuery(searchQuery?: SQ): SQ & DQ {
@@ -80,6 +91,10 @@ export class References<
 export class NoReferences<SQ extends Query, DQ extends Query>
   implements IReferences<any, SQ, DQ> {
   autoLoadReaction(): IReactionDisposer {
+    throw new Error(`No references defined`);
+  }
+
+  clearAutoLoadReaction(): void {
     throw new Error(`No references defined`);
   }
 
