@@ -1,3 +1,8 @@
+# 1.24.2
+
+-   We now also take the `formAccessor` into account when clearing
+    errors and warnings instead of only the `flatAccessors`.
+
 # 1.24.1
 
 -   We now dispose the `autoLoadReaction` for references when a node is
