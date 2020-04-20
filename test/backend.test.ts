@@ -1401,4 +1401,35 @@ test("backend process all global error", async () => {
   });
   await state.processAll();
   expect(state.error).toEqual("error");
+  state.clearAllValidations();
+  expect(state.error).toBeUndefined();
+});
+
+test("backend process all global warning", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+  const o = M.create({ foo: "FOO" });
+  const myProcessAll = async (node: Instance<typeof M>) => {
+    return {
+      updates: [],
+      errorValidations: [],
+      warningValidations: [
+        { id: "alpha", messages: [{ path: "", message: "warning" }] }
+      ]
+    };
+  };
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+  const state = form.state(o, {
+    backend: {
+      processAll: myProcessAll,
+      debounce
+    }
+  });
+  await state.processAll();
+  expect(state.warning).toEqual("warning");
+  state.clearAllValidations();
+  expect(state.warning).toBeUndefined();
 });

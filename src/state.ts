@@ -455,7 +455,7 @@ export class FormState<
 
   @action
   clearExternalValidations(messageType: "error" | "warning") {
-    this.flatAccessors.forEach(accessor => {
+    [this, ...this.flatAccessors].forEach(accessor => {
       const externalMessages =
         messageType === "error"
           ? accessor.externalErrors
