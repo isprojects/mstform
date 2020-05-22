@@ -98,12 +98,17 @@ test("groups with repeatingform error on top-level", async () => {
     getError: (accessor: any) =>
       accessor instanceof RepeatingFormAccessor && accessor.length === 0
         ? "Cannot be empty"
+        : undefined,
+    getWarning: (accessor: any) =>
+      accessor instanceof RepeatingFormAccessor
+        ? "Some some reason this is insufficient"
         : undefined
   });
 
   const repeatingForm = state.repeatingForm("foo");
 
   expect(repeatingForm.isValid).toBeFalsy();
+  expect(repeatingForm.isWarningFree).toBeFalsy();
 });
 
 test("groups with indexed repeatingform error on top-level", async () => {
@@ -126,6 +131,10 @@ test("groups with indexed repeatingform error on top-level", async () => {
     getError: (accessor: any) =>
       accessor instanceof RepeatingFormIndexedAccessor
         ? "For some reason this is wrong"
+        : undefined,
+    getWarning: (accessor: any) =>
+      accessor instanceof RepeatingFormIndexedAccessor
+        ? "Some some reason this is insufficient"
         : undefined
   });
 
@@ -133,4 +142,5 @@ test("groups with indexed repeatingform error on top-level", async () => {
   const indexedRepeatingForm = repeatingForm.index(0);
 
   expect(indexedRepeatingForm.isValid).toBeFalsy();
+  expect(indexedRepeatingForm.isWarningFree).toBeFalsy();
 });

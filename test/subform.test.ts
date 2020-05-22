@@ -161,9 +161,14 @@ test("groups with subform error on top-level", async () => {
 
   const state = form.state(o, {
     getError: (accessor: any) =>
-      accessor instanceof SubFormAccessor ? "Somehow this is wrong" : undefined
+      accessor instanceof SubFormAccessor ? "Somehow this is wrong" : undefined,
+    getWarning: (accessor: any) =>
+      accessor instanceof SubFormAccessor
+        ? "Somehow this is insufficient"
+        : undefined
   });
   const subForm = state.subForm("sub");
 
   expect(subForm.isValid).toBeFalsy();
+  expect(subForm.isWarningFree).toBeFalsy();
 });
