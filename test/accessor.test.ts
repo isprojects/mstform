@@ -1,6 +1,15 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, RepeatingForm, converters, FieldAccessor } from "../src";
+import {
+  Field,
+  Form,
+  RepeatingForm,
+  RepeatingFormAccessor,
+  RepeatingFormIndexedAccessor,
+  converters,
+  FieldAccessor,
+  Group
+} from "../src";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -67,4 +76,61 @@ test("acccessByPath which has no field", () => {
   const state = form.state(o);
   const accessor = state.accessByPath("/bar");
   expect(accessor).toBeUndefined();
+});
+
+test("groups with repeatingform error on top-level", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [] });
+
+  const state = form.state(o, {
+    getError: (accessor: any) =>
+      accessor instanceof RepeatingFormAccessor && accessor.length === 0
+        ? "Cannot be empty"
+        : undefined
+  });
+
+  const repeatingForm = state.repeatingForm("foo");
+
+  expect(repeatingForm.isValid).toBeFalsy();
+});
+
+test("groups with indexed repeatingform error on top-level", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N)
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o, {
+    getError: (accessor: any) =>
+      accessor instanceof RepeatingFormIndexedAccessor
+        ? "For some reason this is wrong"
+        : undefined
+  });
+
+  const repeatingForm = state.repeatingForm("foo");
+  const indexedRepeatingForm = repeatingForm.index(0);
+
+  expect(indexedRepeatingForm.isValid).toBeFalsy();
 });

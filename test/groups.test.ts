@@ -1,6 +1,16 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, Group, SubForm, RepeatingForm, converters } from "../src";
+import {
+  Field,
+  Form,
+  Group,
+  SubForm,
+  RepeatingForm,
+  RepeatingFormAccessor,
+  RepeatingFormIndexedAccessor,
+  SubFormAccessor,
+  converters
+} from "../src";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -461,4 +471,75 @@ test("groups with warnings in repeatingform", () => {
   expect(repeatingFormEntry1.isWarningFree).toBeTruthy();
   expect(repeatingFormEntry2.isWarningFree).toBeFalsy();
   expect(group.isWarningFree).toBeFalsy();
+});
+
+test("groups with repeatingform and subform error on top-level", async () => {
+  const L = types.model("L", {
+    baz: types.string
+  });
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    foo: types.array(N),
+    sub: L
+  });
+
+  const form = new Form(
+    M,
+    {
+      foo: new RepeatingForm({
+        bar: new Field(converters.string)
+      }),
+      sub: new SubForm({
+        baz: new Field(converters.string)
+      })
+    },
+    {
+      one: new Group({ include: ["foo"] }),
+      two: new Group({ include: ["sub"] })
+    }
+  );
+
+  const o = M.create({ foo: [], sub: { baz: "BAZ" } });
+
+  const state = form.state(o, {
+    getError: (accessor: any) => {
+      if (accessor instanceof RepeatingFormAccessor) {
+        return "Cannot be empty";
+      }
+      if (accessor instanceof SubFormAccessor) {
+        return "Is wrong for some reason";
+      }
+      return undefined;
+    }
+  });
+
+  const repeatingForm = state.repeatingForm("foo");
+  const subForm = state.subForm("sub");
+  const group = state.group("one");
+  const groupTwo = state.group("two");
+
+  expect(repeatingForm.isValid).toBeFalsy();
+  expect(subForm.isValid).toBeFalsy();
+  expect(group.isValid).toBeFalsy();
+  expect(groupTwo.isValid).toBeFalsy();
+
+  const p = M.create({ foo: [{ bar: "BAR" }], sub: { baz: "BAZ" } });
+
+  const state_ = form.state(p, {
+    getError: (accessor: any) => {
+      if (accessor instanceof RepeatingFormIndexedAccessor) {
+        return "Cannot be empty";
+      }
+      return undefined;
+    }
+  });
+
+  const repeatingForm_ = state_.repeatingForm("foo");
+  const indexedRepeatingForm = repeatingForm_.index(0);
+  const group_ = state_.group("one");
+
+  expect(indexedRepeatingForm.isValid).toBeFalsy();
+  expect(group_.isValid).toBeFalsy();
 });

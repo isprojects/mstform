@@ -63,7 +63,10 @@ export class RepeatingFormAccessor<
 
   @computed
   get isValid(): boolean {
-    return this.accessors.every(accessor => accessor.isValid);
+    return (
+      this.errorValue == null &&
+      this.accessors.every(accessor => accessor.isValid)
+    );
   }
 
   @computed

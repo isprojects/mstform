@@ -30,4 +30,12 @@ export class SubFormAccessor<
   get value(): any {
     return this.state.getValue(this.path);
   }
+
+  @computed
+  get isValid(): boolean {
+    return (
+      this.errorValue == null &&
+      this.accessors.every(accessor => accessor.isValid)
+    );
+  }
 }

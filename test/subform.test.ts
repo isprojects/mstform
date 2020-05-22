@@ -1,6 +1,6 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
-import { Field, Form, SubForm, converters } from "../src";
+import { Field, Form, SubForm, SubFormAccessor, converters } from "../src";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -141,4 +141,29 @@ test("SubField disabled when SubForm in a SubForm is disabled", () => {
   expect(subForm.disabled).toBeTruthy();
   expect(subForm2.disabled).toBeTruthy();
   expect(subField.disabled).toBeTruthy();
+});
+
+test("groups with subform error on top-level", async () => {
+  const N = types.model("N", {
+    bar: types.string
+  });
+  const M = types.model("M", {
+    sub: N
+  });
+
+  const form = new Form(M, {
+    sub: new SubForm({
+      bar: new Field(converters.string)
+    })
+  });
+
+  const o = M.create({ sub: { bar: "BAR" } });
+
+  const state = form.state(o, {
+    getError: (accessor: any) =>
+      accessor instanceof SubFormAccessor ? "Somehow this is wrong" : undefined
+  });
+  const subForm = state.subForm("sub");
+
+  expect(subForm.isValid).toBeFalsy();
 });
