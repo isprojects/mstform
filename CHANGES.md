@@ -1,3 +1,8 @@
+# 1.24.3
+
+-   We now also render subforms, repeatingforms, and indexed repeatingforms
+    as invalid if the accessor itself has feedback.
+
 # 1.24.2
 
 -   We now also take the `formAccessor` into account when clearing
