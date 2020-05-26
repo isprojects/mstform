@@ -527,7 +527,7 @@ test("groups with repeatingform and subform error on top-level", async () => {
 
   const p = M.create({ foo: [{ bar: "BAR" }], sub: { baz: "BAZ" } });
 
-  const state_ = form.state(p, {
+  const stateWithWarning = form.state(p, {
     getError: (accessor: any) => {
       if (accessor instanceof RepeatingFormIndexedAccessor) {
         return "Cannot be empty";
@@ -536,10 +536,10 @@ test("groups with repeatingform and subform error on top-level", async () => {
     }
   });
 
-  const repeatingForm_ = state_.repeatingForm("foo");
-  const indexedRepeatingForm = repeatingForm_.index(0);
-  const group_ = state_.group("one");
+  const repeatingFormWithWarning = stateWithWarning.repeatingForm("foo");
+  const indexedRepeatingForm = repeatingFormWithWarning.index(0);
+  const groupWithWarning = stateWithWarning.group("one");
 
   expect(indexedRepeatingForm.isValid).toBeFalsy();
-  expect(group_.isValid).toBeFalsy();
+  expect(groupWithWarning.isValid).toBeFalsy();
 });
