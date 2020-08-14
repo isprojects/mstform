@@ -10,7 +10,6 @@ import {
   unprotect,
   getRoot
 } from "mobx-state-tree";
-import { timingSafeEqual } from "crypto";
 
 export type Query = {};
 
