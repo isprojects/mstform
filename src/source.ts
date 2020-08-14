@@ -10,6 +10,7 @@ import {
   unprotect,
   getRoot
 } from "mobx-state-tree";
+import { timingSafeEqual } from "crypto";
 
 export type Query = {};
 
@@ -55,6 +56,8 @@ export class Source<T extends IAnyModelType, Q extends Query>
   // XXX this grows indefinitely with cached results...
   @observable
   _cache = new Map<string, CacheEntry<T>>();
+
+  _existingLoad = new Map<string, Promise<SnapshotIn<T>[]>>();
 
   constructor({
     entryMap,
@@ -138,10 +141,22 @@ export class Source<T extends IAnyModelType, Q extends Query>
     ) {
       return result.values;
     }
-    const items = await this._load(q);
+    const items = await this.loadOrExisting(key, q).finally(() =>
+      this._existingLoad.delete(key)
+    );
     const values = items.map((item: any) => this.addOrUpdate(item));
     this.setCache(key, values, timestamp);
     return values;
+  }
+
+  async loadOrExisting(key: string, q: Q): Promise<SnapshotIn<T>[]> {
+    const existingLoad = this._existingLoad.get(key);
+    if (existingLoad) {
+      return existingLoad;
+    }
+    const load = this._load(q);
+    this._existingLoad.set(key, load);
+    return load;
   }
 
   values(q?: Q): Instance<T>[] | undefined {
@@ -158,6 +173,7 @@ export class Source<T extends IAnyModelType, Q extends Query>
   @action
   clear() {
     this._cache.clear();
+    this._existingLoad.clear();
     runInAction(() => {
       const root = getRoot(this.entryMap);
       unprotect(root);
