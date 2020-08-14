@@ -36,7 +36,9 @@ export interface SaveFunc<M> {
 }
 
 export interface Process<M> {
-  (node: Instance<M>, path: string, liveOnly: boolean): Promise<ProcessResult>;
+  (node: Instance<M>, path: string, liveOnly: boolean): Promise<
+    Partial<ProcessResult>
+  >;
 }
 
 export interface ProcessAll<M> {
@@ -157,7 +159,13 @@ export class Backend<M extends IAnyModelType> {
       console.error("Unexpected error during process:", e);
       return;
     }
-    const completeProcessResult: ProcessResult = processResult;
+    const completeProcessResult: ProcessResult = {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: [],
+      ...processResult
+    };
     this.runProcessResult(completeProcessResult);
   }
 
