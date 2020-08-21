@@ -873,13 +873,13 @@ test("processAll and liveOnly", async () => {
   });
 
   await state.processAll();
-  expect(liveSeen).toEqual([true]);
+  expect(liveSeen).toEqual([false]);
 
   await state.save();
 
   await state.processAll();
 
-  expect(liveSeen).toEqual([true, false]);
+  expect(liveSeen).toEqual([false, false]);
 });
 
 test("reset liveOnly status", async () => {
