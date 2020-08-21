@@ -1,3 +1,8 @@
+# 1.24.4
+
+-   Assure that the `processAll` function triggers non-live validations in order
+    to trigger warnings on the first attempt.
+
 # 1.24.3
 
 -   We now also render subforms, repeatingforms, and indexed repeatingforms
