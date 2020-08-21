@@ -289,7 +289,6 @@ export class FormState<
 
   @computed
   get liveOnly(): boolean {
-    //hittng 'process' should also validate non-live validations
     return this.saveStatus === "before";
   }
 
