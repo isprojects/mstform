@@ -415,13 +415,13 @@ export class FormState<
   }
 
   @action
-  async processAll() {
+  async processAll(liveOnly?: boolean) {
     if (this.processor == null) {
       throw new Error("Cannot process all without backend configuration");
     }
     this.setSaveStatus("after");
 
-    return this.processor.realProcessAll();
+    return this.processor.realProcessAll(liveOnly);
   }
 
   @action

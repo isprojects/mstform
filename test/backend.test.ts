@@ -878,8 +878,50 @@ test("processAll and liveOnly", async () => {
   await state.save();
 
   await state.processAll();
-
   expect(liveSeen).toEqual([false, false]);
+});
+
+test("processAll and liveOnly overrule", async () => {
+  const M = types.model("M", {
+    foo: types.string
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string)
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const liveSeen: boolean[] = [];
+
+  async function myProcessAll(node: Instance<typeof M>, liveOnly: boolean) {
+    liveSeen.push(liveOnly);
+    return {
+      updates: [],
+      errorValidations: [],
+      warningValidations: []
+    };
+  }
+
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+
+  const state = form.state(o, {
+    backend: {
+      processAll: myProcessAll,
+      save: mySave,
+      debounce: debounce
+    }
+  });
+
+  await state.processAll(true);
+  expect(liveSeen).toEqual([true]);
+
+  await state.save();
+
+  await state.processAll(true);
+  expect(liveSeen).toEqual([true, true]);
 });
 
 test("reset liveOnly status", async () => {

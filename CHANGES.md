@@ -1,7 +1,9 @@
 # 1.24.4
 
 -   Assure that the `processAll` function triggers non-live validations in order
-    to trigger warnings on the first attempt.
+    to trigger warnings on the first attempt. You can pass the optional parameter
+    `liveOnly` to the function to manually trigger all validations, or just the
+    live ones.
 
 # 1.24.3
 
