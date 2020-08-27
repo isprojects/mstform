@@ -873,12 +873,12 @@ test("processAll and liveOnly", async () => {
   });
 
   await state.processAll();
-  expect(liveSeen).toEqual([false]);
+  expect(liveSeen).toEqual([true]);
 
   await state.save();
 
   await state.processAll();
-  expect(liveSeen).toEqual([false, false]);
+  expect(liveSeen).toEqual([true, false]);
 });
 
 test("processAll and liveOnly overrule", async () => {
@@ -915,13 +915,13 @@ test("processAll and liveOnly overrule", async () => {
     }
   });
 
-  await state.processAll(true);
-  expect(liveSeen).toEqual([true]);
+  await state.processAll(false);
+  expect(liveSeen).toEqual([false]);
 
   await state.save();
 
   await state.processAll(true);
-  expect(liveSeen).toEqual([true, true]);
+  expect(liveSeen).toEqual([false, true]);
 });
 
 test("reset liveOnly status", async () => {

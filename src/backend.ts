@@ -130,7 +130,7 @@ export class Backend<M extends IAnyModelType> {
     }
     const processResult = await this.processAll(
       this.node,
-      liveOnly || this.state.liveOnly
+      liveOnly != null ? liveOnly : this.state.liveOnly
     );
     this.clearValidations();
 
