@@ -1,7 +1,12 @@
-# 1.24.4
+# 1.25.0
 
 -   You can pass the optional parameter `liveOnly` to the `processAll` function
     to manually trigger all validations, or just the live ones.
+
+-   Upgraded typescript to version `3.9.5`.
+
+-   When calling load on the same `source` at the same time with the same
+    parameters we now reuse the same promise to prevent duplicate requests.
 
 # 1.24.3
 
