@@ -1,3 +1,8 @@
+# 1.24.4
+
+-   You can pass the optional parameter `liveOnly` to the `processAll` function
+    to manually trigger all validations, or just the live ones.
+
 # 1.24.3
 
 -   We now also render subforms, repeatingforms, and indexed repeatingforms

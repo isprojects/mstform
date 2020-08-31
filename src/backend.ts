@@ -122,13 +122,16 @@ export class Backend<M extends IAnyModelType> {
     return false;
   }
 
-  async realProcessAll() {
+  async realProcessAll(liveOnly?: boolean) {
     if (this.processAll == null) {
       throw new Error(
         "Cannot process all if processAll function is not configured"
       );
     }
-    const processResult = await this.processAll(this.node, this.state.liveOnly);
+    const processResult = await this.processAll(
+      this.node,
+      liveOnly != null ? liveOnly : this.state.liveOnly
+    );
     this.clearValidations();
 
     const completeProcessResult: ProcessResult = {
