@@ -84,6 +84,86 @@ test("source", async () => {
   expect(loadHit).toEqual(["x", "x"]);
 });
 
+test("source should load once when multiple loads for the same source are triggered", async () => {
+  const Item = types
+    .model("Item", {
+      id: types.identifierNumber,
+      text: types.string,
+      feature: types.string
+    })
+    .views(self => ({
+      get displayText() {
+        return "Display " + self.text;
+      }
+    }));
+
+  const Container = types.model("Container", {
+    entryMap: types.map(Item)
+  });
+
+  const container = Container.create({ entryMap: {} });
+
+  const data = [
+    { id: 1, text: "A", feature: "x" },
+    { id: 2, text: "B", feature: "x" },
+    { id: 3, text: "C", feature: "y" }
+  ];
+
+  let loadHit: number = 0;
+
+  const load = async ({ feature }: { feature: string }) => {
+    loadHit++;
+    return data;
+  };
+
+  const source = new Source({
+    entryMap: container.entryMap,
+    load,
+    cacheDuration: 2
+  });
+
+  await Promise.allSettled([
+    source.load(),
+    source.load(),
+    source.load(),
+    source.load(),
+    source.load(),
+    source.load(),
+    source.load()
+  ]);
+  expect(loadHit).toBe(1);
+
+  loadHit = 0;
+  source.clear();
+  await Promise.allSettled([
+    source.load(),
+    source.load(),
+    source.load(),
+    source.load({ feature: "a" }),
+    source.load(),
+    source.load(),
+    source.load()
+  ]);
+  expect(loadHit).toBe(2);
+
+  const loadWithReject = ({ feature }: { feature: string }) => {
+    loadHit++;
+    return Promise.reject();
+  };
+  const sourceWithReject = new Source({
+    entryMap: container.entryMap,
+    load: loadWithReject,
+    cacheDuration: 2
+  });
+
+  // Make sure a reject also clears the promise from the `existingLoad`.
+  loadHit = 0;
+  await sourceWithReject.load().catch(() => true);
+  await sourceWithReject.load().catch(() => true);
+  await sourceWithReject.load().catch(() => true);
+  expect(loadHit).toBe(3);
+});
+
 test("source container function", async () => {
   const Item = types.model("Item", {
     id: types.identifierNumber,

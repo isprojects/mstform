@@ -36,7 +36,9 @@ export interface SaveFunc<M> {
 }
 
 export interface Process<M> {
-  (node: Instance<M>, path: string, liveOnly: boolean): Promise<ProcessResult>;
+  (node: Instance<M>, path: string, liveOnly: boolean): Promise<
+    Partial<ProcessResult>
+  >;
 }
 
 export interface ProcessAll<M> {

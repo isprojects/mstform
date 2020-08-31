@@ -56,6 +56,8 @@ export class Source<T extends IAnyModelType, Q extends Query>
   @observable
   _cache = new Map<string, CacheEntry<T>>();
 
+  _existingLoadPromises = new Map<string, Promise<SnapshotIn<T>[]>>();
+
   constructor({
     entryMap,
     load,
@@ -138,10 +140,23 @@ export class Source<T extends IAnyModelType, Q extends Query>
     ) {
       return result.values;
     }
-    const items = await this._load(q);
+    const items = await this.loadReusePromise(q);
     const values = items.map((item: any) => this.addOrUpdate(item));
     this.setCache(key, values, timestamp);
     return values;
+  }
+
+  async loadReusePromise(q: Q): Promise<SnapshotIn<T>[]> {
+    const key = this._keyForQuery(q);
+    const existingLoadPromise = this._existingLoadPromises.get(key);
+    if (existingLoadPromise != null) {
+      return existingLoadPromise;
+    }
+    const promise = this._load(q).finally(() =>
+      this._existingLoadPromises.delete(key)
+    );
+    this._existingLoadPromises.set(key, promise);
+    return promise;
   }
 
   values(q?: Q): Instance<T>[] | undefined {
@@ -158,6 +173,7 @@ export class Source<T extends IAnyModelType, Q extends Query>
   @action
   clear() {
     this._cache.clear();
+    this._existingLoadPromises.clear();
     runInAction(() => {
       const root = getRoot(this.entryMap);
       unprotect(root);
