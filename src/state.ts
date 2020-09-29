@@ -57,7 +57,7 @@ export interface ExtraValidation {
 }
 
 export interface RepeatingFormAccessorAllows {
-  (repeatingFormAccessor: RepeatingFormAccessor<any, any>): boolean;
+  (repeatingFormAccessor: RepeatingFormAccessor<any, any, any>): boolean;
 }
 
 export interface EventFunc<R, V> {
@@ -116,7 +116,7 @@ export class FormState<
   M extends IAnyModelType,
   D extends FormDefinition<M>,
   G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> implements IFormAccessor<D, G> {
+> extends FormAccessorBase<D, G, M> implements IFormAccessor<D, G, M> {
   @observable
   saveStatus: SaveStatusOptions = "before";
 
@@ -254,18 +254,18 @@ export class FormState<
   // between form accessor and its subclasses
   createRepeatingFormAccessor(
     repeatingForm: RepeatingForm<any, any>,
-    parent: IFormAccessor<any, any>,
+    parent: IFormAccessor<any, any, any>,
     name: string
-  ): IRepeatingFormAccessor<any, any> {
+  ): IRepeatingFormAccessor<any, any, any> {
     return new RepeatingFormAccessor(this, repeatingForm, parent, name);
   }
 
   createSubFormAccessor(
     definition: any,
     groupDefinition: any,
-    parent: IFormAccessor<any, any>,
+    parent: IFormAccessor<any, any, any>,
     name: string
-  ): ISubFormAccessor<any, any> {
+  ): ISubFormAccessor<any, any, any> {
     return new SubFormAccessor(this, definition, groupDefinition, parent, name);
   }
 

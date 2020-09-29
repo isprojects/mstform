@@ -7,7 +7,7 @@ export class GroupAccessor<D extends FormDefinition<any>> {
   constructor(
     public state: FormState<any, any, any>,
     public definition: D,
-    public parent: FormAccessorBase<any, any>,
+    public parent: FormAccessorBase<any, any, any>,
     public group: Group<D>
   ) {}
 

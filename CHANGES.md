@@ -1,3 +1,19 @@
+# 1.26.0
+
+-   Upgraded Typescript to version `4.0.3` and upgrade various testing
+    dependencies as well.
+
+-   Reworked types so that individual accessors are now aware of the type of
+    the `value` prop.
+
+-   The typing changes requires various interfaces such as
+    `IRepeatingFormAccessor` to take a third generic type, the model type.
+
+-   The typing changes also requires you to actually `.create()` model instances
+    you pass to methods on repeating form accessor like `push`, instead of
+    pushing in the JSON directly, otherwise you get a type error about missing
+    views and such.
+
 # 1.25.0
 
 -   You can pass the optional parameter `liveOnly` to the `processAll` function

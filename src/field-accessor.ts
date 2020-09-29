@@ -39,7 +39,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   constructor(
     public state: FormState<any, any, any>,
     public field: Field<R, V>,
-    parent: IFormAccessor<any, any>,
+    parent: IFormAccessor<any, any, any>,
     public name: string
   ) {
     super(parent);
@@ -58,7 +58,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   @computed
   get path(): string {
-    return (this.parent as FormAccessorBase<any, any>).path + "/" + this.name;
+    return (
+      (this.parent as FormAccessorBase<any, any, any>).path + "/" + this.name
+    );
   }
 
   dispose() {
@@ -137,7 +139,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     // been removed. It's not ideal but we return undefined in such a case.
     try {
       return this.state.getValue(
-        (this.parent as FormAccessorBase<any, any>).path
+        (this.parent as FormAccessorBase<any, any, any>).path
       );
     } catch {
       return undefined;
@@ -150,7 +152,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
       return false;
     }
     // field accessor overrides this to look at raw value
-    return this._addMode || (this.parent as FormAccessorBase<any, any>).addMode;
+    return (
+      this._addMode || (this.parent as FormAccessorBase<any, any, any>).addMode
+    );
   }
 
   @computed

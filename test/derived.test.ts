@@ -131,7 +131,7 @@ test("calculated repeating push and remove", () => {
 
   const state = form.state(o);
   const forms = state.repeatingForm("foo");
-  forms.push({ calculated: 0, a: 5, b: 3 });
+  forms.push(N.create({ calculated: 0, a: 5, b: 3 }));
 
   // we get a form and field here so we can see that its reaction is disposed
   // later
@@ -227,7 +227,7 @@ test("calculated with addModeDefaults", () => {
 
   expect(changeCount).toBe(0);
 
-  forms.push({ calculated: 0, a: 5, b: 3 }, ["calculated", "a", "b"]);
+  forms.push(N.create({ calculated: 0, a: 5, b: 3 }), ["calculated", "a", "b"]);
 
   // this shouldn't have issued a change, as the derived value is
   // calculated during adding
@@ -259,7 +259,7 @@ test("calculated with addModeDefaults", () => {
   expect(calculated1.raw).toEqual("9");
 
   // now add a third entry
-  forms.push({ calculated: 0, a: 5, b: 3 }, ["calculated", "a", "b"]);
+  forms.push(N.create({ calculated: 0, a: 5, b: 3 }), ["calculated", "a", "b"]);
   const sub2 = forms.index(2);
 
   const calculated2 = sub2.field("calculated");

@@ -1,4 +1,5 @@
 import { observable, computed, action } from "mobx";
+import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import {
   SubForm,
@@ -27,16 +28,20 @@ import {
 import { AccessorBase } from "./accessor-base";
 
 export abstract class FormAccessorBase<
-  D extends FormDefinition<any>,
-  G extends GroupDefinition<D>
-> extends AccessorBase implements IFormAccessor<D, G> {
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<D>,
+  M extends IAnyModelType
+> extends AccessorBase implements IFormAccessor<D, G, M> {
   public keys: (keyof D)[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
   repeatingFormAccessors: Map<
     keyof D,
-    IRepeatingFormAccessor<any, any>
+    IRepeatingFormAccessor<any, any, any>
   > = observable.map();
-  subFormAccessors: Map<keyof D, ISubFormAccessor<any, any>> = observable.map();
+  subFormAccessors: Map<
+    keyof D,
+    ISubFormAccessor<any, any, any>
+  > = observable.map();
   groupAccessors: Map<keyof G, GroupAccessor<any>> = observable.map();
 
   abstract path: string;
@@ -66,7 +71,7 @@ export abstract class FormAccessorBase<
   }
 
   @computed
-  get value(): any {
+  get value(): Instance<M> {
     return this.state.getValue(this.path);
   }
 
@@ -186,7 +191,7 @@ export abstract class FormAccessorBase<
     const result = new FieldAccessor(
       this.state,
       field,
-      this as IFormAccessor<D, G>,
+      this as IFormAccessor<D, G, M>,
       name as string
     );
     this.fieldAccessors.set(name, result);
@@ -206,13 +211,13 @@ export abstract class FormAccessorBase<
   ) {
     const result = this.state.createRepeatingFormAccessor(
       repeatingForm,
-      this as FormAccessorBase<any, any>,
+      this as FormAccessorBase<any, any, any>,
       name as string
     );
     this.repeatingFormAccessors.set(name, result);
   }
 
-  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K> {
+  repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K, M> {
     const accessor = this.repeatingFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a RepeatingForm`);
@@ -224,13 +229,13 @@ export abstract class FormAccessorBase<
     const result = this.state.createSubFormAccessor(
       subForm.definition,
       subForm.groupDefinition,
-      this as FormAccessorBase<any, any>,
+      this as FormAccessorBase<any, any, any>,
       name as string
     );
     this.subFormAccessors.set(name, result);
   }
 
-  subForm<K extends keyof D>(name: K): SubFormAccess<D, K> {
+  subForm<K extends keyof D>(name: K): SubFormAccess<D, K, M> {
     const accessor = this.subFormAccessors.get(name);
     if (accessor == null) {
       throw new Error(`${name} is not a SubForm`);

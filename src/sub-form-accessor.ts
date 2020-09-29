@@ -1,4 +1,5 @@
 import { computed } from "mobx";
+import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
@@ -6,14 +7,15 @@ import { FormAccessorBase } from "./form-accessor-base";
 import { ISubFormAccessor, IFormAccessor } from "./interfaces";
 
 export class SubFormAccessor<
-  D extends FormDefinition<any>,
-  G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G> implements ISubFormAccessor<D, G> {
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<D>,
+  M extends IAnyModelType
+> extends FormAccessorBase<D, G, M> implements ISubFormAccessor<D, G, M> {
   constructor(
     public state: FormState<any, any, any>,
     definition: D,
     groupDefinition: G | undefined,
-    public parent: IFormAccessor<any, any>,
+    public parent: IFormAccessor<any, any, any>,
     public name: string
   ) {
     super(definition, groupDefinition, parent, false);
@@ -27,7 +29,7 @@ export class SubFormAccessor<
   }
 
   @computed
-  get value(): any {
+  get value(): Instance<M> {
     return this.state.getValue(this.path);
   }
 

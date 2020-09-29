@@ -449,7 +449,7 @@ test("error on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
-  let usedAccessor: IFormAccessor<any, any> | undefined = undefined;
+  let usedAccessor: IFormAccessor<any, any, any> | undefined = undefined;
 
   const state = form.state(o, {
     getError: (accessor: any) => {
@@ -477,7 +477,7 @@ test("warning on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
-  let usedAccessor: IFormAccessor<any, any> | undefined = undefined;
+  let usedAccessor: IFormAccessor<any, any, any> | undefined = undefined;
 
   const state = form.state(o, {
     getWarning: (accessor: any) => {

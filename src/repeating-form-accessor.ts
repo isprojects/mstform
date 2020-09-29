@@ -1,5 +1,5 @@
 import { observable, computed } from "mobx";
-import { applyPatch } from "mobx-state-tree";
+import { IAnyModelType, applyPatch, Instance } from "mobx-state-tree";
 
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { FormState } from "./state";
@@ -15,15 +15,16 @@ import {
 } from "./interfaces";
 
 export class RepeatingFormAccessor<
-  D extends FormDefinition<any>,
-  G extends GroupDefinition<D>
-> extends AccessorBase implements IRepeatingFormAccessor<D, G> {
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<D>,
+  M extends IAnyModelType
+> extends AccessorBase implements IRepeatingFormAccessor<D, G, M> {
   name: string;
 
   @observable
   repeatingFormIndexedAccessors: Map<
     number,
-    IRepeatingFormIndexedAccessor<D, G>
+    IRepeatingFormIndexedAccessor<D, G, M>
   > = observable.map();
 
   externalErrors = new ExternalMessages();
@@ -32,7 +33,7 @@ export class RepeatingFormAccessor<
   constructor(
     public state: FormState<any, any, any>,
     public repeatingForm: RepeatingForm<D, G>,
-    public parent: IFormAccessor<any, any>,
+    public parent: IFormAccessor<any, any, any>,
     name: string
   ) {
     super(parent);
@@ -46,7 +47,7 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get value(): any {
+  get value(): Instance<M>[] {
     return this.state.getValue(this.path);
   }
 
@@ -94,7 +95,7 @@ export class RepeatingFormAccessor<
     this.repeatingFormIndexedAccessors.set(index, result);
   }
 
-  index(index: number): IRepeatingFormIndexedAccessor<D, G> {
+  index(index: number): IRepeatingFormIndexedAccessor<D, G, M> {
     const accessor = this.repeatingFormIndexedAccessors.get(index);
     if (accessor == null) {
       throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
@@ -103,7 +104,7 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get accessors(): IRepeatingFormIndexedAccessor<D, G>[] {
+  get accessors(): IRepeatingFormIndexedAccessor<D, G, M>[] {
     const result = Array.from(this.repeatingFormIndexedAccessors.values());
     result.sort((first, second) => first.index - second.index);
     return result;
@@ -119,13 +120,13 @@ export class RepeatingFormAccessor<
     return accessor.accessBySteps(rest);
   }
 
-  insert(index: number, node: any, addModeDefaults: string[] = []) {
+  insert(index: number, node: Instance<M>, addModeDefaults: string[] = []) {
     const path = this.path + "/" + index;
     applyPatch(this.state.node, [{ op: "add", path, value: node }]);
     this.index(index).setAddMode(addModeDefaults);
   }
 
-  push(node: any, addModeDefaults: string[] = []) {
+  push(node: Instance<M>, addModeDefaults: string[] = []) {
     const a = this.value;
     const index = a.length;
     const path = this.path + "/" + index;
@@ -134,7 +135,7 @@ export class RepeatingFormAccessor<
     indexedAccessor.setAddMode(addModeDefaults);
   }
 
-  remove(node: any) {
+  remove(node: Instance<M>) {
     const a = this.value;
     const index = a.indexOf(node);
     if (index === -1) {
@@ -152,7 +153,7 @@ export class RepeatingFormAccessor<
       return;
     }
     const toDelete: number[] = [];
-    const toInsert: IRepeatingFormIndexedAccessor<any, any>[] = [];
+    const toInsert: IRepeatingFormIndexedAccessor<any, any, any>[] = [];
 
     accessors.forEach((accessor, i) => {
       if (i <= index) {
@@ -169,7 +170,7 @@ export class RepeatingFormAccessor<
     const accessors = this.repeatingFormIndexedAccessors;
 
     const toDelete: number[] = [];
-    const toInsert: IRepeatingFormIndexedAccessor<any, any>[] = [];
+    const toInsert: IRepeatingFormIndexedAccessor<any, any, any>[] = [];
     accessors.forEach((accessor, i) => {
       if (i < index) {
         return;
@@ -184,7 +185,7 @@ export class RepeatingFormAccessor<
 
   private executeRenumber(
     toDelete: number[],
-    toInsert: IRepeatingFormIndexedAccessor<any, any>[]
+    toInsert: IRepeatingFormIndexedAccessor<any, any, any>[]
   ) {
     const accessors = this.repeatingFormIndexedAccessors;
 

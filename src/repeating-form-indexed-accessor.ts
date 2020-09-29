@@ -1,4 +1,5 @@
 import { action, observable, computed } from "mobx";
+import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import { FormDefinition, GroupDefinition } from "./form";
 import { FormState } from "./state";
@@ -9,10 +10,11 @@ import {
 } from "./interfaces";
 
 export class RepeatingFormIndexedAccessor<
-  D extends FormDefinition<any>,
-  G extends GroupDefinition<D>
-> extends FormAccessorBase<D, G>
-  implements IRepeatingFormIndexedAccessor<D, G> {
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<D>,
+  M extends IAnyModelType
+> extends FormAccessorBase<D, G, M>
+  implements IRepeatingFormIndexedAccessor<D, G, M> {
   @observable
   index: number;
 
@@ -20,7 +22,7 @@ export class RepeatingFormIndexedAccessor<
     public state: FormState<any, any, any>,
     definition: D,
     groupDefinition: G | undefined,
-    public parent: IRepeatingFormAccessor<D, G>,
+    public parent: IRepeatingFormAccessor<D, G, M>,
     index: number
   ) {
     super(definition, groupDefinition, parent, false);
@@ -50,7 +52,7 @@ export class RepeatingFormIndexedAccessor<
   }
 
   @computed
-  get value(): any {
+  get value(): Instance<M> {
     return this.state.getValue(this.path);
   }
 
