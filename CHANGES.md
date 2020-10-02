@@ -14,6 +14,9 @@
     pushing in the JSON directly, otherwise you get a type error about missing
     views and such.
 
+-   Export a few convenience types: `IAnySubFormAccessor`,
+    `IAnyRepeatingFormAccessor`, `IAnyRepeatingFormIndexedAccessor`.
+
 # 1.25.0
 
 -   You can pass the optional parameter `liveOnly` to the `processAll` function
