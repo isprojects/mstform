@@ -97,3 +97,13 @@ export type IParentAccessor =
   | IFormAccessor<any, any, any>
   | IRepeatingFormAccessor<any, any, any>
   | undefined;
+
+export type IAnyRepeatingFormIndexedAccessor = IRepeatingFormIndexedAccessor<
+  any,
+  any,
+  any
+>;
+
+export type IAnyRepeatingFormAccessor = IRepeatingFormAccessor<any, any, any>;
+
+export type IAnySubFormAccessor = ISubFormAccessor<any, any, any>;
