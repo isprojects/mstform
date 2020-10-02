@@ -113,9 +113,9 @@ export interface FormStateOptions<M> {
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<
-  M extends IAnyModelType,
   D extends FormDefinition<M>,
-  G extends GroupDefinition<D>
+  G extends GroupDefinition<D>,
+  M extends IAnyModelType
 > extends FormAccessorBase<D, G, M> implements IFormAccessor<D, G, M> {
   @observable
   saveStatus: SaveStatusOptions = "before";

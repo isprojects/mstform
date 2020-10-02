@@ -62,7 +62,7 @@ export class Backend<M extends IAnyModelType> {
   applyUpdate: ApplyUpdate;
 
   constructor(
-    public state: FormState<M, any, any>,
+    public state: FormState<any, any, M>,
     public node: Instance<M>,
     public save?: SaveFunc<M>,
     public process?: Process<M>,

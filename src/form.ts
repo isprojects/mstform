@@ -134,11 +134,11 @@ export class Form<
     public groupDefinition?: G
   ) {}
 
-  get FormStateType(): FormState<M, D, G> {
+  get FormStateType(): FormState<D, G, M> {
     throw new Error("For introspection");
   }
 
-  state(node: Instance<M>, options?: FormStateOptions<M>): FormState<M, D, G> {
+  state(node: Instance<M>, options?: FormStateOptions<M>): FormState<D, G, M> {
     const nodeId = getNodeId(node);
     // make sure we dispose of any old FormState before we create
     // a new one.
