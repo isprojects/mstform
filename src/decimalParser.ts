@@ -39,6 +39,7 @@ export type DecimalOptions = {
   addZeroes: boolean;
   allowNegative: boolean;
   normalizedDecimalPlaces?: number;
+  minimalFlexibleDecimals?: number;
 };
 
 type TokenOptions = {
@@ -134,13 +135,24 @@ export function parseDecimal(s: string, options: Options): string {
   if (options.normalizedDecimalPlaces == null) {
     return converted;
   }
-  return normalize(converted, options.normalizedDecimalPlaces);
+
+  // flexible number of decimals or standard normalizedDecimalPlaces?
+  const trailingZeros =
+    options.minimalFlexibleDecimals == null
+      ? options.normalizedDecimalPlaces
+      : options.minimalFlexibleDecimals;
+  return normalize(converted, trailingZeros);
 }
 
 function normalize(decimal: string, amount: number): string {
   const parts = decimal.split(".");
   const beforePeriod = parts[0];
   const decimals = parts.length === 2 ? parts[1] : "";
+
+  // do we need to add trailing zeros ?
+  if (decimals.length >= amount) {
+    return beforePeriod + "." + decimals;
+  }
   return beforePeriod + "." + addZeroes(decimals, amount);
 }
 

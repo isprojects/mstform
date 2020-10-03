@@ -135,6 +135,31 @@ test("normalizedDecimalPlaces", () => {
   expect(parseDecimal("-4", options)).toEqual("-4.0000");
 });
 
+test("minimalFlexibleDecimals", () => {
+  const options = {
+    maxWholeDigits: 50,
+    decimalPlaces: 6,
+    normalizedDecimalPlaces: 4,
+    minimalFlexibleDecimals: 3,
+    allowNegative: true,
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: true,
+    addZeroes: true
+  };
+  expect(parseDecimal("12,345.45", options)).toEqual("12345.450");
+  expect(parseDecimal(".12", options)).toEqual(".120");
+  expect(parseDecimal("3", options)).toEqual("3.000");
+  expect(parseDecimal("-4", options)).toEqual("-4.000");
+
+  // show more decimals because we have more decimals than three
+  expect(parseDecimal(".1234", options)).toEqual(".1234");
+  expect(parseDecimal(".12345", options)).toEqual(".12345");
+
+  // do not allow more than 6 decimals
+  expect(() => parseDecimal(".1234567", options)).toThrow();
+});
+
 test("numbers without thousand separators", () => {
   // as a special case we accept numbers without thousand separators too
   expect(parseDecimal("1000", options)).toEqual("1000");

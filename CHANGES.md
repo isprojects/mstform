@@ -17,6 +17,10 @@
 -   Export a few convenience types: `IAnySubFormAccessor`,
     `IAnyRepeatingFormAccessor`, `IAnyRepeatingFormIndexedAccessor`.
 
+-   Add a `minimalFlexibleDecimals` option to the `decimal` converter. This is
+    useful if you only want to display the number of decimals we actually have:
+    It does not show the trailing zeros after this minimal number of decimals.
+
 # 1.25.0
 
 -   You can pass the optional parameter `liveOnly` to the `processAll` function

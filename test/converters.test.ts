@@ -292,6 +292,54 @@ test("decimal converter with normalizedDecimalPlaces", () => {
   );
 });
 
+test("decimal converter with minimalFlexibleDecimals", () => {
+  const options = {
+    decimalPlaces: 6,
+    normalizedDecimalPlaces: 4,
+    minimalFlexibleDecimals: 3
+  };
+
+  check(converters.stringDecimal(options), "3", "3.000");
+  check(converters.stringDecimal(options), "3.14", "3.140");
+  check(converters.stringDecimal(options), "43.14", "43.140");
+  check(converters.stringDecimal(options), "4313", "4313.000");
+  check(converters.stringDecimal(options), "-3.14", "-3.140");
+  check(converters.stringDecimal(options), "0", "0.000");
+  check(converters.stringDecimal(options), ".14", ".140");
+  check(converters.stringDecimal(options), "14.", "14.000");
+  check(converters.stringDecimal(options), ".143", ".143");
+
+  // show more decimals because we have more decimals than three
+  check(converters.stringDecimal(options), ".1434", ".1434");
+  check(converters.stringDecimal(options), ".14345", ".14345");
+
+  checkWithOptions(converters.stringDecimal(options), "43,14", "43.140", {
+    decimalSeparator: ",",
+    ...baseOptions
+  });
+  checkWithOptions(
+    converters.stringDecimal({ decimalPlaces: 6, normalizedDecimalPlaces: 7 }),
+    "4.000,000000",
+    "4000.0000000",
+    {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      ...baseOptions
+    }
+  );
+  checkWithOptions(
+    converters.stringDecimal({ decimalPlaces: 2, normalizedDecimalPlaces: 4 }),
+    "36.365,21",
+    "36365.2100",
+    {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+      renderThousands: true,
+      ...baseOptions
+    }
+  );
+});
+
 test("decimal converter with both options", () => {
   checkWithOptions(converters.stringDecimal, "4.314.314,31", "4314314.31", {
     decimalSeparator: ",",
