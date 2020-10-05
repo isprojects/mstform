@@ -1,3 +1,9 @@
+# 1.27.0
+
+-   Add a `maxZeroesPadding` option to the `decimal` renderer.
+    `maxZeroesPadding` can be set to limit the number of trailing zeros. This to
+    display a flexible minimum amount of decimals. Show more if we have more.
+
 # 1.26.0
 
 -   Upgraded Typescript to version `4.0.3` and upgrade various testing
@@ -16,10 +22,6 @@
 
 -   Export a few convenience types: `IAnySubFormAccessor`,
     `IAnyRepeatingFormAccessor`, `IAnyRepeatingFormIndexedAccessor`.
-
--   Add a `maxZeroesPadding` option to the `decimal` renderer.
-    `maxZeroesPadding` can be set to limit the number of trailing zeros. This to
-    display a flexible minimum amount of decimals. Show more if we have more.
 
 # 1.25.0
 
