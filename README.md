@@ -396,6 +396,11 @@ separate the integral and fractional part of a number or decimal.
 `thousandSeparator` specifies the character used to group thousands together.
 `renderThousands` determines whether or not the thousand separators should be
 rendered.
+`maxZeroesPadding` can be set to limit the number of trailing zeros. This to
+display a flexible minimum amount of decimals. Show more if we have more. Added
+this new property for a customer that is wishing to display prices in at least 2
+and at most 10 decimals. But, if, for instance, a price does not have more than
+3 decimals, we do not want to show all trailing zeros
 
 ### Boolean
 
