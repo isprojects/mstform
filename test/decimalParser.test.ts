@@ -208,3 +208,28 @@ test("empty render no addZeroes", () => {
   };
   expect(renderDecimal("", options)).toEqual("");
 });
+
+test("render addZeroes maxZeroesPadding", () => {
+  const options = {
+    maxWholeDigits: 50,
+    decimalPlaces: 4,
+    allowNegative: true,
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: false,
+    addZeroes: true,
+    maxZeroesPadding: 2
+  };
+  expect(renderDecimal("100", options)).toEqual("100.00");
+  expect(renderDecimal("1234", options)).toEqual("1234.00");
+  expect(renderDecimal("1.12", options)).toEqual("1.12");
+  expect(renderDecimal(".12", options)).toEqual(".12");
+  expect(renderDecimal(".12345", options)).toEqual(".1234");
+  expect(renderDecimal("12345678", options)).toEqual("12345678.00");
+  expect(renderDecimal("-1.5", options)).toEqual("-1.50");
+  expect(renderDecimal("-100", options)).toEqual("-100.00");
+  expect(renderDecimal("100.0000000000", options)).toEqual("100.00");
+  expect(renderDecimal("100.1200000000", options)).toEqual("100.12");
+  expect(renderDecimal("100.1234000000", options)).toEqual("100.1234");
+  expect(renderDecimal("100.1234500000", options)).toEqual("100.1234");
+});

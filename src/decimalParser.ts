@@ -39,6 +39,7 @@ export type DecimalOptions = {
   addZeroes: boolean;
   allowNegative: boolean;
   normalizedDecimalPlaces?: number;
+  maxZeroesPadding?: number;
 };
 
 type TokenOptions = {
@@ -62,7 +63,17 @@ function thousands(wholeDigits: string, thousandSeparator: string): string {
 }
 
 function trimDecimals(decimalDigits: string, decimalPlaces: number): string {
-  return decimalDigits.slice(0, decimalPlaces);
+  // remove all trailing zeroes
+  // reverse loop until there are no trailing zeroes anymore
+  let result = decimalDigits.split("");
+  for (let i = result.length - 1; i >= 0; i--) {
+    if (result[i] === "0") {
+      result[i] = "";
+    } else {
+      break;
+    }
+  }
+  return result.join("").slice(0, decimalPlaces);
 }
 
 function addZeroes(decimalDigits: string, decimalPlaces: number): string {
@@ -91,7 +102,13 @@ export function renderDecimal(s: string, options: Options): string {
 
   decimalDigits = trimDecimals(decimalDigits, options.decimalPlaces);
   if (options.addZeroes) {
-    decimalDigits = addZeroes(decimalDigits, options.decimalPlaces);
+    let decimalPlaces = options.decimalPlaces;
+    if (options.maxZeroesPadding != null) {
+      decimalPlaces = options.maxZeroesPadding;
+    }
+    if (decimalPlaces - decimalDigits.length > 0) {
+      decimalDigits = addZeroes(decimalDigits, decimalPlaces);
+    }
   }
 
   const result =
