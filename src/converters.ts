@@ -236,6 +236,13 @@ function textStringArray(options?: TextStringArrayOptions) {
     },
     render(value) {
       return value.join("\n");
+    },
+    preprocessRaw(raw: string) {
+      // Filter out empty lines.
+      return raw
+        .split("\n")
+        .filter(rawValue => rawValue)
+        .join("\n");
     }
   });
 }
