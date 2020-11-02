@@ -1,3 +1,7 @@
+# 1.27.1
+
+-   BREAKING CHANGE: `textStringArray` now filters out empty lines via `preProcessRaw`.
+
 # 1.27.0
 
 -   Add a `maxZeroesPadding` option to the `decimal` renderer.

@@ -563,11 +563,15 @@ test("text string array converter", () => {
 
   field.setRaw("\n");
   expect(field.raw).toEqual("\n");
-  expect(field.value).toEqual(["", ""]);
+  expect(field.value).toEqual([]);
 
   field.setRaw("   ");
   expect(field.raw).toEqual("   ");
   expect(field.value).toEqual([]);
+
+  field.setRaw("1\n2 \n3\n");
+  expect(field.raw).toEqual("1\n2 \n3\n");
+  expect(field.value).toEqual(["1", "2", "3"]);
 });
 
 test("render decimal number without decimals with decimal separator", () => {
