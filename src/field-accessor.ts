@@ -239,7 +239,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   validate(options?: ValidateOptions): boolean {
     const ignoreRequired = options != null ? options.ignoreRequired : false;
     const ignoreGetError = options != null ? options.ignoreGetError : false;
-    this.validateRaw(this.raw, { ignoreRequired });
+    this.setValueFromRaw(this.raw, { ignoreRequired });
     if (ignoreGetError) {
       return this.isInternallyValid;
     }
@@ -265,7 +265,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   }
 
   @action
-  validateRaw(raw: R, options?: ProcessOptions) {
+  setValueFromRaw(raw: R, options?: ProcessOptions) {
     const stateConverterOptions = this.state.stateConverterOptionsWithContext(
       this
     );
@@ -317,7 +317,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
     this._raw = raw;
 
-    this.validateRaw(raw, options);
+    this.setValueFromRaw(raw, options);
   }
 
   @action
