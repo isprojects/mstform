@@ -1,3 +1,7 @@
+# 1.28.0
+
+-   The performance of `validate` on the form state has been improved.
+
 # 1.27.1
 
 -   BREAKING CHANGE: `textStringArray` now filters out empty lines via `preProcessRaw`.
