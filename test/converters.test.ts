@@ -93,6 +93,8 @@ test("string converter", () => {
 test("string converter with options", () => {
   check(converters.string({ maxLength: 32 }), "foo", "foo");
   fails(converters.string({ maxLength: 2 }), "foo");
+  check(converters.string({ minLength: 2 }), "foo", "foo");
+  fails(converters.string({ minLength: 4 }), "foo");
 });
 
 test("number converter", () => {

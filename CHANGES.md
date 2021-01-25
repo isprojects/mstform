@@ -1,3 +1,8 @@
+# 1.29.0
+
+-   The string converter can now take the option `minLength`, which validates
+    your string on if it contains too few characters.
+
 # 1.28.0
 
 -   The performance of `validate` on the form state has been improved.

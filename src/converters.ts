@@ -30,6 +30,7 @@ export class StringConverter<V> extends Converter<string, V> {
 
 type StringOptions = {
   maxLength?: number;
+  minLength?: number;
 };
 
 function string(options: StringOptions) {
@@ -39,6 +40,9 @@ function string(options: StringOptions) {
     convert(raw) {
       if (options.maxLength != null && options.maxLength < raw.length) {
         throw new ConversionError("exceedsMaxLength");
+      }
+      if (options.minLength != null && options.minLength > raw.length) {
+        throw new ConversionError("failsMinLength");
       }
       return raw;
     },
