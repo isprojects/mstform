@@ -8,14 +8,15 @@ module.exports = merge(common, {
   entry: "./demo/index.tsx",
   mode: "development",
   devServer: {
-    contentBase: "./demo"
+    contentBase: "./demo",
+    disableHostCheck: true,
   },
   devtool: "inline-source-map",
   plugins: [
     new HtmlWebpackPlugin({
       title: "mstform Demo",
       inject: "body",
-      template: "demo/div.html"
-    })
-  ]
+      template: "demo/div.html",
+    }),
+  ],
 });
