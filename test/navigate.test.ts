@@ -94,6 +94,6 @@ test("value for repeating form", () => {
   expect(first.value.something()).toEqual("BARX");
   const parent = first.parent as IFormAccessor<any, any, any>;
   const parentParent = parent.parent as IFormAccessor<any, any, any>;
-  expect(getType(parent.value)).toEqual(types.array(N));
+  expect(getType(parent.value)).toMatchObject(types.array(N));
   expect(getType(parentParent.value)).toBe(M);
 });
