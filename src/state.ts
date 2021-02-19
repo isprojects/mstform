@@ -232,7 +232,6 @@ export class FormState<
   }
 
   // needed by FormAccessor base
-  @computed
   get state() {
     return this;
   }
