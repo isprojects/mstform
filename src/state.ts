@@ -166,6 +166,7 @@ export class FormState<
     }: FormStateOptions<M> = {}
   ) {
     super(form.definition, form.groupDefinition, undefined, addMode);
+    makeObservable(this);
 
     this.noRawUpdate = false;
 
@@ -228,7 +229,6 @@ export class FormState<
     if (addMode) {
       this.setAddModeDefaults(addModeDefaults);
     }
-    makeObservable(this);
   }
 
   // needed by FormAccessor base
