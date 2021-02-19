@@ -1,4 +1,4 @@
-import { observable, computed, action } from "mobx";
+import { observable, computed, action, makeObservable } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import {
@@ -44,8 +44,6 @@ export abstract class FormAccessorBase<
   > = observable.map();
   groupAccessors: Map<keyof G, GroupAccessor<any>> = observable.map();
 
-  abstract path: string;
-
   constructor(
     public definition: any,
     public groupDefinition: any,
@@ -53,6 +51,7 @@ export abstract class FormAccessorBase<
     addMode: boolean
   ) {
     super(parent);
+    makeObservable(this);
     this.keys = Object.keys(this.definition);
     this._addMode = addMode;
   }

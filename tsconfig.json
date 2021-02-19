@@ -19,7 +19,8 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "jsx": "react",
-        "typeRoots": ["node_modules/@types"]
+        "typeRoots": ["node_modules/@types"],
+        "useDefineForClassFields": true
     },
     "include": ["src/**/*", "test/**/*", "demo/**/*"]
 }

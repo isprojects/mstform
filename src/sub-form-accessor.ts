@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { computed, makeObservable, override } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import { FormDefinition, GroupDefinition } from "./form";
@@ -19,6 +19,7 @@ export class SubFormAccessor<
     public name: string
   ) {
     super(definition, groupDefinition, parent, false);
+    makeObservable(this);
     this.name = name;
     this.initialize();
   }
@@ -28,12 +29,12 @@ export class SubFormAccessor<
     return this.parent.path + "/" + this.name;
   }
 
-  @computed
+  @override
   get value(): Instance<M> {
     return this.state.getValue(this.path);
   }
 
-  @computed
+  @override
   get isValid(): boolean {
     return (
       this.errorValue == null &&

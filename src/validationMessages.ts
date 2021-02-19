@@ -1,4 +1,4 @@
-import { observable, action, computed } from "mobx";
+import { observable, action, computed, makeObservable } from "mobx";
 
 export type Message = {
   path: string;
@@ -7,6 +7,10 @@ export type Message = {
 
 export class ExternalMessages {
   messages: Map<string, string> = observable.map();
+
+  constructor() {
+    makeObservable(this);
+  }
 
   @action
   update(

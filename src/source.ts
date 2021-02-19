@@ -1,4 +1,10 @@
-import { observable, computed, action, runInAction } from "mobx";
+import {
+  observable,
+  computed,
+  action,
+  runInAction,
+  makeObservable
+} from "mobx";
 import {
   applySnapshot,
   applyPatch,
@@ -73,6 +79,7 @@ export class Source<T extends IAnyModelType, Q extends Query>
     mapPropertyName?: string;
     defaultQuery?: () => Q;
   }) {
+    makeObservable(this);
     this._entryMap = entryMap;
     this._load = load;
     if (getId == null) {

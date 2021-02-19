@@ -6,7 +6,9 @@ import {
   toJS,
   reaction,
   comparer,
-  IReactionDisposer
+  IReactionDisposer,
+  override,
+  makeObservable
 } from "mobx";
 
 import {
@@ -43,6 +45,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     public name: string
   ) {
     super(parent);
+    makeObservable(this);
     this.createDerivedReaction();
     this._value = state.getValue(this.path);
     if (field.options && field.options.references) {
@@ -77,12 +80,12 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     this.dispose();
   }
 
-  @computed
+  @override
   get fieldref(): string {
     return pathToFieldref(this.path);
   }
 
-  @computed
+  @override
   get context(): any {
     return this.state.context;
   }
@@ -187,6 +190,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     }
 
     this._value = value;
+
     this.state.setValueWithoutRawUpdate(this.path, value);
     // XXX maybe rename this to 'update' as change might imply onChange
     // this is why I named 'updateFunc' on state that way instead of
@@ -226,7 +230,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     return this._value;
   }
 
-  @computed
+  @override
   get required(): boolean {
     return (
       !this.field.converter.neverRequired &&

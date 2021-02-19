@@ -1,4 +1,4 @@
-import { computed, observable, action } from "mobx";
+import { computed, observable, action, makeObservable } from "mobx";
 
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
@@ -29,16 +29,18 @@ export abstract class AccessorBase implements IAccessor {
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
 
-  abstract state: FormState<any, any, any>;
+  abstract get state(): FormState<any, any, any>;
 
-  abstract path: string;
-  abstract addMode: boolean;
-  abstract value: any;
-  abstract isValid: boolean;
+  abstract get path(): string;
+  abstract get addMode(): boolean;
+  abstract get value(): any;
+  abstract get isValid(): boolean;
   abstract accessBySteps(steps: string[]): IAccessor | undefined;
   abstract validate(options?: ValidateOptions): boolean;
 
-  constructor(public parent: IParentAccessor) {}
+  constructor(public parent: IParentAccessor) {
+    makeObservable(this);
+  }
 
   @computed
   get context(): any {

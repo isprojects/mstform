@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 import { IAnyModelType, applyPatch, Instance } from "mobx-state-tree";
 
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
@@ -37,6 +37,7 @@ export class RepeatingFormAccessor<
     name: string
   ) {
     super(parent);
+    makeObservable(this);
     this.name = name;
     this.initialize();
   }

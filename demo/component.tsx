@@ -39,43 +39,41 @@ type InlineErrorProps = {
   field?: FieldAccessor<any, any>;
 };
 
-@observer
 class InlineError extends Component<InlineErrorProps> {
   render() {
     const { children, field } = this.props;
+    const ObserverInlineError = observer(() => <>{children}{field && <span>{field.error}</span>}</>)
     return (
       <div>
-        {children}
-        {field && <span>{field.error}</span>}
-      </div>
+      <ObserverInlineError/>
+</div>
     );
   }
 }
 
-@observer
 export class MyInput extends Component<{
   type: string;
   field: FieldAccessor<any, any>;
 }> {
   render() {
+    const ObserverInput = observer(() => <input type={type} {...field.inputProps} />)
     const { type, field } = this.props;
-    return <input type={type} {...field.inputProps} />;
+    return <ObserverInput />
   }
 }
 
-@observer
 export class MyTextArea extends Component<{
   field: FieldAccessor<any, any>;
 }> {
   render() {
     const { field } = this.props;
-    return <textarea {...field.inputProps} />;
+    const ObserverTextarea = observer(() => <textarea {...field.inputProps} />)
+    return <ObserverTextarea />
   }
 }
 
 type MyFormProps = {};
 
-@observer
 export class MyForm extends Component<MyFormProps> {
   formState: typeof form.FormStateType;
 
@@ -106,6 +104,7 @@ export class MyForm extends Component<MyFormProps> {
     const b = formState.field("b");
     const derived = formState.field("derived");
     const textarea = formState.field("textarea");
+
     return (
       <div>
         <span>Simple text field with validator (set it to "correct")</span>

@@ -1,4 +1,4 @@
-import { action, observable, computed } from "mobx";
+import { action, observable, computed, makeObservable, override } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import { FormDefinition, GroupDefinition } from "./form";
@@ -26,6 +26,7 @@ export class RepeatingFormIndexedAccessor<
     index: number
   ) {
     super(definition, groupDefinition, parent, false);
+    makeObservable(this);
     this.index = index;
     this.initialize();
   }
@@ -43,7 +44,7 @@ export class RepeatingFormIndexedAccessor<
     return this.parent.path + "/" + this.index;
   }
 
-  @computed
+  @override
   get isValid(): boolean {
     return (
       this.errorValue == null &&
@@ -51,7 +52,7 @@ export class RepeatingFormIndexedAccessor<
     );
   }
 
-  @computed
+  @override
   get value(): Instance<M> {
     return this.state.getValue(this.path);
   }
@@ -67,7 +68,7 @@ export class RepeatingFormIndexedAccessor<
     this.setAddModeDefaults(addModeDefaults);
   }
 
-  @computed
+  @override
   get addMode(): boolean {
     return this._addMode || this.parent.addMode;
   }

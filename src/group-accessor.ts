@@ -1,4 +1,4 @@
-import { computed } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { FormDefinition, Group } from "./form";
 import { FormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
@@ -9,7 +9,9 @@ export class GroupAccessor<D extends FormDefinition<any>> {
     public definition: D,
     public parent: FormAccessorBase<any, any, any>,
     public group: Group<D>
-  ) {}
+  ) {
+    makeObservable(this);
+  }
 
   @computed
   get isValid(): boolean {

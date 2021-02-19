@@ -1,4 +1,4 @@
-import { action, computed, observable } from "mobx";
+import { action, computed, observable, makeObservable, override } from "mobx";
 import {
   onPatch,
   resolvePath,
@@ -228,15 +228,17 @@ export class FormState<
     if (addMode) {
       this.setAddModeDefaults(addModeDefaults);
     }
+    makeObservable(this);
   }
 
   // needed by FormAccessor base
+  @computed
   get state() {
     return this;
   }
 
   // normally context is determined from state, but state owns it
-  @computed
+  @override
   get context(): any {
     return this._context;
   }
@@ -274,7 +276,7 @@ export class FormState<
     return "";
   }
 
-  @computed
+  @override
   get value(): Instance<M> {
     return this.node;
   }
