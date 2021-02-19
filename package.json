@@ -98,8 +98,8 @@
     },
     "peerDependencies": {
         "decimal.js-light": "^2.5.0",
-        "mobx": "^5.15.0",
-        "mobx-state-tree": "^3.15.0"
+        "mobx": "^6.1.0",
+        "mobx-state-tree": "^5"
     },
     "keywords": [
         "mobx",
