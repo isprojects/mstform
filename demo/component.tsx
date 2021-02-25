@@ -11,12 +11,12 @@ const M = types
     a: types.number,
     b: types.number,
     derived: types.number,
-    textarea: types.array(types.string)
+    textarea: types.array(types.string),
   })
-  .views(self => ({
+  .views((self) => ({
     get calculated() {
       return self.a + self.b;
-    }
+    },
   }));
 
 // we create an instance of the model
@@ -25,52 +25,39 @@ const o = M.create({ foo: "FOO", a: 1, b: 3, derived: 4, textarea: [] });
 // we expose this field in our form
 const form = new Form(M, {
   foo: new Field(converters.string, {
-    validators: [value => (value !== "correct" ? "Wrong" : false)]
+    validators: [(value) => (value !== "correct" ? "Wrong" : false)],
   }),
   a: new Field(converters.number),
   b: new Field(converters.number),
   derived: new Field(converters.number, {
-    derived: node => node.calculated
+    derived: (node) => node.calculated,
   }),
-  textarea: new Field(converters.textStringArray)
+  textarea: new Field(converters.textStringArray),
 });
 
-type InlineErrorProps = {
+const InlineError: React.FunctionComponent<{
   field?: FieldAccessor<any, any>;
-};
+}> = observer((props) => {
+  const { field, children } = props;
+  return (
+    <div>
+      {children}
+      {field && <span>{field.error}</span>}
+    </div>
+  );
+});
 
-class InlineError extends Component<InlineErrorProps> {
-  render() {
-    const { children, field } = this.props;
-    const ObserverInlineError = observer(() => <>{children}{field && <span>{field.error}</span>}</>)
-    return (
-      <div>
-      <ObserverInlineError/>
-</div>
-    );
-  }
-}
-
-export class MyInput extends Component<{
+const MyInput: React.FunctionComponent<{
   type: string;
   field: FieldAccessor<any, any>;
-}> {
-  render() {
-    const ObserverInput = observer(() => <input type={type} {...field.inputProps} />)
-    const { type, field } = this.props;
-    return <ObserverInput />
-  }
-}
+}> = observer((props) => {
+  const { type, field } = props;
+  return <input type={type} {...field.inputProps} />;
+});
 
-export class MyTextArea extends Component<{
+const MyTextArea: React.FunctionComponent<{
   field: FieldAccessor<any, any>;
-}> {
-  render() {
-    const { field } = this.props;
-    const ObserverTextarea = observer(() => <textarea {...field.inputProps} />)
-    return <ObserverTextarea />
-  }
-}
+}> = observer((props) => <textarea {...props.field.inputProps} />);
 
 type MyFormProps = {};
 
@@ -82,16 +69,16 @@ export class MyForm extends Component<MyFormProps> {
     // we create a form state for this model
     this.formState = form.state(o, {
       backend: {
-        save: async node => {
+        save: async (node) => {
           console.log(getSnapshot(node));
           return null;
-        }
-      }
+        },
+      },
     });
   }
 
   handleSave = () => {
-    this.formState.save().then(r => {
+    this.formState.save().then((r) => {
       console.log("saved success", r);
     });
   };
