@@ -1,3 +1,7 @@
+# 1.29.0
+
+-   BREAKING CHANGE: Upgraded to MobX version `^6.1.0` and mobx-state-tree version `^5.0.0`.
+
 # 1.28.0
 
 -   The performance of `validate` on the form state has been improved.
