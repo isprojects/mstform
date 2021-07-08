@@ -7,13 +7,13 @@ configure({ enforceActions: "observed" });
 
 test("a simple form", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      validators: [value => value !== "correct" && "Wrong"]
-    })
+      validators: [(value) => value !== "correct" && "Wrong"],
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -35,15 +35,15 @@ test("a simple form", () => {
 
 test("a simple form with array field", () => {
   const M = types.model("M", {
-    foo: types.array(types.string)
+    foo: types.array(types.string),
   });
 
   const form = new Form(M, {
     foo: new Field(converters.stringArray, {
       validators: [
-        value => (value.length !== 1 || value[0] !== "correct") && "Wrong"
-      ]
-    })
+        (value) => (value.length !== 1 || value[0] !== "correct") && "Wrong",
+      ],
+    }),
   });
 
   const o = M.create({ foo: ["FOO"] });
@@ -66,11 +66,11 @@ test("a simple form with array field", () => {
 
 test("number input", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 3 });
@@ -91,11 +91,11 @@ test("number input", () => {
 
 test("conversion failure with message", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number, { conversionError: "Not a number" })
+    foo: new Field(converters.number, { conversionError: "Not a number" }),
   });
 
   const o = M.create({ foo: 3 });
@@ -116,16 +116,16 @@ test("conversion failure with message", () => {
 
 test("repeating form", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -147,16 +147,16 @@ test("repeating form", () => {
 
 test("repeating form with conversion", () => {
   const N = types.model("N", {
-    bar: types.number
+    bar: types.number,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.number)
-    })
+      bar: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: 3 }] });
@@ -176,16 +176,16 @@ test("repeating form with conversion", () => {
 
 test("repeating form push", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -208,10 +208,10 @@ test("repeating form push", () => {
 
 test("repeating form push, with default fieldrefs", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   let changeCount = 0;
@@ -221,9 +221,9 @@ test("repeating form push, with default fieldrefs", () => {
       bar: new Field(converters.string, {
         change: () => {
           changeCount++;
-        }
-      })
-    })
+        },
+      }),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -248,16 +248,16 @@ test("repeating form push, with default fieldrefs", () => {
 
 test("repeating form insert", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -284,16 +284,16 @@ test("repeating form insert", () => {
 
 test("repeating form insert with default fieldrefs", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -320,16 +320,16 @@ test("repeating form insert with default fieldrefs", () => {
 
 test("repeating form applySnapshot shouldn't trigger addMode", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -351,16 +351,16 @@ test("repeating form applySnapshot shouldn't trigger addMode", () => {
 
 test("repeating form remove", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -375,18 +375,18 @@ test("repeating form remove", () => {
 
 test("repeating form remove and insert clears errors", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
       bar: new Field(converters.string, {
-        validators: [value => value !== "correct" && "wrong"]
-      })
-    })
+        validators: [(value) => value !== "correct" && "wrong"],
+      }),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "correct" }] });
@@ -407,18 +407,18 @@ test("repeating form remove and insert clears errors", () => {
 
 test("repeating form tougher remove clear raw", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
       bar: new Field(converters.string, {
-        validators: [value => "always wrong"]
-      })
-    })
+        validators: [(value) => "always wrong"],
+      }),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "A" }, { bar: "B" }] });
@@ -438,18 +438,18 @@ test("repeating form tougher remove clear raw", () => {
 
 test("repeating form insert should retain raw too", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
       bar: new Field(converters.string, {
-        validators: [value => "always wrong"]
-      })
-    })
+        validators: [(value) => "always wrong"],
+      }),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "A" }, { bar: "B" }] });
@@ -480,21 +480,21 @@ test("repeating form insert should retain raw too", () => {
 
 test("repeating form nested remove", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    n_entries: types.array(N)
+    n_entries: types.array(N),
   });
   const L = types.model("L", {
-    m_entries: types.array(M)
+    m_entries: types.array(M),
   });
 
   const form = new Form(L, {
     m_entries: new RepeatingForm({
       n_entries: new RepeatingForm({
-        bar: new Field(converters.string)
-      })
-    })
+        bar: new Field(converters.string),
+      }),
+    }),
   });
 
   const o = L.create({ m_entries: [{ n_entries: [{ bar: "BAR" }] }] });
@@ -509,16 +509,16 @@ test("repeating form nested remove", () => {
 
 test("accessors should retain index order after insert", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "A" }, { bar: "B" }] });
@@ -527,27 +527,27 @@ test("accessors should retain index order after insert", () => {
 
   const forms = state.repeatingForm("foo");
   forms.insert(0, N.create({ bar: "inserted" }));
-  expect(forms.accessors.map(accessor => accessor.path)).toEqual([
+  expect(forms.accessors.map((accessor) => accessor.path)).toEqual([
     "/foo/0",
     "/foo/1",
-    "/foo/2"
+    "/foo/2",
   ]);
 });
 
 test("repeating form validate", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
       bar: new Field(converters.string, {
-        validators: [value => value !== "correct" && "Wrong"]
-      })
-    })
+        validators: [(value) => value !== "correct" && "Wrong"],
+      }),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "incorrect" }] });
@@ -570,22 +570,22 @@ test("repeating form validate", () => {
 
 test("repeating form multiple entries validate", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
       bar: new Field(converters.string, {
-        validators: [value => value !== "correct" && "Wrong"]
-      })
-    })
+        validators: [(value) => value !== "correct" && "Wrong"],
+      }),
+    }),
   });
 
   const o = M.create({
-    foo: [{ bar: "incorrect" }, { bar: "Also incorrect" }]
+    foo: [{ bar: "incorrect" }, { bar: "Also incorrect" }],
   });
 
   const state = form.state(o);
@@ -603,23 +603,20 @@ test("repeating form multiple entries validate", () => {
   const result2 = state.validate();
   expect(result2).toBeFalsy();
 
-  forms
-    .index(1)
-    .field("bar")
-    .setRaw("correct");
+  forms.index(1).field("bar").setRaw("correct");
   const result3 = state.validate();
   expect(result3).toBeTruthy();
 });
 
 test("not required with maybe", () => {
   const M = types.model("M", {
-    foo: types.maybe(types.number)
+    foo: types.maybe(types.number),
   });
 
   const form = new Form(M, {
     foo: new Field(converters.maybe(converters.number), {
-      required: false
-    })
+      required: false,
+    }),
   });
 
   const o = M.create({ foo: undefined });
@@ -640,13 +637,13 @@ test("not required with maybe", () => {
 
 test("not required with maybeNull", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.number)
+    foo: types.maybeNull(types.number),
   });
 
   const form = new Form(M, {
     foo: new Field(converters.maybeNull(converters.number), {
-      required: false
-    })
+      required: false,
+    }),
   });
 
   const o = M.create({ foo: null });
@@ -667,13 +664,13 @@ test("not required with maybeNull", () => {
 
 test("required", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: 3 });
@@ -691,13 +688,13 @@ test("required", () => {
 
 test("required with requiredError", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: 3 });
@@ -715,20 +712,20 @@ test("required with requiredError", () => {
 
 test("required with context in requiredError", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: 3 });
 
   const state = form.state(o, {
     context: "!",
-    requiredError: context => "Verplicht" + context
+    requiredError: (context) => "Verplicht" + context,
   });
 
   const field = state.field("foo");
@@ -742,21 +739,21 @@ test("required with context in requiredError", () => {
 
 test("required with requiredError on state and on field", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
       required: true,
-      requiredError: "This is required"
-    })
+      requiredError: "This is required",
+    }),
   });
 
   const o = M.create({ foo: 3 });
 
   const state = form.state(o, {
     context: "!",
-    requiredError: "This is not required"
+    requiredError: "This is not required",
   });
 
   const field = state.field("foo");
@@ -770,11 +767,11 @@ test("required with requiredError on state and on field", () => {
 
 test("required for number is implied", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number, {})
+    foo: new Field(converters.number, {}),
   });
 
   const o = M.create({ foo: 3 });
@@ -792,13 +789,13 @@ test("required for number is implied", () => {
 
 test("required with string", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -816,13 +813,13 @@ test("required with string", () => {
 
 test("required with string and whitespace", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -837,13 +834,13 @@ test("required with string and whitespace", () => {
 
 test("required with number and whitespace", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: 3 });
@@ -858,13 +855,13 @@ test("required with number and whitespace", () => {
 
 test("required with boolean has no effect", () => {
   const M = types.model("M", {
-    foo: types.boolean
+    foo: types.boolean,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.boolean, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: false });
@@ -880,13 +877,13 @@ test("required with boolean has no effect", () => {
 
 test("required with maybe", () => {
   const M = types.model("M", {
-    foo: types.maybe(types.number)
+    foo: types.maybe(types.number),
   });
 
   const form = new Form(M, {
     foo: new Field(converters.maybe(converters.number), {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: undefined });
@@ -907,13 +904,13 @@ test("required with maybe", () => {
 
 test("required with maybeNull", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.number)
+    foo: types.maybeNull(types.number),
   });
 
   const form = new Form(M, {
     foo: new Field(converters.maybeNull(converters.number), {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: null });
@@ -935,16 +932,16 @@ test("required with maybeNull", () => {
 test("setting value on model will update form", () => {
   const M = types
     .model("M", {
-      foo: types.string
+      foo: types.string,
     })
-    .actions(self => ({
+    .actions((self) => ({
       update(value: string) {
         self.foo = value;
-      }
+      },
     }));
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -966,27 +963,30 @@ test("setting value on model will update form", () => {
 test("model converter", () => {
   const R = types.model("R", {
     id: types.identifier,
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
-    foo: types.reference(R)
+    foo: types.reference(R),
   });
 
   const Root = types.model("Root", {
     entries: types.array(R),
-    instance: M
+    instance: M,
   });
 
   const root = Root.create({
-    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
-    instance: { foo: "1" }
+    entries: [
+      { id: "1", bar: "correct" },
+      { id: "2", bar: "incorrect" },
+    ],
+    instance: { foo: "1" },
   });
 
   const form = new Form(M, {
     foo: new Field(converters.model(R), {
-      validators: [value => value.bar !== "correct" && "Wrong"]
-    })
+      validators: [(value) => value.bar !== "correct" && "Wrong"],
+    }),
   });
 
   const r1 = root.entries[0];
@@ -1014,25 +1014,28 @@ test("model converter", () => {
 test("model converter with validate does not throw", () => {
   const R = types.model("R", {
     id: types.identifier,
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
-    foo: types.reference(R)
+    foo: types.reference(R),
   });
 
   const Root = types.model("Root", {
     entries: types.array(R),
-    instance: M
+    instance: M,
   });
 
   const root = Root.create({
-    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
-    instance: { foo: "1" }
+    entries: [
+      { id: "1", bar: "correct" },
+      { id: "2", bar: "incorrect" },
+    ],
+    instance: { foo: "1" },
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.model(R))
+    foo: new Field(converters.model(R)),
   });
 
   const r2 = root.entries[1];
@@ -1050,34 +1053,37 @@ test("model converter with validate does not throw", () => {
 test("model converter maybe", () => {
   const R = types.model("R", {
     id: types.identifier,
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
-    foo: types.maybe(types.reference(R))
+    foo: types.maybe(types.reference(R)),
   });
 
   const Root = types.model("Root", {
     entries: types.array(R),
-    instance: M
+    instance: M,
   });
 
   const root = Root.create({
-    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
-    instance: { foo: "1" }
+    entries: [
+      { id: "1", bar: "correct" },
+      { id: "2", bar: "incorrect" },
+    ],
+    instance: { foo: "1" },
   });
 
   const form = new Form(M, {
     foo: new Field(converters.maybe(converters.model(R)), {
       validators: [
-        value => {
+        (value) => {
           if (value == null) {
             return false;
           }
           return value.bar !== "correct" && "Wrong";
-        }
-      ]
-    })
+        },
+      ],
+    }),
   });
 
   const r1 = root.entries[0];
@@ -1104,34 +1110,37 @@ test("model converter maybe", () => {
 test("model converter maybeNull", () => {
   const R = types.model("R", {
     id: types.identifier,
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
-    foo: types.maybeNull(types.reference(R))
+    foo: types.maybeNull(types.reference(R)),
   });
 
   const Root = types.model("Root", {
     entries: types.array(R),
-    instance: M
+    instance: M,
   });
 
   const root = Root.create({
-    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
-    instance: { foo: "1" }
+    entries: [
+      { id: "1", bar: "correct" },
+      { id: "2", bar: "incorrect" },
+    ],
+    instance: { foo: "1" },
   });
 
   const form = new Form(M, {
     foo: new Field(converters.maybeNull(converters.model(R)), {
       validators: [
-        value => {
+        (value) => {
           if (value == null) {
             return false;
           }
           return value.bar !== "correct" && "Wrong";
-        }
-      ]
-    })
+        },
+      ],
+    }),
   });
 
   const r1 = root.entries[0];
@@ -1157,11 +1166,11 @@ test("model converter maybeNull", () => {
 
 test("add mode for flat form, string", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "" });
@@ -1180,11 +1189,11 @@ test("add mode for flat form, string", () => {
 
 test("add mode for flat form, string and required", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string, { required: true })
+    foo: new Field(converters.string, { required: true }),
   });
 
   const o = M.create({ foo: "" });
@@ -1205,11 +1214,11 @@ test("add mode for flat form, string and required", () => {
 
 test("add mode for flat form, maybe string", () => {
   const M = types.model("M", {
-    foo: types.maybe(types.string)
+    foo: types.maybe(types.string),
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.string))
+    foo: new Field(converters.maybe(converters.string)),
   });
 
   const o = M.create({ foo: undefined });
@@ -1231,11 +1240,11 @@ test("add mode for flat form, maybe string", () => {
 
 test("add mode for flat form, maybeNull string", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string)
+    foo: types.maybeNull(types.string),
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybeNull(converters.string))
+    foo: new Field(converters.maybeNull(converters.string)),
   });
 
   const o = M.create({ foo: null });
@@ -1257,11 +1266,11 @@ test("add mode for flat form, maybeNull string", () => {
 
 test("add mode for flat form, number", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 0 });
@@ -1280,11 +1289,11 @@ test("add mode for flat form, number", () => {
 
 test("add mode for flat form, maybeNull number", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.number)
+    foo: types.maybeNull(types.number),
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybeNull(converters.number))
+    foo: new Field(converters.maybeNull(converters.number)),
   });
 
   const o = M.create({ foo: null });
@@ -1306,11 +1315,11 @@ test("add mode for flat form, maybeNull number", () => {
 
 test("add mode for flat form, number, defaults", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 0 });
@@ -1330,28 +1339,31 @@ test("add mode for flat form, number, defaults", () => {
 test("model converter in add mode", () => {
   const R = types.model("R", {
     id: types.identifier,
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
-    foo: types.reference(R)
+    foo: types.reference(R),
   });
 
   const Root = types.model("Root", {
     entries: types.array(R),
-    instance: M
+    instance: M,
   });
 
   const root = Root.create({
-    entries: [{ id: "1", bar: "correct" }, { id: "2", bar: "incorrect" }],
-    instance: { foo: "1" }
+    entries: [
+      { id: "1", bar: "correct" },
+      { id: "2", bar: "incorrect" },
+    ],
+    instance: { foo: "1" },
   });
 
   const form = new Form(M, {
     foo: new Field(converters.model(R), {
       required: true,
-      validators: [value => value.bar !== "correct" && "Wrong"]
-    })
+      validators: [(value) => value.bar !== "correct" && "Wrong"],
+    }),
   });
 
   const r1 = root.entries[0];
@@ -1380,17 +1392,17 @@ test("model converter in add mode", () => {
 
 test("add mode for repeating push", () => {
   const N = types.model("N", {
-    bar: types.number
+    bar: types.number,
   });
 
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.number)
-    })
+      bar: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: 0 }] });
@@ -1414,17 +1426,17 @@ test("add mode for repeating push", () => {
 
 test("add mode for repeating push, whole form add mode", () => {
   const N = types.model("N", {
-    bar: types.number
+    bar: types.number,
   });
 
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.number)
-    })
+      bar: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: 0 }] });
@@ -1448,17 +1460,17 @@ test("add mode for repeating push, whole form add mode", () => {
 
 test("add mode for repeating insert", () => {
   const N = types.model("N", {
-    bar: types.number
+    bar: types.number,
   });
 
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.number)
-    })
+      bar: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: 0 }] });
@@ -1482,11 +1494,11 @@ test("add mode for repeating insert", () => {
 
 test("add mode validate", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 0 });
@@ -1504,18 +1516,18 @@ test("add mode validate", () => {
 test("a form with a disabled field", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path.startsWith("/foo")
+    isDisabled: (accessor) => accessor.path.startsWith("/foo"),
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -1526,20 +1538,20 @@ test("a form with a disabled field", () => {
 
 test("a form with a repeating disabled field", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({ bar: new Field(converters.string) })
+    foo: new RepeatingForm({ bar: new Field(converters.string) }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path === "/foo"
+    isDisabled: (accessor) => accessor.path === "/foo",
   });
   const repeating = state.repeatingForm("foo");
 
@@ -1550,18 +1562,18 @@ test("a form with a repeating disabled field", () => {
 test("a form with a hidden field", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
 
   const state = form.state(o, {
-    isHidden: accessor => accessor.path.startsWith("/foo")
+    isHidden: (accessor) => accessor.path.startsWith("/foo"),
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -1579,21 +1591,21 @@ test("a form with a dynamic required that touches value", () => {
   // * this happens *within an autorun*
 
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "" });
 
   const state = form.state(o, {
-    isRequired: accessor => {
+    isRequired: (accessor) => {
       // all we do is touch accessor.value
       const touched = accessor.value;
       return false;
-    }
+    },
   });
   const fooField = state.field("foo");
   const disposer = autorun(() => {
@@ -1610,12 +1622,12 @@ test("a form with a dynamic required that touches value", () => {
 test("a hard required trumps dynamic required", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string, { required: true })
+    bar: new Field(converters.string, { required: true }),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
@@ -1623,7 +1635,7 @@ test("a hard required trumps dynamic required", () => {
   let touched = false;
 
   const state = form.state(o, {
-    isRequired: accessor => accessor.path.startsWith("/foo")
+    isRequired: (accessor) => accessor.path.startsWith("/foo"),
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -1635,18 +1647,18 @@ test("a hard required trumps dynamic required", () => {
 test("a form with a readOnly field", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
 
   const state = form.state(o, {
-    isReadOnly: accessor => accessor.path.startsWith("/foo")
+    isReadOnly: (accessor) => accessor.path.startsWith("/foo"),
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -1661,12 +1673,12 @@ test("a form with a readOnly field", () => {
 test("extra validation", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
@@ -1677,7 +1689,7 @@ test("extra validation", () => {
         return value === "Wrong" ? "Wrong!" : false;
       }
       return false;
-    }
+    },
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -1690,16 +1702,16 @@ test("extra validation", () => {
 
 test("boolean converter", () => {
   const N = types.model("N", {
-    bar: types.boolean
+    bar: types.boolean,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.boolean)
-    })
+      bar: new Field(converters.boolean),
+    }),
   });
 
   const o = M.create({ foo: [] });
@@ -1719,11 +1731,11 @@ test("converter and raw update", () => {
   // into 0.2. this would mean that when you type 0.20 it
   // could immediately update the raw to 0.2, which isn't desired
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 0 });
@@ -1742,18 +1754,18 @@ test("raw update and errors", () => {
   // could immediately update the raw to 0.2, which isn't desired
   const M = types
     .model("M", {
-      foo: types.number
+      foo: types.number,
     })
-    .actions(self => ({
+    .actions((self) => ({
       update(value: number) {
         self.foo = value;
-      }
+      },
     }));
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
-      validators: [value => (value > 10 ? "Wrong" : false)]
-    })
+      validators: [(value) => (value > 10 ? "Wrong" : false)],
+    }),
   });
 
   const o = M.create({ foo: 0 });
@@ -1781,26 +1793,29 @@ test("raw update and references", () => {
 
   const M = types
     .model("M", {
-      foo: types.maybeNull(types.reference(N))
+      foo: types.maybeNull(types.reference(N)),
     })
-    .actions(self => ({
+    .actions((self) => ({
       update(value: Instance<typeof N>) {
         self.foo = value;
-      }
+      },
     }));
 
   const Root = types.model({
     rs: types.array(N),
-    m: M
+    m: M,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object)
+    foo: new Field(converters.object),
   });
 
   const r = Root.create({
-    rs: [{ id: "a", bar: 1 }, { id: "b", bar: 2 }],
-    m: { foo: null }
+    rs: [
+      { id: "a", bar: 1 },
+      { id: "b", bar: 2 },
+    ],
+    m: { foo: null },
   });
   r.m.update(r.rs[0]);
 
@@ -1817,16 +1832,16 @@ test("raw update and add form", () => {
   // could immediately update the raw to 0.2, which isn't desired
   const M = types
     .model("M", {
-      foo: types.number
+      foo: types.number,
     })
-    .actions(self => ({
+    .actions((self) => ({
       update(value: number) {
         self.foo = value;
-      }
+      },
     }));
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 0 });
@@ -1861,11 +1876,11 @@ test("raw update and add form", () => {
 
 test("raw update and limited amount of patches", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "first" });
@@ -1873,7 +1888,7 @@ test("raw update and limited amount of patches", () => {
   const field = state.field("foo");
 
   const patches: any = [];
-  onPatch(o, patch => {
+  onPatch(o, (patch) => {
     patches.push(patch);
   });
 
@@ -1883,8 +1898,8 @@ test("raw update and limited amount of patches", () => {
     {
       op: "replace",
       path: "/foo",
-      value: "second"
-    }
+      value: "second",
+    },
   ]);
 
   applySnapshot(o, { foo: "second" });
@@ -1894,18 +1909,18 @@ test("raw update and limited amount of patches", () => {
     {
       op: "replace",
       path: "/foo",
-      value: "second"
-    }
+      value: "second",
+    },
   ]);
 });
 
 test("raw update and multiple accessors", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "first" });
@@ -1914,7 +1929,7 @@ test("raw update and multiple accessors", () => {
   const field2 = state.field("foo");
 
   const patches: any = [];
-  onPatch(o, patch => {
+  onPatch(o, (patch) => {
     patches.push(patch);
   });
 
@@ -1924,8 +1939,8 @@ test("raw update and multiple accessors", () => {
     {
       op: "replace",
       path: "/foo",
-      value: "second"
-    }
+      value: "second",
+    },
   ]);
 
   applySnapshot(o, { foo: "second" });
@@ -1935,20 +1950,20 @@ test("raw update and multiple accessors", () => {
     {
       op: "replace",
       path: "/foo",
-      value: "second"
-    }
+      value: "second",
+    },
   ]);
 });
 
 test("focus hook", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
@@ -1960,9 +1975,9 @@ test("focus hook", () => {
       focused.push({
         raw: accessor.raw,
         value: accessor.value,
-        name: accessor.name
+        name: accessor.name,
       });
-    }
+    },
   });
 
   const fooField = state.field("foo");
@@ -1975,7 +1990,7 @@ test("focus hook", () => {
 
   expect(focused).toEqual([
     { name: "foo", raw: "FOO", value: "FOO" },
-    { name: "bar", raw: "BAR", value: "BAR" }
+    { name: "bar", raw: "BAR", value: "BAR" },
   ]);
 
   // no focus hook
@@ -1987,12 +2002,12 @@ test("focus hook", () => {
 test("blur hook", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
@@ -2004,9 +2019,9 @@ test("blur hook", () => {
       blurred.push({
         raw: accessor.raw,
         value: accessor.value,
-        name: accessor.name
+        name: accessor.name,
       });
-    }
+    },
   });
 
   const fooField = state.field("foo");
@@ -2019,7 +2034,7 @@ test("blur hook", () => {
 
   expect(blurred).toEqual([
     { name: "foo", raw: "FOO", value: "FOO" },
-    { name: "bar", raw: "BAR", value: "BAR" }
+    { name: "bar", raw: "BAR", value: "BAR" },
   ]);
 
   // no blur hook
@@ -2031,12 +2046,12 @@ test("blur hook", () => {
 test("update hook", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
@@ -2044,13 +2059,13 @@ test("update hook", () => {
   const updated: any[] = [];
 
   const state = form.state(o, {
-    update: accessor => {
+    update: (accessor) => {
       updated.push({
         raw: accessor.raw,
         value: accessor.value,
-        name: accessor.name
+        name: accessor.name,
       });
-    }
+    },
   });
 
   const fooField = state.field("foo");
@@ -2060,17 +2075,17 @@ test("update hook", () => {
 
   expect(updated).toEqual([
     { name: "foo", raw: "FOO!", value: "FOO!" },
-    { name: "bar", raw: "BAR!", value: "BAR!" }
+    { name: "bar", raw: "BAR!", value: "BAR!" },
   ]);
 });
 
 test("string is trimmed", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "  FOO" });
@@ -2091,39 +2106,39 @@ test("string is trimmed", () => {
 
 test("form with thousandSeparator . and empty decimalSeparator invalid", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "3000" });
 
   const form = new Form(M, {
-    foo: new Field(converters.stringDecimal())
+    foo: new Field(converters.stringDecimal()),
   });
 
   expect(() => {
     form.state(o, {
-      converterOptions: { thousandSeparator: "." }
+      converterOptions: { thousandSeparator: "." },
     });
   }).toThrow();
 });
 
 test("form with thousandSeparator and decimalSeparator same value invalid", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "3000" });
 
   const form = new Form(M, {
-    foo: new Field(converters.stringDecimal())
+    foo: new Field(converters.stringDecimal()),
   });
 
   expect(() => {
     form.state(o, {
       converterOptions: {
         thousandSeparator: ",",
-        decimalSeparator: ","
-      }
+        decimalSeparator: ",",
+      },
     });
   }).toThrow();
 });
@@ -2131,17 +2146,17 @@ test("form with thousandSeparator and decimalSeparator same value invalid", () =
 test("blur hook with postprocess", () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(
       converters.stringDecimal({ decimalPlaces: 2, addZeroes: true }),
       {
-        postprocess: true
+        postprocess: true,
       }
     ),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "4314314", bar: "BAR" });
@@ -2150,8 +2165,8 @@ test("blur hook with postprocess", () => {
     converterOptions: {
       thousandSeparator: ".",
       decimalSeparator: ",",
-      renderThousands: true
-    }
+      renderThousands: true,
+    },
   });
 
   const fooField = state.field("foo");
@@ -2166,16 +2181,16 @@ test("blur hook with postprocess", () => {
 
 test("blur hook no postprocess with error", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(
       converters.stringDecimal({ decimalPlaces: 2, addZeroes: true }),
       {
-        postprocess: true
+        postprocess: true,
       }
-    )
+    ),
   });
 
   const o = M.create({ foo: "4314314" });
@@ -2184,8 +2199,8 @@ test("blur hook no postprocess with error", () => {
     converterOptions: {
       thousandSeparator: ".",
       decimalSeparator: ",",
-      renderThousands: true
-    }
+      renderThousands: true,
+    },
   });
 
   const fooField = state.field("foo");
@@ -2197,7 +2212,7 @@ test("blur hook no postprocess with error", () => {
 
 test("blur hook with postprocess maybe field", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string)
+    foo: types.maybeNull(types.string),
   });
 
   const form = new Form(M, {
@@ -2206,9 +2221,9 @@ test("blur hook with postprocess maybe field", () => {
         converters.stringDecimal({ decimalPlaces: 2, addZeroes: true })
       ),
       {
-        postprocess: true
+        postprocess: true,
       }
-    )
+    ),
   });
 
   const o = M.create({ foo: "4314314" });
@@ -2217,8 +2232,8 @@ test("blur hook with postprocess maybe field", () => {
     converterOptions: {
       thousandSeparator: ".",
       decimalSeparator: ",",
-      renderThousands: true
-    }
+      renderThousands: true,
+    },
   });
 
   const fooField = state.field("foo");
@@ -2230,21 +2245,21 @@ test("blur hook with postprocess maybe field", () => {
 
 test("setValueAndUpdateRaw", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "" });
 
   const form = new Form(M, {
-    foo: new Field(converters.stringDecimal())
+    foo: new Field(converters.stringDecimal()),
   });
 
   const state = form.state(o, {
     converterOptions: {
       thousandSeparator: ".",
       decimalSeparator: ",",
-      renderThousands: true
-    }
+      renderThousands: true,
+    },
   });
 
   // Setting the raw directly would update the value without relying on other event handlers
@@ -2262,25 +2277,25 @@ test("setValueAndUpdateRaw", () => {
 
 test("repeatingField disabled when repeatingForm disabled", () => {
   const N = types.model("N", {
-    repeatingField: types.string
+    repeatingField: types.string,
   });
 
   const M = types.model("M", {
-    repeating: types.array(N)
+    repeating: types.array(N),
   });
 
   const form = new Form(M, {
     repeating: new RepeatingForm({
-      repeatingField: new Field(converters.string)
-    })
+      repeatingField: new Field(converters.string),
+    }),
   });
 
   const o = M.create({
-    repeating: [{ repeatingField: "REPEATING_FIELD" }]
+    repeating: [{ repeatingField: "REPEATING_FIELD" }],
   });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path === "/repeating"
+    isDisabled: (accessor) => accessor.path === "/repeating",
   });
 
   const repeating = state.repeatingForm("repeating");
@@ -2294,31 +2309,31 @@ test("repeatingField disabled when repeatingForm disabled", () => {
 
 test("repeatingField disabled when repeatingForm in repeatingForm is disabled", () => {
   const O = types.model("O", {
-    repeatingField: types.string
+    repeatingField: types.string,
   });
 
   const N = types.model("N", {
-    repeating2: types.array(O)
+    repeating2: types.array(O),
   });
 
   const M = types.model("M", {
-    repeating: types.array(N)
+    repeating: types.array(N),
   });
 
   const form = new Form(M, {
     repeating: new RepeatingForm({
       repeating2: new RepeatingForm({
-        repeatingField: new Field(converters.string)
-      })
-    })
+        repeatingField: new Field(converters.string),
+      }),
+    }),
   });
 
   const o = M.create({
-    repeating: [{ repeating2: [{ repeatingField: "REPEATING_FIELD" }] }]
+    repeating: [{ repeating2: [{ repeatingField: "REPEATING_FIELD" }] }],
   });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path === "/repeating"
+    isDisabled: (accessor) => accessor.path === "/repeating",
   });
 
   const repeating = state.repeatingForm("repeating");
@@ -2336,19 +2351,19 @@ test("repeatingField disabled when repeatingForm in repeatingForm is disabled", 
 
 test("field disabled when form disabled", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({
-    foo: "FOO"
+    foo: "FOO",
   });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path === ""
+    isDisabled: (accessor) => accessor.path === "",
   });
 
   const formAccessor = state;
@@ -2360,34 +2375,34 @@ test("field disabled when form disabled", () => {
 
 test("inputAllowed", () => {
   const N = types.model("N", {
-    hiddenRepeatingField: types.string
+    hiddenRepeatingField: types.string,
   });
 
   const M = types.model("M", {
     disabledField: types.string,
     readOnlyField: types.string,
-    repeatingForm: types.array(N)
+    repeatingForm: types.array(N),
   });
 
   const form = new Form(M, {
     disabledField: new Field(converters.string),
     readOnlyField: new Field(converters.string),
     repeatingForm: new RepeatingForm({
-      hiddenRepeatingField: new Field(converters.string)
-    })
+      hiddenRepeatingField: new Field(converters.string),
+    }),
   });
 
   const o = M.create({
     disabledField: "DISABLED",
     readOnlyField: "READ_ONLY",
-    repeatingForm: [{ hiddenRepeatingField: "HIDDEN_REPEATING_FIELD" }]
+    repeatingForm: [{ hiddenRepeatingField: "HIDDEN_REPEATING_FIELD" }],
   });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path === "/disabledField",
-    isHidden: accessor =>
+    isDisabled: (accessor) => accessor.path === "/disabledField",
+    isHidden: (accessor) =>
       accessor.path === "/repeatingForm/0/hiddenRepeatingField",
-    isReadOnly: accessor => accessor.path === "/readOnlyField"
+    isReadOnly: (accessor) => accessor.path === "/readOnlyField",
   });
 
   const formAccessor = state;
@@ -2411,7 +2426,8 @@ test("isEmpty on fields", () => {
     maybeNullString: types.maybeNull(types.string),
     boolean: types.boolean,
     textStringArray: types.array(types.string),
-    decimal: types.string
+    decimal: types.string,
+    stringArray: types.array(types.string),
   });
 
   const form = new Form(M, {
@@ -2419,7 +2435,8 @@ test("isEmpty on fields", () => {
     maybeNullString: new Field(converters.maybeNull(converters.string)),
     boolean: new Field(converters.boolean),
     textStringArray: new Field(converters.textStringArray),
-    decimal: new Field(converters.stringDecimal({ decimalPlaces: 2 }))
+    stringArray: new Field(converters.stringArray),
+    decimal: new Field(converters.stringDecimal({ decimalPlaces: 2 })),
   });
 
   const o = M.create({
@@ -2427,7 +2444,8 @@ test("isEmpty on fields", () => {
     maybeNullString: null,
     boolean: false,
     textStringArray: ["Q"],
-    decimal: "0.00"
+    decimal: "0.00",
+    stringArray: undefined,
   });
 
   const state = form.state(o);
@@ -2436,6 +2454,7 @@ test("isEmpty on fields", () => {
   const maybeNullStringField = state.field("maybeNullString");
   const booleanField = state.field("boolean");
   const textStringArrayField = state.field("textStringArray");
+  const stringArrayField = state.field("stringArray");
   const decimalField = state.field("decimal");
 
   // String
@@ -2470,6 +2489,13 @@ test("isEmpty on fields", () => {
   textStringArrayField.setRaw("A\nB\nC");
   expect(textStringArrayField.isEmpty).toBe(false);
 
+  // stringArray
+  expect(stringArrayField.isEmpty).toBe(true);
+  stringArrayField.setRaw([]);
+  expect(stringArrayField.isEmpty).toBe(true);
+  stringArrayField.setRaw(["abc", "def"]);
+  expect(stringArrayField.isEmpty).toBe(false);
+
   // decimal
   expect(decimalField.isEmpty).toBe(false);
 
@@ -2486,12 +2512,14 @@ test("isEmptyAndRequired on fields", () => {
     maybeNullString: types.maybeNull(types.string),
     boolean: types.boolean,
     textStringArray: types.array(types.string),
+    stringArray: types.array(types.string),
     decimal: types.string,
     requiredString: types.string,
     requiredMaybeNullString: types.maybeNull(types.string),
     requiredBoolean: types.boolean,
     requiredTextStringArray: types.array(types.string),
-    requiredDecimal: types.string
+    requiredStringArray: types.array(types.string),
+    requiredDecimal: types.string,
   });
 
   const form = new Form(M, {
@@ -2499,25 +2527,27 @@ test("isEmptyAndRequired on fields", () => {
     maybeNullString: new Field(converters.maybeNull(converters.string)),
     boolean: new Field(converters.boolean),
     textStringArray: new Field(converters.textStringArray),
+    stringArray: new Field(converters.stringArray),
     decimal: new Field(converters.stringDecimal({ decimalPlaces: 2 })),
     requiredString: new Field(converters.string, {
-      required: true
+      required: true,
     }),
     requiredMaybeNullString: new Field(
       converters.maybeNull(converters.string),
       {
-        required: true
+        required: true,
       }
     ),
     requiredBoolean: new Field(converters.boolean, {
-      required: true
+      required: true,
     }),
     requiredTextStringArray: new Field(converters.textStringArray, {
-      required: true
+      required: true,
     }),
+    requiredStringArray: new Field(converters.stringArray, { required: true }),
     requiredDecimal: new Field(converters.stringDecimal({ decimalPlaces: 2 }), {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({
@@ -2525,12 +2555,14 @@ test("isEmptyAndRequired on fields", () => {
     maybeNullString: null,
     boolean: false,
     textStringArray: ["Q"],
+    stringArray: undefined,
     decimal: "0.00",
     requiredString: "",
     requiredMaybeNullString: null,
     requiredBoolean: false,
     requiredTextStringArray: ["Q"],
-    requiredDecimal: "0.00"
+    requiredStringArray: undefined,
+    requiredDecimal: "0.00",
   });
 
   const state = form.state(o);
@@ -2539,12 +2571,14 @@ test("isEmptyAndRequired on fields", () => {
   const maybeNullStringField = state.field("maybeNullString");
   const booleanField = state.field("boolean");
   const textStringArrayField = state.field("textStringArray");
+  const stringArrayField = state.field("stringArray");
   const decimalField = state.field("decimal");
 
   const requiredStringField = state.field("requiredString");
   const requiredMaybeNullStringField = state.field("requiredMaybeNullString");
   const requiredBooleanField = state.field("requiredBoolean");
   const requiredTextStringArrayField = state.field("requiredTextStringArray");
+  const requiredStringArrayField = state.field("requiredStringArray");
   const requiredDecimalField = state.field("requiredDecimal");
 
   // String
@@ -2578,6 +2612,13 @@ test("isEmptyAndRequired on fields", () => {
 
   textStringArrayField.setRaw("A\nB\nC");
   expect(textStringArrayField.isEmptyAndRequired).toBe(false);
+
+  // stringArray
+  expect(stringArrayField.isEmptyAndRequired).toBe(false);
+  stringArrayField.setRaw([]);
+  expect(stringArrayField.isEmptyAndRequired).toBe(false);
+  stringArrayField.setRaw(["abc", "def"]);
+  expect(stringArrayField.isEmptyAndRequired).toBe(false);
 
   // decimal
   expect(decimalField.isEmptyAndRequired).toBe(false);
@@ -2621,6 +2662,14 @@ test("isEmptyAndRequired on fields", () => {
   requiredTextStringArrayField.setRaw("A\nB\nC");
   expect(requiredTextStringArrayField.isEmptyAndRequired).toBe(false);
 
+  // stringArray
+
+  expect(requiredStringArrayField.isEmptyAndRequired).toBe(true);
+  requiredStringArrayField.setRaw([]);
+  expect(requiredStringArrayField.isEmptyAndRequired).toBe(true);
+  requiredStringArrayField.setRaw(["abc", "def"]);
+  expect(requiredStringArrayField.isEmptyAndRequired).toBe(false);
+
   // decimal
   expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
 
@@ -2633,13 +2682,13 @@ test("isEmptyAndRequired on fields", () => {
 
 test("clearAllValidations", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      validators: [value => value !== "correct" && "Wrong"]
-    })
+      validators: [(value) => value !== "correct" && "Wrong"],
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
