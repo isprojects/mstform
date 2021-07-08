@@ -2663,7 +2663,6 @@ test("isEmptyAndRequired on fields", () => {
   expect(requiredTextStringArrayField.isEmptyAndRequired).toBe(false);
 
   // stringArray
-
   expect(requiredStringArrayField.isEmptyAndRequired).toBe(true);
   requiredStringArrayField.setRaw([]);
   expect(requiredStringArrayField.isEmptyAndRequired).toBe(true);
