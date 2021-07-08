@@ -8,7 +8,7 @@ import {
   comparer,
   IReactionDisposer,
   override,
-  makeObservable
+  makeObservable,
 } from "mobx";
 
 import {
@@ -16,7 +16,7 @@ import {
   ProcessValue,
   ValidationMessage,
   ProcessOptions,
-  errorMessage
+  errorMessage,
 } from "./form";
 import { FormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
@@ -95,7 +95,17 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (this.field.converter.emptyImpossible) {
       return false;
     }
-    return this.raw === this.field.converter.emptyRaw;
+    const raw = this.raw;
+    const emptyRaw = this.field.converter.emptyRaw;
+    const converterName = (this.field._converter as any).name;
+    if (
+      converterName === "stringArray" &&
+      Array.isArray(raw) &&
+      Array.isArray(emptyRaw)
+    ) {
+      return raw.length === emptyRaw.length;
+    }
+    return raw === emptyRaw;
   }
 
   @computed
