@@ -97,12 +97,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     }
     const raw = this.raw;
     const emptyRaw = this.field.converter.emptyRaw;
-    const converterName = (this.field._converter as any).name;
-    if (
-      converterName === "stringArray" &&
-      Array.isArray(raw) &&
-      Array.isArray(emptyRaw)
-    ) {
+    if (Array.isArray(raw) && Array.isArray(emptyRaw)) {
       return raw.length === emptyRaw.length;
     }
     return raw === emptyRaw;
