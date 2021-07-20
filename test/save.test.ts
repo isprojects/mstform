@@ -363,7 +363,7 @@ test("string is trimmed and save", async () => {
   expect(saved).toEqual({ foo: "FOO" });
 });
 
-test("stringArray required save", async () => {
+test("stringArray required save empty", async () => {
   const M = types.model("M", {
     stringArray: types.array(types.string),
   });
@@ -389,7 +389,33 @@ test("stringArray required save", async () => {
   expect(stringArrayField.error).toEqual("Required");
 });
 
-test("textStringArray required save", async () => {
+test("stringArray required save filled", async () => {
+  const M = types.model("M", {
+    stringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    stringArray: new Field(converters.stringArray, { required: true }),
+  });
+
+  const o = M.create({ stringArray: ["Test", "Kees"] });
+
+  const state = form.state(o, {
+    isRequired: () => true,
+    backend: { save: async () => null },
+  });
+
+  const stringArrayField = state.field("stringArray");
+
+  expect(stringArrayField.raw).toEqual(["Test", "Kees"]);
+  expect(stringArrayField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(stringArrayField.error).toBeUndefined();
+});
+
+test("textStringArray required save empty", async () => {
   const M = types.model("M", {
     textStringArray: types.array(types.string),
   });
@@ -413,4 +439,30 @@ test("textStringArray required save", async () => {
   await state.save();
 
   expect(textStringArray.error).toEqual("Required");
+});
+
+test("textStringArray required save filled", async () => {
+  const M = types.model("M", {
+    textStringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    textStringArray: new Field(converters.textStringArray, { required: true }),
+  });
+
+  const o = M.create({ textStringArray: ["test"] });
+
+  const state = form.state(o, {
+    isRequired: () => true,
+    backend: { save: async () => null },
+  });
+
+  const textStringArray = state.field("textStringArray");
+
+  expect(textStringArray.raw).toEqual("test");
+  expect(textStringArray.error).toBeUndefined();
+
+  await state.save();
+
+  expect(textStringArray.error).toBeUndefined();
 });
