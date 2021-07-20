@@ -3,14 +3,14 @@ import {
   IAnyModelType,
   ModelInstanceTypeProps,
   Instance,
-  getNodeId
+  getNodeId,
 } from "mobx-state-tree";
 import {
   ConversionError,
   ConverterOrFactory,
   IConverter,
   StateConverterOptionsWithContext,
-  makeConverter
+  makeConverter,
 } from "./converter";
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
@@ -19,7 +19,9 @@ import { Source } from "./source";
 import { FieldAccessor } from "./field-accessor";
 
 export type ArrayEntryType<T> = T extends IMSTArray<infer A>
-  ? (A extends IAnyModelType ? A : never)
+  ? A extends IAnyModelType
+    ? A
+    : never
   : never;
 
 export type RawType<F> = F extends Field<infer R, any> ? R : never;
@@ -56,7 +58,7 @@ export type InstanceFormDefinition<M extends ModelInstanceTypeProps<any>> = {
   [K in keyof M]?:
     | Field<any, M[K]>
     | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any>
-    | SubForm<FormDefinition<M[K]>, any>
+    | SubForm<FormDefinition<M[K]>, any>;
 };
 
 export type ValidationResponse = string | null | undefined | false;
@@ -213,7 +215,7 @@ export class Field<R, V> {
             "Cannot have fromEvent and getRaw defined at same time"
           );
         }
-        this.getRaw = ev => ev.target.value;
+        this.getRaw = (ev) => ev.target.value;
       } else {
         this.getRaw = options.getRaw || identity;
       }
@@ -230,10 +232,10 @@ export class Field<R, V> {
 
   createDefaultControlled(): Controlled {
     if (this.getRaw !== identity) {
-      return accessor => {
+      return (accessor) => {
         return {
           value: accessor.raw,
-          onChange: (...args: any[]) => accessor.setRaw(this.getRaw(...args))
+          onChange: (...args: any[]) => accessor.setRaw(this.getRaw(...args)),
         };
       };
     }
@@ -270,6 +272,9 @@ export class Field<R, V> {
     required: boolean,
     options: ProcessOptions | undefined
   ): boolean {
+    if (Array.isArray(raw) && Array.isArray(this.converter.emptyRaw)) {
+      return raw.length === this.converter.emptyRaw.length;
+    }
     if (raw !== this.converter.emptyRaw) {
       return false;
     }
