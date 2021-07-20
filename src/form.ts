@@ -272,10 +272,13 @@ export class Field<R, V> {
     required: boolean,
     options: ProcessOptions | undefined
   ): boolean {
-    if (Array.isArray(raw) && Array.isArray(this.converter.emptyRaw)) {
-      return raw.length === this.converter.emptyRaw.length;
+    const emptyRaw = this.converter.emptyRaw;
+    const bothArray = Array.isArray(raw) && Array.isArray(emptyRaw);
+    if (bothArray && (raw as any).length !== (emptyRaw as any).length) {
+      return false;
     }
-    if (raw !== this.converter.emptyRaw) {
+
+    if (!bothArray && raw !== emptyRaw) {
       return false;
     }
     if (!this.converter.neverRequired && this.converter.emptyImpossible) {

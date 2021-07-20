@@ -280,7 +280,6 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     );
 
     raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
-
     if (this.field.isRequired(raw, this.required, options)) {
       if (!this.field.converter.emptyImpossible) {
         this.setValue(this.field.converter.emptyValue);
