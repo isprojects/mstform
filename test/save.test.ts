@@ -415,6 +415,55 @@ test("stringArray required save filled", async () => {
   expect(stringArrayField.error).toBeUndefined();
 });
 
+test("stringArray not required save empty", async () => {
+  const M = types.model("M", {
+    stringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    stringArray: new Field(converters.stringArray),
+  });
+
+  const o = M.create({ stringArray: [] });
+
+  const state = form.state(o, {
+    backend: { save: async () => null },
+  });
+
+  const stringArrayField = state.field("stringArray");
+
+  expect(stringArrayField.raw).toEqual([]);
+  expect(stringArrayField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(stringArrayField.error).toBeUndefined();
+});
+
+test("stringArray not required save filled", async () => {
+  const M = types.model("M", {
+    stringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    stringArray: new Field(converters.stringArray),
+  });
+
+  const o = M.create({ stringArray: ["Worst", "Kees", "Scenario"] });
+
+  const state = form.state(o, {
+    backend: { save: async () => null },
+  });
+
+  const stringArrayField = state.field("stringArray");
+
+  expect(stringArrayField.raw).toEqual(["Worst", "Kees", "Scenario"]);
+  expect(stringArrayField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(stringArrayField.error).toBeUndefined();
+});
 test("textStringArray required save empty", async () => {
   const M = types.model("M", {
     textStringArray: types.array(types.string),
