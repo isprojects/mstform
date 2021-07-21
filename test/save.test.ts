@@ -3,21 +3,21 @@ import { Field, Form, converters } from "../src";
 
 test("FormState can be saved", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string, {})
+    foo: new Field(converters.string, {}),
   });
 
   async function save(node: Instance<typeof M>) {
     if (node.foo === "") {
       return {
         errorValidations: [
-          { id: "dummy", messages: [{ path: "/foo", message: "Wrong" }] }
-        ]
+          { id: "dummy", messages: [{ path: "/foo", message: "Wrong" }] },
+        ],
       };
     }
     return null;
@@ -52,13 +52,13 @@ test("FormState can be saved", async () => {
 
 test("save argument can be snapshotted", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string, {})
+    foo: new Field(converters.string, {}),
   });
 
   let snapshot;
@@ -77,24 +77,24 @@ test("save argument can be snapshotted", async () => {
 
 test("inline save argument can be snapshotted", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string, {})
+    foo: new Field(converters.string, {}),
   });
 
   let snapshot;
 
   const state = form.state(o, {
     backend: {
-      save: async node => {
+      save: async (node) => {
         snapshot = getSnapshot(node);
         return null;
-      }
-    }
+      },
+    },
   });
 
   await state.save();
@@ -104,13 +104,13 @@ test("inline save argument can be snapshotted", async () => {
 
 test("required with save", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: "" });
@@ -130,19 +130,19 @@ test("required with save", async () => {
 test("dynamic required with save", async () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "", bar: "" });
 
   const state = form.state(o, {
     isRequired: () => true,
-    backend: { save: async () => null }
+    backend: { save: async () => null },
   });
 
   const fooField = state.field("foo");
@@ -160,20 +160,20 @@ test("dynamic required with save", async () => {
 
 test("no validation before save", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      validators: [value => value !== "correct" && "Wrong"]
-    })
+      validators: [(value) => value !== "correct" && "Wrong"],
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o, {
     validation: { beforeSave: "no" },
-    backend: { save: async () => null }
+    backend: { save: async () => null },
   });
 
   const field = state.field("foo");
@@ -204,39 +204,39 @@ test("no validation before save", async () => {
 
 test("no validation after save either", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
       validators: [
-        value => value !== "correct" && value !== "clientcorrect" && "Wrong"
-      ]
-    })
+        (value) => value !== "correct" && value !== "clientcorrect" && "Wrong",
+      ],
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o, {
     backend: {
-      save: async node => {
+      save: async (node) => {
         if (node.foo !== "correct") {
           return {
             errorValidations: [
               {
                 id: "dummy",
-                messages: [{ path: "/foo", message: "Server wrong" }]
-              }
-            ]
+                messages: [{ path: "/foo", message: "Server wrong" }],
+              },
+            ],
           };
         }
         return null;
-      }
+      },
     },
     validation: {
       beforeSave: "no",
-      afterSave: "no"
-    }
+      afterSave: "no",
+    },
   });
 
   const field = state.field("foo");
@@ -276,12 +276,12 @@ test("no validation after save either", async () => {
 test("a form with a dynamic required field", async () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
@@ -295,17 +295,17 @@ test("a form with a dynamic required field", async () => {
         errorValidations: [
           {
             id: "dummy",
-            messages: [{ path: "/foo", message: "Required by save" }]
-          }
-        ]
+            messages: [{ path: "/foo", message: "Required by save" }],
+          },
+        ],
       };
     }
     return null;
   }
 
   const state = form.state(o, {
-    isRequired: accessor => accessor.path.startsWith("/foo"),
-    backend: { save }
+    isRequired: (accessor) => accessor.path.startsWith("/foo"),
+    backend: { save },
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -339,13 +339,13 @@ test("a form with a dynamic required field", async () => {
 
 test("string is trimmed and save", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "  FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   let saved = null;
@@ -361,4 +361,157 @@ test("string is trimmed and save", async () => {
   await state.save();
   expect(field.value).toEqual("FOO");
   expect(saved).toEqual({ foo: "FOO" });
+});
+
+test("stringArray required save empty", async () => {
+  const M = types.model("M", {
+    stringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    stringArray: new Field(converters.stringArray, { required: true }),
+  });
+
+  const o = M.create({ stringArray: [] });
+
+  const state = form.state(o, {
+    isRequired: () => true,
+    backend: { save: async () => null },
+  });
+
+  const stringArrayField = state.field("stringArray");
+
+  expect(stringArrayField.raw).toEqual([]);
+  expect(stringArrayField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(stringArrayField.error).toEqual("Required");
+});
+
+test("stringArray required save filled", async () => {
+  const M = types.model("M", {
+    stringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    stringArray: new Field(converters.stringArray, { required: true }),
+  });
+
+  const o = M.create({ stringArray: ["Test", "Kees"] });
+
+  const state = form.state(o, {
+    isRequired: () => true,
+    backend: { save: async () => null },
+  });
+
+  const stringArrayField = state.field("stringArray");
+
+  expect(stringArrayField.raw).toEqual(["Test", "Kees"]);
+  expect(stringArrayField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(stringArrayField.error).toBeUndefined();
+});
+
+test("stringArray not required save empty", async () => {
+  const M = types.model("M", {
+    stringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    stringArray: new Field(converters.stringArray),
+  });
+
+  const o = M.create({ stringArray: [] });
+
+  const state = form.state(o, {
+    backend: { save: async () => null },
+  });
+
+  const stringArrayField = state.field("stringArray");
+
+  expect(stringArrayField.raw).toEqual([]);
+  expect(stringArrayField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(stringArrayField.error).toBeUndefined();
+});
+
+test("stringArray not required save filled", async () => {
+  const M = types.model("M", {
+    stringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    stringArray: new Field(converters.stringArray),
+  });
+
+  const o = M.create({ stringArray: ["Worst", "Kees", "Scenario"] });
+
+  const state = form.state(o, {
+    backend: { save: async () => null },
+  });
+
+  const stringArrayField = state.field("stringArray");
+
+  expect(stringArrayField.raw).toEqual(["Worst", "Kees", "Scenario"]);
+  expect(stringArrayField.error).toBeUndefined();
+
+  await state.save();
+
+  expect(stringArrayField.error).toBeUndefined();
+});
+test("textStringArray required save empty", async () => {
+  const M = types.model("M", {
+    textStringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    textStringArray: new Field(converters.textStringArray, { required: true }),
+  });
+
+  const o = M.create({ textStringArray: [""] });
+
+  const state = form.state(o, {
+    isRequired: () => true,
+    backend: { save: async () => null },
+  });
+
+  const textStringArray = state.field("textStringArray");
+
+  expect(textStringArray.raw).toEqual("");
+  expect(textStringArray.error).toBeUndefined();
+
+  await state.save();
+
+  expect(textStringArray.error).toEqual("Required");
+});
+
+test("textStringArray required save filled", async () => {
+  const M = types.model("M", {
+    textStringArray: types.array(types.string),
+  });
+
+  const form = new Form(M, {
+    textStringArray: new Field(converters.textStringArray, { required: true }),
+  });
+
+  const o = M.create({ textStringArray: ["test"] });
+
+  const state = form.state(o, {
+    isRequired: () => true,
+    backend: { save: async () => null },
+  });
+
+  const textStringArray = state.field("textStringArray");
+
+  expect(textStringArray.raw).toEqual("test");
+  expect(textStringArray.error).toBeUndefined();
+
+  await state.save();
+
+  expect(textStringArray.error).toBeUndefined();
 });
