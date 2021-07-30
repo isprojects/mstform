@@ -17,7 +17,6 @@ module.exports = {
   },
   output: {
     filename: "mstform.js",
-    // path: path.resolve(__dirname, "dist"),
     library: "mstform",
     libraryTarget: "umd",
   },
