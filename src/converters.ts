@@ -8,7 +8,7 @@ import {
   StateConverterOptionsWithContext,
   ConversionError,
   withDefaults,
-  makeConverter
+  makeConverter,
 } from "./converter";
 import { controlled } from "./controlled";
 import { dynamic } from "./dynamic-converter";
@@ -19,7 +19,7 @@ import {
   renderDecimal,
   DecimalOptions,
   DecimalParserError,
-  checkConverterOptions
+  checkConverterOptions,
 } from "./decimalParser";
 
 const INTEGER_REGEX = new RegExp("^-?(0|[1-9]\\d*)$");
@@ -47,7 +47,21 @@ function string(options: StringOptions) {
     },
     preprocessRaw(raw: string): string {
       return raw.trim();
-    }
+    },
+  });
+}
+
+function literalString<T>() {
+  return new Converter<T, T>({
+    emptyRaw: "" as any,
+    emptyImpossible: true,
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    defaultControlled: controlled.value,
   });
 }
 
@@ -67,7 +81,7 @@ function number(options?: NumberOptions) {
           addZeroes: false,
           decimalSeparator: converterOptions.decimalSeparator || ".",
           thousandSeparator: converterOptions.thousandSeparator || ",",
-          renderThousands: converterOptions.renderThousands || false
+          renderThousands: converterOptions.renderThousands || false,
         });
       } catch (e) {
         if (e instanceof DecimalParserError) {
@@ -84,7 +98,7 @@ function number(options?: NumberOptions) {
         addZeroes: false,
         decimalSeparator: converterOptions.decimalSeparator || ".",
         thousandSeparator: converterOptions.thousandSeparator || ",",
-        renderThousands: converterOptions.renderThousands || false
+        renderThousands: converterOptions.renderThousands || false,
       });
     },
     preprocessRaw(
@@ -92,7 +106,7 @@ function number(options?: NumberOptions) {
       options: StateConverterOptionsWithContext
     ): string {
       return raw.trim();
-    }
+    },
   });
 }
 
@@ -113,7 +127,7 @@ function integer(options?: IntegerOptions) {
     },
     preprocessRaw(raw: string): string {
       return raw.trim();
-    }
+    },
   });
 }
 
@@ -130,7 +144,7 @@ function boolean(options?: BooleanOptions) {
       return value;
     },
     defaultControlled: controlled.checked,
-    neverRequired: true
+    neverRequired: true,
   });
 }
 
@@ -145,7 +159,7 @@ function decimalConvert(
       ...options,
       decimalSeparator: converterOptions.decimalSeparator || ".",
       thousandSeparator: converterOptions.thousandSeparator || ",",
-      renderThousands: converterOptions.renderThousands || false
+      renderThousands: converterOptions.renderThousands || false,
     });
   } catch (e) {
     if (e instanceof DecimalParserError) {
@@ -164,7 +178,7 @@ function decimalRender(
     ...options,
     decimalSeparator: converterOptions.decimalSeparator || ".",
     thousandSeparator: converterOptions.thousandSeparator || ",",
-    renderThousands: converterOptions.renderThousands || false
+    renderThousands: converterOptions.renderThousands || false,
   });
 }
 
@@ -182,7 +196,7 @@ function stringDecimal(options: DecimalOptions) {
     },
     render(value, converterOptions) {
       return decimalRender(value, options, converterOptions);
-    }
+    },
   });
 }
 
@@ -200,7 +214,7 @@ function decimal(options: DecimalOptions) {
     },
     render(value, converterOptions) {
       return decimalRender(value.toString(), options, converterOptions);
-    }
+    },
   });
 }
 
@@ -216,7 +230,7 @@ function stringArray(options?: StringArrayOptions) {
     },
     render(value) {
       return value.slice();
-    }
+    },
   });
 }
 
@@ -228,7 +242,7 @@ function textStringArray(options?: TextStringArrayOptions) {
     emptyValue: observable.array([]),
     defaultControlled: controlled.value,
     convert(raw) {
-      const rawSplit = raw.split("\n").map(r => r.trim());
+      const rawSplit = raw.split("\n").map((r) => r.trim());
       if (rawSplit.length === 1 && rawSplit[0] === "") {
         return observable.array([]);
       }
@@ -241,9 +255,9 @@ function textStringArray(options?: TextStringArrayOptions) {
       // Filter out empty lines.
       return raw
         .split("\n")
-        .filter(rawValue => rawValue)
+        .filter((rawValue) => rawValue)
         .join("\n");
-    }
+    },
   });
 }
 
@@ -322,7 +336,7 @@ function stringMaybe<V>(converter: IConverter<string, V>, emptyValue: V) {
         return "";
       }
       return converter.render(value, options);
-    }
+    },
   });
 }
 
@@ -340,7 +354,7 @@ function model<M extends IAnyModelType>(model: M) {
     },
     render(value) {
       return value;
-    }
+    },
   });
 }
 
@@ -354,7 +368,7 @@ function maybeModel<M, RE, VE>(
     emptyValue: emptyValue,
     convert: (r: M | RE) => (r !== emptyRaw ? (r as M) : emptyValue),
     render: (v: M | VE) => (v !== emptyValue ? (v as M) : emptyRaw),
-    defaultControlled: controlled.object
+    defaultControlled: controlled.object,
   });
 }
 
@@ -362,24 +376,25 @@ const object = new Converter<any, any>({
   emptyRaw: null,
   emptyValue: undefined,
   convert: identity,
-  render: identity
+  render: identity,
 });
 
 export const converters = {
   string: withDefaults(string, {}),
+  literalString,
   number,
   integer,
   stringDecimal: withDefaults(stringDecimal, {
     maxWholeDigits: 10,
     decimalPlaces: 2,
     allowNegative: true,
-    addZeroes: true
+    addZeroes: true,
   }),
   decimal: withDefaults(decimal, {
     maxWholeDigits: 10,
     decimalPlaces: 2,
     allowNegative: true,
-    addZeroes: true
+    addZeroes: true,
   }),
   boolean,
   textStringArray,
@@ -388,5 +403,5 @@ export const converters = {
   maybeNull,
   model,
   object,
-  dynamic
+  dynamic,
 };

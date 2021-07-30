@@ -2702,3 +2702,25 @@ test("clearAllValidations", () => {
   state.clearAllValidations();
   expect(field.error).toBeUndefined();
 });
+
+test("a simple form with literalString converter", () => {
+  const M = types.model("M", {
+    foo: types.union(types.literal("foo"), types.literal("bar")),
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.literalString<"foo" | "bar">()),
+  });
+
+  const o = M.create({ foo: "foo" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("foo");
+  field.setRaw("bar");
+  expect(field.error).toBeUndefined();
+  expect(field.value).toEqual("bar");
+
+  expect(field.node).toBe(state.node);
+});
