@@ -7,7 +7,7 @@ import {
   Form,
   converters,
   StateConverterOptionsWithContext,
-  FieldAccessor
+  FieldAccessor,
 } from "../src";
 import { ConverterOrFactory, makeConverter } from "../src/converter";
 
@@ -15,7 +15,7 @@ const baseOptions = {
   // a BIG lie. but we don't really have an accessor in these
   // tests and it's safe to leave it null, even though in
   // the integrated code accessor always *does* exist
-  accessor: (null as unknown) as FieldAccessor<any, any>
+  accessor: null as unknown as FieldAccessor<any, any>,
 };
 
 function check(
@@ -104,12 +104,12 @@ test("number converter", () => {
   check(converters.number, "-3.14", -3.14);
   checkWithOptions(converters.number, "1234,56", 1234.56, {
     decimalSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   checkWithOptions(converters.number, "4.000,000000", 4000, {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    ...baseOptions
+    ...baseOptions,
   });
   fails(converters.number, "foo");
   fails(converters.number, "1foo");
@@ -117,30 +117,30 @@ test("number converter", () => {
   failsWithOptions(converters.number, "1,23.45", {
     decimalSeparator: ".",
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.number, ",12345", {
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.number, "1234,567", {
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.number, "12.3,456", {
     decimalSeparator: ".",
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.number, "1.1,1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.number, "1,1.1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    ...baseOptions
+    ...baseOptions,
   });
 });
 
@@ -148,7 +148,7 @@ test("number converter with both options", () => {
   checkWithOptions(converters.number, "4.314.314,31", 4314314.31, {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    ...baseOptions
+    ...baseOptions,
   });
 });
 
@@ -174,7 +174,7 @@ test("decimal converter", () => {
   check(converters.stringDecimal, "14.", "14.");
   checkWithOptions(converters.stringDecimal, "43,14", "43.14", {
     decimalSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   checkWithOptions(
     converters.stringDecimal({ decimalPlaces: 6 }),
@@ -183,7 +183,7 @@ test("decimal converter", () => {
     {
       decimalSeparator: ",",
       thousandSeparator: ".",
-      ...baseOptions
+      ...baseOptions,
     }
   );
   checkWithOptions(
@@ -194,7 +194,7 @@ test("decimal converter", () => {
       decimalSeparator: ",",
       thousandSeparator: ".",
       renderThousands: true,
-      ...baseOptions
+      ...baseOptions,
     }
   );
   fails(converters.stringDecimal, "foo");
@@ -207,36 +207,36 @@ test("decimal converter", () => {
   failsWithOptions(converters.stringDecimal, "1,23.45", {
     decimalSeparator: ".",
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.stringDecimal, ",12345", {
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.stringDecimal, "1234,567", {
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.stringDecimal, "12.3,456", {
     decimalSeparator: ".",
     thousandSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.stringDecimal, "1.1,1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.stringDecimal, "1,1.1", {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    ...baseOptions
+    ...baseOptions,
   });
   failsWithOptions(converters.stringDecimal, "1234.56", {
     decimalSeparator: ",",
     thousandSeparator: ".",
     renderThousands: true,
-    ...baseOptions
+    ...baseOptions,
   });
 });
 
@@ -246,7 +246,7 @@ test("decimal converter for decimal type", () => {
   checkDecimal(converters.decimal, "-3.14", new Decimal("-3.14"));
   checkDecimalWithOptions(converters.decimal, "43,14", new Decimal("43.14"), {
     decimalSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   fails(converters.decimal, "foo");
   fails(converters.decimal, "1foo");
@@ -267,7 +267,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
   check(converters.stringDecimal(options), "14.", "14.0000");
   checkWithOptions(converters.stringDecimal(options), "43,14", "43.1400", {
     decimalSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
   checkWithOptions(
     converters.stringDecimal({ decimalPlaces: 6, normalizedDecimalPlaces: 7 }),
@@ -276,7 +276,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
     {
       decimalSeparator: ",",
       thousandSeparator: ".",
-      ...baseOptions
+      ...baseOptions,
     }
   );
   checkWithOptions(
@@ -287,7 +287,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
       decimalSeparator: ",",
       thousandSeparator: ".",
       renderThousands: true,
-      ...baseOptions
+      ...baseOptions,
     }
   );
 });
@@ -296,7 +296,7 @@ test("decimal converter with both options", () => {
   checkWithOptions(converters.stringDecimal, "4.314.314,31", "4314314.31", {
     decimalSeparator: ",",
     thousandSeparator: ".",
-    ...baseOptions
+    ...baseOptions,
   });
 });
 
@@ -306,7 +306,7 @@ test("decimal converter render with renderThousands false", () => {
     decimalSeparator: ",",
     thousandSeparator: ".",
     renderThousands: false,
-    ...baseOptions
+    ...baseOptions,
   };
   const value = "4.314.314,31";
   const processedValue = converter.preprocessRaw(value, options);
@@ -324,7 +324,7 @@ test("decimal converter render with six decimals", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    ...baseOptions
+    ...baseOptions,
   };
   const value = "4.000000";
   const processedValue = converter.preprocessRaw(value, options);
@@ -342,7 +342,7 @@ test("decimal converter render with six decimals and thousand separators", () =>
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    ...baseOptions
+    ...baseOptions,
   };
   const value = "4000000.000000";
   const processedValue = converter.preprocessRaw(value, options);
@@ -360,7 +360,7 @@ test("decimal converter render with six decimals, only showing three", () => {
     decimalSeparator: ",",
     thousandSeparator: ".",
     renderThousands: true,
-    ...baseOptions
+    ...baseOptions,
   };
   const value = "4000.000000";
   const rendered = converter.render(value, options);
@@ -373,7 +373,7 @@ test("decimal converter with thousandSeparator . and no decimalSeparator can't c
   const options = {
     thousandSeparator: ".",
     renderThousands: true,
-    ...baseOptions
+    ...baseOptions,
   };
   const value = "4.000";
   const processedValue = converter.preprocessRaw(value, options);
@@ -388,7 +388,7 @@ test("decimal converter with thousandSeparator . and no decimalSeparator can't c
 test("do not convert a normal string with decimal options", () => {
   checkWithOptions(converters.string, "43,14", "43,14", {
     decimalSeparator: ",",
-    ...baseOptions
+    ...baseOptions,
   });
 });
 
@@ -433,12 +433,12 @@ test("maybeNull string converter", () => {
 
 test("model converter", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
   const o = M.create({
-    foo: "FOO"
+    foo: "FOO",
   });
-  const converter = converters.model(M);
+  const converter = converters.model<typeof M>();
   const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
   const r2 = converter.convert(o, baseOptions);
@@ -447,12 +447,12 @@ test("model converter", () => {
 
 test("maybe model converter", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
   const o = M.create({
-    foo: "FOO"
+    foo: "FOO",
   });
-  const converter = converters.maybe(converters.model(M));
+  const converter = converters.maybe(converters.model<typeof M>());
   const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
   const r2 = converter.convert(o, baseOptions);
@@ -464,12 +464,12 @@ test("maybe model converter", () => {
 
 test("maybeNull model converter", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
   const o = M.create({
-    foo: "FOO"
+    foo: "FOO",
   });
-  const converter = converters.maybeNull(converters.model(M));
+  const converter = converters.maybeNull(converters.model<typeof M>());
   const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
   const r2 = converter.convert(o, baseOptions);
@@ -480,10 +480,10 @@ test("maybeNull model converter", () => {
 
 test("object converter", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
   const o = M.create({
-    foo: "FOO"
+    foo: "FOO",
   });
   const converter = converters.object;
   const r = converter.convert({ foo: "value" }, baseOptions);
@@ -498,13 +498,13 @@ test("dynamic decimal converter", () => {
   const context = { options: { decimalPlaces: 0 } };
 
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(
-      converters.dynamic(converters.stringDecimal, context => context.options)
-    )
+      converters.dynamic(converters.stringDecimal, (context) => context.options)
+    ),
   });
 
   const o = M.create({ foo: "4" });
@@ -533,11 +533,11 @@ test("dynamic decimal converter", () => {
 
 test("text string array converter", () => {
   const M = types.model("M", {
-    foo: types.array(types.string)
+    foo: types.array(types.string),
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.textStringArray)
+    foo: new Field(converters.textStringArray),
   });
 
   const o = M.create({ foo: ["A", "B", "C"] });
@@ -580,16 +580,16 @@ test("render decimal number without decimals with decimal separator", () => {
   // previous form state when we attach a new form state to the same
   // node
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(
-      converters.dynamic(converters.stringDecimal, context => ({
+      converters.dynamic(converters.stringDecimal, (context) => ({
         allowNegative: false,
-        decimalPlaces: getCurrencyDecimals(context.getCurrency())
+        decimalPlaces: getCurrencyDecimals(context.getCurrency()),
       }))
-    )
+    ),
   });
 
   function getCurrencyDecimals(currency: string) {
@@ -609,21 +609,21 @@ test("render decimal number without decimals with decimal separator", () => {
     converterOptions: {
       decimalSeparator: ",",
       thousandSeparator: ".",
-      renderThousands: true
+      renderThousands: true,
     },
     context: {
-      getCurrency: () => currency
-    }
+      getCurrency: () => currency,
+    },
   });
   const state = form.state(o, {
     converterOptions: {
       decimalSeparator: ",",
       thousandSeparator: ".",
-      renderThousands: true
+      renderThousands: true,
     },
     context: {
-      getCurrency: () => currency
-    }
+      getCurrency: () => currency,
+    },
   });
   const field = state.field("foo");
 
@@ -637,7 +637,7 @@ test("render decimal number without decimals with decimal separator", () => {
 
 test("obey addZeroes false", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string)
+    foo: types.maybeNull(types.string),
   });
 
   const form = new Form(M, {
@@ -645,7 +645,7 @@ test("obey addZeroes false", () => {
       converters.maybeNull(
         converters.stringDecimal({ decimalPlaces: 6, addZeroes: false })
       )
-    )
+    ),
   });
 
   const o = M.create({ foo: "1" });
@@ -658,7 +658,7 @@ test("obey addZeroes false", () => {
 
 test("obey addZeroes true", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string)
+    foo: types.maybeNull(types.string),
   });
 
   const form = new Form(M, {
@@ -666,7 +666,7 @@ test("obey addZeroes true", () => {
       converters.maybeNull(
         converters.stringDecimal({ decimalPlaces: 6, addZeroes: true })
       )
-    )
+    ),
   });
 
   const o = M.create({ foo: "1" });
@@ -679,7 +679,7 @@ test("obey addZeroes true", () => {
 
 test("maybe decimal converter/render for empty", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string)
+    foo: types.maybeNull(types.string),
   });
 
   const form = new Form(M, {
@@ -687,7 +687,7 @@ test("maybe decimal converter/render for empty", () => {
       converters.maybeNull(
         converters.stringDecimal({ decimalPlaces: 6, addZeroes: false })
       )
-    )
+    ),
   });
 
   const o = M.create({ foo: "" });

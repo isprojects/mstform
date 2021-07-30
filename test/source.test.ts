@@ -1,7 +1,7 @@
 import { configure } from "mobx";
 import { types, getSnapshot } from "mobx-state-tree";
 import { Source, Form, converters, Field, RepeatingForm } from "../src";
-import { resolveReactions } from "./util";
+import { resolveReactions } from "./utils";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -10,7 +10,7 @@ function refSnapshots(refs: any[] | undefined): any[] {
   if (refs === undefined) {
     throw new Error("Did not expect undefined refs");
   }
-  return refs.map(ref => getSnapshot(ref));
+  return refs.map((ref) => getSnapshot(ref));
 }
 
 test("source", async () => {
@@ -18,16 +18,16 @@ test("source", async () => {
     .model("Item", {
       id: types.identifierNumber,
       text: types.string,
-      feature: types.string
+      feature: types.string,
     })
-    .views(self => ({
+    .views((self) => ({
       get displayText() {
         return "Display " + self.text;
-      }
+      },
     }));
 
   const Container = types.model("Container", {
-    entryMap: types.map(Item)
+    entryMap: types.map(Item),
   });
 
   const container = Container.create({ entryMap: {} });
@@ -35,20 +35,20 @@ test("source", async () => {
   const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
-    { id: 3, text: "C", feature: "y" }
+    { id: 3, text: "C", feature: "y" },
   ];
 
   const loadHit: string[] = [];
 
   const load = async ({ feature }: { feature: string }) => {
     loadHit.push(feature);
-    return data.filter(entry => entry.feature === feature);
+    return data.filter((entry) => entry.feature === feature);
   };
 
   const source = new Source({
     entryMap: container.entryMap,
     load,
-    cacheDuration: 2
+    cacheDuration: 2,
   });
 
   await source.load({ feature: "x" }, 0);
@@ -61,7 +61,7 @@ test("source", async () => {
   }
   expect(refSnapshots(values)).toEqual([
     { id: 1, text: "A", feature: "x" },
-    { id: 2, text: "B", feature: "x" }
+    { id: 2, text: "B", feature: "x" },
   ]);
 
   expect(values[0].displayText).toEqual("Display A");
@@ -76,7 +76,7 @@ test("source", async () => {
   expect(values2).not.toBeUndefined();
   expect(refSnapshots(values2)).toEqual([
     { id: 1, text: "A", feature: "x" },
-    { id: 2, text: "B", feature: "x" }
+    { id: 2, text: "B", feature: "x" },
   ]);
 
   // when the cache duration has expired we expect another load.
@@ -89,16 +89,16 @@ test("source should load once when multiple loads for the same source are trigge
     .model("Item", {
       id: types.identifierNumber,
       text: types.string,
-      feature: types.string
+      feature: types.string,
     })
-    .views(self => ({
+    .views((self) => ({
       get displayText() {
         return "Display " + self.text;
-      }
+      },
     }));
 
   const Container = types.model("Container", {
-    entryMap: types.map(Item)
+    entryMap: types.map(Item),
   });
 
   const container = Container.create({ entryMap: {} });
@@ -106,7 +106,7 @@ test("source should load once when multiple loads for the same source are trigge
   const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
-    { id: 3, text: "C", feature: "y" }
+    { id: 3, text: "C", feature: "y" },
   ];
 
   let loadHit: number = 0;
@@ -119,7 +119,7 @@ test("source should load once when multiple loads for the same source are trigge
   const source = new Source({
     entryMap: container.entryMap,
     load,
-    cacheDuration: 2
+    cacheDuration: 2,
   });
 
   await Promise.allSettled([
@@ -129,7 +129,7 @@ test("source should load once when multiple loads for the same source are trigge
     source.load(),
     source.load(),
     source.load(),
-    source.load()
+    source.load(),
   ]);
   expect(loadHit).toBe(1);
 
@@ -142,7 +142,7 @@ test("source should load once when multiple loads for the same source are trigge
     source.load({ feature: "a" }),
     source.load(),
     source.load(),
-    source.load()
+    source.load(),
   ]);
   expect(loadHit).toBe(2);
 
@@ -153,7 +153,7 @@ test("source should load once when multiple loads for the same source are trigge
   const sourceWithReject = new Source({
     entryMap: container.entryMap,
     load: loadWithReject,
-    cacheDuration: 2
+    cacheDuration: 2,
   });
 
   // Make sure a reject also clears the promise from the `existingLoad`.
@@ -167,11 +167,11 @@ test("source should load once when multiple loads for the same source are trigge
 test("source container function", async () => {
   const Item = types.model("Item", {
     id: types.identifierNumber,
-    text: types.string
+    text: types.string,
   });
 
   const Container = types.model("Container", {
-    entryMap: types.map(Item)
+    entryMap: types.map(Item),
   });
 
   const container = Container.create({ entryMap: {} });
@@ -179,20 +179,20 @@ test("source container function", async () => {
   const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
-    { id: 3, text: "C", feature: "y" }
+    { id: 3, text: "C", feature: "y" },
   ];
 
   const loadHit: string[] = [];
 
   const load = async ({ feature }: { feature: string }) => {
     loadHit.push(feature);
-    return data.filter(entry => entry.feature === feature);
+    return data.filter((entry) => entry.feature === feature);
   };
 
   const source = new Source({
     entryMap: () => container.entryMap,
     load,
-    cacheDuration: 2
+    cacheDuration: 2,
   });
 
   await source.load({ feature: "x" }, 0);
@@ -202,7 +202,7 @@ test("source container function", async () => {
   expect(values).not.toBeUndefined();
   expect(refSnapshots(values)).toEqual([
     { id: 1, text: "A" },
-    { id: 2, text: "B" }
+    { id: 2, text: "B" },
   ]);
   expect(loadHit).toEqual(["x"]);
 
@@ -215,7 +215,7 @@ test("source container function", async () => {
   expect(values2).not.toBeUndefined();
   expect(refSnapshots(values2)).toEqual([
     { id: 1, text: "A" },
-    { id: 2, text: "B" }
+    { id: 2, text: "B" },
   ]);
 
   // when the cache duration has expired we expect another load.
@@ -226,40 +226,43 @@ test("source container function", async () => {
 describe("source accessor in fields", () => {
   const ItemA = types.model("ItemA", {
     id: types.identifierNumber,
-    text: types.string
+    text: types.string,
   });
 
   const ContainerA = types.model("ContainerA", {
-    entryMap: types.map(ItemA)
+    entryMap: types.map(ItemA),
   });
 
   const ItemB = types.model("ItemB", {
     id: types.identifierNumber,
-    text: types.string
+    text: types.string,
   });
 
   const ContainerB = types.model("ContainerB", {
-    entryMap: types.map(ItemB)
+    entryMap: types.map(ItemB),
   });
 
   const M = types.model("M", {
     a: types.maybe(types.reference(ItemA)),
-    b: types.maybe(types.reference(ItemB))
+    b: types.maybe(types.reference(ItemB)),
   });
 
   const R = types.model("R", {
     m: M,
     containerA: ContainerA,
-    containerB: ContainerB
+    containerB: ContainerB,
   });
 
   // pretend this is data on the server. The load functions use this
   // to give correct answers.
-  const aData = [{ id: 1, text: "AOne" }, { id: 2, text: "ATwo" }];
+  const aData = [
+    { id: 1, text: "AOne" },
+    { id: 2, text: "ATwo" },
+  ];
   const bData = [
     { id: 3, text: "BThree", aId: 1 },
     { id: 4, text: "BFour", aId: 1 },
-    { id: 5, text: "BFive", aId: 2 }
+    { id: 5, text: "BFive", aId: 2 },
   ];
 
   async function loadA(q: any) {
@@ -270,17 +273,17 @@ describe("source accessor in fields", () => {
   async function loadB(q: any) {
     const a = q.a;
     const aId = a != null ? a.id : undefined;
-    return bData.filter(entry => entry.aId === aId);
+    return bData.filter((entry) => entry.aId === aId);
   }
 
   test("form without autoLoad", async () => {
     const r = R.create({
       m: {
         a: undefined,
-        b: undefined
+        b: undefined,
       },
       containerA: { entryMap: {} },
-      containerB: { entryMap: {} }
+      containerB: { entryMap: {} },
     });
 
     const o = r.m;
@@ -291,21 +294,21 @@ describe("source accessor in fields", () => {
     const sourceB = new Source({ entryMap: containerB.entryMap, load: loadB });
 
     const form = new Form(M, {
-      a: new Field(converters.maybe(converters.model(ItemA)), {
+      a: new Field(converters.maybe(converters.model<typeof ItemA>()), {
         references: {
-          source: sourceA
-        }
+          source: sourceA,
+        },
       }),
-      b: new Field(converters.maybe(converters.model(ItemB)), {
+      b: new Field(converters.maybe(converters.model<typeof ItemB>()), {
         references: {
           source: sourceB,
           // this source is dependent on state. This information
           // should be sent whenever a load is issued
-          dependentQuery: accessor => {
+          dependentQuery: (accessor) => {
             return { a: accessor.node.a };
-          }
-        }
-      })
+          },
+        },
+      }),
     });
 
     const state = form.state(o);
@@ -321,7 +324,7 @@ describe("source accessor in fields", () => {
     const refsA = fieldA.references.values();
     expect(refSnapshots(refsA)).toEqual([
       { id: 1, text: "AOne" },
-      { id: 2, text: "ATwo" }
+      { id: 2, text: "ATwo" },
     ]);
 
     await fieldB.references.load();
@@ -350,7 +353,7 @@ describe("source accessor in fields", () => {
 
     expect(refSnapshots(refsB2)).toEqual([
       { id: 3, text: "BThree" },
-      { id: 4, text: "BFour" }
+      { id: 4, text: "BFour" },
     ]);
   });
 
@@ -358,10 +361,10 @@ describe("source accessor in fields", () => {
     const r = R.create({
       m: {
         a: undefined,
-        b: undefined
+        b: undefined,
       },
       containerA: { entryMap: {} },
-      containerB: { entryMap: {} }
+      containerB: { entryMap: {} },
     });
 
     const o = r.m;
@@ -372,21 +375,21 @@ describe("source accessor in fields", () => {
     const sourceB = new Source({ entryMap: containerB.entryMap, load: loadB });
 
     const form = new Form(M, {
-      a: new Field(converters.maybe(converters.model(ItemA)), {
+      a: new Field(converters.maybe(converters.model<typeof ItemA>()), {
         references: {
-          source: sourceA
-        }
+          source: sourceA,
+        },
       }),
-      b: new Field(converters.maybe(converters.model(ItemB)), {
+      b: new Field(converters.maybe(converters.model<typeof ItemB>()), {
         references: {
           source: sourceB,
           // this source is dependent on state. This information
           // should be sent whenever a load is issued
-          dependentQuery: accessor => {
+          dependentQuery: (accessor) => {
             return { a: accessor.node.a };
-          }
-        }
-      })
+          },
+        },
+      }),
     });
 
     const state = form.state(o);
@@ -403,7 +406,7 @@ describe("source accessor in fields", () => {
     const refsA = fieldA.references.values();
     expect(refSnapshots(refsA)).toEqual([
       { id: 1, text: "AOne" },
-      { id: 2, text: "ATwo" }
+      { id: 2, text: "ATwo" },
     ]);
 
     await fieldB.references.load();
@@ -428,7 +431,7 @@ describe("source accessor in fields", () => {
 
     expect(refSnapshots(refsB2)).toEqual([
       { id: 3, text: "BThree" },
-      { id: 4, text: "BFour" }
+      { id: 4, text: "BFour" },
     ]);
 
     disposeA();
@@ -439,18 +442,18 @@ describe("source accessor in fields", () => {
     const n = types.model("N", {
       foo: types.array(M),
       containerA: ContainerA,
-      containerB: ContainerB
+      containerB: ContainerB,
     });
 
     const r = n.create({
       foo: [
         {
           a: undefined,
-          b: undefined
-        }
+          b: undefined,
+        },
       ],
       containerA: { entryMap: {} },
-      containerB: { entryMap: {} }
+      containerB: { entryMap: {} },
     });
 
     const containerA = r.containerA;
@@ -463,23 +466,23 @@ describe("source accessor in fields", () => {
 
     const form = new Form(n, {
       foo: new RepeatingForm({
-        a: new Field(converters.maybe(converters.model(ItemA)), {
+        a: new Field(converters.maybe(converters.model<typeof ItemA>()), {
           references: {
-            source: sourceA
-          }
+            source: sourceA,
+          },
         }),
-        b: new Field(converters.maybe(converters.model(ItemB)), {
+        b: new Field(converters.maybe(converters.model<typeof ItemB>()), {
           references: {
             source: sourceB,
             // this source is dependent on state. This information
             // should be sent whenever a load is issued
-            dependentQuery: accessor => {
+            dependentQuery: (accessor) => {
               dependentQueryCounter += 1;
               return { a: accessor.node.a, c: accessor.node.c };
-            }
-          }
-        })
-      })
+            },
+          },
+        }),
+      }),
     });
     const state = form.state(r);
     const repeating = state.repeatingForm("foo");
@@ -500,16 +503,16 @@ describe("source accessor in fields", () => {
   test("no references", async () => {
     const r = R.create({
       m: {
-        a: undefined
+        a: undefined,
       },
       containerA: { entryMap: {} },
-      containerB: { entryMap: {} }
+      containerB: { entryMap: {} },
     });
 
     const o = r.m;
 
     const form = new Form(M, {
-      a: new Field(converters.maybe(converters.model(ItemA)))
+      a: new Field(converters.maybe(converters.model<typeof ItemA>())),
     });
 
     const state = form.state(o);
@@ -526,11 +529,11 @@ test("source clear", async () => {
   const Item = types.model("Item", {
     id: types.identifierNumber,
     text: types.string,
-    feature: types.string
+    feature: types.string,
   });
 
   const Container = types.model("Container", {
-    entryMap: types.map(Item)
+    entryMap: types.map(Item),
   });
 
   const container = Container.create({ entryMap: {} });
@@ -538,7 +541,7 @@ test("source clear", async () => {
   const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
-    { id: 3, text: "C", feature: "y" }
+    { id: 3, text: "C", feature: "y" },
   ];
 
   const load = async () => {
@@ -548,7 +551,7 @@ test("source clear", async () => {
   const source = new Source<typeof Item, any>({
     entryMap: container.entryMap,
     load,
-    cacheDuration: 2
+    cacheDuration: 2,
   });
 
   await source.load({}, 0);
@@ -564,7 +567,7 @@ test("source clear", async () => {
   expect(refSnapshots(values)).toEqual([
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
-    { id: 3, text: "C", feature: "y" }
+    { id: 3, text: "C", feature: "y" },
   ]);
 
   source.clear();
@@ -576,11 +579,11 @@ test("source default timestamp", async () => {
   const Item = types.model("Item", {
     id: types.identifierNumber,
     text: types.string,
-    feature: types.string
+    feature: types.string,
   });
 
   const Container = types.model("Container", {
-    entryMap: types.map(Item)
+    entryMap: types.map(Item),
   });
 
   const container = Container.create({ entryMap: {} });
@@ -588,20 +591,20 @@ test("source default timestamp", async () => {
   const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
-    { id: 3, text: "C", feature: "y" }
+    { id: 3, text: "C", feature: "y" },
   ];
 
   const loadHit: string[] = [];
 
   const load = async ({ feature }: { feature: string }) => {
     loadHit.push(feature);
-    return data.filter(entry => entry.feature === feature);
+    return data.filter((entry) => entry.feature === feature);
   };
 
   const source = new Source({
     entryMap: container.entryMap,
     load,
-    cacheDuration: 2
+    cacheDuration: 2,
   });
 
   await source.load({ feature: "x" });
@@ -616,11 +619,11 @@ test("source default query", async () => {
   const Item = types.model("Item", {
     id: types.identifierNumber,
     text: types.string,
-    feature: types.string
+    feature: types.string,
   });
 
   const Container = types.model("Container", {
-    entryMap: types.map(Item)
+    entryMap: types.map(Item),
   });
 
   const container = Container.create({ entryMap: {} });
@@ -628,20 +631,20 @@ test("source default query", async () => {
   const data = [
     { id: 1, text: "A", feature: "x" },
     { id: 2, text: "B", feature: "x" },
-    { id: 3, text: "C", feature: "y" }
+    { id: 3, text: "C", feature: "y" },
   ];
 
   const loadHit: (string | undefined)[] = [];
 
   const load = async ({ feature }: { feature?: string }) => {
     loadHit.push(feature);
-    return data.filter(entry => entry.feature === feature);
+    return data.filter((entry) => entry.feature === feature);
   };
 
   const source = new Source({
     entryMap: container.entryMap,
     load,
-    cacheDuration: 2
+    cacheDuration: 2,
   });
 
   await source.load();

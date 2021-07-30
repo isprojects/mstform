@@ -7,13 +7,13 @@ import {
   FormDefinition,
   RepeatingForm,
   GroupDefinition,
-  Group
+  Group,
 } from "./form";
 import {
   FieldAccess,
   RepeatingFormAccess,
   SubFormAccess,
-  GroupAccess
+  GroupAccess,
 } from "./accessor";
 import { FieldAccessor } from "./field-accessor";
 import { GroupAccessor } from "./group-accessor";
@@ -23,25 +23,24 @@ import {
   IFormAccessor,
   ISubFormAccessor,
   IRepeatingFormAccessor,
-  IParentAccessor
+  IParentAccessor,
 } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
 
 export abstract class FormAccessorBase<
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<D>,
-  M extends IAnyModelType
-> extends AccessorBase implements IFormAccessor<D, G, M> {
+    D extends FormDefinition<M>,
+    G extends GroupDefinition<D>,
+    M extends IAnyModelType
+  >
+  extends AccessorBase
+  implements IFormAccessor<D, G, M>
+{
   public keys: (keyof D)[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
-  repeatingFormAccessors: Map<
-    keyof D,
-    IRepeatingFormAccessor<any, any, any>
-  > = observable.map();
-  subFormAccessors: Map<
-    keyof D,
-    ISubFormAccessor<any, any, any>
-  > = observable.map();
+  repeatingFormAccessors: Map<keyof D, IRepeatingFormAccessor<any, any, any>> =
+    observable.map();
+  subFormAccessors: Map<keyof D, ISubFormAccessor<any, any, any>> =
+    observable.map();
   groupAccessors: Map<keyof G, GroupAccessor<any>> = observable.map();
 
   constructor(
@@ -57,12 +56,12 @@ export abstract class FormAccessorBase<
   }
 
   validate(options?: ValidateOptions): boolean {
-    const values = this.accessors.map(accessor => accessor.validate(options));
+    const values = this.accessors.map((accessor) => accessor.validate(options));
     const ignoreGetError = options != null ? options.ignoreGetError : false;
     if (!ignoreGetError) {
       values.push(this.errorValue === undefined); // add possible error of the form itself
     }
-    return values.every(value => value);
+    return values.every((value) => value);
   }
 
   dispose() {
@@ -76,14 +75,14 @@ export abstract class FormAccessorBase<
 
   @computed
   get isValid(): boolean {
-    return this.accessors.every(accessor => accessor.isValid);
+    return this.accessors.every((accessor) => accessor.isValid);
   }
 
   @computed
   get accessors(): IAccessor[] {
     const result: IAccessor[] = [];
 
-    this.keys.forEach(key => {
+    this.keys.forEach((key) => {
       const entry = this.definition[key];
       if (entry instanceof Field) {
         result.push(this.field(key as keyof D));
@@ -101,10 +100,10 @@ export abstract class FormAccessorBase<
     const fieldrefSet = new Set<string>();
     const fieldrefPrefix = this.fieldref !== "" ? this.fieldref + "." : "";
 
-    addModeDefaults.forEach(fieldref => {
+    addModeDefaults.forEach((fieldref) => {
       fieldrefSet.add(fieldrefPrefix + fieldref);
     });
-    this.accessors.forEach(accessor => {
+    this.accessors.forEach((accessor) => {
       if (accessor instanceof FieldAccessor) {
         if (fieldrefSet.has(accessor.fieldref)) {
           if (accessor.field.derivedFunc == null) {
@@ -167,7 +166,7 @@ export abstract class FormAccessorBase<
   }
 
   initialize() {
-    this.keys.forEach(key => {
+    this.keys.forEach((key) => {
       const entry = this.definition[key];
       if (entry instanceof Field) {
         this.createField(key as keyof D, entry);
@@ -179,7 +178,7 @@ export abstract class FormAccessorBase<
     });
     if (this.groupDefinition != null) {
       // we don't have access to the group definition here yet
-      Object.keys(this.groupDefinition).forEach(key => {
+      Object.keys(this.groupDefinition).forEach((key) => {
         const entry = this.groupDefinition[key];
         this.createGroup(key, entry);
       });
@@ -255,7 +254,7 @@ export abstract class FormAccessorBase<
     return accessor;
   }
 
-  repeatingField(name: string): any {
+  repeatingField(): any {
     // not implemented yet
   }
 }

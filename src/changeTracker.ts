@@ -54,7 +54,7 @@ export class ChangeTracker {
   // process requests - field paths in the order of changes, debounced
   requests: string[] = [];
 
-  isProcessing: boolean = false;
+  isProcessing = false;
   processingPromise: Promise<void> = Promise.resolve();
 
   debounceProcess: DebounceProcess;

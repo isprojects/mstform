@@ -3,7 +3,7 @@ import {
   computed,
   action,
   runInAction,
-  makeObservable
+  makeObservable,
 } from "mobx";
 import {
   applySnapshot,
@@ -14,10 +14,10 @@ import {
   SnapshotIn,
   protect,
   unprotect,
-  getRoot
+  getRoot,
 } from "mobx-state-tree";
 
-export type Query = {};
+export type Query = { [key: string]: any };
 
 export interface ISource<T extends IAnyModelType, Q extends Query> {
   load(query?: Q, timestamp?: number): Promise<Instance<T>[]>;
@@ -51,7 +51,8 @@ interface EntryMapFunc<T extends IAnyModelType> {
 type GetEntryMap<T extends IAnyModelType> = EntryMap<T> | EntryMapFunc<T>;
 
 export class Source<T extends IAnyModelType, Q extends Query>
-  implements ISource<T, Q> {
+  implements ISource<T, Q>
+{
   _entryMap: GetEntryMap<T>;
   _load: Load<T, Q>;
   _getId: GetId<T>;
@@ -69,7 +70,7 @@ export class Source<T extends IAnyModelType, Q extends Query>
     load,
     getId,
     keyForQuery,
-    cacheDuration
+    cacheDuration,
   }: {
     entryMap: GetEntryMap<T>;
     load: Load<T, Q>;
@@ -116,7 +117,7 @@ export class Source<T extends IAnyModelType, Q extends Query>
       applyPatch(entryMap, {
         op: "add",
         path: "/" + id.toString(),
-        value: item
+        value: item,
       });
       return entryMap.get(id) as Instance<T>;
     }

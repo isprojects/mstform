@@ -1,5 +1,5 @@
-export function resolveReactions() {
-  return new Promise(resolve => {
+export function resolveReactions(): Promise<void> {
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve();
     }, 0);
@@ -23,8 +23,10 @@ export function until() {
   let resolveResult: () => void = () => {
     /* nothing */
   };
-  const finished = new Promise((resolve, reject) => {
+
+  const finished: Promise<void> = new Promise((resolve) => {
     resolveResult = resolve;
   });
+
   return { resolve: resolveResult, finished };
 }

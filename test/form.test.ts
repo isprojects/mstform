@@ -984,7 +984,7 @@ test("model converter", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.model(R), {
+    foo: new Field(converters.model<typeof R>(), {
       validators: [(value) => value.bar !== "correct" && "Wrong"],
     }),
   });
@@ -1035,7 +1035,7 @@ test("model converter with validate does not throw", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.model(R)),
+    foo: new Field(converters.model<typeof R>()),
   });
 
   const r2 = root.entries[1];
@@ -1074,7 +1074,7 @@ test("model converter maybe", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybe(converters.model(R)), {
+    foo: new Field(converters.maybe(converters.model<typeof R>()), {
       validators: [
         (value) => {
           if (value == null) {
@@ -1131,7 +1131,7 @@ test("model converter maybeNull", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybeNull(converters.model(R)), {
+    foo: new Field(converters.maybeNull(converters.model<typeof R>()), {
       validators: [
         (value) => {
           if (value == null) {
@@ -1360,7 +1360,7 @@ test("model converter in add mode", () => {
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.model(R), {
+    foo: new Field(converters.model<typeof R>(), {
       required: true,
       validators: [(value) => value.bar !== "correct" && "Wrong"],
     }),

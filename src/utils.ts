@@ -33,7 +33,7 @@ function getBySteps(obj: any, steps: string[]): string | undefined {
   if (rest.length === 0) {
     return obj[first];
   }
-  let sub = obj[first];
+  const sub = obj[first];
   if (sub === undefined) {
     return undefined;
   }
@@ -49,7 +49,7 @@ function deleteBySteps(obj: any, steps: string[]) {
   if (rest.length === 0) {
     delete obj[first];
   }
-  let sub = obj[first];
+  const sub = obj[first];
   if (sub === undefined) {
     return;
   }

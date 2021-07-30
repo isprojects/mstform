@@ -1,0 +1,11 @@
+{
+  "extends": ["plugin:@typescript-eslint/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+      "@typescript-eslint/no-explicit-any": 0,
+      "@typescript-eslint/explicit-module-boundary-types": 0
+
+  },
+  "ignorePatterns": ["*webpack*"]
+}

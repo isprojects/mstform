@@ -10,21 +10,21 @@ It doesn't put any requirements on your widgets. It works with any React
 
 ## Features
 
--   It knows about raw input (the value you type) and the converted input (the
-    value you want). You may type a string but want a number, for instance.
-    mstform converts this automatically.
--   It can drive any React controlled component. It normalizes input components
-    so it can generate the right props for it -- whether it be a input type
-    string, type checked or a custom component that works in terms of objects -
-    mstform has you covered.
--   Integrates deeply with a mobx-state-tree (MST) model. You give it a model
-    instance and it renders its contents. When you are ready to submit the form,
-    you have a mobx-state-tree model again. You can modify the mobx-state-tree
-    instance in code as well and the form is automatically updated.
--   Thanks to MST it's easy to convert form contents to JSON and back again.
--   It knows about types. If you use vscode for instance, your editor tells you
-    if you do something wrong. This works even in plain JavaScript if you enable
-    `ts-check`.
+- It knows about raw input (the value you type) and the converted input (the
+  value you want). You may type a string but want a number, for instance.
+  mstform converts this automatically.
+- It can drive any React controlled component. It normalizes input components
+  so it can generate the right props for it -- whether it be a input type
+  string, type checked or a custom component that works in terms of objects -
+  mstform has you covered.
+- Integrates deeply with a mobx-state-tree (MST) model. You give it a model
+  instance and it renders its contents. When you are ready to submit the form,
+  you have a mobx-state-tree model again. You can modify the mobx-state-tree
+  instance in code as well and the form is automatically updated.
+- Thanks to MST it's easy to convert form contents to JSON and back again.
+- It knows about types. If you use vscode for instance, your editor tells you
+  if you do something wrong. This works even in plain JavaScript if you enable
+  `ts-check`.
 
 ## Philosophy
 
@@ -71,14 +71,14 @@ import { Component } from "react";
 
 // we have a MST model with a string field foo
 const M = types.model("M", {
-    foo: types.string
+  foo: types.string,
 });
 
 // we expose this field in our form
 const form = new Form(M, {
-    foo: new Field(converters.string, {
-        validators: [value => (value !== "correct" ? "Wrong" : false)]
-    })
+  foo: new Field(converters.string, {
+    validators: [(value) => (value !== "correct" ? "Wrong" : false)],
+  }),
 });
 
 // we create an instance of the model
@@ -86,42 +86,42 @@ const o = M.create({ foo: "FOO" });
 
 @observer
 class Input extends Component {
-    render() {
-        const { type, field } = this.props;
-        return <input type={type} {...field.inputProps} />;
-    }
+  render() {
+    const { type, field } = this.props;
+    return <input type={type} {...field.inputProps} />;
+  }
 }
 
 @observer
 class InlineError extends Component {
-    render() {
-        const { children, field } = this.props;
-        return (
-            <div>
-                {children}
-                <span>{field.error}</span>
-            </div>
-        );
-    }
+  render() {
+    const { children, field } = this.props;
+    return (
+      <div>
+        {children}
+        <span>{field.error}</span>
+      </div>
+    );
+  }
 }
 
 @observer
 export class MyForm extends Component {
-    constructor(props) {
-        super(props);
-        // we create a form state for this model
-        this.formState = form.state(o);
-    }
+  constructor(props) {
+    super(props);
+    // we create a form state for this model
+    this.formState = form.state(o);
+  }
 
-    render() {
-        // we get the foo field from the form
-        const field = this.formState.field("foo");
-        return (
-            <InlineError field={field}>
-                <Input type="text" field={field} />
-            </InlineError>
-        );
-    }
+  render() {
+    // we get the foo field from the form
+    const field = this.formState.field("foo");
+    return (
+      <InlineError field={field}>
+        <Input type="text" field={field} />
+      </InlineError>
+    );
+  }
 }
 ```
 
@@ -186,12 +186,12 @@ could look like this:
 
 ```js
 const Animal = types.model("Animal", {
-    name: types.string,
-    size: types.string
+  name: types.string,
+  size: types.string,
 });
 
 const Zoo = types.model("Zoo", {
-    animals: types.array(Animal)
+  animals: types.array(Animal),
 });
 ```
 
@@ -201,10 +201,10 @@ Here we want a form that lets you add and remove animals:
 import { RepeatingForm } from "mstform";
 
 const form = new Form(Zoo, {
-    animals: new RepeatingForm({
-        name: new Field(converters.string),
-        size: new Field(converters.string)
-    })
+  animals: new RepeatingForm({
+    name: new Field(converters.string),
+    size: new Field(converters.string),
+  }),
 });
 ```
 
@@ -215,21 +215,21 @@ We can now use it in our `render` method:
 const animalForms = state.repeatingForm("animals");
 
 const entries = o.animals.map((animal, index) => {
-    // get the sub-form we want
-    const animalForm = animalForms.index(index);
-    // and get the fields as usual
-    const name = animalForm.field("name");
-    const size = animalForm.field("size");
-    return (
-        <div>
-            <InlineError field={name}>
-                <Input type="text" field={name} />
-            </InlineError>
-            <InlineError field={size}>
-                <Input type="text" field={size} />
-            </InlineError>
-        </div>
-    );
+  // get the sub-form we want
+  const animalForm = animalForms.index(index);
+  // and get the fields as usual
+  const name = animalForm.field("name");
+  const size = animalForm.field("size");
+  return (
+    <div>
+      <InlineError field={name}>
+        <Input type="text" field={name} />
+      </InlineError>
+      <InlineError field={size}>
+        <Input type="text" field={size} />
+      </InlineError>
+    </div>
+  );
 });
 
 return <div>{entries}</div>;
@@ -243,13 +243,13 @@ look like this:
 
 ```js
 const Animal = types.model("Animal", {
-    name: types.string,
-    size: types.string
+  name: types.string,
+  size: types.string,
 });
 
 const House = types.model("House", {
-    description: types.string,
-    pet: Animal
+  description: types.string,
+  pet: Animal,
 });
 ```
 
@@ -259,11 +259,11 @@ We want a form that includes information about the pet:
 import { SubForm } from "mstform";
 
 const form = new Form(Zoo, {
-    description: new Field(converters.string),
-    pet: new SubForm({
-        name: new Field(converters.string),
-        size: new Field(converters.string)
-    })
+  description: new Field(converters.string),
+  pet: new SubForm({
+    name: new Field(converters.string),
+    size: new Field(converters.string),
+  }),
 });
 ```
 
@@ -279,29 +279,29 @@ const name = state.subForm("pet").field("name");
 
 mstform defines a bunch of accessors:
 
--   `FieldAccessor`, which you define with `Field` and get with `field()`. This
-    represents a field in the form that you can actually fill in and interact
-    with.
+- `FieldAccessor`, which you define with `Field` and get with `field()`. This
+  represents a field in the form that you can actually fill in and interact
+  with.
 
--   `SubFormAccessor` which you define with `SubForm` and get with `subForm()`.
-    This represents a sub-object in the underlying model instance.
+- `SubFormAccessor` which you define with `SubForm` and get with `subForm()`.
+  This represents a sub-object in the underlying model instance.
 
--   `RepeatingFormAccessor` which you define with `RepeatingForm` and get with
-    `repeatingForm()`. This represents an array of objects in the underlying
-    model instance.
+- `RepeatingFormAccessor` which you define with `RepeatingForm` and get with
+  `repeatingForm()`. This represents an array of objects in the underlying
+  model instance.
 
--   `RepeatingFormIndexedAccessor` which you define along with
-    `RepeatingFormAccessor` using `RepeatingForm`. You access it via the
-    `index()` method on a `RepeatingFormAccessor`. This represents a sub-object
-    in the underlying array instance.
+- `RepeatingFormIndexedAccessor` which you define along with
+  `RepeatingFormAccessor` using `RepeatingForm`. You access it via the
+  `index()` method on a `RepeatingFormAccessor`. This represents a sub-object
+  in the underlying array instance.
 
--   `GroupAccessor`. You define this in a second argument on forms. You can
-    access it via the `group()` method on any form accessor. This is a special
-    kind of accessor that only implements the `isValid` and `isWarningFree` methods.
-    It's a way to aggregate validation results from other accessors.
+- `GroupAccessor`. You define this in a second argument on forms. You can
+  access it via the `group()` method on any form accessor. This is a special
+  kind of accessor that only implements the `isValid` and `isWarningFree` methods.
+  It's a way to aggregate validation results from other accessors.
 
--   Finally there is the `FormState` itself, which is the accessor at the root of
-    all things. You get it with `form.state()`.
+- Finally there is the `FormState` itself, which is the accessor at the root of
+  all things. You get it with `form.state()`.
 
 Accessors can contain other accessors. In particular, `FormState`,
 `SubFormAccessor` and `RepeatingFormIndexedAccessor` allow you to access all
@@ -314,23 +314,23 @@ you access sub-accessors either.
 All these accessors, except for `GroupAccessor` which is truly the odd one out,
 have some properties in common:
 
--   `value`: the underlying MST value that this accessor represents.
+- `value`: the underlying MST value that this accessor represents.
 
--   `path`: The JSON path to the underlying MST value (see mobx-state-tree).
+- `path`: The JSON path to the underlying MST value (see mobx-state-tree).
 
--   `fieldref`: a generalization of the path to a pattern. `foo/3/bar` becomes
-    `foo[].bar`.
+- `fieldref`: a generalization of the path to a pattern. `foo/3/bar` becomes
+  `foo[].bar`.
 
--   `context`: The context object such as passed into `form.state()`.
+- `context`: The context object such as passed into `form.state()`.
 
--   `isValid`: Is true if the accessor (and all its sub-accessors) is valid.
+- `isValid`: Is true if the accessor (and all its sub-accessors) is valid.
 
--   `error`: An error message (or `undefined`). Note that errors on non-field
-    accessors can only be set by external means such as with the `getError`
-    hook.
+- `error`: An error message (or `undefined`). Note that errors on non-field
+  accessors can only be set by external means such as with the `getError`
+  hook.
 
--   `warning`: A warning message (or `undefined`). Warning messages can only
-    be set using the `getWarning` hook.
+- `warning`: A warning message (or `undefined`). Warning messages can only
+  be set using the `getWarning` hook.
 
 ## Supported converters
 
@@ -346,49 +346,48 @@ converter generates a validation error.
 The input raw value is a string. The converted value may be a string or some
 other object:
 
--   `converters.string`: value is a string.
+- `converters.string`: value is a string.
 
--   `converters.number`: value is a number.
+- `converters.number`: value is a number.
 
--   `converters.integer`: value is an integer.
+- `converters.integer`: value is an integer.
 
--   `converters.decimal({maxWholeDigits:x, decimalPlaces:y, allowNegative:z})`.
-    You use this with the `decimal` mobx-state-tree type that is also exported
-    by this library, like in this model:
+- `converters.decimal({maxWholeDigits:x, decimalPlaces:y, allowNegative:z})`.
+  You use this with the `decimal` mobx-state-tree type that is also exported
+  by this library, like in this model:
 
-    ```js
-    const M = types.model({
-        d: decimal
-    });
-    ```
+  ```js
+  const M = types.model({
+    d: decimal,
+  });
+  ```
 
-    So the value that the converter delivers is a `Decimal` instance (from
-    `decimal.js-light`). It contains a decimal number with a maximum
-    `maxWholeDigits` (default 10) before the period and a maximum of
-    `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
-    the number of decimals that is initially rendered when opening the form.
-    With `allowNegative` (boolean, default true) you can specify if negative
-    values are allowed. With `normalizedDecimalPlaces` you can set the amount
-    of decimal places the converted number has. It should not be lower than
-    `decimalPlaces`, but can be higher. If it is, the given number is
-    automatically padded with additional decimal places set to 0.
+  So the value that the converter delivers is a `Decimal` instance (from
+  `decimal.js-light`). It contains a decimal number with a maximum
+  `maxWholeDigits` (default 10) before the period and a maximum of
+  `decimalPlaces` (default 2) after the period. `decimalPlaces` also controls
+  the number of decimals that is initially rendered when opening the form.
+  With `allowNegative` (boolean, default true) you can specify if negative
+  values are allowed. With `normalizedDecimalPlaces` you can set the amount
+  of decimal places the converted number has. It should not be lower than
+  `decimalPlaces`, but can be higher. If it is, the given number is
+  automatically padded with additional decimal places set to 0.
 
-    Conversion error types are:
+  Conversion error types are:
 
-    -   `default`: Cannot be parsed, not a decimal number
+  - `default`: Cannot be parsed, not a decimal number
 
-    -   `tooManyDecimalPlaces`: we entered too many digits after the decimal
-        separator.
+  - `tooManyDecimalPlaces`: we entered too many digits after the decimal
+    separator.
 
-    -   `tooManyWholeDigits`: we entered too many digits before the decimal
-        separator.
+  - `tooManyWholeDigits`: we entered too many digits before the decimal
+    separator.
 
-    -   `cannotBeNegative`: you entered a negative number where this wasn't
-        allowed.
+  - `cannotBeNegative`: you entered a negative number where this wasn't
+    allowed.
 
--   `converters.decimalString(maxWholeDigits: x, decimalPlaces: y,
-    allowNegative: z})`: like `converters.decimal` but has a `string` as its
-    value with a normalized representation of the decimal.
+- `converters.decimalString(maxWholeDigits: x, decimalPlaces: y, allowNegative: z})`: like `converters.decimal` but has a `string` as its
+  value with a normalized representation of the decimal.
 
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to
@@ -423,7 +422,7 @@ array of strings by newline.
 
 ### Models
 
-`converters.model(Model)`: does not do any conversion (model instance goes in,
+`converters.model<typeof model>()`: does not do any conversion (model instance goes in,
 model instance comes out), but allows you to specify that a MST model comes in
 as a raw value and is the value. Typescript will be happy. This can be used to
 support an input component such as a drop-down selection that generate a
@@ -457,11 +456,11 @@ function as arguments. So:
 
 ```js
 const form = new Form(Foo, {
-    value: new Field(
-        converters.dynamic(converters.decimal, (context, accessor) => {
-            return { allowNegative: context.weWantNegatives };
-        })
-    )
+  value: new Field(
+    converters.dynamic(converters.decimal, (context, accessor) => {
+      return { allowNegative: context.weWantNegatives };
+    })
+  ),
 });
 ```
 
@@ -487,11 +486,11 @@ set in a `converterOptions` argument on the state:
 
 ```js
 const formState = form.state(o, {
-    converterOptions: {
-        decimalSeparator: ".",
-        thousandSeparator: ",",
-        renderThousands: false
-    }
+  converterOptions: {
+    decimalSeparator: ".",
+    thousandSeparator: ",",
+    renderThousands: false,
+  },
 });
 ```
 
@@ -503,9 +502,9 @@ conversion error. You can control this conversion error with the
 
 ```js
 const form = new Form(M, {
-    nr: new Field(converters.number, {
-        conversionError: "This conversion failed"
-    })
+  nr: new Field(converters.number, {
+    conversionError: "This conversion failed",
+  }),
 });
 ```
 
@@ -514,12 +513,12 @@ as its first argument. Context is an arbitrary object you can pass into the `sta
 
 ```js
 const form = new Form(M, {
-    nr: new Field(converters.number, {
-        conversionError: context =>
-            context.language === "en"
-                ? "This conversion failed"
-                : "De conversie faalde"
-    })
+  nr: new Field(converters.number, {
+    conversionError: (context) =>
+      context.language === "en"
+        ? "This conversion failed"
+        : "De conversie faalde",
+  }),
 });
 ```
 
@@ -559,14 +558,14 @@ takes a text in the UI and considers `"t"` as `true` and the rest as
 
 ```ts
 const boolean = new Converter<string, boolean>({
-    emptyRaw: "f",
-    emptyImpossible: true,
-    convert(raw) {
-        return raw === "t";
-    },
-    render(value) {
-        return value ? "t" : "f";
-    }
+  emptyRaw: "f",
+  emptyImpossible: true,
+  convert(raw) {
+    return raw === "t";
+  },
+  render(value) {
+    return value ? "t" : "f";
+  },
 });
 ```
 
@@ -616,15 +615,15 @@ you control these components for you.
 
 Controlled components receive subtly different props:
 
--   `input` type `string` has a `value` prop and an `onChange` with an event. It
-    gets the updated value from `event.target.value`.
+- `input` type `string` has a `value` prop and an `onChange` with an event. It
+  gets the updated value from `event.target.value`.
 
--   `input` type `checkbox` has a `checked` prop and an `onChange` that receives
-    `event.target.checked` with the updated value.
+- `input` type `checkbox` has a `checked` prop and an `onChange` that receives
+  `event.target.checked` with the updated value.
 
--   There are also higher level widgets where `value` and `onChange` are
-    symmetrical. A date picker widget for instance could have a JS `Date` as
-    `value` and `onChange` directly returns a new `Date` instance.
+- There are also higher level widgets where `value` and `onChange` are
+  symmetrical. A date picker widget for instance could have a JS `Date` as
+  `value` and `onChange` directly returns a new `Date` instance.
 
 mstform offers a `controlled` hook. It takes a function that given the field
 accessor returns the right props for control. This can be used to ensure that
@@ -633,14 +632,14 @@ controlled component.
 
 There are three `controlled` implementations built in:
 
--   `controlled.value` - `value` and `onChange` processes
-    `event.target.value`.
+- `controlled.value` - `value` and `onChange` processes
+  `event.target.value`.
 
--   `controlled.checked` - `checked` and `onChange` processes
-    `event.target.checked`.
+- `controlled.checked` - `checked` and `onChange` processes
+  `event.target.checked`.
 
--   `controlled.object` - `value` represents some object and `onChange` gets a
-    new object as an argument. Symmetrical `value` and `onChange`.
+- `controlled.object` - `value` represents some object and `onChange` gets a
+  new object as an argument. Symmetrical `value` and `onChange`.
 
 By default the converter determines which is used. If you use the `string`
 converter or a derivative, `controlled.value` is used, and if you use the
@@ -659,14 +658,14 @@ import { Component } from "react";
 
 // we have a MST model with a string field foo
 const M = types.model("M", {
-    foo: types.string
+  foo: types.string,
 });
 
 // we expose this field in our form
 const form = new Form(M, {
-    foo: new Field(converters.string, {
-        controlled: controlled.string
-    })
+  foo: new Field(converters.string, {
+    controlled: controlled.string,
+  }),
 });
 ```
 
@@ -686,7 +685,7 @@ Consider this MST model:
 
 ```js
 const M = types.model("Foo", {
-    nr: types.number
+  nr: types.number,
 });
 ```
 
@@ -705,7 +704,7 @@ Let's look at the form definition:
 
 ```js
 const form = new Form(M, {
-    nr: new Field(converters.number)
+  nr: new Field(converters.number),
 });
 ```
 
@@ -761,17 +760,17 @@ is visible immediately in the form.
 When we create the form state, we can pass it options on how to interact with
 the backend. There are two features:
 
--   You can save the form by specifying a save function. This save function can
-    return error messages in case the backend could not save successfully.
+- You can save the form by specifying a save function. This save function can
+  return error messages in case the backend could not save successfully.
 
--   You can configure the form to be validated and updated dynamically by the
-    backend using a `process` function. This can show messages and update the
-    form while the user is typing, under the control of a backend. This is
-    useful because validation needs to be defined on the backend anyway in
-    order to prevent any incorrect data to be submitted. This way you can
-    integrate this same validation code with the frontend. You can also supply
-    a `processAll` function which runs all validations supported by the
-    backend.
+- You can configure the form to be validated and updated dynamically by the
+  backend using a `process` function. This can show messages and update the
+  form while the user is typing, under the control of a backend. This is
+  useful because validation needs to be defined on the backend anyway in
+  order to prevent any incorrect data to be submitted. This way you can
+  integrate this same validation code with the frontend. You can also supply
+  a `processAll` function which runs all validations supported by the
+  backend.
 
 ### Save
 
@@ -780,10 +779,10 @@ You can write a function that defines how to save the underlying MST instance
 
 ```js
 async function save(node) {
-    // we have defined a real 'save' function on the model that knows how
-    // to save the form to the backend. Should return a ProcessResult if
-    // there is a problem, or null or undefined if there is no problem.
-    return node.save();
+  // we have defined a real 'save' function on the model that knows how
+  // to save the form to the backend. Should return a ProcessResult if
+  // there is a problem, or null or undefined if there is no problem.
+  return node.save();
 }
 ```
 
@@ -791,7 +790,7 @@ Here is how we configure it:
 
 ```js
 this.formState = form.state(o, {
-    backend: { save }
+  backend: { save },
 });
 ```
 
@@ -804,47 +803,47 @@ When you implement a form submit button, you should call `state.save()`:
 ```js
 @observer
 export class MyForm extends Component {
-    constructor(props) {
-        super(props);
-        // we create a form state for this model
-        this.formState = form.state(o, {
-            backend: { save }
-        });
-    }
+  constructor(props) {
+    super(props);
+    // we create a form state for this model
+    this.formState = form.state(o, {
+      backend: { save },
+    });
+  }
 
-    handleSave = async () => {
-        const success = await this.formState.save();
-        if (success) {
-            // success
-        } else {
-            // failure
-        }
-    };
-
-    render() {
-        // we get the foo field from the form
-        const field = this.formState.field("foo");
-        return (
-            <div>
-                ... render the form itself
-                <button onClick={this.handleSave}>Save</button>
-            </div>
-        );
+  handleSave = async () => {
+    const success = await this.formState.save();
+    if (success) {
+      // success
+    } else {
+      // failure
     }
+  };
+
+  render() {
+    // we get the foo field from the form
+    const field = this.formState.field("foo");
+    return (
+      <div>
+        ... render the form itself
+        <button onClick={this.handleSave}>Save</button>
+      </div>
+    );
+  }
 }
 ```
 
 `state.save()` does the following:
 
--   Makes sure the form is completely valid before it's submitted to the
-    server. If not, the save is canceled and validation errors are displayed.
+- Makes sure the form is completely valid before it's submitted to the
+  server. If not, the save is canceled and validation errors are displayed.
 
--   Uses your supplied `save` function do to the actual saving.
+- Uses your supplied `save` function do to the actual saving.
 
--   Processes the process result returned by the server.
+- Processes the process result returned by the server.
 
--   Returns `true` if saving succeeded, and `false` if not due to validation
-    errors or server processing problems.
+- Returns `true` if saving succeeded, and `false` if not due to validation
+  errors or server processing problems.
 
 If you don't specify your own `save` you get an exception when you call
 `state.save()`.
@@ -864,13 +863,13 @@ Here is how we configure it (in addition to `save`):
 
 ```js
 async function process(node, path, liveOnly) {
-    // we have defined a real 'process' function on the model that knows how
-    // to invoke process on the backend. returns ProcessResult
-    return node.process();
+  // we have defined a real 'process' function on the model that knows how
+  // to invoke process on the backend. returns ProcessResult
+  return node.process();
 }
 
 this.formState = form.state(o, {
-    backend: { save, process }
+  backend: { save, process },
 });
 ```
 
@@ -912,13 +911,13 @@ Here is how we configure it (in addition to `save` and `process`):
 
 ```js
 async function processAll(node, liveOnly) {
-    // we have defined a real 'processAll' function on the model that knows how
-    // to invoke processAll on the backend. returns ProcessResult
-    return node.processAll();
+  // we have defined a real 'processAll' function on the model that knows how
+  // to invoke processAll on the backend. returns ProcessResult
+  return node.processAll();
 }
 
 this.formState = form.state(o, {
-    backend: { save, process, processAll }
+  backend: { save, process, processAll },
 });
 ```
 
@@ -985,13 +984,13 @@ Here is how we hook our `process` function into the backend.
 
 ```js
 const M = types.model("M", {
-    foo: types.string
+  foo: types.string,
 });
 
 const o = M.create({ foo: "FOO" });
 
 async function myProcess(node, path) {
-    // call the backend, turn into ProcessResult and return it
+  // call the backend, turn into ProcessResult and return it
 }
 
 form.state(o, { backend: { process: myProcess } });
@@ -1012,10 +1011,8 @@ a custom one:
 import { applyPatch } from "mobx-state-tree";
 
 function myApplyUpdate(node, update) {
-    // same behavior as the default
-    applyPatch(node, [
-        { op: "replace", path: update.path, value: update.value }
-    ]);
+  // same behavior as the default
+  applyPatch(node, [{ op: "replace", path: update.path, value: update.value }]);
 }
 
 form.state(o, { backend: { process: myProcess, applyUpdate: myApplyUpdate } });
@@ -1037,7 +1034,7 @@ can use the `getError` hook:
 
 ```js
 this.formState = form.state(o, {
-    getError: accessor => (accessor.path === "/name" ? "Is wrong" : undefined)
+  getError: (accessor) => (accessor.path === "/name" ? "Is wrong" : undefined),
 });
 ```
 
@@ -1055,10 +1052,10 @@ empty, we can raise an error on the repeating form accessor like this
 
 ```js
 this.formState = form.state(o, {
-    getError: accessor =>
-        accessor instanceof RepeatingFormAccessor && accessor.length === 0
-            ? "The repeating form must contain at least one form"
-            : undefined
+  getError: (accessor) =>
+    accessor instanceof RepeatingFormAccessor && accessor.length === 0
+      ? "The repeating form must contain at least one form"
+      : undefined,
 });
 ```
 
@@ -1071,8 +1068,8 @@ notification to the user.
 
 ```js
 const state = form.state(o, {
-    getWarning: accessor =>
-        accessor.raw < 0 ? "This value is negative" : undefined
+  getWarning: (accessor) =>
+    accessor.raw < 0 ? "This value is negative" : undefined,
 });
 ```
 
@@ -1138,9 +1135,9 @@ passing another option:
 
 ```js
 this.formState = form.state(o, {
-    validation: {
-        beforeSave: "no"
-    }
+  validation: {
+    beforeSave: "no",
+  },
 });
 ```
 
@@ -1150,10 +1147,10 @@ It's also possible to turn off inline validation altogether:
 
 ```js
 this.formState = form.state(o, {
-    validation: {
-        beforeSave: "no",
-        afterSave: "no"
-    }
+  validation: {
+    beforeSave: "no",
+    afterSave: "no",
+  },
 });
 ```
 
@@ -1176,7 +1173,7 @@ field definition:
 
 ```js
 const form = new Form(M, {
-    name: new Field(converters.string, { required: true })
+  name: new Field(converters.string, { required: true }),
 });
 ```
 
@@ -1191,7 +1188,7 @@ be empty). A number converter cannot be empty however:
 
 ```js
 const form = new Form(M, {
-    nr: new Field(converters.number)
+  nr: new Field(converters.number),
 });
 ```
 
@@ -1204,10 +1201,10 @@ You can control the required error message by setting `requiredError`:
 
 ```js
 const form = new Form(M, {
-    name: new Field(converters.string, {
-        required: true,
-        requiredError: "This is required!"
-    })
+  name: new Field(converters.string, {
+    required: true,
+    requiredError: "This is required!",
+  }),
 });
 ```
 
@@ -1216,13 +1213,11 @@ You can also set `requiredError` to a function, in which cases it receives a
 
 ```js
 const form = new Form(M, {
-    name: new Field(converters.string, {
-        required: true,
-        requiredError: context =>
-            context.language === "en"
-                ? "This is required!"
-                : "Dit is verplicht!"
-    })
+  name: new Field(converters.string, {
+    required: true,
+    requiredError: (context) =>
+      context.language === "en" ? "This is required!" : "Dit is verplicht!",
+  }),
 });
 ```
 
@@ -1232,7 +1227,7 @@ required error message on the field:
 
 ```js
 this.formState = form.state(o, {
-    requiredError: "This is required!"
+  requiredError: "This is required!",
 });
 ```
 
@@ -1258,7 +1253,7 @@ The `fieldref` functionality described below is very useful for this.
 
 ```js
 const state = form.state(o, {
-    isDisabled: accessor => accessor.path === "/foo"
+  isDisabled: (accessor) => accessor.path === "/foo",
 });
 ```
 
@@ -1301,7 +1296,7 @@ in a repeating form, you can write:
 
 ```js
 const state = form.state(o, {
-    isDisabled: accessor => accessor.fieldref === "foo[].bar"
+  isDisabled: (accessor) => accessor.fieldref === "foo[].bar",
 });
 ```
 
@@ -1315,11 +1310,11 @@ form level.
 
 ```js
 const state = form.state(o, {
-    extraValidation: (accessor, value) => {
-        if (accessor.path === "/foo") {
-            return value === "Wrong" ? "Wrong!" : false;
-        }
+  extraValidation: (accessor, value) => {
+    if (accessor.path === "/foo") {
+      return value === "Wrong" ? "Wrong!" : false;
     }
+  },
 });
 ```
 
@@ -1339,22 +1334,22 @@ You can define validation groups with a second parameter you pass into `Form`,
 
 ```js
 const M = types.model("M", {
-    a: types.string,
-    b: types.string,
-    c: types.string
+  a: types.string,
+  b: types.string,
+  c: types.string,
 });
 
 const form = new Form(
-    M,
-    {
-        a: new Field(converters.string),
-        b: new Field(converters.string),
-        c: new Field(converters.string)
-    },
-    {
-        one: new Group({ include: ["a", "b"] }),
-        two: new Group({ include: ["c"] })
-    }
+  M,
+  {
+    a: new Field(converters.string),
+    b: new Field(converters.string),
+    c: new Field(converters.string),
+  },
+  {
+    one: new Group({ include: ["a", "b"] }),
+    two: new Group({ include: ["c"] }),
+  }
 );
 ```
 
@@ -1367,10 +1362,10 @@ or `isWarningFree` property:
 ```js
 const first = state.group("first");
 if (first.isValid) {
-    // only executed if a and b are valid
+  // only executed if a and b are valid
 }
 if (first.isWarningFree) {
-    // only executed if none of the group members have warnings
+  // only executed if none of the group members have warnings
 }
 ```
 
@@ -1378,15 +1373,15 @@ When you define a group you can pass `exclude` instead of `include`:
 
 ```js
 const form = new Form(
-    M,
-    {
-        a: new Field(converters.string),
-        b: new Field(converters.string),
-        c: new Field(converters.string)
-    },
-    {
-        one: new Group({ exclude: ["c"] })
-    }
+  M,
+  {
+    a: new Field(converters.string),
+    b: new Field(converters.string),
+    c: new Field(converters.string),
+  },
+  {
+    one: new Group({ exclude: ["c"] }),
+  }
 );
 ```
 
@@ -1405,23 +1400,23 @@ You express such derived values with mstform:
 
 ```js
 const M = types
-    .model("M", {
-        calculated: types.number,
-        a: types.number,
-        b: types.number
-    })
-    .views(self => ({
-        sum() {
-            return self.a + self.b;
-        }
-    }));
+  .model("M", {
+    calculated: types.number,
+    a: types.number,
+    b: types.number,
+  })
+  .views((self) => ({
+    sum() {
+      return self.a + self.b;
+    },
+  }));
 
 const form = new Form(M, {
-    calculated: new Field(converters.number, {
-        derived: node => node.sum()
-    }),
-    a: new Field(converters.number),
-    b: new Field(converters.number)
+  calculated: new Field(converters.number, {
+    derived: (node) => node.sum(),
+  }),
+  a: new Field(converters.number),
+  b: new Field(converters.number),
 });
 ```
 
@@ -1444,23 +1439,23 @@ hook:
 
 ```js
 const M = types
-    .model("M", {
-        a: types.number,
-        b: types.number
-    })
-    .actions(self => ({
-        setB(value: number) {
-            self.b = value;
-        }
-    }));
+  .model("M", {
+    a: types.number,
+    b: types.number,
+  })
+  .actions((self) => ({
+    setB(value: number) {
+      self.b = value;
+    },
+  }));
 
 const form = new Form(M, {
-    a: new Field(converters.number, {
-        change: (node, value) => {
-            node.setB(value);
-        }
-    }),
-    b: new Field(converters.number)
+  a: new Field(converters.number, {
+    change: (node, value) => {
+      node.setB(value);
+    },
+  }),
+  b: new Field(converters.number),
 });
 ```
 
@@ -1479,8 +1474,8 @@ pass a special hooks to the form state options for this:
 
 ```js
 const state = form.state(o, {
-    focus: (ev, accessor) => {},
-    blur: (ev, accessor) => {}
+  focus: (ev, accessor) => {},
+  blur: (ev, accessor) => {},
 });
 ```
 
@@ -1496,9 +1491,9 @@ extra zeroes in decimal fields, like so:
 
 ```js
 const form = new Form(M, {
-    foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
-        postprocess: true
-    })
+  foo: new Field(converters.decimal({ decimalPlaces: 2, addZeroes: true }), {
+    postprocess: true,
+  }),
 });
 ```
 
@@ -1512,7 +1507,7 @@ client-side validation messages, the update hook isn't yet triggered.
 
 ```js
 const state = form.state(o, {
-    update: accessor => {}
+  update: (accessor) => {},
 });
 ```
 
@@ -1529,12 +1524,12 @@ allow the user to select a user object.
 
 ```js
 const User = types.model("User", {
-    id: types.identifier,
-    username: types.string
+  id: types.identifier,
+  username: types.string,
 });
 
 const UserContainer = types.model("UserContainer", {
-    entryMap: types.map(User)
+  entryMap: types.map(User),
 });
 ```
 
@@ -1557,14 +1552,14 @@ and returns an array of serialized `User` items, so:
 
 ```js
 [
-    {
-        id: "a",
-        username: "Alpha"
-    },
-    {
-        id: "b",
-        username: "Beta"
-    }
+  {
+    id: "a",
+    username: "Alpha",
+  },
+  {
+    id: "b",
+    username: "Beta",
+  },
 ];
 ```
 
@@ -1578,8 +1573,8 @@ way to load users::
 import { Source } from "mstform";
 
 const userSource = new Source({
-    entryMap: root.userContainer.entryMap,
-    load: loadUsers
+  entryMap: root.userContainer.entryMap,
+  load: loadUsers,
 });
 ```
 
@@ -1590,8 +1585,8 @@ Note that you can also make `entryMap` a function that returns the
 import { Source } from "mstform";
 
 const userSource = new Source({
-    entryMap: () => root.userContainer.entryMap,
-    load: loadUsers
+  entryMap: () => root.userContainer.entryMap,
+  load: loadUsers,
 });
 ```
 
@@ -1599,7 +1594,7 @@ We define a model which contains a reference to a user:
 
 ```js
 const M = types.model("M", {
-    user: types.maybe(types.reference(User))
+  user: types.maybe(types.reference(User)),
 });
 ```
 
@@ -1607,11 +1602,11 @@ And a form for it:
 
 ```js
 const form = new Form(M, {
-    user: new Field(converters.maybe(converters.model(User)), {
-        references: {
-            source: userSource
-        }
-    })
+  user: new Field(converters.maybe(converters.model<typeof User>()), {
+    references: {
+      source: userSource,
+    },
+  }),
 });
 ```
 
@@ -1661,29 +1656,29 @@ Now we have a form with a user and a friend:
 
 ```js
 const M = types.model("M", {
-    user: types.maybe(types.reference(User)),
-    friend: types.maybe(types.reference(User))
+  user: types.maybe(types.reference(User)),
+  friend: types.maybe(types.reference(User)),
 });
 
 const friendSource = new Source({
-    container: root.userContainer,
-    load: loadFriends
+  container: root.userContainer,
+  load: loadFriends,
 });
 
 const form = new Form(M, {
-    user: new Field(converters.maybe(converters.model(User)), {
-        references: {
-            source: userSource
-        }
-    }),
-    friend: new Field(converters.maybe(converters.model(User)), {
-        references: {
-            source: friendSource,
-            dependentQuery: accessor => {
-                return { user: accessor.node.user };
-            }
-        }
-    })
+  user: new Field(converters.maybe(converters.model<typeof User>()), {
+    references: {
+      source: userSource,
+    },
+  }),
+  friend: new Field(converters.maybe(converters.model<typeof User>()), {
+    references: {
+      source: friendSource,
+      dependentQuery: (accessor) => {
+        return { user: accessor.node.user };
+      },
+    },
+  }),
 });
 ```
 
@@ -1712,5 +1707,5 @@ from the container or from the search results.
 
 ## Tips
 
--   Don't name your form state `this.state` on a React component as this has a
-    special meaning to React and can lead to odd bugs.
+- Don't name your form state `this.state` on a React component as this has a
+  special meaning to React and can lead to odd bugs.
