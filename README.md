@@ -422,7 +422,7 @@ array of strings by newline.
 
 ### Models
 
-`converters.model<typeof model>()`: does not do any conversion (model instance goes in,
+`converters.model(Model)`: does not do any conversion (model instance goes in,
 model instance comes out), but allows you to specify that a MST model comes in
 as a raw value and is the value. Typescript will be happy. This can be used to
 support an input component such as a drop-down selection that generate a
@@ -1602,7 +1602,7 @@ And a form for it:
 
 ```js
 const form = new Form(M, {
-  user: new Field(converters.maybe(converters.model<typeof User>()), {
+  user: new Field(converters.maybe(converters.model(User)), {
     references: {
       source: userSource,
     },
@@ -1666,12 +1666,12 @@ const friendSource = new Source({
 });
 
 const form = new Form(M, {
-  user: new Field(converters.maybe(converters.model<typeof User>()), {
+  user: new Field(converters.maybe(converters.model(User)), {
     references: {
       source: userSource,
     },
   }),
-  friend: new Field(converters.maybe(converters.model<typeof User>()), {
+  friend: new Field(converters.maybe(converters.model(User)), {
     references: {
       source: friendSource,
       dependentQuery: (accessor) => {

@@ -402,7 +402,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     return currentValidationProps(this);
   }
 
-  accessBySteps(): IAccessor {
+  accessBySteps(_steps: string[]): IAccessor {
     throw new Error("Cannot step through field accessor");
   }
 }

@@ -17,7 +17,7 @@ import {
   getRoot,
 } from "mobx-state-tree";
 
-export type Query = { [key: string]: any };
+export type Query = Record<string, any>;
 
 export interface ISource<T extends IAnyModelType, Q extends Query> {
   load(query?: Q, timestamp?: number): Promise<Instance<T>[]>;

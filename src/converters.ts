@@ -234,7 +234,7 @@ function textStringArray() {
   });
 }
 
-function maybe<V>(
+function maybe<_R, V>(
   converter: StringConverter<V> | (() => StringConverter<V>)
 ): IConverter<string, V | undefined>;
 function maybe<M>(
@@ -258,7 +258,7 @@ function maybe<R, V>(
   >;
 }
 
-function maybeNull<V>(
+function maybeNull<_R, V>(
   converter: StringConverter<V> | (() => StringConverter<V>)
 ): IConverter<string, V | null>;
 function maybeNull<M>(
@@ -313,7 +313,7 @@ function stringMaybe<V>(converter: IConverter<string, V>, emptyValue: V) {
   });
 }
 
-function model<M extends IAnyModelType>() {
+function model<M extends IAnyModelType>(_model: M) {
   return new Converter<Instance<M> | null, Instance<M>>({
     emptyRaw: null,
     emptyImpossible: true,

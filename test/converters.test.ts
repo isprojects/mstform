@@ -438,7 +438,7 @@ test("model converter", () => {
   const o = M.create({
     foo: "FOO",
   });
-  const converter = converters.model<typeof M>();
+  const converter = converters.model(M);
   const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
   const r2 = converter.convert(o, baseOptions);
@@ -452,7 +452,7 @@ test("maybe model converter", () => {
   const o = M.create({
     foo: "FOO",
   });
-  const converter = converters.maybe(converters.model<typeof M>());
+  const converter = converters.maybe(converters.model(M));
   const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
   const r2 = converter.convert(o, baseOptions);
@@ -469,7 +469,7 @@ test("maybeNull model converter", () => {
   const o = M.create({
     foo: "FOO",
   });
-  const converter = converters.maybeNull(converters.model<typeof M>());
+  const converter = converters.maybeNull(converters.model(M));
   const r = converter.convert({ foo: "value" }, baseOptions);
   expect(r).toEqual({ value: { foo: "value" } });
   const r2 = converter.convert(o, baseOptions);

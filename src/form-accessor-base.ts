@@ -254,7 +254,7 @@ export abstract class FormAccessorBase<
     return accessor;
   }
 
-  repeatingField(): any {
+  repeatingField(_name: string): any {
     // not implemented yet
   }
 }

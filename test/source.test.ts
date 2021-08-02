@@ -294,12 +294,12 @@ describe("source accessor in fields", () => {
     const sourceB = new Source({ entryMap: containerB.entryMap, load: loadB });
 
     const form = new Form(M, {
-      a: new Field(converters.maybe(converters.model<typeof ItemA>()), {
+      a: new Field(converters.maybe(converters.model(ItemA)), {
         references: {
           source: sourceA,
         },
       }),
-      b: new Field(converters.maybe(converters.model<typeof ItemB>()), {
+      b: new Field(converters.maybe(converters.model(ItemB)), {
         references: {
           source: sourceB,
           // this source is dependent on state. This information
@@ -375,12 +375,12 @@ describe("source accessor in fields", () => {
     const sourceB = new Source({ entryMap: containerB.entryMap, load: loadB });
 
     const form = new Form(M, {
-      a: new Field(converters.maybe(converters.model<typeof ItemA>()), {
+      a: new Field(converters.maybe(converters.model(ItemA)), {
         references: {
           source: sourceA,
         },
       }),
-      b: new Field(converters.maybe(converters.model<typeof ItemB>()), {
+      b: new Field(converters.maybe(converters.model(ItemB)), {
         references: {
           source: sourceB,
           // this source is dependent on state. This information
@@ -466,12 +466,12 @@ describe("source accessor in fields", () => {
 
     const form = new Form(n, {
       foo: new RepeatingForm({
-        a: new Field(converters.maybe(converters.model<typeof ItemA>()), {
+        a: new Field(converters.maybe(converters.model(ItemA)), {
           references: {
             source: sourceA,
           },
         }),
-        b: new Field(converters.maybe(converters.model<typeof ItemB>()), {
+        b: new Field(converters.maybe(converters.model(ItemB)), {
           references: {
             source: sourceB,
             // this source is dependent on state. This information
@@ -512,7 +512,7 @@ describe("source accessor in fields", () => {
     const o = r.m;
 
     const form = new Form(M, {
-      a: new Field(converters.maybe(converters.model<typeof ItemA>())),
+      a: new Field(converters.maybe(converters.model(ItemA))),
     });
 
     const state = form.state(o);
