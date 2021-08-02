@@ -7,7 +7,7 @@ configure({ enforceActions: "observed" });
 
 test("conversion failure with multiple messages", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
@@ -15,17 +15,17 @@ test("conversion failure with multiple messages", () => {
       converters.stringDecimal({
         allowNegative: false,
         decimalPlaces: 4,
-        maxWholeDigits: 4
+        maxWholeDigits: 4,
       }),
       {
         conversionError: {
           default: "Not a number",
           tooManyDecimalPlaces: "Too many decimal places",
           tooManyWholeDigits: "Too many whole digits",
-          cannotBeNegative: "Cannot be negative"
-        }
+          cannotBeNegative: "Cannot be negative",
+        },
       }
-    )
+    ),
   });
 
   const o = M.create({ foo: "3.14" });
@@ -34,8 +34,8 @@ test("conversion failure with multiple messages", () => {
     converterOptions: {
       decimalSeparator: ",",
       thousandSeparator: ".",
-      renderThousands: true
-    }
+      renderThousands: true,
+    },
   });
 
   const field = state.field("foo");
@@ -58,7 +58,7 @@ test("conversion failure with multiple messages", () => {
 
 test("conversion failure with multiple messages, context", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
@@ -66,19 +66,19 @@ test("conversion failure with multiple messages, context", () => {
       converters.stringDecimal({
         allowNegative: false,
         decimalPlaces: 4,
-        maxWholeDigits: 4
+        maxWholeDigits: 4,
       }),
       {
         conversionError: {
-          default: context => "Not a number" + context.extra,
-          tooManyDecimalPlaces: context =>
+          default: (context) => "Not a number" + context.extra,
+          tooManyDecimalPlaces: (context) =>
             "Too many decimal places" + context.extra,
-          tooManyWholeDigits: context =>
+          tooManyWholeDigits: (context) =>
             "Too many whole digits" + context.extra,
-          cannotBeNegative: context => "Cannot be negative" + context.extra
-        }
+          cannotBeNegative: (context) => "Cannot be negative" + context.extra,
+        },
       }
-    )
+    ),
   });
 
   const o = M.create({ foo: "3.14" });
@@ -87,11 +87,11 @@ test("conversion failure with multiple messages, context", () => {
     converterOptions: {
       decimalSeparator: ",",
       thousandSeparator: ".",
-      renderThousands: true
+      renderThousands: true,
     },
     context: {
-      extra: "!!"
-    }
+      extra: "!!",
+    },
   });
 
   const field = state.field("foo");

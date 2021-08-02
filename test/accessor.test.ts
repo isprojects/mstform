@@ -8,7 +8,7 @@ import {
   RepeatingFormIndexedAccessor,
   converters,
   FieldAccessor,
-  Group
+  Group,
 } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -16,10 +16,10 @@ configure({ enforceActions: "observed" });
 
 test("accessByPath simple field", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 3 });
@@ -36,16 +36,16 @@ test("accessByPath simple field", () => {
 test("accessByPath repeating form", () => {
   const N = types.model("N", {
     foo: types.number,
-    bar: types.number // no field
+    bar: types.number, // no field
   });
   const M = types.model("M", {
-    entries: types.array(N)
+    entries: types.array(N),
   });
 
   const form = new Form(M, {
     entries: new RepeatingForm({
-      foo: new Field(converters.number)
-    })
+      foo: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ entries: [{ foo: 3, bar: 4 }] });
@@ -64,11 +64,11 @@ test("accessByPath repeating form", () => {
 test("acccessByPath which has no field", () => {
   const M = types.model("M", {
     foo: types.number,
-    bar: types.number
+    bar: types.number,
   });
   // bar is not specified as a field
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 3, bar: 4 });
@@ -80,16 +80,16 @@ test("acccessByPath which has no field", () => {
 
 test("groups with repeatingform error on top-level", async () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [] });
@@ -102,7 +102,7 @@ test("groups with repeatingform error on top-level", async () => {
     getWarning: (accessor: any) =>
       accessor instanceof RepeatingFormAccessor
         ? "Some some reason this is insufficient"
-        : undefined
+        : undefined,
   });
 
   const repeatingForm = state.repeatingForm("foo");
@@ -113,16 +113,16 @@ test("groups with repeatingform error on top-level", async () => {
 
 test("groups with indexed repeatingform error on top-level", async () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -135,7 +135,7 @@ test("groups with indexed repeatingform error on top-level", async () => {
     getWarning: (accessor: any) =>
       accessor instanceof RepeatingFormIndexedAccessor
         ? "Some some reason this is insufficient"
-        : undefined
+        : undefined,
   });
 
   const repeatingForm = state.repeatingForm("foo");

@@ -1,6 +1,3 @@
-const path = require("path");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
-
 module.exports = {
   module: {
     rules: [
@@ -16,8 +13,10 @@ module.exports = {
   },
   output: {
     filename: "mstform.js",
-    library: "mstform",
-    libraryTarget: "umd",
+    library: {
+      name: "mstform",
+      type: "umd",
+    },
+    clean: true,
   },
-  plugins: [new CleanWebpackPlugin(["dist"])],
 };

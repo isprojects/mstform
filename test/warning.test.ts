@@ -8,7 +8,7 @@ import {
   RepeatingForm,
   RepeatingFormAccessor,
   SubForm,
-  converters
+  converters,
 } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -17,12 +17,12 @@ configure({ enforceActions: "observed" });
 test("a simple warning", async () => {
   const M = types.model("M", {
     foo: types.string,
-    bar: types.string
+    bar: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
-    bar: new Field(converters.string)
+    bar: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
@@ -30,7 +30,7 @@ test("a simple warning", async () => {
   const state = form.state(o, {
     backend: { save: async () => null },
     getWarning: (accessor: any) =>
-      accessor.path === "/foo" ? "Please reconsider" : undefined
+      accessor.path === "/foo" ? "Please reconsider" : undefined,
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
@@ -56,11 +56,11 @@ test("a simple warning", async () => {
 
 test("a simple error", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -72,14 +72,14 @@ test("a simple error", async () => {
       updates: [],
       accessUpdates: [],
       errorValidations: [],
-      warningValidations: []
+      warningValidations: [],
     };
   }
 
   const state = form.state(o, {
     backend: { save: async () => null, process },
     getError: (accessor: any) =>
-      accessor.path === "/foo" ? "Wrong" : undefined
+      accessor.path === "/foo" ? "Wrong" : undefined,
   });
   const fooField = state.field("foo");
 
@@ -96,14 +96,14 @@ test("a simple error", async () => {
 
 test("client side errors trumps getError", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   // The validator expects "correct"
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      validators: [value => value !== "correct" && "Wrong"]
-    })
+      validators: [(value) => value !== "correct" && "Wrong"],
+    }),
   });
 
   const o = M.create({ foo: "not correct" });
@@ -114,7 +114,7 @@ test("client side errors trumps getError", () => {
       accessor instanceof FieldAccessor &&
       accessor.raw !== accessor.raw.toUpperCase()
         ? "Not uppercase"
-        : undefined
+        : undefined,
   });
   const field = state.field("foo");
   // The getErrors hook already fills in the error
@@ -133,11 +133,11 @@ test("client side errors trumps getError", () => {
 
 test("both errors and warnings", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -146,7 +146,7 @@ test("both errors and warnings", () => {
     getError: (accessor: any) =>
       accessor.path === "/foo" ? "Wrong" : undefined,
     getWarning: (accessor: any) =>
-      accessor.path === "/foo" ? "Please reconsider" : undefined
+      accessor.path === "/foo" ? "Please reconsider" : undefined,
   });
   const fooField = state.field("foo");
 
@@ -159,23 +159,23 @@ test("both errors and warnings", () => {
 
 test("warning in repeating form", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "correct" }, { bar: "incorrect" }] });
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.path === "/foo/1/bar" ? "Please reconsider" : undefined
+      accessor.path === "/foo/1/bar" ? "Please reconsider" : undefined,
   });
 
   const forms = state.repeatingForm("foo");
@@ -194,26 +194,26 @@ test("warning in repeating form", () => {
 
 test("warning in subform field", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
     foo: types.string,
-    sub: N
+    sub: N,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
     sub: new SubForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: "FOO", sub: { bar: "BAR" } });
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.path === "/sub/bar" ? "Please reconsider" : undefined
+      accessor.path === "/sub/bar" ? "Please reconsider" : undefined,
   });
 
   const fooField = state.field("foo");
@@ -231,16 +231,16 @@ test("warning in subform field", () => {
 
 test("error on repeating form", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [] });
@@ -249,7 +249,7 @@ test("error on repeating form", () => {
     getError: (accessor: any) =>
       accessor instanceof RepeatingFormAccessor && accessor.length === 0
         ? "Empty"
-        : undefined
+        : undefined,
   });
 
   const result1 = state.validate();
@@ -269,16 +269,16 @@ test("error on repeating form", () => {
 
 test("warning on repeating form", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [] });
@@ -291,7 +291,7 @@ test("warning on repeating form", () => {
       return accessor instanceof RepeatingFormAccessor && accessor.length === 0
         ? "Empty"
         : undefined;
-    }
+    },
   });
 
   const repeatingForms = state.repeatingForm("foo");
@@ -310,23 +310,23 @@ test("warning on repeating form", () => {
 
 test("error on indexed repeating form", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "correct" }, { bar: "incorrect" }] });
 
   const state = form.state(o, {
     getError: (accessor: any) =>
-      accessor.path === "/foo/1" ? "Error" : undefined
+      accessor.path === "/foo/1" ? "Error" : undefined,
   });
 
   const result = state.validate();
@@ -343,23 +343,23 @@ test("error on indexed repeating form", () => {
 
 test("warning on indexed repeating form", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "correct" }, { bar: "incorrect" }] });
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.path === "/foo/1" ? "Warning" : undefined
+      accessor.path === "/foo/1" ? "Warning" : undefined,
   });
 
   const forms = state.repeatingForm("foo");
@@ -376,26 +376,26 @@ test("warning on indexed repeating form", () => {
 
 test("error on subform", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
     foo: types.string,
-    sub: N
+    sub: N,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
     sub: new SubForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: "FOO", sub: { bar: "BAR" } });
 
   const state = form.state(o, {
     getError: (accessor: any) =>
-      accessor.path === "/sub" ? "Error" : undefined
+      accessor.path === "/sub" ? "Error" : undefined,
   });
 
   const result = state.validate();
@@ -409,26 +409,26 @@ test("error on subform", () => {
 
 test("warning on subform", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
     foo: types.string,
-    sub: N
+    sub: N,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
     sub: new SubForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: "FOO", sub: { bar: "BAR" } });
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.path === "/sub" ? "Warning" : undefined
+      accessor.path === "/sub" ? "Warning" : undefined,
   });
 
   const subform = state.subForm("sub");
@@ -440,11 +440,11 @@ test("warning on subform", () => {
 
 test("error on formstate", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -455,7 +455,7 @@ test("error on formstate", () => {
     getError: (accessor: any) => {
       usedAccessor = accessor;
       return "Error";
-    }
+    },
   });
 
   const result = state.validate();
@@ -468,11 +468,11 @@ test("error on formstate", () => {
 
 test("warning on formstate", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -483,7 +483,7 @@ test("warning on formstate", () => {
     getWarning: (accessor: any) => {
       usedAccessor = accessor;
       return "Warning";
-    }
+    },
   });
 
   expect(state.warning).toEqual("Warning");

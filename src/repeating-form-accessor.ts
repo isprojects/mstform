@@ -11,14 +11,17 @@ import {
   IAccessor,
   IRepeatingFormIndexedAccessor,
   IRepeatingFormAccessor,
-  IFormAccessor
+  IFormAccessor,
 } from "./interfaces";
 
 export class RepeatingFormAccessor<
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<D>,
-  M extends IAnyModelType
-> extends AccessorBase implements IRepeatingFormAccessor<D, G, M> {
+    D extends FormDefinition<M>,
+    G extends GroupDefinition<D>,
+    M extends IAnyModelType
+  >
+  extends AccessorBase
+  implements IRepeatingFormAccessor<D, G, M>
+{
   name: string;
 
   @observable
@@ -54,20 +57,20 @@ export class RepeatingFormAccessor<
 
   // XXX validate and isValid should be implemented on accessor?
   validate(options?: ValidateOptions): boolean {
-    const values = this.accessors.map(accessor => accessor.validate(options));
+    const values = this.accessors.map((accessor) => accessor.validate(options));
     // appending possible error on the repeatingform itself
     const ignoreGetError = options != null ? options.ignoreGetError : false;
     if (!ignoreGetError) {
       values.push(this.errorValue === undefined);
     }
-    return values.every(value => value);
+    return values.every((value) => value);
   }
 
   @computed
   get isValid(): boolean {
     return (
       this.errorValue == null &&
-      this.accessors.every(accessor => accessor.isValid)
+      this.accessors.every((accessor) => accessor.isValid)
     );
   }
 
@@ -143,7 +146,7 @@ export class RepeatingFormAccessor<
       throw new Error("Cannot find node to remove.");
     }
     applyPatch(this.state.node, [
-      { op: "remove", path: this.path + "/" + index }
+      { op: "remove", path: this.path + "/" + index },
     ]);
   }
 
@@ -191,11 +194,11 @@ export class RepeatingFormAccessor<
     const accessors = this.repeatingFormIndexedAccessors;
 
     // first remove all accessors that are renumbered
-    toDelete.forEach(index => {
+    toDelete.forEach((index) => {
       accessors.delete(index);
     });
     // insert renumbered accessors all at once afterwards
-    toInsert.forEach(accessor => {
+    toInsert.forEach((accessor) => {
       accessors.set(accessor.index, accessor);
     });
   }

@@ -13,31 +13,31 @@ test("path to fieldref", () => {
 
 test("fieldref", () => {
   const N = types.model("N", {
-    repeatingField: types.string
+    repeatingField: types.string,
   });
   const Sub = types.model("Sub", {
-    subField: types.string
+    subField: types.string,
   });
   const M = types.model("M", {
     field: types.string,
     repeating: types.array(N),
-    sub: Sub
+    sub: Sub,
   });
 
   const form = new Form(M, {
     field: new Field(converters.string),
     repeating: new RepeatingForm({
-      repeatingField: new Field(converters.string)
+      repeatingField: new Field(converters.string),
     }),
     sub: new SubForm({
-      subField: new Field(converters.string)
-    })
+      subField: new Field(converters.string),
+    }),
   });
 
   const o = M.create({
     field: "FIELD",
     repeating: [{ repeatingField: "REPEATING_FIELD" }],
-    sub: { subField: "SUB FIELD" }
+    sub: { subField: "SUB FIELD" },
   });
 
   const state = form.state(o);

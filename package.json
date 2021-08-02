@@ -68,7 +68,6 @@
         "@types/react-dom": "^17.0.9",
         "@typescript-eslint/eslint-plugin": "^4.28.5",
         "@typescript-eslint/parser": "^4.28.5",
-        "clean-webpack-plugin": "^0.1.19",
         "coveralls": "^3.0.0",
         "cross-env": "^5.1.1",
         "decimal.js-light": "^2.5.1",

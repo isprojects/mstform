@@ -6,23 +6,23 @@ import {
   Form,
   Field,
   setupValidationProps,
-  ValidationProps
+  ValidationProps,
 } from "../src";
 
 configure({ enforceActions: "observed" });
 
 test("custom validationProps", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number, { controlled: controlled.value })
+    foo: new Field(converters.number, { controlled: controlled.value }),
   });
 
   const o = M.create({ foo: 1 });
 
-  const myValidationProps: ValidationProps = accessor => {
+  const myValidationProps: ValidationProps = (accessor) => {
     return { error: accessor.error };
   };
   setupValidationProps(myValidationProps);
@@ -33,6 +33,6 @@ test("custom validationProps", () => {
   expect(field.validationProps).toEqual({});
   field.setRaw("wrong");
   expect(field.validationProps).toEqual({
-    error: "Could not convert"
+    error: "Could not convert",
   });
 });
