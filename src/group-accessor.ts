@@ -23,7 +23,7 @@ export class GroupAccessor<D extends FormDefinition<any>> {
     return this.hasFeedback(this.isWarningFreeForNames.bind(this));
   }
 
-  hasFeedback(feedbackFunc: Function): boolean {
+  hasFeedback(feedbackFunc: (names: (keyof D)[]) => boolean): boolean {
     const include = this.group.options.include;
     const exclude = this.group.options.exclude;
     if (include != null && exclude != null) {
@@ -40,11 +40,11 @@ export class GroupAccessor<D extends FormDefinition<any>> {
 
   notExcluded(names: (keyof D)[]): (keyof D)[] {
     const keys = this.parent.keys as (keyof D)[];
-    return keys.filter(name => !names.includes(name));
+    return keys.filter((name) => !names.includes(name));
   }
 
   isValidForNames(names: (keyof D)[]): boolean {
-    return names.every(key => {
+    return names.every((key) => {
       const accessor = this.parent.access(key as string);
       if (accessor == null) {
         return true;
@@ -54,7 +54,7 @@ export class GroupAccessor<D extends FormDefinition<any>> {
   }
 
   isWarningFreeForNames(names: (keyof D)[]): boolean {
-    return names.every(key => {
+    return names.every((key) => {
       const accessor = this.parent.access(key as string);
       if (accessor == null) {
         return true;

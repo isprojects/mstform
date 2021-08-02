@@ -7,19 +7,19 @@ configure({ enforceActions: "observed" });
 
 test("a sub form", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
     foo: types.string,
-    sub: N
+    sub: N,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
     sub: new SubForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: "FOO", sub: { bar: "BAR" } });
@@ -42,19 +42,19 @@ test("a sub form", () => {
 
 test("sub form validation", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
     foo: types.string,
-    sub: N
+    sub: N,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
     sub: new SubForm({
-      bar: new Field(converters.string, { required: true })
-    })
+      bar: new Field(converters.string, { required: true }),
+    }),
   });
 
   const o = M.create({ foo: "FOO", sub: { bar: "BAR" } });
@@ -74,25 +74,25 @@ test("sub form validation", () => {
 
 test("SubField disabled when SubForm disabled", () => {
   const N = types.model("N", {
-    subField: types.string
+    subField: types.string,
   });
 
   const M = types.model("M", {
-    subForm: N
+    subForm: N,
   });
 
   const form = new Form(M, {
     subForm: new SubForm({
-      subField: new Field(converters.string)
-    })
+      subField: new Field(converters.string),
+    }),
   });
 
   const o = M.create({
-    subForm: { subField: "SUB_FIELD" }
+    subForm: { subField: "SUB_FIELD" },
   });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path === "/subForm"
+    isDisabled: (accessor) => accessor.path === "/subForm",
   });
 
   const subForm = state.subForm("subForm");
@@ -104,31 +104,31 @@ test("SubField disabled when SubForm disabled", () => {
 
 test("SubField disabled when SubForm in a SubForm is disabled", () => {
   const O = types.model("O", {
-    subField: types.string
+    subField: types.string,
   });
 
   const N = types.model("N", {
-    subForm2: O
+    subForm2: O,
   });
 
   const M = types.model("M", {
-    subForm: N
+    subForm: N,
   });
 
   const form = new Form(M, {
     subForm: new SubForm({
       subForm2: new SubForm({
-        subField: new Field(converters.string)
-      })
-    })
+        subField: new Field(converters.string),
+      }),
+    }),
   });
 
   const o = M.create({
-    subForm: { subForm2: { subField: "SUB_FIELD" } }
+    subForm: { subForm2: { subField: "SUB_FIELD" } },
   });
 
   const state = form.state(o, {
-    isDisabled: accessor => accessor.path === "/subForm"
+    isDisabled: (accessor) => accessor.path === "/subForm",
   });
 
   const subForm = state.subForm("subForm");
@@ -145,16 +145,16 @@ test("SubField disabled when SubForm in a SubForm is disabled", () => {
 
 test("groups with subform error on top-level", async () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    sub: N
+    sub: N,
   });
 
   const form = new Form(M, {
     sub: new SubForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ sub: { bar: "BAR" } });
@@ -165,7 +165,7 @@ test("groups with subform error on top-level", async () => {
     getWarning: (accessor: any) =>
       accessor instanceof SubFormAccessor
         ? "Somehow this is insufficient"
-        : undefined
+        : undefined,
   });
   const subForm = state.subForm("sub");
 

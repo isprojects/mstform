@@ -12,19 +12,19 @@ export abstract class AccessorBase implements IAccessor {
   protected _error?: string;
 
   @observable
-  protected _addMode: boolean = false;
+  protected _addMode = false;
 
   @observable
-  private _isReadOnly: boolean = false;
+  private _isReadOnly = false;
 
   @observable
-  private _isDisabled: boolean = false;
+  private _isDisabled = false;
 
   @observable
-  private _isHidden: boolean = false;
+  private _isHidden = false;
 
   @observable
-  protected _isRequired: boolean = false;
+  protected _isRequired = false;
 
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
@@ -94,8 +94,8 @@ export abstract class AccessorBase implements IAccessor {
     if (this.warningValue !== undefined) {
       return false;
     }
-    return !this.flatAccessors.some(
-      accessor => (accessor ? accessor.warningValue !== undefined : false)
+    return !this.flatAccessors.some((accessor) =>
+      accessor ? accessor.warningValue !== undefined : false
     );
   }
 
@@ -145,7 +145,7 @@ export abstract class AccessorBase implements IAccessor {
   @computed
   get flatAccessors(): IAccessor[] {
     const result: IAccessor[] = [];
-    this.accessors.forEach(accessor => {
+    this.accessors.forEach((accessor) => {
       result.push(...accessor.flatAccessors);
       result.push(accessor);
     });

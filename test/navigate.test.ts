@@ -6,7 +6,7 @@ import {
   SubForm,
   RepeatingForm,
   converters,
-  IFormAccessor
+  IFormAccessor,
 } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -14,11 +14,11 @@ configure({ enforceActions: "observed" });
 
 test("value for state", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -30,22 +30,22 @@ test("value for state", () => {
 test("value for sub form", () => {
   const N = types
     .model("N", {
-      bar: types.string
+      bar: types.string,
     })
-    .views(self => ({
+    .views((self) => ({
       something() {
         return self.bar + "X";
-      }
+      },
     }));
 
   const M = types.model("M", {
-    foo: N
+    foo: N,
   });
 
   const form = new Form(M, {
     foo: new SubForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: { bar: "BAR" } });
@@ -62,22 +62,22 @@ test("value for sub form", () => {
 test("value for repeating form", () => {
   const N = types
     .model("N", {
-      bar: types.string
+      bar: types.string,
     })
-    .views(self => ({
+    .views((self) => ({
       something() {
         return self.bar + "X";
-      }
+      },
     }));
 
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
-      bar: new Field(converters.string)
-    })
+      bar: new Field(converters.string),
+    }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });

@@ -7,7 +7,7 @@ const options = {
   decimalSeparator: ".",
   thousandSeparator: ",",
   renderThousands: true,
-  addZeroes: true
+  addZeroes: true,
 };
 
 test("basic parse", () => {
@@ -32,7 +32,7 @@ test("swapped separators", () => {
     decimalSeparator: ",",
     thousandSeparator: ".",
     renderThousands: true,
-    addZeroes: true
+    addZeroes: true,
   };
   expect(parseDecimal("100.000", options)).toEqual("100000");
   expect(parseDecimal("100,53", options)).toEqual("100.53");
@@ -80,7 +80,7 @@ test("do not allowNegative", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    addZeroes: true
+    addZeroes: true,
   };
   expect(() => parseDecimal("-100", options)).toThrow();
 });
@@ -93,7 +93,7 @@ test("maxWholeDigits", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    addZeroes: true
+    addZeroes: true,
   };
   expect(parseDecimal("12,345", options)).toEqual("12345");
   expect(parseDecimal("-12,345", options)).toEqual("-12345");
@@ -110,7 +110,7 @@ test("decimalPlaces", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    addZeroes: true
+    addZeroes: true,
   };
   expect(parseDecimal("12,345.45", options)).toEqual("12345.45");
   expect(parseDecimal(".1234", options)).toEqual(".1234");
@@ -127,7 +127,7 @@ test("normalizedDecimalPlaces", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    addZeroes: true
+    addZeroes: true,
   };
   expect(parseDecimal("12,345.45", options)).toEqual("12345.4500");
   expect(parseDecimal(".12", options)).toEqual(".1200");
@@ -160,7 +160,7 @@ test("render no renderThousands", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: false,
-    addZeroes: true
+    addZeroes: true,
   };
   expect(renderDecimal("100", options)).toEqual("100.0000");
   expect(renderDecimal("1234", options)).toEqual("1234.0000");
@@ -180,7 +180,7 @@ test("render no addZeroes", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    addZeroes: false
+    addZeroes: false,
   };
   expect(renderDecimal("100", options)).toEqual("100");
   expect(renderDecimal("1234", options)).toEqual("1,234");
@@ -204,7 +204,7 @@ test("empty render no addZeroes", () => {
     decimalSeparator: ".",
     thousandSeparator: ",",
     renderThousands: true,
-    addZeroes: false
+    addZeroes: false,
   };
   expect(renderDecimal("", options)).toEqual("");
 });
@@ -218,7 +218,7 @@ test("render addZeroes maxZeroesPadding", () => {
     thousandSeparator: ",",
     renderThousands: false,
     addZeroes: true,
-    maxZeroesPadding: 2
+    maxZeroesPadding: 2,
   };
   expect(renderDecimal("100", options)).toEqual("100.00");
   expect(renderDecimal("1234", options)).toEqual("1234.00");

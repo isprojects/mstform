@@ -14,10 +14,10 @@ export const decimal = types.custom<string, Decimal>({
   },
   getValidationMessage(snapshot) {
     try {
-      const dummy = new Decimal(snapshot);
+      new Decimal(snapshot);
     } catch (e) {
       return "Not a valid decimal";
     }
     return "";
-  }
+  },
 });

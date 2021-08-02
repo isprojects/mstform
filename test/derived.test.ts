@@ -10,20 +10,20 @@ test("calculated", () => {
     .model("M", {
       calculated: types.number,
       a: types.number,
-      b: types.number
+      b: types.number,
     })
-    .views(self => ({
+    .views((self) => ({
       sum() {
         return self.a + self.b;
-      }
+      },
     }));
 
   const form = new Form(M, {
     calculated: new Field(converters.number, {
-      derived: (node: Instance<typeof M>) => node.sum()
+      derived: (node: Instance<typeof M>) => node.sum(),
     }),
     a: new Field(converters.number),
-    b: new Field(converters.number)
+    b: new Field(converters.number),
   });
 
   const o = M.create({ calculated: 0, a: 1, b: 2 });
@@ -55,25 +55,25 @@ test("calculated repeating", () => {
     .model("N", {
       calculated: types.number,
       a: types.number,
-      b: types.number
+      b: types.number,
     })
-    .views(self => ({
+    .views((self) => ({
       sum() {
         return self.a + self.b;
-      }
+      },
     }));
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
       calculated: new Field(converters.number, {
-        derived: node => node.sum()
+        derived: (node) => node.sum(),
       }),
       a: new Field(converters.number),
-      b: new Field(converters.number)
-    })
+      b: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }] });
@@ -105,26 +105,26 @@ test("calculated repeating push and remove", () => {
     .model("N", {
       calculated: types.number,
       a: types.number,
-      b: types.number
+      b: types.number,
     })
-    .views(self => ({
+    .views((self) => ({
       sum() {
         return self.a + self.b;
-      }
+      },
     }));
 
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
     foo: new RepeatingForm({
       calculated: new Field(converters.number, {
-        derived: node => node.sum()
+        derived: (node) => node.sum(),
       }),
       a: new Field(converters.number),
-      b: new Field(converters.number)
-    })
+      b: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }] });
@@ -192,32 +192,32 @@ test("calculated with addModeDefaults", () => {
     .model("N", {
       calculated: types.number,
       a: types.number,
-      b: types.number
+      b: types.number,
     })
-    .views(self => ({
+    .views((self) => ({
       sum() {
         return self.a + self.b;
-      }
+      },
     }));
 
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   let changeCount = 0;
   const form = new Form(M, {
     foo: new RepeatingForm({
       calculated: new Field(converters.number, {
-        derived: node => {
+        derived: (node) => {
           return node.sum();
         },
         change: () => {
           changeCount++;
-        }
+        },
       }),
       a: new Field(converters.number),
-      b: new Field(converters.number)
-    })
+      b: new Field(converters.number),
+    }),
   });
 
   const o = M.create({ foo: [{ calculated: 0, a: 1, b: 2 }] });
@@ -273,12 +273,12 @@ test("calculated with context", () => {
     .model("M", {
       calculated: types.string,
       a: types.string,
-      b: types.string
+      b: types.string,
     })
-    .views(self => ({
+    .views((self) => ({
       sum() {
         return (parseFloat(self.a) + parseFloat(self.b)).toString();
-      }
+      },
     }));
 
   function getDecimalPlaces(context: any) {
@@ -290,19 +290,21 @@ test("calculated with context", () => {
     calculated: new Field(
       converters.dynamic(converters.stringDecimal, getDecimalPlaces),
       {
-        derived: (node: Instance<typeof M>) => node.sum()
+        derived: (node: Instance<typeof M>) => node.sum(),
       }
     ),
     a: new Field(
       converters.dynamic(converters.stringDecimal, getDecimalPlaces)
     ),
-    b: new Field(converters.dynamic(converters.stringDecimal, getDecimalPlaces))
+    b: new Field(
+      converters.dynamic(converters.stringDecimal, getDecimalPlaces)
+    ),
   });
 
   const o = M.create({ calculated: "0.0000", a: "1.0000", b: "2.3456" });
 
   const state = form.state(o, {
-    context: { getNumberOfDecimals: () => 4 }
+    context: { getNumberOfDecimals: () => 4 },
   });
   const calculated = state.field("calculated");
   const a = state.field("a");
@@ -329,21 +331,21 @@ test("dispose", () => {
     .model("M", {
       calculated: types.number,
       a: types.number,
-      b: types.number
+      b: types.number,
     })
-    .views(self => ({
+    .views((self) => ({
       sum() {
         counter++;
         return self.a + self.b;
-      }
+      },
     }));
 
   const form = new Form(M, {
     calculated: new Field(converters.number, {
-      derived: (node: Instance<typeof M>) => node.sum()
+      derived: (node: Instance<typeof M>) => node.sum(),
     }),
     a: new Field(converters.number),
-    b: new Field(converters.number)
+    b: new Field(converters.number),
   });
 
   const o = M.create({ calculated: 0, a: 1, b: 2 });

@@ -5,11 +5,11 @@ configure({ enforceActions: "observed" });
 
 test("object controlled", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object, { controlled: controlled.object })
+    foo: new Field(converters.object, { controlled: controlled.object }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -25,11 +25,11 @@ test("object controlled", () => {
 
 test("value controlled", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object, { controlled: controlled.value })
+    foo: new Field(converters.object, { controlled: controlled.value }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -45,11 +45,11 @@ test("value controlled", () => {
 
 test("checked controlled", () => {
   const M = types.model("M", {
-    foo: types.boolean
+    foo: types.boolean,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object, { controlled: controlled.checked })
+    foo: new Field(converters.object, { controlled: controlled.checked }),
   });
 
   const o = M.create({ foo: true });
@@ -65,18 +65,18 @@ test("checked controlled", () => {
 
 test("custom controlled", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.object, {
-      controlled: accessor => {
+      controlled: (accessor) => {
         return {
           weird: accessor.raw,
-          onChange: (raw: any) => accessor.setRaw(raw)
+          onChange: (raw: any) => accessor.setRaw(raw),
         };
-      }
-    })
+      },
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -91,11 +91,11 @@ test("custom controlled", () => {
 
 test("default value controlled for string converter", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -111,11 +111,11 @@ test("default value controlled for string converter", () => {
 
 test("default value controlled for maybe string converter", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string)
+    foo: types.maybeNull(types.string),
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.maybeNull(converters.string))
+    foo: new Field(converters.maybeNull(converters.string)),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -131,11 +131,11 @@ test("default value controlled for maybe string converter", () => {
 
 test("default checked controlled for boolean converter", () => {
   const M = types.model("M", {
-    foo: types.boolean
+    foo: types.boolean,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.boolean)
+    foo: new Field(converters.boolean),
   });
 
   const o = M.create({ foo: true });
@@ -151,11 +151,11 @@ test("default checked controlled for boolean converter", () => {
 
 test("default object controlled", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object)
+    foo: new Field(converters.object),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -171,11 +171,11 @@ test("default object controlled", () => {
 
 test("default object controlled for stringArray converter", () => {
   const M = types.model("M", {
-    foo: types.array(types.string)
+    foo: types.array(types.string),
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.stringArray)
+    foo: new Field(converters.stringArray),
   });
 
   const o = M.create({ foo: [] });
@@ -190,11 +190,11 @@ test("default object controlled for stringArray converter", () => {
 
 test("default object controlled for maybe converter", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string)
+    foo: types.maybeNull(types.string),
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.object)
+    foo: new Field(converters.object),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -211,13 +211,13 @@ test("default object controlled for maybe converter", () => {
 // fromEvent backwards compatibility
 test("getRaw fromEvent", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      fromEvent: true
-    })
+      fromEvent: true,
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -234,13 +234,13 @@ test("getRaw fromEvent", () => {
 // handleChange backwards compatibility
 test("getRaw fromEvent", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      fromEvent: true
-    })
+      fromEvent: true,
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -257,15 +257,15 @@ test("getRaw fromEvent", () => {
 // getRaw backwards compatibility
 test("override getRaw", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
       getRaw(event) {
         return event.target.weird;
-      }
-    })
+      },
+    }),
   });
 
   const o = M.create({ foo: "FOO" });

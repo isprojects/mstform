@@ -9,12 +9,12 @@ test("changehook", () => {
   const M = types
     .model("M", {
       c: types.number,
-      b: types.number
+      b: types.number,
     })
-    .actions(self => ({
+    .actions((self) => ({
       setB(value: number) {
         self.b = value;
-      }
+      },
     }));
 
   const touched: boolean[] = [];
@@ -24,9 +24,9 @@ test("changehook", () => {
       change: (node, value) => {
         touched.push(true);
         node.setB(value);
-      }
+      },
     }),
-    b: new Field(converters.number)
+    b: new Field(converters.number),
   });
 
   const o = M.create({ c: 1, b: 2 });
@@ -73,12 +73,12 @@ test("change hook with raw value", () => {
   const M = types
     .model("M", {
       c: types.number,
-      b: types.number
+      b: types.number,
     })
-    .actions(self => ({
+    .actions((self) => ({
       setB(value: number) {
         self.b = value;
-      }
+      },
     }));
 
   const touched: boolean[] = [];
@@ -88,9 +88,9 @@ test("change hook with raw value", () => {
       change: (node, value) => {
         touched.push(true);
         node.setB(value);
-      }
+      },
     }),
-    b: new Field(converters.number)
+    b: new Field(converters.number),
   });
 
   const o = M.create({ c: 1, b: 2 });
@@ -113,12 +113,12 @@ test("changehook with null", () => {
   const M = types
     .model("M", {
       c: types.maybeNull(types.number),
-      b: types.maybeNull(types.number)
+      b: types.maybeNull(types.number),
     })
-    .actions(self => ({
+    .actions((self) => ({
       setB(value: number) {
         self.b = value;
-      }
+      },
     }));
 
   const touched: boolean[] = [];
@@ -128,9 +128,9 @@ test("changehook with null", () => {
       change: (node, value) => {
         touched.push(true);
         node.setB(value);
-      }
+      },
     }),
-    b: new Field(converters.maybeNull(converters.number))
+    b: new Field(converters.maybeNull(converters.number)),
   });
 
   const o = M.create({ c: 1, b: 2 });
@@ -160,12 +160,12 @@ test("changehook doesn't fire if nothing changed", () => {
   const M = types
     .model("M", {
       c: types.number,
-      b: types.number
+      b: types.number,
     })
-    .actions(self => ({
+    .actions((self) => ({
       setB(value: number) {
         self.b = value;
-      }
+      },
     }));
 
   const touched: boolean[] = [];
@@ -175,9 +175,9 @@ test("changehook doesn't fire if nothing changed", () => {
       change: (node, value) => {
         touched.push(true);
         node.setB(value);
-      }
+      },
     }),
-    b: new Field(converters.number)
+    b: new Field(converters.number),
   });
 
   const o = M.create({ c: 1, b: 2 });
@@ -196,12 +196,12 @@ test("changehook doesn't fire if nothing changed with required", () => {
   const M = types
     .model("M", {
       c: types.string,
-      b: types.string
+      b: types.string,
     })
-    .actions(self => ({
+    .actions((self) => ({
       setB(value: string) {
         self.b = value;
-      }
+      },
     }));
 
   const touched: boolean[] = [];
@@ -212,9 +212,9 @@ test("changehook doesn't fire if nothing changed with required", () => {
         touched.push(true);
         node.setB("touched");
       },
-      required: true
+      required: true,
     }),
-    b: new Field(converters.string)
+    b: new Field(converters.string),
   });
 
   const o = M.create({ c: "", b: "B" });

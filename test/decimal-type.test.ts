@@ -5,12 +5,12 @@ import { decimal } from "../src/";
 test("decimal reading and writing", () => {
   const M = types
     .model({
-      d: decimal
+      d: decimal,
     })
-    .actions(self => ({
+    .actions((self) => ({
       setDecimal(d: Decimal) {
         self.d = d;
-      }
+      },
     }));
 
   const o = M.create({ d: "1.25" });
@@ -19,7 +19,7 @@ test("decimal reading and writing", () => {
   expect(o.d.equals(new Decimal("1.25"))).toBeTruthy();
   const snapshot = getSnapshot(o);
   expect(snapshot).toEqual({
-    d: "1.25"
+    d: "1.25",
   });
 });
 

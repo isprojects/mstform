@@ -6,15 +6,17 @@ import { FormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
 import {
   IRepeatingFormIndexedAccessor,
-  IRepeatingFormAccessor
+  IRepeatingFormAccessor,
 } from "./interfaces";
 
 export class RepeatingFormIndexedAccessor<
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<D>,
-  M extends IAnyModelType
-> extends FormAccessorBase<D, G, M>
-  implements IRepeatingFormIndexedAccessor<D, G, M> {
+    D extends FormDefinition<M>,
+    G extends GroupDefinition<D>,
+    M extends IAnyModelType
+  >
+  extends FormAccessorBase<D, G, M>
+  implements IRepeatingFormIndexedAccessor<D, G, M>
+{
   @observable
   index: number;
 
@@ -32,7 +34,7 @@ export class RepeatingFormIndexedAccessor<
   }
 
   clear() {
-    this.flatAccessors.forEach(accessor => {
+    this.flatAccessors.forEach((accessor) => {
       accessor.clear();
     });
     this.parent.removeIndex(this.index);
@@ -48,7 +50,7 @@ export class RepeatingFormIndexedAccessor<
   get isValid(): boolean {
     return (
       this.errorValue == null &&
-      this.accessors.every(accessor => accessor.isValid)
+      this.accessors.every((accessor) => accessor.isValid)
     );
   }
 

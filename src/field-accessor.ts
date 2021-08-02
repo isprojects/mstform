@@ -275,9 +275,8 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   @action
   setValueFromRaw(raw: R, options?: ProcessOptions) {
-    const stateConverterOptions = this.state.stateConverterOptionsWithContext(
-      this
-    );
+    const stateConverterOptions =
+      this.state.stateConverterOptionsWithContext(this);
 
     raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
 
@@ -399,11 +398,11 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   }
 
   @computed
-  get validationProps(): object {
+  get validationProps(): Record<string, unknown> {
     return currentValidationProps(this);
   }
 
-  accessBySteps(steps: string[]): IAccessor {
+  accessBySteps(_steps: string[]): IAccessor {
     throw new Error("Cannot step through field accessor");
   }
 }

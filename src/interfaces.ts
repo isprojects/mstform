@@ -6,7 +6,7 @@ import {
   FieldAccess,
   RepeatingFormAccess,
   SubFormAccess,
-  GroupAccess
+  GroupAccess,
 } from "./accessor";
 import { FormDefinition } from "./form";
 import { AccessUpdate } from "./backend";

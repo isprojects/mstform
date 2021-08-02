@@ -7,13 +7,13 @@ configure({ enforceActions: "observed" });
 
 test("setRaw with required ignore", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      required: true
-    })
+      required: true,
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -33,11 +33,11 @@ test("setRaw with required ignore", () => {
 
 test("setRaw with required ignore with automatically required", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 1 });
@@ -59,13 +59,13 @@ test("setRaw with required ignore with automatically required", () => {
 
 test("FormState can be saved ignoring required", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string, { required: true })
+    foo: new Field(converters.string, { required: true }),
   });
 
   let saved = false;
@@ -101,13 +101,13 @@ test("FormState can be saved ignoring required", async () => {
 
 test("FormState can be saved ignoring external errors", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   let saved = false;
@@ -124,13 +124,13 @@ test("FormState can be saved ignoring external errors", async () => {
       updates: [],
       accessUpdates: [],
       errorValidations: [],
-      warningValidations: []
+      warningValidations: [],
     };
   }
 
   const state = form.state(o, {
     backend: { save, process },
-    getError: accessor => (accessor.path === "/foo" ? "Wrong!" : undefined)
+    getError: (accessor) => (accessor.path === "/foo" ? "Wrong!" : undefined),
   });
 
   const field = state.field("foo");
@@ -160,13 +160,13 @@ test("FormState can be saved ignoring external errors", async () => {
 
 test("FormState can be saved ignoring non-field external errors", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   let saved = false;
@@ -183,13 +183,13 @@ test("FormState can be saved ignoring non-field external errors", async () => {
       updates: [],
       accessUpdates: [],
       errorValidations: [],
-      warningValidations: []
+      warningValidations: [],
     };
   }
 
   const state = form.state(o, {
     backend: { save, process },
-    getError: accessor => (accessor.path === "" ? "Wrong!" : undefined)
+    getError: (accessor) => (accessor.path === "" ? "Wrong!" : undefined),
   });
 
   const field = state.field("foo");
@@ -212,16 +212,16 @@ test("FormState can be saved ignoring non-field external errors", async () => {
 
 test("ignoreGetError repeating indexed accessor non-field external", async () => {
   const N = types.model("N", {
-    foo: types.string
+    foo: types.string,
   });
   const M = types.model("M", {
-    items: types.array(N)
+    items: types.array(N),
   });
 
   const o = M.create({ items: [{ foo: "FOO" }] });
 
   const form = new Form(M, {
-    items: new RepeatingForm({ foo: new Field(converters.string) })
+    items: new RepeatingForm({ foo: new Field(converters.string) }),
   });
 
   let saved = false;
@@ -238,13 +238,14 @@ test("ignoreGetError repeating indexed accessor non-field external", async () =>
       updates: [],
       accessUpdates: [],
       errorValidations: [],
-      warningValidations: []
+      warningValidations: [],
     };
   }
 
   const state = form.state(o, {
     backend: { save, process },
-    getError: accessor => (accessor.path === "/items/0" ? "Wrong!" : undefined)
+    getError: (accessor) =>
+      accessor.path === "/items/0" ? "Wrong!" : undefined,
   });
 
   // we have an internal error
@@ -264,16 +265,16 @@ test("ignoreGetError repeating indexed accessor non-field external", async () =>
 
 test("ignoreGetError repeating accessor non-field external", async () => {
   const N = types.model("N", {
-    foo: types.string
+    foo: types.string,
   });
   const M = types.model("M", {
-    items: types.array(N)
+    items: types.array(N),
   });
 
   const o = M.create({ items: [{ foo: "FOO" }] });
 
   const form = new Form(M, {
-    items: new RepeatingForm({ foo: new Field(converters.string) })
+    items: new RepeatingForm({ foo: new Field(converters.string) }),
   });
 
   let saved = false;
@@ -289,13 +290,13 @@ test("ignoreGetError repeating accessor non-field external", async () => {
       updates: [],
       accessUpdates: [],
       errorValidations: [],
-      warningValidations: []
+      warningValidations: [],
     };
   }
 
   const state = form.state(o, {
     backend: { save, process },
-    getError: accessor => (accessor.path === "/items" ? "Wrong!" : undefined)
+    getError: (accessor) => (accessor.path === "/items" ? "Wrong!" : undefined),
   });
 
   // we have an internal error
@@ -315,16 +316,16 @@ test("ignoreGetError repeating accessor non-field external", async () => {
 
 test("ignoreGetError sub form accessor non-field external", async () => {
   const N = types.model("N", {
-    foo: types.string
+    foo: types.string,
   });
   const M = types.model("M", {
-    item: N
+    item: N,
   });
 
   const o = M.create({ item: { foo: "FOO" } });
 
   const form = new Form(M, {
-    item: new SubForm({ foo: new Field(converters.string) })
+    item: new SubForm({ foo: new Field(converters.string) }),
   });
 
   let saved = false;
@@ -341,13 +342,13 @@ test("ignoreGetError sub form accessor non-field external", async () => {
       updates: [],
       accessUpdates: [],
       errorValidations: [],
-      warningValidations: []
+      warningValidations: [],
     };
   }
 
   const state = form.state(o, {
     backend: { save, process },
-    getError: accessor => (accessor.path === "/item" ? "Wrong!" : undefined)
+    getError: (accessor) => (accessor.path === "/item" ? "Wrong!" : undefined),
   });
 
   // we have an internal error
@@ -367,13 +368,13 @@ test("ignoreGetError sub form accessor non-field external", async () => {
 
 test("FormState can be saved without affecting save status", async () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const o = M.create({ foo: "FOO" });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   async function save(data: any) {
@@ -382,7 +383,7 @@ test("FormState can be saved without affecting save status", async () => {
 
   const state = form.state(o, {
     backend: { save },
-    getError: accessor => (accessor.path === "/foo" ? "Wrong!" : undefined)
+    getError: (accessor) => (accessor.path === "/foo" ? "Wrong!" : undefined),
   });
 
   // now we save, ignoring save status

@@ -8,7 +8,7 @@ import {
   SubFormGroupDefinitionType,
   RawType,
   ValueType,
-  ArrayEntryType
+  ArrayEntryType,
 } from "./form";
 import { FieldAccessor } from "./field-accessor";
 import { GroupAccessor } from "./group-accessor";
