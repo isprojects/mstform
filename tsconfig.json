@@ -20,7 +20,8 @@
         "emitDecoratorMetadata": true,
         "jsx": "react",
         "typeRoots": ["node_modules/@types"],
-        "useDefineForClassFields": true
+        "useDefineForClassFields": true,
+        "outDir": "dist/src"
     },
-    "include": ["src/**/*", "test/**/*", "demo/**/*"]
+    "include": ["src/**/*"]
 }

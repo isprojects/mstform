@@ -18,7 +18,7 @@ export class ExternalMessages {
     affectedValidationIds: Set<string>
   ) {
     // remove all keys that are in affected validation ids
-    affectedValidationIds.forEach(key => {
+    affectedValidationIds.forEach((key) => {
       this.messages.delete(key);
     });
     // now add in the new messages if they exist

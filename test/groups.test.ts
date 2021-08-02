@@ -9,7 +9,7 @@ import {
   RepeatingFormAccessor,
   RepeatingFormIndexedAccessor,
   SubFormAccessor,
-  converters
+  converters,
 } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -20,7 +20,7 @@ test("groups basic", () => {
     a: types.number,
     b: types.number,
     c: types.number,
-    d: types.number
+    d: types.number,
   });
 
   const form = new Form(
@@ -29,11 +29,11 @@ test("groups basic", () => {
       a: new Field(converters.number),
       b: new Field(converters.number),
       c: new Field(converters.number),
-      d: new Field(converters.number)
+      d: new Field(converters.number),
     },
     {
       one: new Group({ include: ["a", "b"] }),
-      two: new Group({ include: ["c", "d"] })
+      two: new Group({ include: ["c", "d"] }),
     }
   );
 
@@ -67,7 +67,7 @@ test("groups exclude", () => {
     a: types.number,
     b: types.number,
     c: types.number,
-    d: types.number
+    d: types.number,
   });
 
   const form = new Form(
@@ -76,11 +76,11 @@ test("groups exclude", () => {
       a: new Field(converters.number),
       b: new Field(converters.number),
       c: new Field(converters.number),
-      d: new Field(converters.number)
+      d: new Field(converters.number),
     },
     {
       one: new Group({ exclude: ["a", "b"] }),
-      two: new Group({ exclude: ["c", "d"] })
+      two: new Group({ exclude: ["c", "d"] }),
     }
   );
 
@@ -114,12 +114,12 @@ test("groups sub form", () => {
     a: types.number,
     b: types.number,
     c: types.number,
-    d: types.number
+    d: types.number,
   });
 
   const M = types.model("M", {
     field: types.number,
-    item: N
+    item: N,
   });
 
   const form = new Form(
@@ -131,13 +131,13 @@ test("groups sub form", () => {
           a: new Field(converters.number),
           b: new Field(converters.number),
           c: new Field(converters.number),
-          d: new Field(converters.number)
+          d: new Field(converters.number),
         },
         {
           one: new Group({ include: ["a", "b"] }),
-          two: new Group({ include: ["c", "d"] })
+          two: new Group({ include: ["c", "d"] }),
         }
-      )
+      ),
     },
     { whole: new Group({ include: ["item"] }) }
   );
@@ -182,12 +182,12 @@ test("groups sub form exclude", () => {
     a: types.number,
     b: types.number,
     c: types.number,
-    d: types.number
+    d: types.number,
   });
 
   const M = types.model("M", {
     field: types.number,
-    item: N
+    item: N,
   });
 
   const form = new Form(
@@ -199,13 +199,13 @@ test("groups sub form exclude", () => {
           a: new Field(converters.number),
           b: new Field(converters.number),
           c: new Field(converters.number),
-          d: new Field(converters.number)
+          d: new Field(converters.number),
         },
         {
           one: new Group({ exclude: ["a", "b"] }),
-          two: new Group({ exclude: ["c", "d"] })
+          two: new Group({ exclude: ["c", "d"] }),
         }
-      )
+      ),
     },
     { whole: new Group({ include: ["item"] }) }
   );
@@ -250,11 +250,11 @@ test("groups repeating form", () => {
     a: types.number,
     b: types.number,
     c: types.number,
-    d: types.number
+    d: types.number,
   });
 
   const M = types.model("M", {
-    items: types.array(N)
+    items: types.array(N),
   });
 
   const form = new Form(M, {
@@ -263,13 +263,13 @@ test("groups repeating form", () => {
         a: new Field(converters.number),
         b: new Field(converters.number),
         c: new Field(converters.number),
-        d: new Field(converters.number)
+        d: new Field(converters.number),
       },
       {
         one: new Group({ include: ["a", "b"] }),
-        two: new Group({ include: ["c", "d"] })
+        two: new Group({ include: ["c", "d"] }),
       }
-    )
+    ),
   });
 
   const o = M.create({ items: [{ a: 1, b: 2, c: 3, d: 4 }] });
@@ -303,11 +303,11 @@ test("groups repeating form exclude", () => {
     a: types.number,
     b: types.number,
     c: types.number,
-    d: types.number
+    d: types.number,
   });
 
   const M = types.model("M", {
-    items: types.array(N)
+    items: types.array(N),
   });
 
   const form = new Form(M, {
@@ -316,13 +316,13 @@ test("groups repeating form exclude", () => {
         a: new Field(converters.number),
         b: new Field(converters.number),
         c: new Field(converters.number),
-        d: new Field(converters.number)
+        d: new Field(converters.number),
       },
       {
         one: new Group({ exclude: ["a", "b"] }),
-        two: new Group({ exclude: ["c", "d"] })
+        two: new Group({ exclude: ["c", "d"] }),
       }
-    )
+    ),
   });
 
   const o = M.create({ items: [{ a: 1, b: 2, c: 3, d: 4 }] });
@@ -356,7 +356,7 @@ test("groups with warnings", () => {
     a: types.number,
     b: types.number,
     c: types.number,
-    d: types.number
+    d: types.number,
   });
 
   const form = new Form(
@@ -365,11 +365,11 @@ test("groups with warnings", () => {
       a: new Field(converters.number),
       b: new Field(converters.number),
       c: new Field(converters.number),
-      d: new Field(converters.number)
+      d: new Field(converters.number),
     },
     {
       one: new Group({ include: ["a", "b"] }),
-      two: new Group({ include: ["c", "d"] })
+      two: new Group({ include: ["c", "d"] }),
     }
   );
 
@@ -377,7 +377,7 @@ test("groups with warnings", () => {
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.path === "/a" ? "Please reconsider" : undefined
+      accessor.path === "/a" ? "Please reconsider" : undefined,
   });
   const a = state.field("a");
   const b = state.field("b");
@@ -398,12 +398,12 @@ test("groups with warnings", () => {
 
 test("groups with warnings in subform", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
 
   const M = types.model("M", {
     foo: types.string,
-    sub: N
+    sub: N,
   });
 
   const form = new Form(
@@ -411,11 +411,11 @@ test("groups with warnings in subform", () => {
     {
       foo: new Field(converters.string),
       sub: new SubForm({
-        bar: new Field(converters.string)
-      })
+        bar: new Field(converters.string),
+      }),
     },
     {
-      one: new Group({ include: ["sub"] })
+      one: new Group({ include: ["sub"] }),
     }
   );
 
@@ -423,7 +423,7 @@ test("groups with warnings in subform", () => {
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.path === "/sub" ? "SubWarning" : undefined
+      accessor.path === "/sub" ? "SubWarning" : undefined,
   });
 
   const subForm = state.subForm("sub");
@@ -437,21 +437,21 @@ test("groups with warnings in subform", () => {
 
 test("groups with warnings in repeatingform", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(
     M,
     {
       foo: new RepeatingForm({
-        bar: new Field(converters.string)
-      })
+        bar: new Field(converters.string),
+      }),
     },
     {
-      one: new Group({ include: ["foo"] })
+      one: new Group({ include: ["foo"] }),
     }
   );
 
@@ -459,7 +459,7 @@ test("groups with warnings in repeatingform", () => {
 
   const state = form.state(o, {
     getWarning: (accessor: any) =>
-      accessor.path === "/foo/1/bar" ? "Warning" : undefined
+      accessor.path === "/foo/1/bar" ? "Warning" : undefined,
   });
 
   const repeatingForm = state.repeatingForm("foo");
@@ -475,29 +475,29 @@ test("groups with warnings in repeatingform", () => {
 
 test("groups with repeatingform and subform error on top-level", async () => {
   const L = types.model("L", {
-    baz: types.string
+    baz: types.string,
   });
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
     foo: types.array(N),
-    sub: L
+    sub: L,
   });
 
   const form = new Form(
     M,
     {
       foo: new RepeatingForm({
-        bar: new Field(converters.string)
+        bar: new Field(converters.string),
       }),
       sub: new SubForm({
-        baz: new Field(converters.string)
-      })
+        baz: new Field(converters.string),
+      }),
     },
     {
       one: new Group({ include: ["foo"] }),
-      two: new Group({ include: ["sub"] })
+      two: new Group({ include: ["sub"] }),
     }
   );
 
@@ -512,7 +512,7 @@ test("groups with repeatingform and subform error on top-level", async () => {
         return "Is wrong for some reason";
       }
       return undefined;
-    }
+    },
   });
 
   const repeatingForm = state.repeatingForm("foo");
@@ -533,7 +533,7 @@ test("groups with repeatingform and subform error on top-level", async () => {
         return "Cannot be empty";
       }
       return undefined;
-    }
+    },
   });
 
   const repeatingFormWithWarning = stateWithWarning.repeatingForm("foo");

@@ -1,6 +1,6 @@
 import {
   StateConverterOptions,
-  StateConverterOptionsWithContext
+  StateConverterOptionsWithContext,
 } from "./converter";
 
 type TOKEN_MINUS = "-";
@@ -65,7 +65,7 @@ function thousands(wholeDigits: string, thousandSeparator: string): string {
 function trimDecimals(decimalDigits: string, decimalPlaces: number): string {
   // remove all trailing zeroes
   // reverse loop until there are no trailing zeroes anymore
-  let result = decimalDigits.split("");
+  const result = decimalDigits.split("");
   for (let i = result.length - 1; i >= 0; i--) {
     if (result[i] === "0") {
       result[i] = "";
@@ -145,8 +145,8 @@ export function parseDecimal(s: string, options: Options): string {
   // note that the tokenizer has replaced the decimal separator
   // with the standard "." at this point.
   const converted = tokens
-    .filter(token => token.type !== TOKEN_THOUSAND_SEPARATOR)
-    .map(token => token.value)
+    .filter((token) => token.type !== TOKEN_THOUSAND_SEPARATOR)
+    .map((token) => token.value)
     .join("");
   if (options.normalizedDecimalPlaces == null) {
     return converted;
@@ -211,7 +211,7 @@ class Parser {
     this.currentToken = result;
   };
 
-  accept: Accept = tokenType => {
+  accept: Accept = (tokenType) => {
     if (this.currentToken != null && this.currentToken.type === tokenType) {
       this.nextToken();
       return true;
@@ -219,7 +219,7 @@ class Parser {
     return false;
   };
 
-  expect: Expect = tokenType => {
+  expect: Expect = (tokenType) => {
     if (this.accept(tokenType)) {
       return true;
     }

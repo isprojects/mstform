@@ -4,7 +4,7 @@ import {
   resolvePath,
   applyPatch,
   IAnyModelType,
-  Instance
+  Instance,
 } from "mobx-state-tree";
 
 import {
@@ -14,7 +14,7 @@ import {
   GroupDefinition,
   ErrorFunc,
   IDisposer,
-  RepeatingForm
+  RepeatingForm,
 } from "./form";
 import { pathToSteps, stepsToPath } from "./utils";
 import { FieldAccessor } from "./field-accessor";
@@ -25,7 +25,7 @@ import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor"
 import { ValidateOptions } from "./validate-options";
 import {
   StateConverterOptions,
-  StateConverterOptionsWithContext
+  StateConverterOptionsWithContext,
 } from "./converter";
 import { checkConverterOptions } from "./decimalParser";
 import {
@@ -34,14 +34,14 @@ import {
   Process,
   SaveFunc,
   ProcessAll,
-  AccessUpdate
+  AccessUpdate,
 } from "./backend";
 import { Validation } from "./validationMessages";
 import {
   IAccessor,
   IFormAccessor,
   IRepeatingFormAccessor,
-  ISubFormAccessor
+  ISubFormAccessor,
 } from "./interfaces";
 
 export interface AccessorAllows {
@@ -113,10 +113,13 @@ export interface FormStateOptions<M> {
 export type SaveStatusOptions = "before" | "rightAfter" | "after";
 
 export class FormState<
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<D>,
-  M extends IAnyModelType
-> extends FormAccessorBase<D, G, M> implements IFormAccessor<D, G, M> {
+    D extends FormDefinition<M>,
+    G extends GroupDefinition<D>,
+    M extends IAnyModelType
+  >
+  extends FormAccessorBase<D, G, M>
+  implements IFormAccessor<D, G, M>
+{
   @observable
   saveStatus: SaveStatusOptions = "before";
 
@@ -162,7 +165,7 @@ export class FormState<
       context,
       converterOptions = {},
       requiredError = "Required",
-      addModeDefaults = []
+      addModeDefaults = [],
     }: FormStateOptions<M> = {}
   ) {
     super(form.definition, form.groupDefinition, undefined, addMode);
@@ -170,7 +173,7 @@ export class FormState<
 
     this.noRawUpdate = false;
 
-    this._onPatchDisposer = onPatch(node, patch => {
+    this._onPatchDisposer = onPatch(node, (patch) => {
       if (patch.op === "remove") {
         this.removePath(patch.path);
       } else if (patch.op === "add") {
@@ -191,7 +194,7 @@ export class FormState<
       beforeSave: "immediate",
       afterSave: "immediate",
       pauseDuration: 0,
-      ...validation
+      ...validation,
     };
     this.validationBeforeSave = validationOptions.beforeSave;
     this.validationAfterSave = validationOptions.afterSave;
@@ -246,7 +249,7 @@ export class FormState<
     // clean up onPatch
     this._onPatchDisposer();
     // do dispose on all accessors, cleaning up
-    this.flatAccessors.forEach(accessor => {
+    this.flatAccessors.forEach((accessor) => {
       accessor.dispose();
     });
   }
@@ -299,7 +302,7 @@ export class FormState<
     return {
       context: this.context,
       accessor: accessor,
-      ...this._converterOptions
+      ...this._converterOptions,
     };
   }
 
@@ -433,9 +436,9 @@ export class FormState<
     const pathToValidations = new Map<string, Map<string, string>>();
     // which validation ids are touched at all
     const affectedValidationIds = new Set<string>();
-    validations.forEach(validation => {
+    validations.forEach((validation) => {
       affectedValidationIds.add(validation.id);
-      validation.messages.forEach(message => {
+      validation.messages.forEach((message) => {
         let validationIdToMessage = pathToValidations.get(message.path);
         if (validationIdToMessage == null) {
           validationIdToMessage = new Map<string, string>();
@@ -444,7 +447,7 @@ export class FormState<
         validationIdToMessage.set(validation.id, message.message);
       });
     });
-    [this, ...this.flatAccessors].forEach(accessor => {
+    [this, ...this.flatAccessors].forEach((accessor) => {
       const validationIdToMessage = pathToValidations.get(accessor.path);
       const externalMessages =
         messageType === "error"
@@ -456,7 +459,7 @@ export class FormState<
 
   @action
   clearExternalValidations(messageType: "error" | "warning") {
-    [this, ...this.flatAccessors].forEach(accessor => {
+    [this, ...this.flatAccessors].forEach((accessor) => {
       const externalMessages =
         messageType === "error"
           ? accessor.externalErrors
@@ -469,7 +472,7 @@ export class FormState<
   clearAllValidations() {
     this.clearExternalValidations("error");
     this.clearExternalValidations("warning");
-    this.flatAccessors.forEach(accessor => {
+    this.flatAccessors.forEach((accessor) => {
       accessor.clearError();
     });
   }

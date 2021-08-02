@@ -53,7 +53,7 @@ export class Converter<R, V> implements IConverter<R, V> {
   emptyValue: V;
   emptyImpossible: boolean;
   defaultControlled: Controlled;
-  neverRequired: boolean = false;
+  neverRequired = false;
 
   constructor(public definition: ConverterOptions<R, V>) {
     this.emptyRaw = definition.emptyRaw;

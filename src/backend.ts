@@ -53,9 +53,9 @@ function defaultApplyUpdate(node: Instance<IAnyModelType>, update: any): void {
   applyPatch(node, [{ op: "replace", path: update.path, value: update.value }]);
 }
 
-export type ProcessorOptions = { applyUpdate?: ApplyUpdate } & Partial<
-  DebounceOptions
->;
+export type ProcessorOptions = {
+  applyUpdate?: ApplyUpdate;
+} & Partial<DebounceOptions>;
 
 export class Backend<M extends IAnyModelType> {
   changeTracker: ChangeTracker;
@@ -81,13 +81,9 @@ export class Backend<M extends IAnyModelType> {
   }
 
   runProcessResult(processResult: ProcessResult) {
-    const {
-      updates,
-      accessUpdates,
-      errorValidations,
-      warningValidations
-    } = processResult;
-    updates.forEach(update => {
+    const { updates, accessUpdates, errorValidations, warningValidations } =
+      processResult;
+    updates.forEach((update) => {
       // anything that has changed by the user in the mean time shouldn't
       // be updated, as the user input takes precedence
       if (this.changeTracker.hasChanged(update.path)) {
@@ -95,7 +91,7 @@ export class Backend<M extends IAnyModelType> {
       }
       this.applyUpdate(this.node, update);
     });
-    accessUpdates.forEach(accessUpdate => {
+    accessUpdates.forEach((accessUpdate) => {
       this.state.setAccessUpdate(accessUpdate);
     });
 
@@ -118,7 +114,7 @@ export class Backend<M extends IAnyModelType> {
       accessUpdates: [],
       errorValidations: [],
       warningValidations: [],
-      ...processResult
+      ...processResult,
     };
     this.runProcessResult(completeProcessResult);
     return false;
@@ -141,7 +137,7 @@ export class Backend<M extends IAnyModelType> {
       accessUpdates: [],
       errorValidations: [],
       warningValidations: [],
-      ...processResult
+      ...processResult,
     };
     this.runProcessResult(completeProcessResult);
   }
@@ -167,7 +163,7 @@ export class Backend<M extends IAnyModelType> {
       accessUpdates: [],
       errorValidations: [],
       warningValidations: [],
-      ...processResult
+      ...processResult,
     };
     this.runProcessResult(completeProcessResult);
   }

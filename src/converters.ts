@@ -65,9 +65,7 @@ function literalString<T>() {
   });
 }
 
-type NumberOptions = {};
-
-function number(options?: NumberOptions) {
+function number() {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -101,18 +99,13 @@ function number(options?: NumberOptions) {
         renderThousands: converterOptions.renderThousands || false,
       });
     },
-    preprocessRaw(
-      raw: string,
-      options: StateConverterOptionsWithContext
-    ): string {
+    preprocessRaw(raw: string): string {
       return raw.trim();
     },
   });
 }
 
-type IntegerOptions = {};
-
-function integer(options?: IntegerOptions) {
+function integer() {
   return new StringConverter<number>({
     emptyRaw: "",
     emptyImpossible: true,
@@ -131,9 +124,7 @@ function integer(options?: IntegerOptions) {
   });
 }
 
-type BooleanOptions = {};
-
-function boolean(options?: BooleanOptions) {
+function boolean() {
   return new Converter<boolean, boolean>({
     emptyRaw: false,
     emptyImpossible: true,
@@ -218,10 +209,8 @@ function decimal(options: DecimalOptions) {
   });
 }
 
-type StringArrayOptions = {};
-
 // XXX create a way to create arrays with mobx state tree types
-function stringArray(options?: StringArrayOptions) {
+function stringArray() {
   return new Converter<string[], IObservableArray<string>>({
     emptyRaw: [],
     emptyValue: observable.array([]),
@@ -234,9 +223,7 @@ function stringArray(options?: StringArrayOptions) {
   });
 }
 
-type TextStringArrayOptions = {};
-
-function textStringArray(options?: TextStringArrayOptions) {
+function textStringArray() {
   return new Converter<string, IObservableArray<string>>({
     emptyRaw: "",
     emptyValue: observable.array([]),
@@ -261,7 +248,7 @@ function textStringArray(options?: TextStringArrayOptions) {
   });
 }
 
-function maybe<R, V>(
+function maybe<_R, V>(
   converter: StringConverter<V> | (() => StringConverter<V>)
 ): IConverter<string, V | undefined>;
 function maybe<M>(
@@ -274,7 +261,7 @@ function maybe<R, V>(
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
     return stringMaybe(
-      (converter as unknown) as IConverter<string, V>,
+      converter as unknown as IConverter<string, V>,
       undefined
     );
   }
@@ -285,7 +272,7 @@ function maybe<R, V>(
   >;
 }
 
-function maybeNull<R, V>(
+function maybeNull<_R, V>(
   converter: StringConverter<V> | (() => StringConverter<V>)
 ): IConverter<string, V | null>;
 function maybeNull<M>(
@@ -298,7 +285,7 @@ function maybeNull<R, V>(
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
     return stringMaybe(
-      (converter as unknown) as IConverter<string, V | null>,
+      converter as unknown as IConverter<string, V | null>,
       null
     );
   }
@@ -340,7 +327,7 @@ function stringMaybe<V>(converter: IConverter<string, V>, emptyValue: V) {
   });
 }
 
-function model<M extends IAnyModelType>(model: M) {
+function model<M extends IAnyModelType>(_model: M) {
   return new Converter<Instance<M> | null, Instance<M>>({
     emptyRaw: null,
     emptyImpossible: true,

@@ -7,10 +7,13 @@ import { FormAccessorBase } from "./form-accessor-base";
 import { ISubFormAccessor, IFormAccessor } from "./interfaces";
 
 export class SubFormAccessor<
-  D extends FormDefinition<M>,
-  G extends GroupDefinition<D>,
-  M extends IAnyModelType
-> extends FormAccessorBase<D, G, M> implements ISubFormAccessor<D, G, M> {
+    D extends FormDefinition<M>,
+    G extends GroupDefinition<D>,
+    M extends IAnyModelType
+  >
+  extends FormAccessorBase<D, G, M>
+  implements ISubFormAccessor<D, G, M>
+{
   constructor(
     public state: FormState<any, any, any>,
     definition: D,
@@ -38,7 +41,7 @@ export class SubFormAccessor<
   get isValid(): boolean {
     return (
       this.errorValue == null &&
-      this.accessors.every(accessor => accessor.isValid)
+      this.accessors.every((accessor) => accessor.isValid)
     );
   }
 }

@@ -7,7 +7,7 @@ import {
   RepeatingForm,
   converters,
   Converter,
-  ConversionError
+  ConversionError,
 } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -15,11 +15,11 @@ configure({ enforceActions: "observed" });
 
 test("context passed to field accessor", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.string)
+    foo: new Field(converters.string),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -32,14 +32,14 @@ test("context passed to field accessor", () => {
 
 test("context passed to sub form accessor", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: N
+    foo: N,
   });
 
   const form = new Form(M, {
-    foo: new SubForm({ bar: new Field(converters.string) })
+    foo: new SubForm({ bar: new Field(converters.string) }),
   });
 
   const o = M.create({ foo: { bar: "BAR" } });
@@ -52,14 +52,14 @@ test("context passed to sub form accessor", () => {
 
 test("context passed to repeating form accessor", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({ bar: new Field(converters.string) })
+    foo: new RepeatingForm({ bar: new Field(converters.string) }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -72,14 +72,14 @@ test("context passed to repeating form accessor", () => {
 
 test("context passed to repeating form indexed accessor", () => {
   const N = types.model("N", {
-    bar: types.string
+    bar: types.string,
   });
   const M = types.model("M", {
-    foo: types.array(N)
+    foo: types.array(N),
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({ bar: new Field(converters.string) })
+    foo: new RepeatingForm({ bar: new Field(converters.string) }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -93,13 +93,13 @@ test("context passed to repeating form indexed accessor", () => {
 
 test("context in validate", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string, {
-      validators: [(value, context) => value !== context.theValue && "Wrong"]
-    })
+      validators: [(value, context) => value !== context.theValue && "Wrong"],
+    }),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -127,7 +127,7 @@ test("context in validate", () => {
 
 test("context in converter", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const myConverter = new Converter<string, string>({
@@ -140,11 +140,11 @@ test("context in converter", () => {
     },
     render(value) {
       return value;
-    }
+    },
   });
 
   const form = new Form(M, {
-    foo: new Field(myConverter)
+    foo: new Field(myConverter),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -163,7 +163,7 @@ test("context in converter", () => {
 
 test("context in converter in convert", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const myConverter = new Converter<string, string>({
@@ -173,11 +173,11 @@ test("context in converter in convert", () => {
     },
     render(value) {
       return value;
-    }
+    },
   });
 
   const form = new Form(M, {
-    foo: new Field(myConverter)
+    foo: new Field(myConverter),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -193,7 +193,7 @@ test("context in converter in convert", () => {
 
 test("context in converter in render", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const myConverter = new Converter<string, string>({
@@ -203,11 +203,11 @@ test("context in converter in render", () => {
     },
     render(value, options) {
       return options.context.prefix + value;
-    }
+    },
   });
 
   const form = new Form(M, {
-    foo: new Field(myConverter)
+    foo: new Field(myConverter),
   });
 
   const o = M.create({ foo: "FOO" });
@@ -225,14 +225,14 @@ test("context in converter in render", () => {
 
 test("requiredError", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
       required: true,
-      requiredError: "Required!"
-    })
+      requiredError: "Required!",
+    }),
   });
 
   const o = M.create({ foo: 3 });
@@ -250,14 +250,14 @@ test("requiredError", () => {
 
 test("requiredError dynamic with context", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
       required: true,
-      requiredError: (context: any) => "Required" + context
-    })
+      requiredError: (context: any) => "Required" + context,
+    }),
   });
 
   const o = M.create({ foo: 3 });
@@ -275,13 +275,13 @@ test("requiredError dynamic with context", () => {
 
 test("conversionError dynamic with context", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.number, {
-      conversionError: (context: any) => "Not a number" + context
-    })
+      conversionError: (context: any) => "Not a number" + context,
+    }),
   });
 
   const o = M.create({ foo: 3 });
@@ -302,17 +302,17 @@ test("conversionError dynamic with context", () => {
 
 test("converter options in decimal converter in convert", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.stringDecimal())
+    foo: new Field(converters.stringDecimal()),
   });
 
   const o = M.create({ foo: "4300.20" });
 
   const state = form.state(o, {
-    converterOptions: { decimalSeparator: "," }
+    converterOptions: { decimalSeparator: "," },
   });
   const field = state.field("foo");
 
@@ -324,17 +324,17 @@ test("converter options in decimal converter in convert", () => {
 
 test("converter options in decimal converter in render", () => {
   const M = types.model("M", {
-    foo: types.string
+    foo: types.string,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.stringDecimal())
+    foo: new Field(converters.stringDecimal()),
   });
 
   const o = M.create({ foo: "1234567.89" });
 
   const state = form.state(o, {
-    converterOptions: { decimalSeparator: "," }
+    converterOptions: { decimalSeparator: "," },
   });
   const field = state.field("foo");
 
@@ -343,17 +343,17 @@ test("converter options in decimal converter in render", () => {
 
 test("converter options in number converter in convert", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 4300.2 });
 
   const state = form.state(o, {
-    converterOptions: { decimalSeparator: "," }
+    converterOptions: { decimalSeparator: "," },
   });
   const field = state.field("foo");
 
@@ -365,17 +365,17 @@ test("converter options in number converter in convert", () => {
 
 test("converter options in number converter in render", () => {
   const M = types.model("M", {
-    foo: types.number
+    foo: types.number,
   });
 
   const form = new Form(M, {
-    foo: new Field(converters.number)
+    foo: new Field(converters.number),
   });
 
   const o = M.create({ foo: 1234567 });
 
   const state = form.state(o, {
-    converterOptions: { thousandSeparator: ",", renderThousands: true }
+    converterOptions: { thousandSeparator: ",", renderThousands: true },
   });
   const field = state.field("foo");
 

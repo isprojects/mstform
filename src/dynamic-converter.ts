@@ -1,7 +1,7 @@
 import {
   IConverter,
   StateConverterOptionsWithContext,
-  PartialConverterFactory
+  PartialConverterFactory,
 } from "./converter";
 import { FieldAccessor } from "./field-accessor";
 
@@ -40,7 +40,7 @@ function delegatingConverter<R, V>(
         options.context,
         options.accessor
       ).preprocessRaw(raw, options);
-    }
+    },
   };
 }
 

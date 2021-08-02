@@ -5,7 +5,7 @@ import { ISource, Query } from "./source";
 export interface IReferences<
   T extends IAnyModelType,
   SQ extends Query,
-  DQ extends Query
+  _DQ extends Query
 > {
   autoLoadReaction(): IReactionDisposer;
   clearAutoLoadReaction(): void;
@@ -27,7 +27,8 @@ export class References<
   T extends IAnyModelType,
   SQ extends Query,
   DQ extends Query
-> implements IReferences<T, SQ, DQ> {
+> implements IReferences<T, SQ, DQ>
+{
   constructor(
     public source: ISource<T, SQ & DQ>,
     public dependentQuery: DependentQuery<DQ> = () => ({} as DQ)
@@ -60,7 +61,7 @@ export class References<
     }
     return {
       ...searchQuery,
-      ...this.dependentQuery()
+      ...this.dependentQuery(),
     };
   }
 
@@ -89,7 +90,8 @@ export class References<
 }
 
 export class NoReferences<SQ extends Query, DQ extends Query>
-  implements IReferences<any, SQ, DQ> {
+  implements IReferences<any, SQ, DQ>
+{
   autoLoadReaction(): IReactionDisposer {
     throw new Error(`No references defined`);
   }
