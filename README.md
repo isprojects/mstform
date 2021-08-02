@@ -348,6 +348,9 @@ other object:
 
 - `converters.string`: value is a string.
 
+- `converters.literalString<literalType>`: value is a string.
+  literalType is a string literal type of which values are valid.
+
 - `converters.number`: value is a number.
 
 - `converters.integer`: value is an integer.
@@ -386,8 +389,8 @@ other object:
   - `cannotBeNegative`: you entered a negative number where this wasn't
     allowed.
 
-- `converters.decimalString(maxWholeDigits: x, decimalPlaces: y, allowNegative: z})`: like `converters.decimal` but has a `string` as its
-  value with a normalized representation of the decimal.
+  - `converters.decimalString(maxWholeDigits: x, decimalPlaces: y, allowNegative: z})`: like `converters.decimal` but has a `string` as its
+    value with a normalized representation of the decimal.
 
 Number and decimal converters also respond to a handful of options through the
 use of `converterOptions`. `decimalSeparator` specifies the character used to

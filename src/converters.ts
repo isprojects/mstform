@@ -51,6 +51,20 @@ function string(options: StringOptions) {
   });
 }
 
+function literalString<T>() {
+  return new Converter<T, T>({
+    emptyRaw: "" as any,
+    emptyImpossible: true,
+    convert(raw) {
+      return raw;
+    },
+    render(value) {
+      return value;
+    },
+    defaultControlled: controlled.value,
+  });
+}
+
 function number() {
   return new StringConverter<number>({
     emptyRaw: "",
@@ -354,6 +368,7 @@ const object = new Converter<any, any>({
 
 export const converters = {
   string: withDefaults(string, {}),
+  literalString,
   number,
   integer,
   stringDecimal: withDefaults(stringDecimal, {

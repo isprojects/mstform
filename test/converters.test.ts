@@ -706,3 +706,13 @@ test("maybe decimal converter/render for empty", () => {
   field.setRawFromValue();
   expect(field.raw).toEqual("");
 });
+
+test("literal string converter", () => {
+  check(converters.literalString<"foo" | "bar">(), "foo", "foo");
+
+  check(
+    converters.literalString<"aap" | "kwarktaart">(),
+    "kwarktaart",
+    "kwarktaart"
+  );
+});
