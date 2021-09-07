@@ -1542,14 +1542,16 @@ test("test enabled property interactions on form", () => {
   const M = types.model("M", {
     foo: types.string,
     bar: types.string,
+    zulu: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(converters.string),
     bar: new Field(converters.string),
+    zulu: new Field(converters.string),
   });
 
-  const o = M.create({ foo: "FOO", bar: "BAR" });
+  const o = M.create({ foo: "FOO", bar: "BAR", zulu: "zulu" });
 
   const state = form.state(o, {
     isDisabled: (accessor) =>
@@ -1562,6 +1564,7 @@ test("test enabled property interactions on form", () => {
   });
   const fooField = state.field("foo");
   const barField = state.field("bar");
+  const zuluField = state.field("zulu");
 
   expect(fooField.disabled).toBeTruthy();
   expect(fooField.enabled).toBeTruthy();
@@ -1570,6 +1573,11 @@ test("test enabled property interactions on form", () => {
   expect(barField.hidden).toBeTruthy();
   expect(barField.readOnly).toBeTruthy();
   expect(barField.enabled).toBeFalsy();
+
+  expect(zuluField.disabled).toBeFalsy();
+  expect(zuluField.hidden).toBeFalsy();
+  expect(zuluField.readOnly).toBeFalsy();
+  expect(zuluField.enabled).toBeTruthy();
 });
 
 test("a form with a repeating disabled field", () => {
