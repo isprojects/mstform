@@ -17,6 +17,7 @@ export type AccessUpdate = {
   disabled?: boolean;
   hidden?: boolean;
   required?: boolean;
+  enabled?: boolean;
 };
 
 type ValidationInfo = {
