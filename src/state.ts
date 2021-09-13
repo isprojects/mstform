@@ -518,3 +518,5 @@ export class FormState<
     return true;
   }
 }
+
+export type AnyFormState = FormState<any, any, any>

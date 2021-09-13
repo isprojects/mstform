@@ -107,3 +107,5 @@ export type IAnyRepeatingFormIndexedAccessor = IRepeatingFormIndexedAccessor<
 export type IAnyRepeatingFormAccessor = IRepeatingFormAccessor<any, any, any>;
 
 export type IAnySubFormAccessor = ISubFormAccessor<any, any, any>;
+
+export type IAnyFormAccessor = IFormAccessor<any, any, any>;
