@@ -92,6 +92,7 @@ export interface FormStateOptions<M> {
   isHidden?: AccessorAllows;
   isReadOnly?: AccessorAllows;
   isRequired?: AccessorAllows;
+  isEnabled?: AccessorAllows;
 
   getError?: ErrorOrWarning;
   getWarning?: ErrorOrWarning;
@@ -130,6 +131,7 @@ export class FormState<
   isHiddenFunc: AccessorAllows;
   isReadOnlyFunc: AccessorAllows;
   isRequiredFunc: AccessorAllows;
+  isEnabledFunc: AccessorAllows;
   getErrorFunc: ErrorOrWarning;
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
@@ -154,6 +156,7 @@ export class FormState<
       isHidden = () => false,
       isReadOnly = () => false,
       isRequired = () => false,
+      isEnabled = () => false,
       getError = () => undefined,
       getWarning = () => undefined,
       backend = undefined,
@@ -187,6 +190,7 @@ export class FormState<
     this.isHiddenFunc = isHidden;
     this.isReadOnlyFunc = isReadOnly;
     this.isRequiredFunc = isRequired;
+    this.isEnabledFunc = isEnabled;
     this.getErrorFunc = getError;
     this.getWarningFunc = getWarning;
     this.extraValidationFunc = extraValidation;

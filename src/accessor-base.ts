@@ -26,6 +26,9 @@ export abstract class AccessorBase implements IAccessor {
   @observable
   protected _isRequired = false;
 
+  @observable
+  private _isEnabled = false;
+
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
 
@@ -127,6 +130,18 @@ export abstract class AccessorBase implements IAccessor {
   }
 
   @computed
+  get enabled(): boolean {
+    return (
+      (this.parent != null &&
+        !this.readOnly &&
+        !this.disabled &&
+        !this.hidden) ||
+      this._isEnabled ||
+      this.state.isEnabledFunc(this)
+    );
+  }
+
+  @computed
   get required(): boolean {
     // field accessor subclass overrides this to handle field-specific
     // required status
@@ -164,6 +179,9 @@ export abstract class AccessorBase implements IAccessor {
   setAccess(update: AccessUpdate) {
     if (update.readOnly != null) {
       this._isReadOnly = update.readOnly;
+    }
+    if (update.enabled != null) {
+      this._isEnabled = update.enabled;
     }
     if (update.disabled != null) {
       this._isDisabled = update.disabled;

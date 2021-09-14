@@ -1533,7 +1533,51 @@ test("a form with a disabled field", () => {
   const barField = state.field("bar");
 
   expect(fooField.disabled).toBeTruthy();
+  expect(fooField.enabled).toBeFalsy();
   expect(barField.disabled).toBeFalsy();
+  expect(barField.enabled).toBeTruthy();
+});
+
+test("test enabled property interactions on form", () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string,
+    zulu: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string),
+    zulu: new Field(converters.string),
+  });
+
+  const o = M.create({ foo: "FOO", bar: "BAR", zulu: "zulu" });
+
+  const state = form.state(o, {
+    isDisabled: (accessor) =>
+      accessor.path.startsWith("/foo") || accessor.path.startsWith("/bar"),
+    isReadOnly: (accessor) =>
+      accessor.path.startsWith("/foo") || accessor.path.startsWith("/bar"),
+    isHidden: (accessor) =>
+      accessor.path.startsWith("/foo") || accessor.path.startsWith("/bar"),
+    isEnabled: (accessor) => accessor.path.startsWith("/foo"),
+  });
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+  const zuluField = state.field("zulu");
+
+  expect(fooField.disabled).toBeTruthy();
+  expect(fooField.enabled).toBeTruthy();
+
+  expect(barField.disabled).toBeTruthy();
+  expect(barField.hidden).toBeTruthy();
+  expect(barField.readOnly).toBeTruthy();
+  expect(barField.enabled).toBeFalsy();
+
+  expect(zuluField.disabled).toBeFalsy();
+  expect(zuluField.hidden).toBeFalsy();
+  expect(zuluField.readOnly).toBeFalsy();
+  expect(zuluField.enabled).toBeTruthy();
 });
 
 test("a form with a repeating disabled field", () => {
@@ -1557,6 +1601,7 @@ test("a form with a repeating disabled field", () => {
 
   expect(repeating.disabled).toBeTruthy();
   expect(repeating.index(0).field("bar").disabled).toBeTruthy();
+  expect(repeating.index(0).field("bar").enabled).toBeFalsy();
 });
 
 test("a form with a hidden field", () => {
@@ -1665,9 +1710,11 @@ test("a form with a readOnly field", () => {
 
   expect(fooField.readOnly).toBeTruthy();
   expect(fooField.inputProps.readOnly).toBeTruthy();
+  expect(fooField.enabled).toBeFalsy();
 
   expect(barField.readOnly).toBeFalsy();
   expect(barField.inputProps.readOnly).toBeUndefined();
+  expect(barField.enabled).toBeTruthy();
 });
 
 test("extra validation", () => {
