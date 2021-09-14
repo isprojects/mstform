@@ -18,13 +18,13 @@ import {
   ProcessOptions,
   errorMessage,
 } from "./form";
-import { FormState } from "./state";
+import { AnyFormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
 import { currentValidationProps } from "./validation-props";
 import { ValidateOptions } from "./validate-options";
 import { References, NoReferences, IReferences } from "./references";
 import { pathToFieldref } from "./utils";
-import { IAccessor, IFormAccessor } from "./interfaces";
+import { IAccessor, IAnyFormAccessor } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
 
 export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
@@ -39,9 +39,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   references: IReferences<any, any, any>;
 
   constructor(
-    public state: FormState<any, any, any>,
+    public state: AnyFormState,
     public field: Field<R, V>,
-    parent: IFormAccessor<any, any, any>,
+    parent: IAnyFormAccessor,
     public name: string
   ) {
     super(parent);

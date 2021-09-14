@@ -3,7 +3,7 @@ import { types, Instance } from "mobx-state-tree";
 import {
   Field,
   Form,
-  IFormAccessor,
+  IAnyFormAccessor,
   FieldAccessor,
   RepeatingForm,
   RepeatingFormAccessor,
@@ -449,7 +449,7 @@ test("error on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
-  let usedAccessor: IFormAccessor<any, any, any> | undefined = undefined;
+  let usedAccessor: IAnyFormAccessor | undefined = undefined;
 
   const state = form.state(o, {
     getError: (accessor: any) => {
@@ -477,7 +477,7 @@ test("warning on formstate", () => {
 
   const o = M.create({ foo: "FOO" });
 
-  let usedAccessor: IFormAccessor<any, any, any> | undefined = undefined;
+  let usedAccessor: IAnyFormAccessor | undefined = undefined;
 
   const state = form.state(o, {
     getWarning: (accessor: any) => {

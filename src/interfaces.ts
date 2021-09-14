@@ -10,7 +10,7 @@ import {
 } from "./accessor";
 import { FormDefinition } from "./form";
 import { AccessUpdate } from "./backend";
-import { FormState } from "./state";
+import { AnyFormState } from "./state";
 
 export interface IAccessor {
   path: string;
@@ -29,7 +29,7 @@ export interface IAccessor {
   addMode: boolean;
   context: any;
   parent: IParentAccessor;
-  state: FormState<any, any, any>;
+  state: AnyFormState;
 
   validate(options?: ValidateOptions): boolean;
 
