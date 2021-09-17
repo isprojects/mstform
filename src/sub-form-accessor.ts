@@ -2,9 +2,9 @@ import { computed, makeObservable, override } from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import { FormDefinition, GroupDefinition } from "./form";
-import { FormState } from "./state";
+import { AnyFormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
-import { ISubFormAccessor, IFormAccessor } from "./interfaces";
+import { ISubFormAccessor, IAnyFormAccessor } from "./interfaces";
 
 export class SubFormAccessor<
     D extends FormDefinition<M>,
@@ -15,10 +15,10 @@ export class SubFormAccessor<
   implements ISubFormAccessor<D, G, M>
 {
   constructor(
-    public state: FormState<any, any, any>,
+    public state: AnyFormState,
     definition: D,
     groupDefinition: G | undefined,
-    public parent: IFormAccessor<any, any, any>,
+    public parent: IAnyFormAccessor,
     public name: string
   ) {
     super(definition, groupDefinition, parent, false);

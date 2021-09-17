@@ -2,7 +2,7 @@ import { observable, computed, makeObservable } from "mobx";
 import { IAnyModelType, applyPatch, Instance } from "mobx-state-tree";
 
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
-import { FormState } from "./state";
+import { AnyFormState } from "./state";
 import { RepeatingFormIndexedAccessor } from "./repeating-form-indexed-accessor";
 import { AccessorBase } from "./accessor-base";
 import { ValidateOptions } from "./validate-options";
@@ -11,7 +11,7 @@ import {
   IAccessor,
   IRepeatingFormIndexedAccessor,
   IRepeatingFormAccessor,
-  IFormAccessor,
+  IAnyFormAccessor,
 } from "./interfaces";
 
 export class RepeatingFormAccessor<
@@ -34,9 +34,9 @@ export class RepeatingFormAccessor<
   externalWarnings = new ExternalMessages();
 
   constructor(
-    public state: FormState<any, any, any>,
+    public state: AnyFormState,
     public repeatingForm: RepeatingForm<D, G>,
-    public parent: IFormAccessor<any, any, any>,
+    public parent: IAnyFormAccessor,
     name: string
   ) {
     super(parent);

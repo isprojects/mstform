@@ -2,7 +2,7 @@ import { computed, observable, action, makeObservable } from "mobx";
 
 import { pathToFieldref } from "./utils";
 import { ExternalMessages } from "./validationMessages";
-import { FormState } from "./state";
+import { AnyFormState } from "./state";
 import { ValidateOptions } from "./validate-options";
 import { IAccessor, IParentAccessor } from "./interfaces";
 import { AccessUpdate } from "./backend";
@@ -32,7 +32,7 @@ export abstract class AccessorBase implements IAccessor {
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
 
-  abstract get state(): FormState<any, any, any>;
+  abstract get state(): AnyFormState;
 
   abstract get path(): string;
   abstract get addMode(): boolean;

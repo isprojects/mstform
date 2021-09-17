@@ -7,6 +7,7 @@ import {
   RepeatingForm,
   converters,
   IFormAccessor,
+  IAnyFormAccessor,
 } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -56,7 +57,7 @@ test("value for sub form", () => {
   expect(sub.value).toBe(o.foo);
   expect(getType(sub.value)).toBe(N);
   expect(sub.value.something()).toEqual("BARX");
-  expect(getType((sub.parent as IFormAccessor<any, any, any>).value)).toBe(M);
+  expect(getType((sub.parent as IAnyFormAccessor).value)).toBe(M);
 });
 
 test("value for repeating form", () => {
@@ -92,8 +93,8 @@ test("value for repeating form", () => {
   expect(first.value).toBe(o.foo[0]);
   expect(getType(first.value)).toBe(N);
   expect(first.value.something()).toEqual("BARX");
-  const parent = first.parent as IFormAccessor<any, any, any>;
-  const parentParent = parent.parent as IFormAccessor<any, any, any>;
+  const parent = first.parent as IAnyFormAccessor;
+  const parentParent = parent.parent as IAnyFormAccessor;
   expect(getType(parent.value)).toMatchObject(types.array(N));
   expect(getType(parentParent.value)).toBe(M);
 });

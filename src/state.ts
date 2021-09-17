@@ -40,6 +40,7 @@ import { Validation } from "./validationMessages";
 import {
   IAccessor,
   IFormAccessor,
+  IAnyFormAccessor,
   IRepeatingFormAccessor,
   ISubFormAccessor,
 } from "./interfaces";
@@ -262,7 +263,7 @@ export class FormState<
   // between form accessor and its subclasses
   createRepeatingFormAccessor(
     repeatingForm: RepeatingForm<any, any>,
-    parent: IFormAccessor<any, any, any>,
+    parent: IAnyFormAccessor,
     name: string
   ): IRepeatingFormAccessor<any, any, any> {
     return new RepeatingFormAccessor(this, repeatingForm, parent, name);
@@ -271,7 +272,7 @@ export class FormState<
   createSubFormAccessor(
     definition: any,
     groupDefinition: any,
-    parent: IFormAccessor<any, any, any>,
+    parent: IAnyFormAccessor,
     name: string
   ): ISubFormAccessor<any, any, any> {
     return new SubFormAccessor(this, definition, groupDefinition, parent, name);
@@ -522,3 +523,5 @@ export class FormState<
     return true;
   }
 }
+
+export type AnyFormState = FormState<any, any, any>;
