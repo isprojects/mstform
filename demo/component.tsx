@@ -59,7 +59,7 @@ const MyTextArea: React.FunctionComponent<{
   field: FieldAccessor<any, any>;
 }> = observer((props) => <textarea {...props.field.inputProps} />);
 
-type MyFormProps = {};
+type MyFormProps = Record<string, unknown>;
 
 export class MyForm extends Component<MyFormProps> {
   formState: typeof form.FormStateType;
