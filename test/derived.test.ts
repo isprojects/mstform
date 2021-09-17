@@ -321,6 +321,68 @@ test("calculated with context", () => {
   expect(calculated.value).toEqual("3.5801");
 });
 
+test("calculated derived update without change", () => {
+  const M = types
+    .model("M", {
+      calculated: types.number,
+      a: types.number,
+      b: types.number,
+    })
+    .views((self) => ({
+      sum() {
+        return self.a + self.b;
+      },
+    }));
+
+  const form = new Form(M, {
+    calculated: new Field(converters.number, {
+      derived: (node: Instance<typeof M>) => node.sum(),
+    }),
+    a: new Field(converters.number),
+    b: new Field(converters.number),
+  });
+
+  const o = M.create({ calculated: 0, a: 1, b: 2 });
+
+  const state = form.state(o);
+  const calculated = state.field("calculated");
+  const a = state.field("a");
+  const b = state.field("b");
+
+  // Update our calculated value to match the state of a and b.
+  a.setRaw("3");
+
+  // Javascript has no simple variable id comparison, but it does have object property comparison. Therefore, we start with making an object
+  const obj = {};
+  const descriptor = Object.create(null); // no inherited properties
+  descriptor.calculatedRaw = calculated.raw;
+  descriptor.calculatedValue = calculated.value;
+  Object.defineProperty(obj, "key", descriptor); // not enumerable, not configurable, not writable as defaults
+  // If freeze is available, prevents adding or removing the object prototype properties.
+  (Object.freeze || Object)(descriptor.prototype); // (get, set, calculatedRaw, calculatedValue)
+
+  // Double check the numbers match common sense
+  expect(descriptor.calculatedRaw).toEqual("5");
+  expect(descriptor.calculatedValue).toEqual(5);
+
+  // Check if the calculated value changed after changing one the fields it is derived from. It is not supposed to.
+  b.setRaw("2");
+  const newObj = {};
+  const newDescriptor = Object.create(null);
+  newDescriptor.calculatedRaw = calculated.raw;
+  newDescriptor.calculatedValue = calculated.value;
+  Object.defineProperty(newObj, "key", newDescriptor);
+  (Object.freeze || Object)(newDescriptor.prototype);
+
+  // Check if they're the same or new derived values using the most strict methods possible.
+  expect(Object.is(descriptor.calculatedRaw, newDescriptor.calculatedRaw)).toBe(
+    true
+  );
+  expect(
+    Object.is(descriptor.calculatedValue, newDescriptor.calculatedValue)
+  ).toBe(true);
+});
+
 test("dispose", () => {
   // keep a counter to track how often we call our sum function
   // it's called more than we would wish, but if we don't properly
