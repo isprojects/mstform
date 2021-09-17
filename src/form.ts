@@ -296,6 +296,7 @@ export class Field<R, V> {
     raw: R,
     stateConverterOptions: StateConverterOptionsWithContext
   ): ProcessResponse<V> {
+    console.log("[PROCESS]", raw);
     for (const validator of this.rawValidators) {
       const validationResponse = validator(raw, stateConverterOptions.context);
       if (typeof validationResponse === "string" && validationResponse) {

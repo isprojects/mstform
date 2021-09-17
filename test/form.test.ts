@@ -2771,3 +2771,44 @@ test("a simple form with literalString converter", () => {
 
   expect(field.node).toBe(state.node);
 });
+
+test("update field textStringArray", () => {
+  const M = types
+    .model("M", {
+      foo: types.array(types.string),
+    })
+    .actions((self) => ({
+      update() {
+        const result: string[] = ["BAR"];
+        self.foo.replace(result);
+      },
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.textStringArray, { required: true }),
+  });
+  const o = M.create({ foo: ["FOO"] });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  field.setRaw("+FOO");
+
+  expect(field.raw).toEqual("+FOO");
+  expect(o.foo).toEqual(["+FOO"]);
+  expect(field.value).toEqual(["+FOO"]);
+
+  console.log("[RAW]", field.raw);
+  console.log("[VALUE]", field.value);
+  console.log("[STATE]", o.foo.toJSON());
+  console.log("[UPDATE]");
+  o.update();
+  console.log("[RAW]", field.raw);
+  console.log("[VALUE]", field.value);
+  console.log("[STATE]", o.foo.toJSON());
+
+  expect(o.foo).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+});
