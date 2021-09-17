@@ -1,3 +1,12 @@
+# 1.31.0
+
+- Exposed `IFormAccessor<any, any, any>` type as `IAnyFormAccessor` and `FormState<any, any, any>` as AnyFormState.
+- Added isEnabled and associated methods/properties in the same manner as isHidden().
+- Enabled terser minify for production builds.
+- Fixed MyFormProps typescript error.
+- Added test to verify derived field does not change when its value is the same as before.
+- Updated contributors list.
+
 # 1.30.0
 
 - Added a `literalString` converter, supporting the `types.literal` type from `mobx-state-tree`.
