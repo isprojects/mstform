@@ -1,4 +1,4 @@
-import { configure, autorun } from "mobx";
+import { configure, autorun, observable } from "mobx";
 import { types, applySnapshot, onPatch, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
 
@@ -2772,7 +2772,7 @@ test("a simple form with literalString converter", () => {
   expect(field.node).toBe(state.node);
 });
 
-test("update field textStringArray", () => {
+test("update field textStringArray no change", () => {
   const M = types
     .model("M", {
       foo: types.array(types.string),
@@ -2793,20 +2793,45 @@ test("update field textStringArray", () => {
 
   const field = state.field("foo");
 
-  field.setRaw("+FOO");
+  expect(field.raw).toEqual("FOO");
+  expect(o.foo).toEqual(["FOO"]);
+  expect(field.value).toEqual(["FOO"]);
 
-  expect(field.raw).toEqual("+FOO");
-  expect(o.foo).toEqual(["+FOO"]);
-  expect(field.value).toEqual(["+FOO"]);
-
-  console.log("[RAW]", field.raw);
-  console.log("[VALUE]", field.value);
-  console.log("[STATE]", o.foo.toJSON());
-  console.log("[UPDATE]");
   o.update();
-  console.log("[RAW]", field.raw);
-  console.log("[VALUE]", field.value);
-  console.log("[STATE]", o.foo.toJSON());
+
+  expect(o.foo).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+});
+
+test("update field textStringArray after change", () => {
+  const M = types
+    .model("M", {
+      foo: types.array(types.string),
+    })
+    .actions((self) => ({
+      update() {
+        const result: string[] = ["BAR"];
+        self.foo.replace(["BAR"]);
+      },
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.textStringArray, { required: true }),
+  });
+  const o = M.create({ foo: ["FOO"] });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  field.setValueAndUpdateRaw(observable.array(["FOO2"]));
+
+  expect(field.raw).toEqual("FOO2");
+  expect(o.foo).toEqual(["FOO2"]);
+  expect(field.value).toEqual(["FOO2"]);
+
+  o.update();
 
   expect(o.foo).toEqual(["BAR"]);
   expect(field.raw).toEqual("BAR");
