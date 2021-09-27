@@ -381,19 +381,23 @@ export class FormState<
     const accessor = this.accessByPath(
       stepsToPath(steps.slice(0, steps.length - 1))
     );
-    if (
-      accessor === undefined ||
-      !(accessor instanceof RepeatingFormAccessor)
-    ) {
-      // if this isn't a repeating indexed accessor we don't need to react
+    if (accessor === undefined) {
       return;
     }
 
-    accessor.addIndex(index);
+    if (accessor instanceof RepeatingFormAccessor) {
+      accessor.addIndex(index);
+      return;
+    }
+
+    if (Array.isArray(accessor.value)) {
+      this.replacePath(stepsToPath(steps.slice(0, steps.length - 1)));
+    }
 
     // we cannot set it into add mode here, as this can be triggered
     // by code like applySnapshot. Instead use the RepeatingFormAccessor
     // API to ensure add mode is set
+    return;
   }
 
   @action

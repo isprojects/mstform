@@ -348,7 +348,6 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   @action
   setValueAndUpdateRaw(value: V) {
-    // We want to update a value through the accessor and also update the raw
     this.setValue(value);
     this.setRawFromValue();
   }
