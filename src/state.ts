@@ -346,6 +346,21 @@ export class FormState<
     try {
       accessor = this.accessByPath(path);
     } catch {
+      // If no accessor is found we try to see if we are dealing with an array.
+      const steps = pathToSteps(path);
+      const newPath = stepsToPath(steps.slice(0, steps.length - 1));
+      accessor = this.accessByPath(newPath);
+
+      if (accessor === undefined) {
+        return;
+      }
+
+      // When we are dealing with an array we should redirect this action into the replacePath one.
+      // This in turn makes sure that the raw value is updated with the new array value.
+      if (Array.isArray(accessor.value)) {
+        this.replacePath(newPath);
+      }
+
       // it's possible for a path to remove removed but it not
       // being part of a repeating form -- in case of arrays treated
       // as a value

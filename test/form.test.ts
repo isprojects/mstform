@@ -2779,8 +2779,13 @@ test("update field textStringArray via store action", () => {
     })
     .actions((self) => ({
       update() {
-        const result: string[] = ["BAR"];
-        self.foo.replace(result);
+        self.foo.replace(["BAR"]);
+      },
+      add() {
+        self.foo.push("FOO");
+      },
+      remove() {
+        self.foo.remove("FOO");
       },
     }));
 
@@ -2802,6 +2807,18 @@ test("update field textStringArray via store action", () => {
   expect(o.foo).toEqual(["BAR"]);
   expect(field.raw).toEqual("BAR");
   expect(field.value).toEqual(["BAR"]);
+
+  o.add();
+
+  expect(o.foo).toEqual(["BAR", "FOO"]);
+  expect(field.raw).toEqual("BAR\nFOO");
+  expect(field.value).toEqual(["BAR", "FOO"]);
+
+  o.remove();
+
+  expect(o.foo).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
 });
 
 test("update field textStringArray after change", () => {
@@ -2811,7 +2828,6 @@ test("update field textStringArray after change", () => {
     })
     .actions((self) => ({
       update() {
-        const result: string[] = ["BAR"];
         self.foo.replace(["BAR"]);
       },
     }));
@@ -2845,8 +2861,13 @@ test("update field textStringArray via store action in repeating form", () => {
     })
     .actions((self) => ({
       update() {
-        const result: string[] = ["BAR"];
-        self.bar.replace(result);
+        self.bar.replace(["BAR"]);
+      },
+      add() {
+        self.bar.push("FOO");
+      },
+      remove() {
+        self.bar.remove("FOO");
       },
     }));
 
@@ -2874,6 +2895,24 @@ test("update field textStringArray via store action in repeating form", () => {
   expect(field.value).toEqual(["FOO"]);
 
   o.foo[0].update();
+
+  expect(o.foo[0].bar).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+
+  o.foo[0].add();
+
+  expect(o.foo[0].bar).toEqual(["BAR", "FOO"]);
+  expect(field.raw).toEqual("BAR\nFOO");
+  expect(field.value).toEqual(["BAR", "FOO"]);
+
+  o.foo[0].remove();
+
+  expect(o.foo[0].bar).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+
+  o.foo[0].remove();
 
   expect(o.foo[0].bar).toEqual(["BAR"]);
   expect(field.raw).toEqual("BAR");
