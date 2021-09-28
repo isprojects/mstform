@@ -1,4 +1,4 @@
-import { configure, autorun } from "mobx";
+import { configure, autorun, observable } from "mobx";
 import { types, applySnapshot, onPatch, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
 
@@ -2921,4 +2921,151 @@ test.only("form with reference isDirty check", () => {
   field.setRaw(r1);
   expect(field.isDirty).toBeFalsy();
   expect(state.isDirty).toBeFalsy();
+});
+
+test("update field textStringArray via store action", () => {
+  const M = types
+    .model("M", {
+      foo: types.array(types.string),
+    })
+    .actions((self) => ({
+      update() {
+        self.foo.replace(["BAR"]);
+      },
+      add() {
+        self.foo.push("FOO");
+      },
+      remove() {
+        self.foo.remove("FOO");
+      },
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.textStringArray, { required: true }),
+  });
+  const o = M.create({ foo: ["FOO"] });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("FOO");
+  expect(o.foo).toEqual(["FOO"]);
+  expect(field.value).toEqual(["FOO"]);
+
+  o.update();
+
+  expect(o.foo).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+
+  o.add();
+
+  expect(o.foo).toEqual(["BAR", "FOO"]);
+  expect(field.raw).toEqual("BAR\nFOO");
+  expect(field.value).toEqual(["BAR", "FOO"]);
+
+  o.remove();
+
+  expect(o.foo).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+});
+
+test("update field textStringArray after change", () => {
+  const M = types
+    .model("M", {
+      foo: types.array(types.string),
+    })
+    .actions((self) => ({
+      update() {
+        self.foo.replace(["BAR"]);
+      },
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.textStringArray, { required: true }),
+  });
+  const o = M.create({ foo: ["FOO"] });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  field.setValueAndUpdateRaw(observable.array(["FOO2"]));
+
+  expect(field.raw).toEqual("FOO2");
+  expect(o.foo).toEqual(["FOO2"]);
+  expect(field.value).toEqual(["FOO2"]);
+
+  o.update();
+
+  expect(o.foo).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+});
+
+test("update field textStringArray via store action in repeating form", () => {
+  const N = types
+    .model("N", {
+      bar: types.array(types.string),
+    })
+    .actions((self) => ({
+      update() {
+        self.bar.replace(["BAR"]);
+      },
+      add() {
+        self.bar.push("FOO");
+      },
+      remove() {
+        self.bar.remove("FOO");
+      },
+    }));
+
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.textStringArray, { required: true }),
+    }),
+  });
+
+  const o = M.create({ foo: [{ bar: ["FOO"] }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  const oneForm = forms.index(0);
+
+  const field = oneForm.field("bar");
+
+  expect(field.raw).toEqual("FOO");
+  expect(o.foo[0].bar).toEqual(["FOO"]);
+  expect(field.value).toEqual(["FOO"]);
+
+  o.foo[0].update();
+
+  expect(o.foo[0].bar).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+
+  o.foo[0].add();
+
+  expect(o.foo[0].bar).toEqual(["BAR", "FOO"]);
+  expect(field.raw).toEqual("BAR\nFOO");
+  expect(field.value).toEqual(["BAR", "FOO"]);
+
+  o.foo[0].remove();
+
+  expect(o.foo[0].bar).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+
+  o.foo[0].remove();
+
+  expect(o.foo[0].bar).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
 });
