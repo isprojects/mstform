@@ -52,7 +52,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     makeObservable(this);
     this.createDerivedReaction();
     this._value = state.getValue(this.path);
-    this._originalValue = this._value;
+    this._originalValue = toJS(this._value);
     if (field.options && field.options.references) {
       const options = field.options.references;
       const dependentQuery = options.dependentQuery || (() => ({}));
@@ -277,7 +277,16 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (this.addMode) {
       return false;
     }
-    return this.value !== this._originalValue;
+    if (Array.isArray(this.value)) {
+      return toJS(this.value).length !== this._originalValue.length;
+    }
+
+    const jsValue = toJS(this.value);
+
+    if (jsValue != null && (jsValue as any).constructor == {}.constructor) {
+      return JSON.stringify(jsValue) !== JSON.stringify(this._originalValue);
+    }
+    return jsValue !== this._originalValue;
   }
 
   @computed
