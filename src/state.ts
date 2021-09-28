@@ -378,9 +378,9 @@ export class FormState<
       return;
     }
 
-    const accessor = this.accessByPath(
-      stepsToPath(steps.slice(0, steps.length - 1))
-    );
+    const newPath = stepsToPath(steps.slice(0, steps.length - 1));
+
+    const accessor = this.accessByPath(newPath);
     if (accessor === undefined) {
       return;
     }
@@ -390,14 +390,15 @@ export class FormState<
       return;
     }
 
+    // When we are dealing with an array we should redirect this action into the replacePath one.
+    // This in turn makes sure that the raw value is updated with the new array value.
     if (Array.isArray(accessor.value)) {
-      this.replacePath(stepsToPath(steps.slice(0, steps.length - 1)));
+      this.replacePath(newPath);
     }
 
     // we cannot set it into add mode here, as this can be triggered
     // by code like applySnapshot. Instead use the RepeatingFormAccessor
     // API to ensure add mode is set
-    return;
   }
 
   @action

@@ -2772,7 +2772,7 @@ test("a simple form with literalString converter", () => {
   expect(field.node).toBe(state.node);
 });
 
-test("update field textStringArray no change", () => {
+test("update field textStringArray via store action", () => {
   const M = types
     .model("M", {
       foo: types.array(types.string),
@@ -2834,6 +2834,48 @@ test("update field textStringArray after change", () => {
   o.update();
 
   expect(o.foo).toEqual(["BAR"]);
+  expect(field.raw).toEqual("BAR");
+  expect(field.value).toEqual(["BAR"]);
+});
+
+test("update field textStringArray via store action in repeating form", () => {
+  const N = types
+    .model("N", {
+      bar: types.array(types.string),
+    })
+    .actions((self) => ({
+      update() {
+        const result: string[] = ["BAR"];
+        self.bar.replace(result);
+      },
+    }));
+
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.textStringArray, { required: true }),
+    }),
+  });
+
+  const o = M.create({ foo: [{ bar: ["FOO"] }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  const oneForm = forms.index(0);
+
+  const field = oneForm.field("bar");
+
+  expect(field.raw).toEqual("FOO");
+  expect(o.foo[0].bar).toEqual(["FOO"]);
+  expect(field.value).toEqual(["FOO"]);
+
+  o.foo[0].update();
+
+  expect(o.foo[0].bar).toEqual(["BAR"]);
   expect(field.raw).toEqual("BAR");
   expect(field.value).toEqual(["BAR"]);
 });
