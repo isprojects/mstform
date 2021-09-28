@@ -2771,3 +2771,154 @@ test("a simple form with literalString converter", () => {
 
   expect(field.node).toBe(state.node);
 });
+
+test.only("isdirty form and field in addmode", () => {
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, { addMode: true });
+  const field = state.field("foo");
+
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  field.setRaw("correct");
+  expect(state.isDirty).toBeTruthy();
+  expect(field.isDirty).toBeTruthy();
+
+  field.setRaw("FOO");
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});
+
+test.only("isdirty form and field", () => {
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  field.setRaw("correct");
+  expect(state.isDirty).toBeTruthy();
+  expect(field.isDirty).toBeTruthy();
+
+  field.setRaw("FOO");
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});
+
+test.only("repeating form new row isDirty", () => {
+  const N = types.model("N", {
+    bar: types.string,
+  });
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string),
+    }),
+  });
+
+  const o = M.create({ foo: [] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+
+  expect(state.isDirty).toBeFalsy();
+  forms.push(N.create({ bar: "bla" }));
+  expect(state.isDirty).toBeTruthy();
+});
+
+test.only("repeating form existing row isDirty", () => {
+  const N = types.model("N", {
+    bar: types.string,
+  });
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string),
+    }),
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  const oneForm = forms.index(0);
+
+  const field = oneForm.field("bar");
+
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  field.setRaw("QUX");
+  expect(field.isDirty).toBeTruthy();
+  expect(state.isDirty).toBeTruthy();
+});
+
+test.only("form with reference isDirty check", () => {
+  const R = types.model("R", {
+    id: types.identifier,
+    bar: types.string,
+  });
+
+  const M = types.model("M", {
+    foo: types.reference(R),
+  });
+
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M,
+  });
+
+  const root = Root.create({
+    entries: [
+      { id: "1", bar: "correct" },
+      { id: "2", bar: "incorrect" },
+    ],
+    instance: { foo: "1" },
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.model(R)),
+  });
+
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
+
+  const o = root.instance;
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  field.setRaw(r2);
+  expect(field.isDirty).toBeTruthy();
+  expect(state.isDirty).toBeTruthy();
+
+  field.setRaw(r1);
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});

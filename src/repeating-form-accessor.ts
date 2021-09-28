@@ -32,6 +32,7 @@ export class RepeatingFormAccessor<
 
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
+  _initialLength = 0;
 
   constructor(
     public state: AnyFormState,
@@ -43,6 +44,7 @@ export class RepeatingFormAccessor<
     makeObservable(this);
     this.name = name;
     this.initialize();
+    this._initialLength = this.length;
   }
 
   @computed
@@ -77,6 +79,14 @@ export class RepeatingFormAccessor<
   @computed
   get addMode(): boolean {
     return this.parent.addMode;
+  }
+
+  @computed
+  get isDirty(): boolean {
+    if (this.length != this._initialLength) {
+      return true;
+    }
+    return this.accessors.some((accessor) => accessor.isDirty);
   }
 
   initialize() {

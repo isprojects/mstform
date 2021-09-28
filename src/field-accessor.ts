@@ -31,8 +31,12 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @observable
   _raw: R | undefined;
 
+  @observable _originalRaw: R | undefined;
+
   @observable
   _value: V;
+
+  _originalValue: any;
 
   _disposer: IReactionDisposer | undefined;
 
@@ -48,6 +52,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     makeObservable(this);
     this.createDerivedReaction();
     this._value = state.getValue(this.path);
+    this._originalValue = this._value;
     if (field.options && field.options.references) {
       const options = field.options.references;
       const dependentQuery = options.dependentQuery || (() => ({}));
@@ -265,6 +270,14 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @computed
   get isValid(): boolean {
     return this.errorValue === undefined;
+  }
+
+  @computed
+  get isDirty(): boolean {
+    if (this.addMode) {
+      return false;
+    }
+    return this.value !== this._originalValue;
   }
 
   @computed

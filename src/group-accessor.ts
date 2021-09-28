@@ -23,6 +23,11 @@ export class GroupAccessor<D extends FormDefinition<any>> {
     return this.hasFeedback(this.isWarningFreeForNames.bind(this));
   }
 
+  @computed
+  get isDirty(): boolean {
+    throw new Error("Not implemented for group accessor");
+  }
+
   hasFeedback(feedbackFunc: (names: (keyof D)[]) => boolean): boolean {
     const include = this.group.options.include;
     const exclude = this.group.options.exclude;

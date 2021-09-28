@@ -34,6 +34,7 @@ export interface IAccessor {
   validate(options?: ValidateOptions): boolean;
 
   isValid: boolean;
+  isDirty: boolean;
 
   accessors: IAccessor[];
   flatAccessors: IAccessor[];
