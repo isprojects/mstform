@@ -1,6 +1,6 @@
 import { configure, autorun, observable, toJS } from "mobx";
 import { types, applySnapshot, onPatch, Instance } from "mobx-state-tree";
-import { Field, Form, RepeatingForm, converters } from "../src";
+import { Field, Form, RepeatingForm, converters, Group } from "../src";
 
 // "always" leads to trouble during initialization.
 configure({ enforceActions: "observed" });
@@ -2823,6 +2823,74 @@ test("isdirty form and field in addmode", async () => {
   // save without ignoring messages
   await state.save();
   expect(field.isDirty).toBeTruthy();
+  expect(state.isDirty).toBeTruthy();
+});
+
+test("isdirty form and field in addmode with group", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: [],
+    };
+  }
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string,
+    blop: types.string,
+  });
+
+  const form = new Form(
+    M,
+    {
+      foo: new Field(converters.string),
+      bar: new Field(converters.string),
+      blop: new Field(converters.string),
+    },
+    {
+      one: new Group({ exclude: ["blop"] }),
+    }
+  );
+
+  const o = M.create({ foo: "FOO", bar: "BAR", blop: "BLOP" });
+
+  const state = form.state(o, {
+    backend: { save: mySave, process: process },
+    addMode: true,
+  });
+  const fieldFoo = state.field("foo");
+  const fieldBar = state.field("bar");
+  const fieldBlop = state.field("blop");
+  const group = state.group("one");
+
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  fieldFoo.setRaw("correct");
+  expect(group.isDirty).toBeTruthy();
+  expect(fieldFoo.isDirty).toBeTruthy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeTruthy();
+
+  await state.save();
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+
+  fieldBlop.setRaw("otherValue");
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeTruthy();
   expect(state.isDirty).toBeTruthy();
 });
 

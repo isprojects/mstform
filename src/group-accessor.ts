@@ -25,11 +25,7 @@ export class GroupAccessor<D extends FormDefinition<any>> {
 
   @computed
   get isDirty(): boolean {
-    throw new Error("Not implemented for group accessor");
-  }
-
-  resetDirtyState(): void {
-    throw new Error("Not implemented for group accessor");
+    return this.hasFeedback(this.isDirtyForNames.bind(this));
   }
 
   hasFeedback(feedbackFunc: (names: (keyof D)[]) => boolean): boolean {
@@ -69,6 +65,16 @@ export class GroupAccessor<D extends FormDefinition<any>> {
         return true;
       }
       return accessor.isWarningFree;
+    });
+  }
+
+  isDirtyForNames(names: (keyof D)[]): boolean {
+    return names.some((key) => {
+      const accessor = this.parent.access(key as string);
+      if (accessor == null) {
+        return false;
+      }
+      return accessor.isDirty;
     });
   }
 }
