@@ -39,6 +39,7 @@ export interface IAccessor {
   accessors: IAccessor[];
   flatAccessors: IAccessor[];
   accessBySteps(steps: string[]): IAccessor | undefined;
+  resetDirtyState(): void;
 
   dispose(): void;
   clear(): void;

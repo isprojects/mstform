@@ -89,6 +89,11 @@ export class RepeatingFormAccessor<
     return this.accessors.some((accessor) => accessor.isDirty);
   }
 
+  resetDirtyState(): void {
+    this._initialLength = this.length;
+    this.accessors.forEach((accessor) => accessor.resetDirtyState());
+  }
+
   initialize() {
     const entries = this.state.getValue(this.path);
     let i = 0;

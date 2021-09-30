@@ -289,6 +289,10 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     return jsValue !== this._originalValue;
   }
 
+  resetDirtyState(): void {
+    this._originalValue = toJS(this._value);
+  }
+
   @computed
   get requiredError(): string {
     const requiredError = this.field.requiredError || this.state._requiredError;

@@ -83,6 +83,10 @@ export abstract class FormAccessorBase<
     return this.accessors.some((accessor) => accessor.isDirty);
   }
 
+  resetDirtyState(): void {
+    this.accessors.forEach((accessor) => accessor.resetDirtyState());
+  }
+
   @computed
   get accessors(): IAccessor[] {
     const result: IAccessor[] = [];

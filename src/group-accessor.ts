@@ -28,6 +28,10 @@ export class GroupAccessor<D extends FormDefinition<any>> {
     throw new Error("Not implemented for group accessor");
   }
 
+  resetDirtyState(): void {
+    throw new Error("Not implemented for group accessor");
+  }
+
   hasFeedback(feedbackFunc: (names: (keyof D)[]) => boolean): boolean {
     const include = this.group.options.include;
     const exclude = this.group.options.exclude;

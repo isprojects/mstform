@@ -2772,7 +2772,18 @@ test("a simple form with literalString converter", () => {
   expect(field.node).toBe(state.node);
 });
 
-test("isdirty form and field in addmode", () => {
+test("isdirty form and field in addmode", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: [],
+    };
+  }
   const M = types.model("M", {
     foo: types.string,
   });
@@ -2783,7 +2794,13 @@ test("isdirty form and field in addmode", () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.state(o, { addMode: true });
+  const state = form.state(o, {
+    backend: { save: mySave, process: process },
+    addMode: true,
+    getError: (accessor) => {
+      return accessor.path === "/foo" ? "Wrong!" : undefined;
+    },
+  });
   const field = state.field("foo");
 
   expect(field.isDirty).toBeFalsy();
@@ -2795,6 +2812,18 @@ test("isdirty form and field in addmode", () => {
   field.setRaw("FOO");
   expect(field.isDirty).toBeFalsy();
   expect(state.isDirty).toBeFalsy();
+
+  field.setRaw("correct");
+  // save with ignoring messages
+  await state.save({ ignoreGetError: true });
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+
+  field.setRaw("FOO");
+  // save without ignoring messages
+  await state.save();
+  expect(field.isDirty).toBeTruthy();
+  expect(state.isDirty).toBeTruthy();
 });
 
 test("isdirty form and field in addmode and addmodedefaults", () => {
@@ -2857,8 +2886,6 @@ test("form with reference and addmodedefaults isDirty check", () => {
 
   const state = form.state(o, { addMode: true, addModeDefaults: ["foo"] });
   const field = state.field("foo");
-  const x = toJS;
-  debugger;
 
   expect(field.value).toBe(r1);
 
@@ -2932,7 +2959,10 @@ test("isdirty form and field array field", () => {
   expect(state.isDirty).toBeFalsy();
 });
 
-test("repeating form new row isDirty", () => {
+test("repeating form new row isDirty", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
   const N = types.model("N", {
     bar: types.string,
   });
@@ -2948,13 +2978,16 @@ test("repeating form new row isDirty", () => {
 
   const o = M.create({ foo: [] });
 
-  const state = form.state(o);
+  const state = form.state(o, { backend: { save: mySave } });
 
   const forms = state.repeatingForm("foo");
 
   expect(state.isDirty).toBeFalsy();
   forms.push(N.create({ bar: "bla" }));
   expect(state.isDirty).toBeTruthy();
+
+  await state.save();
+  expect(state.isDirty).toBeFalsy();
 });
 
 test("repeating form existing row isDirty", () => {
@@ -2985,6 +3018,35 @@ test("repeating form existing row isDirty", () => {
   field.setRaw("QUX");
   expect(field.isDirty).toBeTruthy();
   expect(state.isDirty).toBeTruthy();
+});
+
+test("repeating form add row isDirty", () => {
+  const N = types.model("N", {
+    bar: types.string,
+  });
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string),
+    }),
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+
+  expect(state.isDirty).toBeFalsy();
+  const newRecord = N.create({ bar: "FOO" });
+  forms.push(newRecord);
+  expect(state.isDirty).toBeTruthy();
+
+  forms.remove(newRecord);
+  expect(state.isDirty).toBeFalsy();
 });
 
 test("form with reference isDirty check", () => {

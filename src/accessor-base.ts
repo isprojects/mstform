@@ -41,6 +41,7 @@ export abstract class AccessorBase implements IAccessor {
   abstract get isDirty(): boolean;
   abstract accessBySteps(steps: string[]): IAccessor | undefined;
   abstract validate(options?: ValidateOptions): boolean;
+  abstract resetDirtyState(): void;
 
   constructor(public parent: IParentAccessor) {
     makeObservable(this);
