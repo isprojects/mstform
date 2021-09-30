@@ -31,8 +31,6 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @observable
   _raw: R | undefined;
 
-  @observable _originalRaw: R | undefined;
-
   @observable
   _value: V;
 
