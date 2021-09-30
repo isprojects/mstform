@@ -2892,6 +2892,14 @@ test("isdirty form and field in addmode with group", async () => {
   expect(fieldBar.isDirty).toBeFalsy();
   expect(fieldBlop.isDirty).toBeTruthy();
   expect(state.isDirty).toBeTruthy();
+
+  fieldFoo.setRaw("something else");
+  expect(fieldFoo.isDirty).toBeTruthy();
+  expect(group.isDirty).toBeTruthy();
+  group.resetDirtyState();
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeTruthy();
 });
 
 test("isdirty form and field in addmode and addmodedefaults", () => {

@@ -15,20 +15,35 @@ export class GroupAccessor<D extends FormDefinition<any>> {
 
   @computed
   get isValid(): boolean {
-    return this.hasFeedback(this.isValidForNames.bind(this));
+    return this.handleNames(this.isValidForNames.bind(this));
   }
 
   @computed
   get isWarningFree(): boolean {
-    return this.hasFeedback(this.isWarningFreeForNames.bind(this));
+    return this.handleNames(this.isWarningFreeForNames.bind(this));
   }
 
   @computed
   get isDirty(): boolean {
-    return this.hasFeedback(this.isDirtyForNames.bind(this));
+    return this.handleNames(this.isDirtyForNames.bind(this));
   }
 
-  hasFeedback(feedbackFunc: (names: (keyof D)[]) => boolean): boolean {
+  resetDirtyState(): void {
+    this.handleNames(this.handleResetDirtyState.bind(this));
+  }
+
+  handleResetDirtyState(names: (keyof D)[]): boolean {
+    names.forEach((key) => {
+      const accessor = this.parent.access(key as string);
+      if (accessor == null) {
+        return true;
+      }
+      return accessor.resetDirtyState();
+    });
+    return true;
+  }
+
+  handleNames(feedbackFunc: (names: (keyof D)[]) => boolean): boolean {
     const include = this.group.options.include;
     const exclude = this.group.options.exclude;
     if (include != null && exclude != null) {
