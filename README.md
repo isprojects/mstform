@@ -1722,7 +1722,7 @@ When saving the form and the save was succesful the dirty state will be reset,
 so the state after saving will be set as the initial value on every
 `FieldAccessor`.
 
-Manually resetting the dirty state can be done by calling `resetDirtyStates` on
+Manually resetting the dirty state can be done by calling `resetDirtyState` on
 the `FormState` or `resetDirtyState` on any other `accessor`.
 
 ## Tips

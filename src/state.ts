@@ -437,12 +437,12 @@ export class FormState<
     }
 
     return this.processor.realSave().then((result) => {
-      this.resetDirtyStates();
+      this.resetDirtyState();
       return result;
     });
   }
 
-  resetDirtyStates() {
+  resetDirtyState() {
     this.flatAccessors.forEach((accessor) => {
       accessor.resetDirtyState();
     });
