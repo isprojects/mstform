@@ -120,14 +120,14 @@ export class RepeatingFormAccessor<
       return;
     }
 
-    // If hashed do match we don't need to restore any removed lines or remove
+    // If hashes do match we don't need to restore any removed lines or remove
     // newly added ones.
     if (this.hashesMatch) {
       this.accessors.forEach((accessor) => accessor.restore());
       return;
     }
 
-    // If hashed do not match we need to restore from the original snapshot.
+    // If hashes do not match we need to restore from the original snapshot.
     applyPatch(this.state.node, {
       op: "replace",
       path: this.path,
