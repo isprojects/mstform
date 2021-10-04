@@ -296,9 +296,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
       if (jsValue.length !== this._originalValue.length) {
         return true;
       }
-      return (
-        JSON.stringify(toJS(this.value)) !== JSON.stringify(this._originalValue)
-      );
+      return JSON.stringify(jsValue) !== JSON.stringify(this._originalValue);
     }
 
     if (isStateTreeNode(this.value) && isModelType(getType(this.value))) {
