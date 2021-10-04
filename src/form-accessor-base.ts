@@ -83,6 +83,14 @@ export abstract class FormAccessorBase<
     return this.accessors.some((accessor) => accessor.isDirty);
   }
 
+  restore(): void {
+    // If this accessor is not dirty, don't bother to restore.
+    if (!this.isDirty) {
+      return;
+    }
+    this.accessors.forEach((accessor) => accessor.restore());
+  }
+
   resetDirtyState(): void {
     this.accessors.forEach((accessor) => accessor.resetDirtyState());
   }

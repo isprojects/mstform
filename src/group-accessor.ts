@@ -28,8 +28,23 @@ export class GroupAccessor<D extends FormDefinition<any>> {
     return this.handleNames(this.isDirtyForNames.bind(this));
   }
 
+  restore(): void {
+    this.handleNames(this.handleRestore.bind(this));
+  }
+
   resetDirtyState(): void {
     this.handleNames(this.handleResetDirtyState.bind(this));
+  }
+
+  handleRestore(names: (keyof D)[]): boolean {
+    names.forEach((key) => {
+      const accessor = this.parent.access(key as string);
+      if (accessor == null) {
+        return true;
+      }
+      return accessor.restore();
+    });
+    return true;
   }
 
   handleResetDirtyState(names: (keyof D)[]): boolean {

@@ -1,5 +1,11 @@
-import { configure, autorun, observable, toJS } from "mobx";
-import { types, applySnapshot, onPatch, Instance } from "mobx-state-tree";
+import { configure, autorun, observable } from "mobx";
+import {
+  types,
+  applySnapshot,
+  onPatch,
+  Instance,
+  SnapshotIn,
+} from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters, Group } from "../src";
 
 // "always" leads to trouble during initialization.
@@ -1677,8 +1683,6 @@ test("a hard required trumps dynamic required", () => {
 
   const o = M.create({ foo: "FOO", bar: "BAR" });
 
-  let touched = false;
-
   const state = form.state(o, {
     isRequired: (accessor) => accessor.path.startsWith("/foo"),
   });
@@ -3059,16 +3063,27 @@ test("repeating form new row isDirty", async () => {
   const forms = state.repeatingForm("foo");
 
   expect(state.isDirty).toBeFalsy();
-  forms.push(N.create({ bar: "bla" }));
+  let newInstance = N.create({ bar: "bla" });
+  forms.push(newInstance);
   expect(state.isDirty).toBeTruthy();
 
   await state.save();
   expect(state.isDirty).toBeFalsy();
+
+  // Remove existing and add new row, this keeps the line count the same but should trigger dirty state.
+  forms.remove(newInstance);
+  newInstance = N.create({ bar: "bloep" });
+  forms.push(newInstance);
+  expect(state.isDirty).toBeTruthy();
 });
 
-test("repeating form existing row isDirty", () => {
+test("repeating form existing row isDirty", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
   const N = types.model("N", {
     bar: types.string,
+    cheesecake: types.array(types.string),
   });
   const M = types.model("M", {
     foo: types.array(N),
@@ -3077,23 +3092,36 @@ test("repeating form existing row isDirty", () => {
   const form = new Form(M, {
     foo: new RepeatingForm({
       bar: new Field(converters.string),
+      cheesecake: new Field(converters.textStringArray),
     }),
   });
 
-  const o = M.create({ foo: [{ bar: "BAR" }] });
+  const o = M.create({ foo: [{ bar: "BAR", cheesecake: [] }] });
 
-  const state = form.state(o);
+  const state = form.state(o, { backend: { save: mySave } });
 
   const forms = state.repeatingForm("foo");
   const oneForm = forms.index(0);
 
   const field = oneForm.field("bar");
+  const cheesecake = oneForm.field("cheesecake");
 
-  expect(field.isDirty).toBeFalsy();
+  expect(forms.isDirty).toBeFalsy();
   expect(state.isDirty).toBeFalsy();
+  expect(field.isDirty).toBeFalsy();
+  expect(cheesecake.isDirty).toBeFalsy();
   field.setRaw("QUX");
-  expect(field.isDirty).toBeTruthy();
+  cheesecake.setRaw("something");
+  expect(forms.isDirty).toBeTruthy();
   expect(state.isDirty).toBeTruthy();
+  expect(field.isDirty).toBeTruthy();
+  expect(cheesecake.isDirty).toBeTruthy();
+
+  await state.save();
+  expect(forms.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  expect(field.isDirty).toBeFalsy();
+  expect(cheesecake.isDirty).toBeFalsy();
 });
 
 test("repeating form add row isDirty", () => {
@@ -3316,4 +3344,402 @@ test("update field textStringArray via store action in repeating form", () => {
   expect(o.foo[0].bar).toEqual(["BAR"]);
   expect(field.raw).toEqual("BAR");
   expect(field.value).toEqual(["BAR"]);
+});
+
+test("restore state form and field in addmode", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: [],
+    };
+  }
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, {
+    backend: { save: mySave, process: process },
+    addMode: true,
+  });
+
+  const field = state.field("foo");
+
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  field.setRaw("correct");
+  expect(state.isDirty).toBeTruthy();
+  expect(field.isDirty).toBeTruthy();
+  expect(field.value).toBe("correct");
+  expect(field.raw).toBe("correct");
+
+  field.restore();
+
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  expect(field.value).toBe("FOO");
+  expect(field.raw).toBe("FOO");
+});
+
+test("restore state form and field in addmode with group", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+  async function process(node: Instance<typeof M>, path: string) {
+    return {
+      updates: [],
+      accessUpdates: [],
+      errorValidations: [],
+      warningValidations: [],
+    };
+  }
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string,
+    blop: types.string,
+  });
+
+  const form = new Form(
+    M,
+    {
+      foo: new Field(converters.string),
+      bar: new Field(converters.string),
+      blop: new Field(converters.string),
+    },
+    {
+      one: new Group({ exclude: ["blop"] }),
+    }
+  );
+
+  const o = M.create({ foo: "FOO", bar: "BAR", blop: "BLOP" });
+
+  const state = form.state(o, {
+    backend: { save: mySave, process: process },
+    addMode: true,
+  });
+  const fieldFoo = state.field("foo");
+  const fieldBar = state.field("bar");
+  const fieldBlop = state.field("blop");
+  const group = state.group("one");
+
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  fieldFoo.setRaw("correct");
+  expect(group.isDirty).toBeTruthy();
+  expect(fieldFoo.isDirty).toBeTruthy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeTruthy();
+
+  state.restore();
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+
+  fieldBlop.setRaw("otherValue");
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeTruthy();
+  expect(state.isDirty).toBeTruthy();
+
+  fieldBlop.restore();
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+
+  fieldFoo.setRaw("something else");
+  expect(fieldFoo.isDirty).toBeTruthy();
+  expect(group.isDirty).toBeTruthy();
+
+  group.restore();
+  expect(group.isDirty).toBeFalsy();
+  expect(fieldFoo.isDirty).toBeFalsy();
+  expect(fieldBar.isDirty).toBeFalsy();
+  expect(fieldBlop.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});
+
+test("restore state form and field in addmode and addmodedefaults", () => {
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, { addMode: true, addModeDefaults: ["foo"] });
+  const field = state.field("foo");
+
+  expect(field.value).toBe("FOO");
+  expect(field.raw).toBe("FOO");
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+  field.setRaw("correct");
+  expect(state.isDirty).toBeTruthy();
+  expect(field.isDirty).toBeTruthy();
+  expect(field.value).toBe("correct");
+  expect(field.raw).toBe("correct");
+
+  state.restore();
+  expect(field.value).toBe("FOO");
+  expect(field.raw).toBe("FOO");
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});
+
+test("restore state form with reference and addmodedefaults", () => {
+  const R = types.model("R", {
+    id: types.identifier,
+    bar: types.string,
+  });
+
+  const M = types.model("M", {
+    foo: types.reference(R),
+  });
+
+  const Root = types.model("Root", {
+    entries: types.array(R),
+    instance: M,
+  });
+
+  const root = Root.create({
+    entries: [
+      { id: "1", bar: "correct" },
+      { id: "2", bar: "incorrect" },
+    ],
+    instance: { foo: "1" },
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.model(R)),
+  });
+
+  const r1 = root.entries[0];
+  const r2 = root.entries[1];
+
+  const o = root.instance;
+
+  const state = form.state(o, { addMode: true, addModeDefaults: ["foo"] });
+  const field = state.field("foo");
+
+  expect(field.value).toBe(r1);
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+
+  field.setRaw(r2);
+  expect(field.isDirty).toBeTruthy();
+  expect(state.isDirty).toBeTruthy();
+
+  field.restore();
+  expect(field.value).toBe(r1);
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});
+
+test("restore state form and field array field", () => {
+  const M = types
+    .model("M", {
+      foo: types.array(types.string),
+    })
+    .actions((self) => ({
+      addFoo() {
+        self.foo.push(`${self.foo.length}`);
+      },
+    }));
+
+  const form = new Form(M, {
+    foo: new Field(converters.textStringArray),
+  });
+
+  const o = M.create({ foo: [] });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.value).toStrictEqual([]);
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+
+  o.addFoo();
+  expect(field.value).toStrictEqual(["0"]);
+  expect(state.isDirty).toBeTruthy();
+  expect(field.isDirty).toBeTruthy();
+
+  state.restore();
+  expect(field.value).toStrictEqual([]);
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});
+
+test("restore state repeating form existing row", () => {
+  const N = types.model("N", {
+    bar: types.string,
+  });
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string),
+    }),
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o);
+
+  const forms = state.repeatingForm("foo");
+  const oneForm = forms.index(0);
+
+  const field = oneForm.field("bar");
+
+  expect(field.value).toBe("BAR");
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+
+  field.setRaw("QUX");
+  expect(field.isDirty).toBeTruthy();
+  expect(state.isDirty).toBeTruthy();
+
+  field.restore();
+  expect(field.value).toBe("BAR");
+  expect(field.isDirty).toBeFalsy();
+  expect(state.isDirty).toBeFalsy();
+});
+
+test("restore state repeating form add row with save", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+  const N = types.model("N", {
+    bar: types.string,
+  });
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new Field(converters.string),
+    }),
+  });
+
+  const o = M.create({ foo: [{ bar: "BAR" }] });
+
+  const state = form.state(o, { backend: { save: mySave } });
+
+  const forms = state.repeatingForm("foo");
+
+  expect(state.isDirty).toBeFalsy();
+  let newRecord = N.create({ bar: "FOO" });
+  forms.push(newRecord);
+  expect(state.isDirty).toBeTruthy();
+  expect(o.foo.length).toBe(2);
+
+  state.restore();
+  expect(o.foo.length).toBe(1);
+  expect(state.isDirty).toBeFalsy();
+
+  newRecord = N.create({ bar: "FOO" });
+  forms.push(newRecord);
+  expect(state.isDirty).toBeTruthy();
+  expect(o.foo.length).toBe(2);
+
+  await state.save();
+  expect(state.isDirty).toBeFalsy();
+  expect(o.foo.length).toBe(2);
+
+  newRecord = N.create({ bar: "FOOBAR" });
+  forms.push(newRecord);
+  state.restore();
+  expect(state.isDirty).toBeFalsy();
+  expect(o.foo.length).toBe(2);
+});
+
+test("restore state with pre and post processors", async () => {
+  async function mySave(node: Instance<typeof M>) {
+    return null;
+  }
+
+  const Y = types.model("Y", {
+    something: types.string,
+  });
+
+  const N = types
+    .model("N", {
+      bar: types.array(Y),
+    })
+    .actions((self) => ({
+      add(entry: SnapshotIn<typeof Y>) {
+        self.bar.push(entry);
+      },
+    }))
+    .preProcessSnapshot((snapshot) => {
+      return {
+        ...snapshot,
+        bar: (snapshot as any).bar.nested,
+      };
+    })
+    .postProcessSnapshot((snapshot) => {
+      return {
+        ...snapshot,
+        bar: { nested: snapshot.bar },
+      };
+    });
+
+  const M = types.model("M", {
+    foo: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new RepeatingForm({
+      bar: new RepeatingForm({
+        something: new Field(converters.string),
+      }),
+    }),
+  });
+
+  const o = M.create({ foo: [] });
+
+  const state = form.state(o, { backend: { save: mySave } });
+  const repeatingFoo = state.repeatingForm("foo");
+
+  expect(state.isDirty).toBeFalsy();
+  const n = N.create({ bar: { nested: [{ something: "a" }] } } as any);
+  repeatingFoo.push(n);
+
+  expect(state.isDirty).toBeTruthy();
+  expect(o.foo[0].bar.length).toBe(1);
+
+  await state.save();
+
+  n.add({ something: "b" });
+
+  expect(o.foo[0].bar.length).toBe(2);
+
+  state.restore();
+  expect(o.foo[0].bar.length).toBe(1);
+  expect(state.isDirty).toBeFalsy();
 });
