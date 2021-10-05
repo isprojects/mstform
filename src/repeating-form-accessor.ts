@@ -1,5 +1,11 @@
-import { observable, computed, makeObservable } from "mobx";
-import { IAnyModelType, applyPatch, Instance } from "mobx-state-tree";
+import { observable, computed, makeObservable, action, toJS } from "mobx";
+import {
+  IAnyModelType,
+  applyPatch,
+  Instance,
+  getSnapshot,
+  cast,
+} from "mobx-state-tree";
 
 import { FormDefinition, RepeatingForm, GroupDefinition } from "./form";
 import { AnyFormState } from "./state";
@@ -32,6 +38,8 @@ export class RepeatingFormAccessor<
 
   externalErrors = new ExternalMessages();
   externalWarnings = new ExternalMessages();
+  @observable _originalValue: any[] = [];
+  @observable _originalHashes: string[] = [];
 
   constructor(
     public state: AnyFormState,
@@ -43,6 +51,7 @@ export class RepeatingFormAccessor<
     makeObservable(this);
     this.name = name;
     this.initialize();
+    this.setOriginalValue();
   }
 
   @computed
@@ -77,6 +86,64 @@ export class RepeatingFormAccessor<
   @computed
   get addMode(): boolean {
     return this.parent.addMode;
+  }
+
+  @computed
+  get isDirty(): boolean {
+    // If length doesn't match we return true without checking further accessors
+    if (this.length != this._originalHashes.length) {
+      return true;
+    }
+
+    // If the hashes of our accessor don't match we know something has changed.
+    if (!this.hashesMatch) {
+      return true;
+    }
+
+    // If hashes do match, check if a nested accessor is dirty.
+    return this.accessors.some((accessor) => accessor.isDirty);
+  }
+
+  @computed
+  get hashesMatch() {
+    const currentHashes = this.accessors
+      .map((accessor) => accessor._hash)
+      .sort()
+      .join(",");
+    const existingHashes = this._originalHashes.slice().sort().join(",");
+    return currentHashes == existingHashes;
+  }
+
+  restore(): void {
+    // If this accessor isn't dirty, don't bother to restore.
+    if (!this.isDirty) {
+      return;
+    }
+
+    // If hashes do match we don't need to restore any removed lines or remove
+    // newly added ones.
+    if (this.hashesMatch) {
+      this.accessors.forEach((accessor) => accessor.restore());
+      return;
+    }
+
+    // If hashes do not match we need to restore from the original snapshot.
+    applyPatch(this.state.node, {
+      op: "replace",
+      path: this.path,
+      value: toJS(this._originalValue),
+    });
+    this.resetDirtyState();
+  }
+
+  resetDirtyState(): void {
+    this.setOriginalValue();
+  }
+
+  @action
+  setOriginalValue(): void {
+    this._originalValue = getSnapshot(cast(this.value));
+    this._originalHashes = this.accessors.map((accessor) => accessor._hash);
   }
 
   initialize() {

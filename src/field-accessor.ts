@@ -26,6 +26,12 @@ import { References, NoReferences, IReferences } from "./references";
 import { pathToFieldref } from "./utils";
 import { IAccessor, IAnyFormAccessor } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
+import {
+  isModelType,
+  getType,
+  getIdentifier,
+  isStateTreeNode,
+} from "mobx-state-tree";
 
 export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @observable
@@ -33,6 +39,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   @observable
   _value: V;
+
+  @observable
+  _originalValue: any;
 
   _disposer: IReactionDisposer | undefined;
 
@@ -48,6 +57,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     makeObservable(this);
     this.createDerivedReaction();
     this._value = state.getValue(this.path);
+    this.setOriginalValue();
     if (field.options && field.options.references) {
       const options = field.options.references;
       const dependentQuery = options.dependentQuery || (() => ({}));
@@ -57,6 +67,15 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     } else {
       this.references = new NoReferences();
     }
+  }
+
+  @action
+  setOriginalValue(): void {
+    if (isStateTreeNode(this._value) && isModelType(getType(this._value))) {
+      this._originalValue = getIdentifier(this._value);
+      return;
+    }
+    this._originalValue = toJS(this._value);
   }
 
   @computed
@@ -265,6 +284,44 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @computed
   get isValid(): boolean {
     return this.errorValue === undefined;
+  }
+
+  @computed
+  get isDirty(): boolean {
+    if (this.addMode) {
+      return false;
+    }
+    if (Array.isArray(this.value)) {
+      const jsValue = toJS(this.value);
+      if (jsValue.length !== this._originalValue.length) {
+        return true;
+      }
+      return JSON.stringify(jsValue) !== JSON.stringify(this._originalValue);
+    }
+
+    if (isStateTreeNode(this.value) && isModelType(getType(this.value))) {
+      return getIdentifier(this.value) !== this._originalValue;
+    }
+
+    const jsValue = toJS(this.value);
+
+    if (jsValue != null && (jsValue as any).constructor == {}.constructor) {
+      return JSON.stringify(jsValue) !== JSON.stringify(this._originalValue);
+    }
+    return jsValue !== this._originalValue;
+  }
+
+  restore(): void {
+    // If this accessor is not dirty, don't bother to restore.
+    if (!this.isDirty) {
+      return;
+    }
+    this.setValueAndUpdateRaw(this._originalValue);
+    this.resetDirtyState();
+  }
+
+  resetDirtyState(): void {
+    this.setOriginalValue();
   }
 
   @computed

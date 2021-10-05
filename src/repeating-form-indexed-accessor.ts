@@ -20,6 +20,10 @@ export class RepeatingFormIndexedAccessor<
   @observable
   index: number;
 
+  // Store hash to easily determine whether we are (still) dealing with the same
+  // accessors in the parent.
+  _hash: string = (Math.random() + 1).toString(36).substring(4);
+
   constructor(
     public state: AnyFormState,
     definition: D,

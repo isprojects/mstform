@@ -38,8 +38,11 @@ export abstract class AccessorBase implements IAccessor {
   abstract get addMode(): boolean;
   abstract get value(): any;
   abstract get isValid(): boolean;
+  abstract get isDirty(): boolean;
   abstract accessBySteps(steps: string[]): IAccessor | undefined;
   abstract validate(options?: ValidateOptions): boolean;
+  abstract resetDirtyState(): void;
+  abstract restore(): void;
 
   constructor(public parent: IParentAccessor) {
     makeObservable(this);

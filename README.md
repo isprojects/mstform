@@ -1708,6 +1708,29 @@ only do this if you have nothing pointing to entries in its underlying
 Note: mstform does not yet not implement any cache eviction facilities, either
 from the container or from the search results.
 
+## Dirty state
+
+For every field accessor we keep a copy of the initial value to determine
+whether the fields value has been changed or not. This initial value does
+include any value that has been set through `addModeDefaults`.
+
+Every `accessor` has a property `isDirty` to check whether something has
+changed, this can be any `accessor` like `RepeatingFormAccessor`,
+`FormAccessor`, `FieldAccessor`, `GroupAccessor`.
+
+When saving the form and the save was succesful the dirty state will be reset,
+so the state after saving will be set as the initial value on every
+`FieldAccessor`.
+
+Manually resetting the dirty state can be done by calling `resetDirtyState` on
+the `FormState` or `resetDirtyState` on any other `accessor`.
+
+## Restore state
+
+Every accessor has a `restore` method to restore its value to the original state.
+
+After succesfully saving a `FormAccessor` the original state is replaced.
+
 ## Tips
 
 - Don't name your form state `this.state` on a React component as this has a
