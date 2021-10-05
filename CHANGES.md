@@ -1,3 +1,10 @@
+# 1.32.0
+
+- Fixed an issue where changes through the `mobx-state-tree` store weren't being
+  handled correctly for array typed fields.
+- Added support for dirty checking fields and forms.
+- Added support for reverting any field or form to its previous initial state.
+
 # 1.31.0
 
 - Exposed `IFormAccessor<any, any, any>` type as `IAnyFormAccessor` and `FormState<any, any, any>` as AnyFormState.
