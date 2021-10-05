@@ -40,6 +40,7 @@ export interface IAccessor {
   flatAccessors: IAccessor[];
   accessBySteps(steps: string[]): IAccessor | undefined;
   resetDirtyState(): void;
+  restore(): void;
 
   dispose(): void;
   clear(): void;
@@ -90,6 +91,7 @@ export interface IRepeatingFormIndexedAccessor<
   M extends IAnyModelType
 > extends IFormAccessor<D, G, M> {
   index: number;
+  _hash: string;
 
   setIndex(index: number): void;
   setAddMode(addModeDefaults: string[]): void;

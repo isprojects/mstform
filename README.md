@@ -1725,6 +1725,12 @@ so the state after saving will be set as the initial value on every
 Manually resetting the dirty state can be done by calling `resetDirtyState` on
 the `FormState` or `resetDirtyState` on any other `accessor`.
 
+## Restore state
+
+Every accessor has a `restore` method to restore its value to the original state.
+
+After succesfully saving a `FormAccessor` the original state is replaced.
+
 ## Tips
 
 - Don't name your form state `this.state` on a React component as this has a
