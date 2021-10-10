@@ -7,7 +7,7 @@ export interface Controlled {
 const value: Controlled = (accessor) => {
   return {
     value: accessor.raw,
-    onChange: (ev: any) => accessor.setRaw(ev.target.value),
+    onChange: (ev: any) => ev.nativeEvent ? accessor.setRaw(ev.nativeEvent.text): accessor.setRaw(ev.target.value),
   };
 };
 
