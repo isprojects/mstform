@@ -8,8 +8,7 @@ import {
 } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters, Group } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("a simple form", () => {
   const M = types.model("M", {

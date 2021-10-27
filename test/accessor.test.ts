@@ -11,8 +11,7 @@ import {
   Group,
 } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("accessByPath simple field", () => {
   const M = types.model("M", {

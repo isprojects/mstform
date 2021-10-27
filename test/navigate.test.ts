@@ -6,12 +6,10 @@ import {
   SubForm,
   RepeatingForm,
   converters,
-  IFormAccessor,
   IAnyFormAccessor,
 } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("value for state", () => {
   const M = types.model("M", {

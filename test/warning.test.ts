@@ -11,8 +11,7 @@ import {
   converters,
 } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("a simple warning", async () => {
   const M = types.model("M", {

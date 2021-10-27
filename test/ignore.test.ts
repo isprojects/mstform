@@ -2,8 +2,7 @@ import { configure } from "mobx";
 import { types, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, SubForm, converters } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("setRaw with required ignore", () => {
   const M = types.model("M", {

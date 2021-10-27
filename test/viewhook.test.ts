@@ -9,7 +9,7 @@ import {
   ValidationProps,
 } from "../src";
 
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("custom validationProps", () => {
   const M = types.model("M", {

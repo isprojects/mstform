@@ -5,8 +5,7 @@ import { debounce, until } from "./utils";
 
 jest.useFakeTimers();
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("backend process sets error messages", async () => {
   const M = types.model("M", {

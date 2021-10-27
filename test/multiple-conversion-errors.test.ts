@@ -2,8 +2,7 @@ import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { Field, Form, converters } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("conversion failure with multiple messages", () => {
   const M = types.model("M", {
