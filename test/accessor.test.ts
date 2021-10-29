@@ -43,7 +43,7 @@ test("accessByPath repeating form", () => {
   });
 
   const form = new Form(M, {
-    entries: new RepeatingForm({
+    entries: new RepeatingForm(M, {
       foo: new Field(converters.number),
     }),
   });
@@ -87,7 +87,7 @@ test("groups with repeatingform error on top-level", async () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -120,7 +120,7 @@ test("groups with indexed repeatingform error on top-level", async () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });

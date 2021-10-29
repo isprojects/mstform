@@ -71,7 +71,7 @@ const form = new Form(M, {
     derived: (node) => node.calculated,
   }),
   textarea: new Field(converters.textStringArray),
-  repeated: new RepeatingForm({
+  repeated: new RepeatingForm(M, {
     foo: new Field(converters.string, {
       validators: [(value) => (value !== "correct" ? "Wrong" : false)],
     }),

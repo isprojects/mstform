@@ -59,7 +59,7 @@ test("context passed to repeating form accessor", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({ bar: new Field(converters.string) }),
+    foo: new RepeatingForm(M, { bar: new Field(converters.string) }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -79,7 +79,7 @@ test("context passed to repeating form indexed accessor", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({ bar: new Field(converters.string) }),
+    foo: new RepeatingForm(M, { bar: new Field(converters.string) }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });

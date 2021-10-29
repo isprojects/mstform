@@ -67,7 +67,7 @@ test("calculated repeating", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       calculated: new Field(converters.number, {
         derived: (node) => node.sum(),
       }),
@@ -118,7 +118,7 @@ test("calculated repeating push and remove", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       calculated: new Field(converters.number, {
         derived: (node) => node.sum(),
       }),
@@ -206,7 +206,7 @@ test("calculated with addModeDefaults", () => {
 
   let changeCount = 0;
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       calculated: new Field(converters.number, {
         derived: (node) => {
           return node.sum();

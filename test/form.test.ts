@@ -129,7 +129,7 @@ test("repeating form", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -160,7 +160,7 @@ test("repeating form with conversion", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.number),
     }),
   });
@@ -189,7 +189,7 @@ test("repeating form push", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -223,7 +223,7 @@ test("repeating form push, with default fieldrefs", () => {
   let changeCount = 0;
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string, {
         change: () => {
           changeCount++;
@@ -261,7 +261,7 @@ test("repeating form insert", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -297,7 +297,7 @@ test("repeating form insert with default fieldrefs", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -333,7 +333,7 @@ test("repeating form applySnapshot shouldn't trigger addMode", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -364,7 +364,7 @@ test("repeating form remove", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -388,7 +388,7 @@ test("repeating form remove and insert clears errors", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string, {
         validators: [(value) => value !== "correct" && "wrong"],
       }),
@@ -420,7 +420,7 @@ test("repeating form tougher remove clear raw", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string, {
         validators: [(value) => "always wrong"],
       }),
@@ -451,7 +451,7 @@ test("repeating form insert should retain raw too", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string, {
         validators: [(value) => "always wrong"],
       }),
@@ -496,8 +496,8 @@ test("repeating form nested remove", () => {
   });
 
   const form = new Form(L, {
-    m_entries: new RepeatingForm({
-      n_entries: new RepeatingForm({
+    m_entries: new RepeatingForm(M, {
+      n_entries: new RepeatingForm(M, {
         bar: new Field(converters.string),
       }),
     }),
@@ -522,7 +522,7 @@ test("accessors should retain index order after insert", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -549,7 +549,7 @@ test("repeating form validate", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string, {
         validators: [(value) => value !== "correct" && "Wrong"],
       }),
@@ -583,7 +583,7 @@ test("repeating form multiple entries validate", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string, {
         validators: [(value) => value !== "correct" && "Wrong"],
       }),
@@ -1406,7 +1406,7 @@ test("add mode for repeating push", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.number),
     }),
   });
@@ -1440,7 +1440,7 @@ test("add mode for repeating push, whole form add mode", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.number),
     }),
   });
@@ -1474,7 +1474,7 @@ test("add mode for repeating insert", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.number),
     }),
   });
@@ -1595,7 +1595,7 @@ test("a form with a repeating disabled field", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({ bar: new Field(converters.string) }),
+    foo: new RepeatingForm(M, { bar: new Field(converters.string) }),
   });
 
   const o = M.create({ foo: [{ bar: "BAR" }] });
@@ -1760,7 +1760,7 @@ test("boolean converter", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.boolean),
     }),
   });
@@ -2336,7 +2336,7 @@ test("repeatingField disabled when repeatingForm disabled", () => {
   });
 
   const form = new Form(M, {
-    repeating: new RepeatingForm({
+    repeating: new RepeatingForm(M, {
       repeatingField: new Field(converters.string),
     }),
   });
@@ -2372,8 +2372,8 @@ test("repeatingField disabled when repeatingForm in repeatingForm is disabled", 
   });
 
   const form = new Form(M, {
-    repeating: new RepeatingForm({
-      repeating2: new RepeatingForm({
+    repeating: new RepeatingForm(M, {
+      repeating2: new RepeatingForm(M, {
         repeatingField: new Field(converters.string),
       }),
     }),
@@ -2438,7 +2438,7 @@ test("inputAllowed", () => {
   const form = new Form(M, {
     disabledField: new Field(converters.string),
     readOnlyField: new Field(converters.string),
-    repeatingForm: new RepeatingForm({
+    repeatingForm: new RepeatingForm(M, {
       hiddenRepeatingField: new Field(converters.string),
     }),
   });
@@ -3051,7 +3051,7 @@ test("repeating form new row isDirty", async () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -3090,7 +3090,7 @@ test("repeating form existing row isDirty", async () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
       cheesecake: new Field(converters.textStringArray),
     }),
@@ -3133,7 +3133,7 @@ test("repeating form add row isDirty", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -3303,7 +3303,7 @@ test("update field textStringArray via store action in repeating form", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.textStringArray, { required: true }),
     }),
   });
@@ -3601,7 +3601,7 @@ test("restore state repeating form existing row", () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -3641,7 +3641,7 @@ test("restore state repeating form add row with save", async () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
+    foo: new RepeatingForm(M, {
       bar: new Field(converters.string),
     }),
   });
@@ -3714,8 +3714,8 @@ test("restore state with pre and post processors", async () => {
   });
 
   const form = new Form(M, {
-    foo: new RepeatingForm({
-      bar: new RepeatingForm({
+    foo: new RepeatingForm(M, {
+      bar: new RepeatingForm(M, {
         something: new Field(converters.string),
       }),
     }),

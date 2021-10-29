@@ -43,7 +43,7 @@ export class RepeatingFormAccessor<
 
   constructor(
     public state: AnyFormState,
-    public repeatingForm: RepeatingForm<D, G>,
+    public repeatingForm: RepeatingForm<M, D, G>,
     public parent: IAnyFormAccessor,
     name: string
   ) {

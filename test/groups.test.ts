@@ -259,6 +259,7 @@ test("groups repeating form", () => {
 
   const form = new Form(M, {
     items: new RepeatingForm(
+      M,
       {
         a: new Field(converters.number),
         b: new Field(converters.number),
@@ -312,6 +313,7 @@ test("groups repeating form exclude", () => {
 
   const form = new Form(M, {
     items: new RepeatingForm(
+      M,
       {
         a: new Field(converters.number),
         b: new Field(converters.number),
@@ -446,7 +448,7 @@ test("groups with warnings in repeatingform", () => {
   const form = new Form(
     M,
     {
-      foo: new RepeatingForm({
+      foo: new RepeatingForm(M, {
         bar: new Field(converters.string),
       }),
     },
@@ -488,7 +490,7 @@ test("groups with repeatingform and subform error on top-level", async () => {
   const form = new Form(
     M,
     {
-      foo: new RepeatingForm({
+      foo: new RepeatingForm(M, {
         bar: new Field(converters.string),
       }),
       sub: new SubForm({

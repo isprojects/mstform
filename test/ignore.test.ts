@@ -221,7 +221,7 @@ test("ignoreGetError repeating indexed accessor non-field external", async () =>
   const o = M.create({ items: [{ foo: "FOO" }] });
 
   const form = new Form(M, {
-    items: new RepeatingForm({ foo: new Field(converters.string) }),
+    items: new RepeatingForm(M, { foo: new Field(converters.string) }),
   });
 
   let saved = false;
@@ -274,7 +274,7 @@ test("ignoreGetError repeating accessor non-field external", async () => {
   const o = M.create({ items: [{ foo: "FOO" }] });
 
   const form = new Form(M, {
-    items: new RepeatingForm({ foo: new Field(converters.string) }),
+    items: new RepeatingForm(M, { foo: new Field(converters.string) }),
   });
 
   let saved = false;
