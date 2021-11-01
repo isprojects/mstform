@@ -2,8 +2,7 @@ import { configure, IReactionDisposer } from "mobx";
 import { types, Instance } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("calculated", () => {
   const M = types

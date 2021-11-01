@@ -1,4 +1,10 @@
-import { observable, computed, action, makeObservable, override } from "mobx";
+import {
+  observable,
+  computed,
+  action,
+  makeObservable,
+  runInAction,
+} from "mobx";
 import { IAnyModelType, Instance } from "mobx-state-tree";
 
 import {
@@ -52,7 +58,9 @@ export abstract class FormAccessorBase<
     super(parent);
     makeObservable(this);
     this.keys = Object.keys(this.definition);
-    this._addMode = addMode;
+    runInAction(() => {
+      this._addMode = addMode;
+    });
   }
 
   validate(options?: ValidateOptions): boolean {
@@ -182,6 +190,7 @@ export abstract class FormAccessorBase<
     return accessor.accessBySteps(rest);
   }
 
+  @action
   initialize() {
     this.keys.forEach((key) => {
       const entry = this.definition[key];

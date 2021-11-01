@@ -3,8 +3,7 @@ import { types, getSnapshot } from "mobx-state-tree";
 import { Source, Form, converters, Field, RepeatingForm } from "../src";
 import { resolveReactions } from "./utils";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 function refSnapshots(refs: any[] | undefined): any[] {
   if (refs === undefined) {

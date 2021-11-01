@@ -3,7 +3,7 @@ import { types } from "mobx-state-tree";
 import { Field, Form, converters, FieldAccessor } from "../src";
 import { ConversionValue, Converter, ConversionError } from "../src/converter";
 
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 const options = {
   // a BIG lie. but we don't really have an accessor in these

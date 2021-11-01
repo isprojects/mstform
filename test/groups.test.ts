@@ -12,8 +12,7 @@ import {
   converters,
 } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("groups basic", () => {
   const M = types.model("M", {

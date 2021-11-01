@@ -10,8 +10,7 @@ import {
   ConversionError,
 } from "../src";
 
-// "always" leads to trouble during initialization.
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("context passed to field accessor", () => {
   const M = types.model("M", {

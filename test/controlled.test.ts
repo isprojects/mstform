@@ -1,7 +1,7 @@
 import { configure } from "mobx";
 import { types } from "mobx-state-tree";
 import { converters, controlled, Form, Field } from "../src";
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "always" });
 
 test("object controlled", () => {
   const M = types.model("M", {
