@@ -29,17 +29,17 @@ export type RawType<F> = F extends Field<infer R, any> ? R : never;
 export type ValueType<F> = F extends Field<any, infer V> ? V : never;
 
 export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
-  IAnyModelType,
   infer D,
-  any
+  any,
+  IAnyModelType
 >
   ? D
   : never;
 
 export type RepeatingFormGroupDefinitionType<T> = T extends RepeatingForm<
-  IAnyModelType,
   any,
-  infer G
+  infer G,
+  IAnyModelType
 >
   ? G
   : never;
@@ -59,7 +59,7 @@ export type FormDefinition<M extends IAnyModelType> = InstanceFormDefinition<
 export type InstanceFormDefinition<M extends ModelInstanceTypeProps<any>> = {
   [K in keyof M]?:
     | Field<any, M[K]>
-    | RepeatingForm<IAnyModelType, FormDefinition<ArrayEntryType<M[K]>>, any>
+    | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any, IAnyModelType>
     | SubForm<FormDefinition<M[K]>, any>;
 };
 
@@ -328,14 +328,14 @@ export class Field<R, V> {
 }
 
 export class RepeatingForm<
-  M extends IAnyModelType,
   D extends FormDefinition<any>,
-  G extends GroupDefinition<D>
+  G extends GroupDefinition<D>,
+  M extends IAnyModelType
 > {
   constructor(
-    public model: M,
     public definition: D,
-    public groupDefinition?: G
+    public groupDefinition?: G,
+    public model?: M
   ) {}
 }
 

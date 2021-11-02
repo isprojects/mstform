@@ -465,7 +465,7 @@ describe("source accessor in fields", () => {
     let dependentQueryCounter = 0;
 
     const form = new Form(n, {
-      foo: new RepeatingForm(M, {
+      foo: new RepeatingForm({
         a: new Field(converters.maybe(converters.model(ItemA)), {
           references: {
             source: sourceA,

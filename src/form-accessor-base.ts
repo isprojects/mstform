@@ -222,7 +222,7 @@ export abstract class FormAccessorBase<
 
   createRepeatingForm<K extends keyof D>(
     name: K,
-    repeatingForm: RepeatingForm<any, any, any>
+    repeatingForm: RepeatingForm<any, any, IAnyModelType>
   ) {
     const result = this.state.createRepeatingFormAccessor(
       repeatingForm,

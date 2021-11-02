@@ -26,7 +26,7 @@ test("fieldref", () => {
 
   const form = new Form(M, {
     field: new Field(converters.string),
-    repeating: new RepeatingForm(M, {
+    repeating: new RepeatingForm({
       repeatingField: new Field(converters.string),
     }),
     sub: new SubForm({

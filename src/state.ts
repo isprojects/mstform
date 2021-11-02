@@ -262,7 +262,7 @@ export class FormState<
   // we delegate the creation to here to avoid circular dependencies
   // between form accessor and its subclasses
   createRepeatingFormAccessor(
-    repeatingForm: RepeatingForm<any, any, any>,
+    repeatingForm: RepeatingForm<any, any, IAnyModelType>,
     parent: IAnyFormAccessor,
     name: string
   ): IRepeatingFormAccessor<any, any, any> {
