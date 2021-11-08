@@ -44,6 +44,7 @@ import {
   IRepeatingFormAccessor,
   ISubFormAccessor,
 } from "./interfaces";
+import { ArrayEntryType } from ".";
 
 export interface AccessorAllows {
   (accessor: IAccessor): boolean;
@@ -262,7 +263,7 @@ export class FormState<
   // we delegate the creation to here to avoid circular dependencies
   // between form accessor and its subclasses
   createRepeatingFormAccessor(
-    repeatingForm: RepeatingForm<any, any, IAnyModelType>,
+    repeatingForm: RepeatingForm<any, any, ArrayEntryType<M[keyof M]>>,
     parent: IAnyFormAccessor,
     name: string
   ): IRepeatingFormAccessor<any, any, any> {

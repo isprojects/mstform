@@ -26,6 +26,7 @@ import {
   IParentAccessor,
 } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
+import { ArrayEntryType } from ".";
 
 export abstract class FormAccessorBase<
     D extends FormDefinition<M>,
@@ -222,7 +223,7 @@ export abstract class FormAccessorBase<
 
   createRepeatingForm<K extends keyof D>(
     name: K,
-    repeatingForm: RepeatingForm<any, any, IAnyModelType>
+    repeatingForm: RepeatingForm<any, any, ArrayEntryType<M[any]>>
   ) {
     const result = this.state.createRepeatingFormAccessor(
       repeatingForm,

@@ -59,7 +59,11 @@ export type FormDefinition<M extends IAnyModelType> = InstanceFormDefinition<
 export type InstanceFormDefinition<M extends ModelInstanceTypeProps<any>> = {
   [K in keyof M]?:
     | Field<any, M[K]>
-    | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any, IAnyModelType>
+    | RepeatingForm<
+        FormDefinition<ArrayEntryType<M[K]>>,
+        any,
+        ArrayEntryType<M[K]>
+      >
     | SubForm<FormDefinition<M[K]>, any>;
 };
 
