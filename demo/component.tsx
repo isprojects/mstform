@@ -85,7 +85,7 @@ const form = new Form(M, {
 });
 
 const InlineError: React.FunctionComponent<{
-  field?: FieldAccessor<any, any>;
+  field?: FieldAccessor<any, any, any>;
 }> = observer((props) => {
   const { field, children } = props;
   return (
@@ -98,14 +98,14 @@ const InlineError: React.FunctionComponent<{
 
 const MyInput: React.FunctionComponent<{
   type: string;
-  field: FieldAccessor<any, any>;
+  field: FieldAccessor<any, any, any>;
 }> = observer((props) => {
   const { type, field } = props;
   return <input type={type} {...field.inputProps} />;
 });
 
 const MyTextArea: React.FunctionComponent<{
-  field: FieldAccessor<any, any>;
+  field: FieldAccessor<any, any, any>;
 }> = observer((props) => <textarea {...props.field.inputProps} />);
 
 type MyFormProps = Record<string, unknown>;

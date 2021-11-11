@@ -116,7 +116,7 @@ test("changehook with null", () => {
       b: types.maybeNull(types.number),
     })
     .actions((self) => ({
-      setB(value: number) {
+      setB(value: number | null) {
         self.b = value;
       },
     }));

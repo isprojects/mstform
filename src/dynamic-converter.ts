@@ -6,11 +6,11 @@ import {
 import { FieldAccessor } from "./field-accessor";
 
 export interface DynamicOptions<O> {
-  (context: any, accessor: FieldAccessor<any, any>): Partial<O>;
+  (context: any, accessor: FieldAccessor<any, any, any>): Partial<O>;
 }
 
 export interface GetContextConverter<R, V> {
-  (context: any, accessor: FieldAccessor<any, any>): IConverter<R, V>;
+  (context: any, accessor: FieldAccessor<any, any, any>): IConverter<R, V>;
 }
 
 function delegatingConverter<R, V>(
@@ -53,7 +53,7 @@ export function dynamic<O, R, V>(
   const defaultConverter = converterFactory();
   return delegatingConverter(
     defaultConverter,
-    (context: any, accessor: FieldAccessor<any, any>) =>
+    (context: any, accessor: FieldAccessor<any, any, any>) =>
       converterFactory(getOptions(context, accessor))
   );
 }

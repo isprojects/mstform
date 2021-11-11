@@ -1,7 +1,7 @@
 import { FieldAccessor } from "./field-accessor";
 
 export interface Controlled {
-  (accessor: FieldAccessor<any, any>): any;
+  (accessor: FieldAccessor<any, any, any>): any;
 }
 
 const value: Controlled = (accessor) => {

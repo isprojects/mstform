@@ -37,7 +37,7 @@ export abstract class FormAccessorBase<
   implements IFormAccessor<D, G, M>
 {
   public keys: (keyof D)[];
-  fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
+  fieldAccessors: Map<keyof D, FieldAccessor<any, any, any>> = observable.map();
   repeatingFormAccessors: Map<keyof D, IRepeatingFormAccessor<any, any, any>> =
     observable.map();
   subFormAccessors: Map<keyof D, ISubFormAccessor<any, any, any>> =
@@ -203,7 +203,7 @@ export abstract class FormAccessorBase<
     }
   }
 
-  createField<K extends keyof D>(name: K, field: Field<any, any>) {
+  createField<K extends keyof D>(name: K, field: Field<any, any, any>) {
     const result = new FieldAccessor(
       this.state,
       field,

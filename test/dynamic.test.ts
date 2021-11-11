@@ -7,7 +7,7 @@ test("dynamic based on accessor", () => {
     bar: types.string,
   });
 
-  const getOptions = (context: any, accessor: FieldAccessor<any, any>) => {
+  const getOptions = (context: any, accessor: FieldAccessor<any, any, any>) => {
     if (accessor.fieldref === "foo") {
       return { allowNegative: false };
     } else {
@@ -38,7 +38,7 @@ test("dynamic converter with maybe", () => {
     foo: types.maybe(types.string),
   });
 
-  const getOptions = (context: any, accessor: FieldAccessor<any, any>) => {
+  const getOptions = (context: any, accessor: FieldAccessor<any, any, any>) => {
     return { allowNegative: false };
   };
 
@@ -66,7 +66,7 @@ test("dynamic converter with maybeNull", () => {
     foo: types.maybeNull(types.string),
   });
 
-  const getOptions = (context: any, accessor: FieldAccessor<any, any>) => {
+  const getOptions = (context: any, accessor: FieldAccessor<any, any, any>) => {
     return { allowNegative: false };
   };
 

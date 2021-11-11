@@ -55,19 +55,19 @@ export interface ErrorOrWarning {
 }
 
 export interface ExtraValidation {
-  (fieldAccessor: FieldAccessor<any, any>, value: any): ValidationResponse;
+  (fieldAccessor: FieldAccessor<any, any, any>, value: any): ValidationResponse;
 }
 
 export interface RepeatingFormAccessorAllows {
   (repeatingFormAccessor: RepeatingFormAccessor<any, any, any>): boolean;
 }
 
-export interface EventFunc<R, V> {
-  (event: any, accessor: FieldAccessor<R, V>): void;
+export interface EventFunc<R, V, M> {
+  (event: any, accessor: FieldAccessor<R, V, M>): void;
 }
 
-export interface UpdateFunc<R, V> {
-  (accessor: FieldAccessor<R, V>): void;
+export interface UpdateFunc<R, V, M> {
+  (accessor: FieldAccessor<R, V, M>): void;
 }
 
 // TODO: implement blur and pause validation
@@ -102,9 +102,9 @@ export interface FormStateOptions<M> {
   backend?: BackendOptions<M> & ProcessorOptions;
 
   extraValidation?: ExtraValidation;
-  focus?: EventFunc<any, any>;
-  blur?: EventFunc<any, any>;
-  update?: UpdateFunc<any, any>;
+  focus?: EventFunc<any, any, any>;
+  blur?: EventFunc<any, any, any>;
+  update?: UpdateFunc<any, any, any>;
 
   context?: any;
   converterOptions?: StateConverterOptions;
@@ -138,9 +138,9 @@ export class FormState<
   getWarningFunc: ErrorOrWarning;
   extraValidationFunc: ExtraValidation;
   private noRawUpdate: boolean;
-  focusFunc: EventFunc<any, any> | undefined;
-  blurFunc: EventFunc<any, any> | undefined;
-  updateFunc: UpdateFunc<any, any> | undefined;
+  focusFunc: EventFunc<any, any, any> | undefined;
+  blurFunc: EventFunc<any, any, any> | undefined;
+  updateFunc: UpdateFunc<any, any, any> | undefined;
 
   processor: Backend<M> | undefined;
 
@@ -225,7 +225,7 @@ export class FormState<
       );
       this.processor = processor;
 
-      this.updateFunc = (accessor: FieldAccessor<any, any>) => {
+      this.updateFunc = (accessor: FieldAccessor<any, any, any>) => {
         if (update != null) {
           update(accessor);
         }

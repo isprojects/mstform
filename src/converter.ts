@@ -10,7 +10,7 @@ export interface StateConverterOptions {
 export interface StateConverterOptionsWithContext
   extends StateConverterOptions {
   context?: any;
-  accessor: FieldAccessor<any, any>;
+  accessor: FieldAccessor<any, any, any>;
 }
 
 export interface ConverterOptions<R, V> {

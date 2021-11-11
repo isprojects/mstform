@@ -15,7 +15,7 @@ const baseOptions = {
   // a BIG lie. but we don't really have an accessor in these
   // tests and it's safe to leave it null, even though in
   // the integrated code accessor always *does* exist
-  accessor: null as unknown as FieldAccessor<any, any>,
+  accessor: null as unknown as FieldAccessor<any, any, any>,
 };
 
 function check(

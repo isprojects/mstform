@@ -33,7 +33,7 @@ import {
   isStateTreeNode,
 } from "mobx-state-tree";
 
-export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
+export class FieldAccessor<R, V, M> extends AccessorBase implements IAccessor {
   @observable
   _raw: R | undefined;
 
@@ -49,7 +49,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   constructor(
     public state: AnyFormState,
-    public field: Field<R, V>,
+    public field: Field<R, V, M>,
     parent: IAnyFormAccessor,
     public name: string
   ) {
