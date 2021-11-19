@@ -6,7 +6,15 @@ import {
   Instance,
   SnapshotIn,
 } from "mobx-state-tree";
-import { Field, Form, RepeatingForm, converters, Group } from "../src";
+import { expectType, TypeEqual } from "ts-expect";
+import {
+  Field,
+  Form,
+  RepeatingForm,
+  converters,
+  Group,
+  ArrayEntryType,
+} from "../src";
 
 configure({ enforceActions: "always" });
 
@@ -3741,4 +3749,41 @@ test("restore state with pre and post processors", async () => {
   state.restore();
   expect(o.foo[0].bar.length).toBe(1);
   expect(state.isDirty).toBeFalsy();
+});
+
+test.only("node type is typeof M", async () => {
+  const N = types.model("N", {
+    foobar: types.string,
+  });
+
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.array(N),
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      change: (node, value) => {
+        expectType<TypeEqual<any, typeof node>>(false);
+        expectType<TypeEqual<Instance<typeof M>, typeof node>>(true);
+      },
+    }),
+    bar: new RepeatingForm({
+      foobar: new Field(converters.string, {
+        change: (node, value) => {
+          // expectType<TypeEqual<any, typeof node>>(false);
+          // expectType<TypeEqual<Instance<typeof N>[], typeof node>>(true);
+        },
+      }),
+    }),
+  });
+
+  const repeatingForm = new RepeatingForm({
+    bar: new Field(converters.string, {
+      change: (node, value) => {
+        // expectType<TypeEqual<any, typeof node>>(false)
+        // expectType<TypeEqual<Instance<typeof M>, typeof node>>(true)
+      },
+    }),
+  });
 });

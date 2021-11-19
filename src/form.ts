@@ -24,9 +24,9 @@ export type ArrayEntryType<T> = T extends IMSTArray<infer A>
     : never
   : never;
 
-export type RawType<F> = F extends Field<infer R, any> ? R : never;
+export type RawType<F> = F extends Field<infer R, any, any> ? R : never;
 
-export type ValueType<F> = F extends Field<any, infer V> ? V : never;
+export type ValueType<F> = F extends Field<any, infer V, any> ? V : never;
 
 export type RepeatingFormDefinitionType<T> = T extends RepeatingForm<
   infer D,
@@ -56,7 +56,7 @@ export type FormDefinition<M extends IAnyModelType> = InstanceFormDefinition<
 
 export type InstanceFormDefinition<M extends ModelInstanceTypeProps<any>> = {
   [K in keyof M]?:
-    | Field<any, M[K]>
+    | Field<any, M[K], M>
     | RepeatingForm<FormDefinition<ArrayEntryType<M[K]>>, any>
     | SubForm<FormDefinition<M[K]>, any>;
 };
@@ -71,8 +71,8 @@ export interface Derived<V> {
   (node: any): V;
 }
 
-export interface Change<V> {
-  (node: any, value: V): void;
+export interface Change<V, M> {
+  (node: M, value: V): void;
 }
 
 export interface RawGetter<R> {
@@ -99,7 +99,7 @@ export type ConversionErrors = {
 
 export type ConversionErrorType = string | ErrorFunc | ConversionErrors;
 
-export interface FieldOptions<R, V, SQ, DQ> {
+export interface FieldOptions<M, R, V, SQ, DQ> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
@@ -108,7 +108,7 @@ export interface FieldOptions<R, V, SQ, DQ> {
   required?: boolean;
   fromEvent?: boolean;
   derived?: Derived<V>;
-  change?: Change<V>;
+  change?: Change<V, M>;
   controlled?: Controlled;
   references?: ReferenceOptions<SQ, DQ>;
   postprocess?: boolean;
@@ -176,7 +176,7 @@ export interface ProcessOptions {
   ignoreRequired?: boolean;
 }
 
-export class Field<R, V> {
+export class Field<R, V, M> {
   rawValidators: Validator<R>[];
   validators: Validator<V>[];
   conversionError: ConversionErrorType;
@@ -184,14 +184,14 @@ export class Field<R, V> {
   required: boolean;
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
-  changeFunc?: Change<V>;
+  changeFunc?: Change<V, M>;
   controlled: Controlled;
   postprocess: boolean;
   _converter: ConverterOrFactory<R, V>;
 
   constructor(
     converter: ConverterOrFactory<R, V>,
-    public options?: FieldOptions<R, V, any, any>
+    public options?: FieldOptions<M, R, V, any, any>
   ) {
     this._converter = converter;
     if (!options) {
