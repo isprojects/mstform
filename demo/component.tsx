@@ -42,6 +42,7 @@ const M = types
     b: types.number,
     derived: types.number,
     textarea: types.array(types.string),
+    check: types.boolean,
     repeated: types.array(N),
   })
   .views((self) => ({
@@ -57,6 +58,7 @@ const o = M.create({
   b: 3,
   derived: 4,
   textarea: [],
+  check: false,
   repeated: [newN(1), newN(2), newN(3)],
 });
 
@@ -71,6 +73,7 @@ const form = new Form(M, {
     derived: (node) => node.calculated,
   }),
   textarea: new Field(converters.textStringArray),
+  check: new Field(converters.boolean),
   repeated: new RepeatingForm({
     foo: new Field(converters.string, {
       validators: [(value) => (value !== "correct" ? "Wrong" : false)],
@@ -199,6 +202,7 @@ export class MyForm extends Component<MyFormProps> {
     const b = formState.field("b");
     const derived = formState.field("derived");
     const textarea = formState.field("textarea");
+    const check = formState.field("check");
 
     return (
       <div>
@@ -223,6 +227,10 @@ export class MyForm extends Component<MyFormProps> {
           <MyTextArea field={textarea} />
         </InlineError>
         <br />
+        <span>checkbox {check.value ? "checked" : "not checked"}</span>
+        <InlineError field={check}>
+          <MyInput type="checkbox" field={check} />
+        </InlineError>
         <br />
         <br />
         <span>Repeated</span>

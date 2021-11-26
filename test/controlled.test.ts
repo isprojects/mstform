@@ -39,7 +39,7 @@ test("value controlled", () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  field.inputProps.onChange({ target: { value: "BAR" } });
+  field.inputProps.onChange({ nativeEvent: { target: { value: "BAR" } } });
   expect(field.raw).toEqual("BAR");
 });
 
@@ -59,7 +59,7 @@ test("checked controlled", () => {
 
   expect(field.inputProps.checked).toEqual(true);
   expect(field.inputProps.value).toBeUndefined();
-  field.inputProps.onChange({ target: { checked: false } });
+  field.inputProps.onChange({ nativeEvent: { target: { checked: false } } });
   expect(field.raw).toEqual(false);
 });
 
@@ -105,7 +105,7 @@ test("default value controlled for string converter", () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  field.inputProps.onChange({ target: { value: "BAR" } });
+  field.inputProps.onChange({ nativeEvent: { target: { value: "BAR" } } });
   expect(field.raw).toEqual("BAR");
 });
 
@@ -125,7 +125,7 @@ test("default value controlled for maybe string converter", () => {
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
-  field.inputProps.onChange({ target: { value: "BAR" } });
+  field.inputProps.onChange({ nativeEvent: { target: { value: "BAR" } } });
   expect(field.raw).toEqual("BAR");
 });
 
@@ -145,7 +145,7 @@ test("default checked controlled for boolean converter", () => {
 
   expect(field.inputProps.checked).toEqual(true);
   expect(field.inputProps.value).toBeUndefined();
-  field.inputProps.onChange({ target: { checked: false } });
+  field.inputProps.onChange({ nativeEvent: { target: { checked: false } } });
   expect(field.raw).toEqual(false);
 });
 

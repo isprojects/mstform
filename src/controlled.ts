@@ -7,14 +7,14 @@ export interface Controlled {
 const value: Controlled = (accessor) => {
   return {
     value: accessor.raw,
-    onChange: (ev: any) => accessor.setRaw(ev.target.value),
+    onChange: (ev: any) => accessor.setRaw(ev.nativeEvent.target.value),
   };
 };
 
 const checked: Controlled = (accessor) => {
   return {
     checked: accessor.raw,
-    onChange: (ev: any) => accessor.setRaw(ev.target.checked),
+    onChange: (ev: any) => accessor.setRaw(ev.nativeEvent.target.checked),
   };
 };
 
