@@ -379,7 +379,7 @@ test("decimal converter with thousandSeparator . and no decimalSeparator can't c
   const processedValue = converter.preprocessRaw(value, options);
   try {
     converter.convert(processedValue, options);
-  } catch (e) {
+  } catch (e: any) {
     message = e.message;
   }
   expect(message).toBeTruthy();
