@@ -15,7 +15,7 @@ import {
 import { FormState, FormStateOptions } from "./state";
 import { Controlled } from "./controlled";
 import { identity } from "./utils";
-import { Source } from "./source";
+import { Query, Source } from "./source";
 import { FieldAccessor } from "./field-accessor";
 
 export type ArrayEntryType<T> = T extends IMSTArray<infer A>
@@ -87,7 +87,7 @@ export interface AccessorDependentQuery<DQ> {
   (accessor: FieldAccessor<any, any>): DQ;
 }
 
-export interface ReferenceOptions<SQ, DQ> {
+export interface ReferenceOptions<SQ extends Query, DQ extends Query> {
   source: Source<any, SQ & DQ>;
   dependentQuery?: AccessorDependentQuery<DQ>;
 }
@@ -99,7 +99,7 @@ export type ConversionErrors = {
 
 export type ConversionErrorType = string | ErrorFunc | ConversionErrors;
 
-export interface FieldOptions<R, V, SQ, DQ> {
+export interface FieldOptions<R, V, SQ extends Query, DQ extends Query> {
   getRaw?(...args: any[]): R;
   rawValidators?: Validator<R>[];
   validators?: Validator<V>[];
