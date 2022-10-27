@@ -6,8 +6,7 @@ module.exports = merge(common, {
   entry: "./demo/index.tsx",
   mode: "development",
   devServer: {
-    contentBase: "./demo",
-    disableHostCheck: true,
+    static: "./demo",
   },
   devtool: "inline-source-map",
   plugins: [

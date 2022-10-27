@@ -1,9 +1,10 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { MyForm } from "./component";
-import { observer} from "mobx-react"
+import { observer } from "mobx-react";
 
-const ObserverMyForm = observer(() => <MyForm /> as any)
+const ObserverMyForm = observer(() => (<MyForm />) as any);
 
-// XXX why the 'as any' hack?
-ReactDOM.render(<ObserverMyForm />, document.getElementById("demo"));
+const container = document.getElementById("demo");
+const root = createRoot(container!);
+root.render(<ObserverMyForm />);
