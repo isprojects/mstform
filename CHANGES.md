@@ -1,6 +1,6 @@
-# 1.32.1 (unreleased)
+# 1.33.0
 
--   Update packages
+-   Update packages to their latest version and removed no longer in use packages.
 
 # 1.32.0
 
