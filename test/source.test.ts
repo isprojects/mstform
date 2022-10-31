@@ -108,7 +108,7 @@ test("source should load once when multiple loads for the same source are trigge
     { id: 3, text: "C", feature: "y" },
   ];
 
-  let loadHit: number = 0;
+  let loadHit = 0;
 
   const load = async ({ feature }: { feature: string }) => {
     loadHit++;

@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, ReactNode } from "react";
 import { observer } from "mobx-react";
 import { Instance, types, getSnapshot } from "mobx-state-tree";
 import {
@@ -86,6 +86,7 @@ const form = new Form(M, {
 
 const InlineError: React.FunctionComponent<{
   field?: FieldAccessor<any, any>;
+  children: ReactNode;
 }> = observer((props) => {
   const { field, children } = props;
   return (

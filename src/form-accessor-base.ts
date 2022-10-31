@@ -224,7 +224,7 @@ export abstract class FormAccessorBase<
   field<K extends keyof D>(name: K): FieldAccess<D, K> {
     const accessor = this.fieldAccessors.get(name);
     if (accessor == null) {
-      throw new Error(`${name} is not a Field`);
+      throw new Error(`${String(name)} is not a Field`);
     }
     return accessor;
   }
@@ -244,7 +244,7 @@ export abstract class FormAccessorBase<
   repeatingForm<K extends keyof D>(name: K): RepeatingFormAccess<D, K, M> {
     const accessor = this.repeatingFormAccessors.get(name);
     if (accessor == null) {
-      throw new Error(`${name} is not a RepeatingForm`);
+      throw new Error(`${String(name)} is not a RepeatingForm`);
     }
     return accessor;
   }
@@ -262,7 +262,7 @@ export abstract class FormAccessorBase<
   subForm<K extends keyof D>(name: K): SubFormAccess<D, K, M> {
     const accessor = this.subFormAccessors.get(name);
     if (accessor == null) {
-      throw new Error(`${name} is not a SubForm`);
+      throw new Error(`${String(name)} is not a SubForm`);
     }
     return accessor;
   }
@@ -275,7 +275,7 @@ export abstract class FormAccessorBase<
   group<K extends keyof G>(name: K): GroupAccess<D> {
     const accessor = this.groupAccessors.get(name);
     if (accessor == null) {
-      throw new Error(`${name} is not a Group`);
+      throw new Error(`${String(name)} is not a Group`);
     }
     return accessor;
   }
