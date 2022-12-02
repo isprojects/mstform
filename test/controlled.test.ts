@@ -23,7 +23,7 @@ test("object controlled", () => {
   expect(field.raw).toEqual("BAR");
 });
 
-test("modelArray controlled", () => {
+test("modelReferenceArray controlled", () => {
   const Bar = types.model("Bar", {
     id: types.identifierNumber,
     name: types.string,

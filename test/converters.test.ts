@@ -445,7 +445,7 @@ test("model converter", () => {
   expect(r2).toEqual({ value: o });
 });
 
-test("modelArray converter", () => {
+test("modelReferenceArray converter", () => {
   const Foo = types.model("Foo", {
     id: types.identifierNumber,
     name: types.string,
