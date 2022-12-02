@@ -1,5 +1,5 @@
 import { configure } from "mobx";
-import { types } from "mobx-state-tree";
+import { castToSnapshot, Instance, types } from "mobx-state-tree";
 import { converters, controlled, Form, Field } from "../src";
 configure({ enforceActions: "always" });
 
@@ -21,6 +21,52 @@ test("object controlled", () => {
   expect(field.inputProps.checked).toBeUndefined();
   field.inputProps.onChange("BAR");
   expect(field.raw).toEqual("BAR");
+});
+
+test("modelArray controlled", () => {
+  const Bar = types.model("Bar", {
+    id: types.identifierNumber,
+    name: types.string,
+  });
+
+  const BarContainer = types
+    .model("BarContainer", {
+      entryMap: types.map(Bar),
+    })
+    .actions((self) => ({
+      addValue(value: Instance<typeof Bar>) {
+        self.entryMap.put(value);
+      },
+    }));
+  const M = types.model("M", {
+    barContainer: BarContainer,
+    foo: types.array(types.reference(Bar)),
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.modelReferenceArray(Bar)),
+  });
+
+  const container = BarContainer.create({ entryMap: {} });
+  const barValue = Bar.create({ id: 1, name: "Lucky" });
+  container.addValue(barValue);
+
+  const o = M.create({
+    barContainer: castToSnapshot(container),
+    foo: [],
+  });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  expect(field.inputProps.value).toEqual([]);
+  field.inputProps.onChange([barValue]);
+  expect(field.raw).toEqual([
+    {
+      id: 1,
+      name: "Lucky",
+    },
+  ]);
 });
 
 test("value controlled", () => {
