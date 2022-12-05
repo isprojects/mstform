@@ -1,3 +1,7 @@
+# 1.33.1
+
+-   Added `modelReferenceArray` converter to support MST `types.array(types.reference(Model))` type.
+
 # 1.33.0
 
 -   Update packages to their latest version and removed no longer in use packages.
