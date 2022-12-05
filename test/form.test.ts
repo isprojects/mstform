@@ -5,6 +5,7 @@ import {
   onPatch,
   Instance,
   SnapshotIn,
+  castToSnapshot,
 } from "mobx-state-tree";
 import { Field, Form, RepeatingForm, converters, Group } from "../src";
 
@@ -67,6 +68,54 @@ test("a simple form with array field", () => {
   field.setRaw(["correct"]);
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual(["correct"]);
+});
+
+test("a simple form with array field of references", () => {
+  const Bar = types.model("Bar", {
+    id: types.identifierNumber,
+    name: types.string,
+  });
+
+  const BarContainer = types
+    .model("BarContainer", {
+      entryMap: types.map(Bar),
+    })
+    .actions((self) => ({
+      addValue(value: Instance<typeof Bar>) {
+        self.entryMap.put(value);
+      },
+    }));
+  const M = types.model("M", {
+    barContainer: BarContainer,
+    foo: types.array(types.reference(Bar)),
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.modelReferenceArray(Bar)),
+  });
+
+  const container = BarContainer.create({ entryMap: {} });
+  const barValue = Bar.create({ id: 1, name: "Lucky" });
+  container.addValue(barValue);
+
+  const o = M.create({
+    barContainer: castToSnapshot(container),
+    foo: [],
+  });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual([]);
+  expect(Array.isArray(field.raw)).toBeTruthy();
+  field.setRaw([barValue]);
+  expect(field.raw).toEqual([
+    {
+      id: 1,
+      name: "Lucky",
+    },
+  ]);
 });
 
 test("number input", () => {

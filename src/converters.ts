@@ -1,5 +1,10 @@
 import { IObservableArray, observable } from "mobx";
-import { IAnyModelType, Instance } from "mobx-state-tree";
+import {
+  IAnyModelType,
+  IMSTArray,
+  Instance,
+  IReferenceType,
+} from "mobx-state-tree";
 import { Decimal } from "decimal.js-light";
 import {
   Converter,
@@ -359,6 +364,20 @@ function maybeModel<M, RE, VE>(
   });
 }
 
+function modelReferenceArray<M extends IAnyModelType>(_model: M) {
+  return new Converter<Instance<M>[], IMSTArray<IReferenceType<M>>>({
+    emptyRaw: [],
+    emptyValue: observable.array([]),
+    defaultControlled: controlled.modelReferenceArray,
+    convert(raw) {
+      return raw as IMSTArray<IReferenceType<M>>;
+    },
+    render(value) {
+      return value;
+    },
+  });
+}
+
 const object = new Converter<any, any>({
   emptyRaw: null,
   emptyValue: undefined,
@@ -389,6 +408,7 @@ export const converters = {
   maybe,
   maybeNull,
   model,
+  modelReferenceArray,
   object,
   dynamic,
 };

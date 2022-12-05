@@ -31,6 +31,8 @@ import {
   getType,
   getIdentifier,
   isStateTreeNode,
+  isReferenceType,
+  getChildType,
 } from "mobx-state-tree";
 
 export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
@@ -189,12 +191,17 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     const result = this._raw;
     if (result !== undefined) {
       // this is an object reference. don't convert to JS
-      if (isObservable(result) && !(result instanceof Array)) {
+      // or if this is an array of references, don't convert to JS.
+      if (
+        (isObservable(result) && !(result instanceof Array)) ||
+        (isObservable(result) &&
+          result instanceof Array &&
+          isStateTreeNode(result) &&
+          isReferenceType(getChildType(result)))
+      ) {
         return result as R;
       }
-      // anything else, including arrays, convert to JS
-      // XXX what if we have an array of object references? cross that
-      // bridge when we support it
+
       return toJS(result) as R;
     }
     if (this.addMode) {

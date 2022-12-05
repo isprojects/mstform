@@ -1,3 +1,10 @@
+import {
+  applyPatch,
+  IAnyModelType,
+  IMSTArray,
+  Instance,
+  IReferenceType,
+} from "mobx-state-tree";
 import { FieldAccessor } from "./field-accessor";
 
 export interface Controlled {
@@ -25,8 +32,25 @@ const object: Controlled = (accessor) => {
   };
 };
 
+const modelReferenceArray: Controlled = (
+  accessor: FieldAccessor<
+    Instance<IAnyModelType>[],
+    IMSTArray<IReferenceType<IAnyModelType>>
+  >
+) => {
+  return {
+    value: accessor.raw,
+    onChange: (value: Instance<IAnyModelType>[]) => {
+      applyPatch(accessor.node, [
+        { op: "replace", path: accessor.path, value: value },
+      ]);
+    },
+  };
+};
+
 export const controlled = {
   value,
   checked,
   object,
+  modelReferenceArray,
 };

@@ -445,6 +445,20 @@ test("model converter", () => {
   expect(r2).toEqual({ value: o });
 });
 
+test("modelReferenceArray converter", () => {
+  const Foo = types.model("Foo", {
+    id: types.identifierNumber,
+    name: types.string,
+  });
+  const fooInstance = Foo.create({ id: 1, name: "Lucky" });
+
+  const converter = converters.modelReferenceArray(Foo);
+  const r = converter.convert([{ id: 1, name: "Lucky" }], baseOptions);
+  expect(r).toEqual({ value: [{ id: 1, name: "Lucky" }] });
+  const r2 = converter.convert([fooInstance], baseOptions);
+  expect(r2).toEqual({ value: [fooInstance] });
+});
+
 test("maybe model converter", () => {
   const M = types.model("M", {
     foo: types.string,
