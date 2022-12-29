@@ -134,6 +134,14 @@ export class Form<M extends IAnyModelType> {
     public groupDefinition?: GroupDefinition<FormDefinition<M>>
   ) {}
 
+  get FormStateType(): FormState<
+    FormDefinition<M>,
+    GroupDefinition<FormDefinition<M>>,
+    M
+  > {
+    throw new Error("For introspection");
+  }
+
   state(
     node: Instance<M>,
     options?: FormStateOptions<M>

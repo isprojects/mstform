@@ -17,21 +17,21 @@ export interface Controlled<R, V> {
 const value: Controlled<any, any> = (accessor) => {
   return {
     value: accessor.raw,
-    onChange: (ev: any) => accessor.setRaw(ev.target.value),
+    onChange: (ev) => accessor.setRaw(ev.target.value),
   };
 };
 
 const checked: Controlled<any, any> = (accessor) => {
   return {
     checked: accessor.raw,
-    onChange: (ev: any) => accessor.setRaw(ev.target.checked),
+    onChange: (ev) => accessor.setRaw(ev.target.checked),
   };
 };
 
 const object: Controlled<any, any> = (accessor) => {
   return {
     value: accessor.raw,
-    onChange: (value: any) => accessor.setRaw(value),
+    onChange: (value) => accessor.setRaw(value),
   };
 };
 
