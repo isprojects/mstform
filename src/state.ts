@@ -58,7 +58,7 @@ export interface ExtraValidation {
 }
 
 export interface RepeatingFormAccessorAllows {
-  (repeatingFormAccessor: RepeatingFormAccessor<any, any, any>): boolean;
+  (repeatingFormAccessor: RepeatingFormAccessor<any>): boolean;
 }
 
 export interface EventFunc<R, V> {
@@ -149,7 +149,7 @@ export class FormState<
   _onPatchDisposer: IDisposer;
 
   constructor(
-    public form: Form<M, D, G>,
+    public form: Form<M>,
     public node: Instance<M>,
     {
       addMode = false,

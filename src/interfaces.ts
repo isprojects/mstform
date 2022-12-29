@@ -8,7 +8,7 @@ import {
   SubFormAccess,
   GroupAccess,
 } from "./accessor";
-import { FormDefinition } from "./form";
+import { FormDefinition, GroupDefinition } from "./form";
 import { AccessUpdate } from "./backend";
 import { AnyFormState } from "./state";
 
@@ -72,12 +72,18 @@ export interface ISubFormAccessor<
 
 export interface IRepeatingFormAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IAccessor {
   length: number;
 
-  index(index: number): IRepeatingFormIndexedAccessor<D, G, M>;
+  index(
+    index: number
+  ): IRepeatingFormIndexedAccessor<
+    FormDefinition<M>,
+    GroupDefinition<FormDefinition<M>>,
+    M
+  >;
   insert(index: number, node: Instance<M>, addModeDefaults?: string[]): void;
   push(node: Instance<M>, addModeDefaults?: string[]): void;
   remove(node: Instance<M>): void;
@@ -87,7 +93,7 @@ export interface IRepeatingFormAccessor<
 
 export interface IRepeatingFormIndexedAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IFormAccessor<D, G, M> {
   index: number;

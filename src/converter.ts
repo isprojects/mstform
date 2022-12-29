@@ -19,7 +19,7 @@ export interface ConverterOptions<R, V> {
   emptyRaw: R;
   emptyValue?: V;
   emptyImpossible?: boolean;
-  defaultControlled?: Controlled;
+  defaultControlled?: Controlled<R, V>;
   neverRequired?: boolean;
   preprocessRaw?(raw: R, options?: StateConverterOptionsWithContext): R;
 }
@@ -33,7 +33,7 @@ export interface IConverter<R, V> {
     options: StateConverterOptionsWithContext
   ): ConversionResponse<V>;
   render(value: V, options: StateConverterOptionsWithContext): R;
-  defaultControlled: Controlled;
+  defaultControlled: Controlled<R, V>;
   neverRequired: boolean;
   preprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
 }
@@ -52,7 +52,7 @@ export class Converter<R, V> implements IConverter<R, V> {
   emptyRaw: R;
   emptyValue: V;
   emptyImpossible: boolean;
-  defaultControlled: Controlled;
+  defaultControlled: Controlled<R, V>;
   neverRequired = false;
 
   constructor(public definition: ConverterOptions<R, V>) {

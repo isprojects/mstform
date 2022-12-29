@@ -447,7 +447,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   @computed
   get inputProps() {
-    const result: any = this.field.controlled(this);
+    const result = this.field.controlled(this);
     result.disabled = this.disabled;
     if (this.readOnly) {
       result.readOnly = this.readOnly;

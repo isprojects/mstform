@@ -7,32 +7,35 @@ import {
 } from "mobx-state-tree";
 import { FieldAccessor } from "./field-accessor";
 
-export interface Controlled {
-  (accessor: FieldAccessor<any, any>): any;
+export interface Controlled<R, V> {
+  (accessor: FieldAccessor<R, V>): {
+    [key: string]: any;
+    onChange: (value: any) => void;
+  };
 }
 
-const value: Controlled = (accessor) => {
+const value: Controlled<any, any> = (accessor) => {
   return {
     value: accessor.raw,
     onChange: (ev: any) => accessor.setRaw(ev.target.value),
   };
 };
 
-const checked: Controlled = (accessor) => {
+const checked: Controlled<any, any> = (accessor) => {
   return {
     checked: accessor.raw,
     onChange: (ev: any) => accessor.setRaw(ev.target.checked),
   };
 };
 
-const object: Controlled = (accessor) => {
+const object: Controlled<any, any> = (accessor) => {
   return {
     value: accessor.raw,
     onChange: (value: any) => accessor.setRaw(value),
   };
 };
 
-const modelReferenceArray: Controlled = (
+const modelReferenceArray: Controlled<any, any> = (
   accessor: FieldAccessor<
     Instance<IAnyModelType>[],
     IMSTArray<IReferenceType<IAnyModelType>>

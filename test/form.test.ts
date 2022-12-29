@@ -7,7 +7,15 @@ import {
   SnapshotIn,
   castToSnapshot,
 } from "mobx-state-tree";
-import { Field, Form, RepeatingForm, converters, Group } from "../src";
+import {
+  Field,
+  Form,
+  RepeatingForm,
+  converters,
+  Group,
+  FormDefinition,
+  GroupDefinition,
+} from "../src";
 
 configure({ enforceActions: "always" });
 
@@ -3790,4 +3798,23 @@ test("restore state with pre and post processors", async () => {
   state.restore();
   expect(o.foo[0].bar.length).toBe(1);
   expect(state.isDirty).toBeFalsy();
+});
+
+test("a simple form with onchange", () => {
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o);
+  const field = state.field("foo");
+
+  field.inputProps.onChange = (value) => {
+    console.log(value);
+  };
 });

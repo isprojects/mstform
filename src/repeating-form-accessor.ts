@@ -20,20 +20,25 @@ import {
   IAnyFormAccessor,
 } from "./interfaces";
 
-export class RepeatingFormAccessor<
-    D extends FormDefinition<M>,
-    G extends GroupDefinition<D>,
-    M extends IAnyModelType
-  >
+export class RepeatingFormAccessor<M extends IAnyModelType>
   extends AccessorBase
-  implements IRepeatingFormAccessor<D, G, M>
+  implements
+    IRepeatingFormAccessor<
+      FormDefinition<M>,
+      GroupDefinition<FormDefinition<M>>,
+      M
+    >
 {
   name: string;
 
   @observable
   repeatingFormIndexedAccessors: Map<
     number,
-    IRepeatingFormIndexedAccessor<D, G, M>
+    IRepeatingFormIndexedAccessor<
+      FormDefinition<M>,
+      GroupDefinition<FormDefinition<M>>,
+      M
+    >
   > = observable.map();
 
   externalErrors = new ExternalMessages();
@@ -43,7 +48,10 @@ export class RepeatingFormAccessor<
 
   constructor(
     public state: AnyFormState,
-    public repeatingForm: RepeatingForm<D, G>,
+    public repeatingForm: RepeatingForm<
+      FormDefinition<M>,
+      GroupDefinition<FormDefinition<M>>
+    >,
     public parent: IAnyFormAccessor,
     name: string
   ) {
@@ -166,7 +174,13 @@ export class RepeatingFormAccessor<
     this.repeatingFormIndexedAccessors.set(index, result);
   }
 
-  index(index: number): IRepeatingFormIndexedAccessor<D, G, M> {
+  index(
+    index: number
+  ): IRepeatingFormIndexedAccessor<
+    FormDefinition<M>,
+    GroupDefinition<FormDefinition<M>>,
+    M
+  > {
     const accessor = this.repeatingFormIndexedAccessors.get(index);
     if (accessor == null) {
       throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
@@ -175,7 +189,11 @@ export class RepeatingFormAccessor<
   }
 
   @computed
-  get accessors(): IRepeatingFormIndexedAccessor<D, G, M>[] {
+  get accessors(): IRepeatingFormIndexedAccessor<
+    FormDefinition<M>,
+    GroupDefinition<FormDefinition<M>>,
+    M
+  >[] {
     const result = Array.from(this.repeatingFormIndexedAccessors.values());
     result.sort((first, second) => first.index - second.index);
     return result;
