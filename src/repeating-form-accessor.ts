@@ -20,25 +20,20 @@ import {
   IAnyFormAccessor,
 } from "./interfaces";
 
-export class RepeatingFormAccessor<M extends IAnyModelType>
+export class RepeatingFormAccessor<
+    D extends FormDefinition<M>,
+    G extends GroupDefinition<D>,
+    M extends IAnyModelType
+  >
   extends AccessorBase
-  implements
-    IRepeatingFormAccessor<
-      FormDefinition<M>,
-      GroupDefinition<FormDefinition<M>>,
-      M
-    >
+  implements IRepeatingFormAccessor<D, G, M>
 {
   name: string;
 
   @observable
   repeatingFormIndexedAccessors: Map<
     number,
-    IRepeatingFormIndexedAccessor<
-      FormDefinition<M>,
-      GroupDefinition<FormDefinition<M>>,
-      M
-    >
+    IRepeatingFormIndexedAccessor<D, G, M>
   > = observable.map();
 
   externalErrors = new ExternalMessages();
@@ -48,10 +43,7 @@ export class RepeatingFormAccessor<M extends IAnyModelType>
 
   constructor(
     public state: AnyFormState,
-    public repeatingForm: RepeatingForm<
-      FormDefinition<M>,
-      GroupDefinition<FormDefinition<M>>
-    >,
+    public repeatingForm: RepeatingForm<D, G>,
     public parent: IAnyFormAccessor,
     name: string
   ) {
@@ -174,13 +166,7 @@ export class RepeatingFormAccessor<M extends IAnyModelType>
     this.repeatingFormIndexedAccessors.set(index, result);
   }
 
-  index(
-    index: number
-  ): IRepeatingFormIndexedAccessor<
-    FormDefinition<M>,
-    GroupDefinition<FormDefinition<M>>,
-    M
-  > {
+  index(index: number): IRepeatingFormIndexedAccessor<D, G, M> {
     const accessor = this.repeatingFormIndexedAccessors.get(index);
     if (accessor == null) {
       throw new Error(`${index} is not a RepeatingFormIndexedAccessor`);
@@ -189,11 +175,7 @@ export class RepeatingFormAccessor<M extends IAnyModelType>
   }
 
   @computed
-  get accessors(): IRepeatingFormIndexedAccessor<
-    FormDefinition<M>,
-    GroupDefinition<FormDefinition<M>>,
-    M
-  >[] {
+  get accessors(): IRepeatingFormIndexedAccessor<D, G, M>[] {
     const result = Array.from(this.repeatingFormIndexedAccessors.values());
     result.sort((first, second) => first.index - second.index);
     return result;

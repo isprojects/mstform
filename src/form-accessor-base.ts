@@ -43,7 +43,7 @@ export abstract class FormAccessorBase<
 {
   public keys: (keyof D)[];
   fieldAccessors: Map<keyof D, FieldAccessor<any, any>> = observable.map();
-  repeatingFormAccessors: Map<keyof D, IRepeatingFormAccessor<any, any, any>> =
+  repeatingFormAccessors: Map<keyof D, RepeatingFormAccess<D, keyof D, M>> =
     observable.map();
   subFormAccessors: Map<keyof D, ISubFormAccessor<any, any, any>> =
     observable.map();

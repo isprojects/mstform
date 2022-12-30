@@ -342,8 +342,8 @@ function stringMaybe<R, V>(converter: IConverter<R, V>, emptyValue: V) {
   });
 }
 
-function model<R extends IAnyModelType>(_model: R) {
-  return new Converter<Instance<R> | null, Instance<R>>({
+function model<M extends IAnyModelType>(_model: M) {
+  return new Converter<Instance<M> | null, Instance<M>>({
     emptyRaw: null,
     emptyImpossible: true,
     defaultControlled: controlled.object,

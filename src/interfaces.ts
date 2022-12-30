@@ -51,7 +51,7 @@ export interface IAccessor {
 
 export interface IFormAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IAccessor {
   access(name: string): IAccessor | undefined;
@@ -64,7 +64,7 @@ export interface IFormAccessor<
 
 export interface ISubFormAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IFormAccessor<D, G, M> {
   name: string;
@@ -77,13 +77,7 @@ export interface IRepeatingFormAccessor<
 > extends IAccessor {
   length: number;
 
-  index(
-    index: number
-  ): IRepeatingFormIndexedAccessor<
-    FormDefinition<M>,
-    GroupDefinition<FormDefinition<M>>,
-    M
-  >;
+  index(index: number): IRepeatingFormIndexedAccessor<D, G, M>;
   insert(index: number, node: Instance<M>, addModeDefaults?: string[]): void;
   push(node: Instance<M>, addModeDefaults?: string[]): void;
   remove(node: Instance<M>): void;

@@ -127,25 +127,22 @@ export type IDisposer = () => void;
 
 const stateDisposers = new Map<number, IDisposer>();
 
-export class Form<M extends IAnyModelType> {
+export class Form<
+  M extends IAnyModelType,
+  D extends FormDefinition<M>,
+  G extends GroupDefinition<D>
+> {
   constructor(
     public model: M,
-    public definition: FormDefinition<M>,
-    public groupDefinition?: GroupDefinition<FormDefinition<M>>
+    public definition: D,
+    public groupDefinition?: G
   ) {}
 
-  get FormStateType(): FormState<
-    FormDefinition<M>,
-    GroupDefinition<FormDefinition<M>>,
-    M
-  > {
+  get FormStateType(): FormState<D, G, M> {
     throw new Error("For introspection");
   }
 
-  state(
-    node: Instance<M>,
-    options?: FormStateOptions<M>
-  ): FormState<FormDefinition<M>, GroupDefinition<FormDefinition<M>>, M> {
+  state(node: Instance<M>, options?: FormStateOptions<M>): FormState<D, G, M> {
     const nodeId = getNodeId(node);
     // make sure we dispose of any old FormState before we create
     // a new one.
@@ -153,11 +150,7 @@ export class Form<M extends IAnyModelType> {
     if (oldDisposer != null) {
       oldDisposer();
     }
-    const result = new FormState<
-      FormDefinition<M>,
-      GroupDefinition<FormDefinition<M>>,
-      M
-    >(this, node, options);
+    const result = new FormState<D, G, M>(this, node, options);
     // dispose of any old FormState for this same node
     stateDisposers.set(nodeId, () => result.dispose());
     return result;
