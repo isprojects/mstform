@@ -8,7 +8,7 @@ import {
   SubFormAccess,
   GroupAccess,
 } from "./accessor";
-import { FormDefinition } from "./form";
+import { FormDefinition, GroupDefinition } from "./form";
 import { AccessUpdate } from "./backend";
 import { AnyFormState } from "./state";
 
@@ -51,7 +51,7 @@ export interface IAccessor {
 
 export interface IFormAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IAccessor {
   access(name: string): IAccessor | undefined;
@@ -64,7 +64,7 @@ export interface IFormAccessor<
 
 export interface ISubFormAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IFormAccessor<D, G, M> {
   name: string;
@@ -72,7 +72,7 @@ export interface ISubFormAccessor<
 
 export interface IRepeatingFormAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IAccessor {
   length: number;
@@ -87,7 +87,7 @@ export interface IRepeatingFormAccessor<
 
 export interface IRepeatingFormIndexedAccessor<
   D extends FormDefinition<M>,
-  G,
+  G extends GroupDefinition<D>,
   M extends IAnyModelType
 > extends IFormAccessor<D, G, M> {
   index: number;

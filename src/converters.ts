@@ -261,12 +261,15 @@ function maybe<M>(
 ): IConverter<M | null, M | undefined>;
 function maybe<R, V>(
   converter: ConverterOrFactory<R, V>
-): IConverter<string, V | undefined> | IConverter<R | null, V | undefined> {
+): IConverter<R, V | undefined>;
+function maybe<R, V>(
+  converter: ConverterOrFactory<R, V>
+): IConverter<R | null, V | undefined> {
   converter = makeConverter(converter);
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
     return stringMaybe(
-      converter as unknown as IConverter<string, V>,
+      converter as unknown as IConverter<string, V | undefined>,
       undefined
     );
   }
@@ -285,7 +288,10 @@ function maybeNull<M>(
 ): IConverter<M | null, M | null>;
 function maybeNull<R, V>(
   converter: ConverterOrFactory<R, V>
-): IConverter<string, V | null> | IConverter<R | null, V | null> {
+): IConverter<R, V | null>;
+function maybeNull<R, V>(
+  converter: ConverterOrFactory<R, V>
+): IConverter<R | null, V | null> {
   converter = makeConverter(converter);
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
@@ -301,20 +307,24 @@ function maybeNull<R, V>(
   >;
 }
 
-function stringMaybe<V>(converter: IConverter<string, V>, emptyValue: V) {
-  return new Converter<string, V>({
+function stringMaybe<R, V>(converter: IConverter<R, V>, emptyValue: V) {
+  return new Converter({
     emptyRaw: "",
     emptyValue: emptyValue,
     defaultControlled: controlled.value,
-    preprocessRaw(
-      raw: string,
-      options: StateConverterOptionsWithContext
-    ): string {
-      raw = raw.trim();
-      return converter.preprocessRaw(raw, options);
+    preprocessRaw(raw: R, options: StateConverterOptionsWithContext) {
+      if (raw == null) {
+        return raw;
+      }
+      const trimmed = (raw as string).trim() as R;
+      return converter.preprocessRaw(trimmed, options);
     },
-    convert(raw: string, options: StateConverterOptionsWithContext) {
-      if (raw.trim() === "") {
+    convert(raw: R, options: StateConverterOptionsWithContext) {
+      if (raw == null) {
+        return raw;
+      }
+      const trimmed = (raw as string).trim() as R;
+      if (trimmed === "") {
         return emptyValue;
       }
       const r = converter.convert(raw, options);

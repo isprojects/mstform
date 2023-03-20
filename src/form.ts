@@ -4,6 +4,8 @@ import {
   ModelInstanceTypeProps,
   Instance,
   getNodeId,
+  IModelType,
+  types,
 } from "mobx-state-tree";
 import {
   ConversionError,
@@ -109,7 +111,7 @@ export interface FieldOptions<R, V, SQ extends Query, DQ extends Query> {
   fromEvent?: boolean;
   derived?: Derived<V>;
   change?: Change<V>;
-  controlled?: Controlled;
+  controlled?: Controlled<R, V>;
   references?: ReferenceOptions<SQ, DQ>;
   postprocess?: boolean;
 }
@@ -148,7 +150,7 @@ export class Form<
     if (oldDisposer != null) {
       oldDisposer();
     }
-    const result = new FormState(this, node, options);
+    const result = new FormState<D, G, M>(this, node, options);
     // dispose of any old FormState for this same node
     stateDisposers.set(nodeId, () => result.dispose());
     return result;
@@ -185,7 +187,7 @@ export class Field<R, V> {
   getRaw: RawGetter<R>;
   derivedFunc?: Derived<V>;
   changeFunc?: Change<V>;
-  controlled: Controlled;
+  controlled: Controlled<R, V>;
   postprocess: boolean;
   _converter: ConverterOrFactory<R, V>;
 
@@ -230,7 +232,7 @@ export class Field<R, V> {
     return makeConverter(this._converter);
   }
 
-  createDefaultControlled(): Controlled {
+  createDefaultControlled(): Controlled<R, V> {
     if (this.getRaw !== identity) {
       return (accessor) => {
         return {
