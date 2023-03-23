@@ -1,3 +1,7 @@
+# 1.33.2
+
+-   Improve typescript typing.
+
 # 1.33.1
 
 -   Added `modelReferenceArray` converter to support MST `types.array(types.reference(Model))` type.
