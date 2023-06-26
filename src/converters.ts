@@ -179,8 +179,16 @@ function decimalRender(
 }
 
 function stringDecimal(options: DecimalOptions) {
+  const emptyRaw = "";
+  function stringDecimalIsEmpty(raw: string, options: DecimalOptions) {
+    if (!options.zeroIsEmpty) {
+      return raw === emptyRaw;
+    }
+    return true;
+  }
   return new StringConverter<string>({
-    emptyRaw: "",
+    emptyRaw,
+    isEmpty: (raw) => stringDecimalIsEmpty(raw, options),
     emptyImpossible: true,
     defaultControlled: controlled.value,
     neverRequired: false,

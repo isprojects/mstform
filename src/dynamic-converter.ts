@@ -41,6 +41,9 @@ function delegatingConverter<R, V>(
         options.accessor
       ).preprocessRaw(raw, options);
     },
+    isEmpty(raw: R) {
+      return defaultConverter.isEmpty(raw);
+    },
   };
 }
 
