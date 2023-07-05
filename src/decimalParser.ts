@@ -40,7 +40,6 @@ export type DecimalOptions = {
   allowNegative: boolean;
   normalizedDecimalPlaces?: number;
   maxZeroesPadding?: number;
-  zeroIsEmpty?: boolean;
 };
 
 type TokenOptions = {

@@ -121,7 +121,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (Array.isArray(raw) && Array.isArray(emptyRaw)) {
       return raw.length === emptyRaw.length;
     }
-    return this.field.converter.isEmpty(raw);
+    return raw === emptyRaw;
   }
 
   @computed
