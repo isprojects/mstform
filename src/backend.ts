@@ -37,9 +37,12 @@ export interface SaveFunc<M> {
 }
 
 export interface Process<M> {
-  (node: Instance<M>, path: string, liveOnly: boolean): Promise<
-    Partial<ProcessResult>
-  >;
+  (
+    node: Instance<M>,
+    path: string,
+    liveOnly: boolean,
+    paths?: string[]
+  ): Promise<Partial<ProcessResult>>;
 }
 
 export interface ProcessAll<M> {
@@ -56,11 +59,13 @@ function defaultApplyUpdate(node: Instance<IAnyModelType>, update: any): void {
 
 export type ProcessorOptions = {
   applyUpdate?: ApplyUpdate;
+  bulkProcess?: boolean;
 } & Partial<DebounceOptions>;
 
 export class Backend<M extends IAnyModelType> {
   changeTracker: ChangeTracker;
   applyUpdate: ApplyUpdate;
+  bulkProcess: boolean;
 
   constructor(
     public state: FormState<any, any, M>,
@@ -68,13 +73,20 @@ export class Backend<M extends IAnyModelType> {
     public save?: SaveFunc<M>,
     public process?: Process<M>,
     public processAll?: ProcessAll<M>,
-    { debounce, delay, applyUpdate = defaultApplyUpdate }: ProcessorOptions = {}
+    {
+      debounce,
+      delay,
+      applyUpdate = defaultApplyUpdate,
+      bulkProcess = false,
+    }: ProcessorOptions = {}
   ) {
     this.changeTracker = new ChangeTracker(
-      (path: string) => this.realProcess(path),
-      { debounce, delay }
+      (path: string, paths: string[] = []) => this.realProcess(path, paths),
+      { debounce, delay },
+      bulkProcess
     );
     this.applyUpdate = applyUpdate;
+    this.bulkProcess = bulkProcess;
   }
 
   run(path: string) {
@@ -148,13 +160,18 @@ export class Backend<M extends IAnyModelType> {
     this.state.clearExternalValidations("warning");
   }
 
-  async realProcess(path: string) {
+  async realProcess(path: string, paths: string[]) {
     if (this.process == null) {
       return;
     }
     let processResult;
     try {
-      processResult = await this.process(this.node, path, this.state.liveOnly);
+      processResult = await this.process(
+        this.node,
+        path,
+        this.state.liveOnly,
+        paths
+      );
     } catch (e) {
       console.error("Unexpected error during process:", e);
       return;

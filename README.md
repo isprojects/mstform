@@ -1039,6 +1039,33 @@ function myApplyUpdate(node, update) {
 form.state(o, { backend: { process: myProcess, applyUpdate: myApplyUpdate } });
 ```
 
+By default, process kicks off for every path in sequence. However, this can be too
+strenuous on your system. If you want to process all paths at once, you can define
+`bulkProcess` on your form state.
+
+```js
+form.state(o, { backend: { process: myProcess, bulkProcess: true } });
+```
+
+Now, your process function expects a list of paths, rather than one path. You can use
+this to call one URL with all paths that need processing.
+
+```js
+const M = types.model("M", {
+    foo: types.string,
+});
+
+const o = M.create({ foo: "FOO" });
+
+async function myProcess(node, path, liveOnly, paths?) {
+    // call the backend, turn into ProcessResult and return it
+}
+
+form.state(o, { backend: { process: myProcess, bulkProcess: true } });
+```
+
+`paths` is an optional argument, so it doesn't have to be defined.
+
 ### Save errors
 
 Before we described how to dynamically update validation information during

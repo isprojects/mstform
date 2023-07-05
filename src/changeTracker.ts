@@ -13,7 +13,7 @@ import { debounce as lodashDebounce } from "lodash";
 // the change tracker is used by the form processor.
 
 interface ProcessChange {
-  (path: string): Promise<any>;
+  (path: string, paths?: string[]): Promise<any>;
 }
 
 export interface DebounceFunc {
@@ -58,15 +58,18 @@ export class ChangeTracker {
   processingPromise: Promise<void> = Promise.resolve();
 
   debounceProcess: DebounceProcess;
+  bulkProcess: boolean;
 
   constructor(
     public process: ProcessChange,
-    options: Partial<DebounceOptions>
+    options: Partial<DebounceOptions>,
+    bulkProcess?: boolean
   ) {
     this.debounceProcess = new DebounceProcess(
       (path: string) => this.makeRequest(path),
       options
     );
+    this.bulkProcess = bulkProcess ? bulkProcess : false;
   }
 
   // track a field that has changed. debounce requests
@@ -103,6 +106,17 @@ export class ChangeTracker {
     // as new ones can come in now
     const requests = this.requests;
     this.requests = [];
+
+    if (this.bulkProcess && requests.length > 1) {
+      const r = await this.process("", requests);
+      this.isProcessing = false;
+
+      if (this.requests.length > 0) {
+        return this.processRequests();
+      }
+
+      return r;
+    }
 
     // process it all in sequence
     const processingPromise = requests.reduce(async (previousPromise, path) => {
