@@ -180,17 +180,18 @@ function decimalRender(
 
 function stringDecimal(options: DecimalOptions) {
   const emptyRaw = "";
-  function stringDecimalIsEmpty(raw: string, options: DecimalOptions) {
-    if (!options.zeroIsEmpty) {
-      return raw === emptyRaw;
+  function stringDecimalIsEmpty(raw: string, options: DecimalOptions): boolean {
+    if (raw === emptyRaw) {
+      return true;
     }
-    return parseFloat(raw) === 0;
+    return options.zeroIsEmpty ? parseFloat(raw) === 0 : false;
   }
 
   return new StringConverter<string>({
     emptyRaw,
     isEmpty: (raw: string) => stringDecimalIsEmpty(raw, options),
-    emptyImpossible: false,
+    emptyImpossible: !options.zeroIsEmpty,
+    emptyValue: options.zeroIsEmpty ? "0" : undefined,
     defaultControlled: controlled.value,
     neverRequired: false,
     preprocessRaw(raw: string): string {
