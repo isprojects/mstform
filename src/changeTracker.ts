@@ -63,13 +63,13 @@ export class ChangeTracker {
   constructor(
     public process: ProcessChange,
     options: Partial<DebounceOptions>,
-    bulkProcess: boolean
+    bulkProcess?: boolean
   ) {
     this.debounceProcess = new DebounceProcess(
       (path: string) => this.makeRequest(path),
       options
     );
-    this.bulkProcess = bulkProcess;
+    this.bulkProcess = bulkProcess ? bulkProcess : false;
   }
 
   // track a field that has changed. debounce requests
@@ -110,6 +110,11 @@ export class ChangeTracker {
     if (this.bulkProcess && requests.length > 1) {
       const r = await this.process("", requests);
       this.isProcessing = false;
+
+      if (this.requests.length > 0) {
+        return this.processRequests();
+      }
+
       return r;
     }
 
