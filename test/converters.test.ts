@@ -757,6 +757,12 @@ test("zero decimal empty and required", () => {
 
   expect(field.isEmptyAndRequired).toBeTruthy();
 
+  // We expect the field to still be empty and required, since zeroIsEmpty is true and the raw is "".
+  // This is equivalent to the empty raw.
+  field.setRaw("");
+
+  expect(field.isEmptyAndRequired).toBeTruthy();
+
   // We no longer expect the field to be empty and required, since zeroIsEmpty is true but the raw is "0.0012".
   // This is equivalent to 0.0012, which isn't technically 0.
   field.setRaw("0.0012");
