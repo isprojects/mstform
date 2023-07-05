@@ -1,3 +1,9 @@
+# 1.34
+
+-   Added new "bulkProcess" option on form states.
+    This is used to process all changed paths at once instead of one at a time.
+    This is useful when the latter is too strenuous and affects app performance.
+
 # 1.33.2
 
 -   Improve typescript typing.
