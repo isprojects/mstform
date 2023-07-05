@@ -1477,3 +1477,62 @@ test("backend process all global warning", async () => {
   state.clearAllValidations();
   expect(state.warning).toBeUndefined();
 });
+
+test("backend bulk process", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+    bar: types.string,
+    baz: types.string,
+  });
+  const o = M.create({ foo: "FOO", bar: "BAR", baz: "BAZ" });
+  const myProcess = async (
+    node: Instance<typeof M>,
+    path: string,
+    liveOnly: boolean,
+    paths?: string[]
+  ) => {
+    if (paths == null || paths.length === 0) {
+      return {
+        updates: [],
+        errorValidations: [
+          { id: "alpha", messages: [{ path, message: "error" }] },
+        ],
+        warningValidations: [],
+      };
+    }
+    const messages = paths?.map((path) => {
+      return { path, message: "error" };
+    });
+    return {
+      updates: [],
+      errorValidations: [{ id: "beta", messages }],
+      warningValidations: [],
+    };
+  };
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+    bar: new Field(converters.string),
+    baz: new Field(converters.string),
+  });
+  const state = form.state(o, {
+    backend: {
+      process: myProcess,
+      debounce,
+      bulkProcess: true,
+    },
+  });
+
+  const fooField = state.field("foo");
+  const barField = state.field("bar");
+  const bazField = state.field("baz");
+  fooField.setRaw("FOO!");
+  barField.setRaw("BAR!");
+  bazField.setRaw("BAZ!");
+
+  jest.runAllTimers();
+
+  await state.processPromise;
+  expect(fooField.error).toEqual("error");
+  expect(barField.error).toEqual("error");
+  expect(bazField.error).toEqual("error");
+});
