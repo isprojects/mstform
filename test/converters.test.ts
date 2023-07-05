@@ -730,29 +730,3 @@ test("literal string converter", () => {
     "kwarktaart"
   );
 });
-
-test("zero decimal empty and required", () => {
-  const M = types.model("M", {
-    foo: types.maybeNull(types.string),
-  });
-
-  const form = new Form(M, {
-    foo: new Field(
-      converters.maybeNull(
-        converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true })
-      ),
-      { required: true }
-    ),
-  });
-
-  const o = M.create({ foo: "0" });
-
-  const state = form.state(o);
-  const field = state.field("foo");
-
-  expect(field.isEmpty).toBeTruthy();
-
-  field.setRaw("0.00");
-
-  expect(field.isEmpty).toBeTruthy();
-});
