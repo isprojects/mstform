@@ -1,3 +1,10 @@
+# 1.34
+
+-   Added `zeroIsEmpty` parameter for the `stringDecimal` converter. When this is enabled,
+    0 and equivalent inputs (e.g. 0.00) will be treated as an empty string.
+-   Converters now have an `isEmpty` hook that allows you to customize the behavior of
+    the empty check for your custom converter.
+
 # 1.33.2
 
 -   Improve typescript typing.
