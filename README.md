@@ -403,6 +403,8 @@ display a flexible minimum amount of decimals. Show more if we have more. Added
 this new property for a customer that is wishing to display prices in at least 2
 and at most 10 decimals. But, if, for instance, a price does not have more than
 3 decimals, we do not want to show all trailing zeros
+`zeroIsEmpty` can be set to treat 0 and similar inputs (e.g. 0.00 or 0.0000) as
+empty values.
 
 ### Boolean
 
@@ -604,6 +606,11 @@ You can optionally set `defaultControlled`, the controlled props to be used by
 default for this converter. You can also optionally set `neverRequired`; this
 is handy for fields where the `required` status makes no sense -- a checkbox is
 an example.
+
+Something else you can define is `isEmpty`. This is a hook that overwrites the
+default empty check, that works by taking the raw and comparing it to the
+`emptyRaw`. This should be a function that takes the raw as argument, and
+returns a boolean.
 
 `convert` and `render` take an optional second argument, `options`. With
 `options`, you can pass `converterOptions` and a `context`. `context` is an

@@ -179,9 +179,19 @@ function decimalRender(
 }
 
 function stringDecimal(options: DecimalOptions) {
+  const emptyRaw = "";
+  function stringDecimalIsEmpty(raw: string, options: DecimalOptions): boolean {
+    if (raw === emptyRaw) {
+      return true;
+    }
+    return options.zeroIsEmpty ? parseFloat(raw) === 0 : false;
+  }
+
   return new StringConverter<string>({
-    emptyRaw: "",
-    emptyImpossible: true,
+    emptyRaw,
+    isEmpty: (raw: string) => stringDecimalIsEmpty(raw, options),
+    emptyImpossible: !options.zeroIsEmpty,
+    emptyValue: options.zeroIsEmpty ? "0" : undefined,
     defaultControlled: controlled.value,
     neverRequired: false,
     preprocessRaw(raw: string): string {
@@ -405,6 +415,7 @@ export const converters = {
     decimalPlaces: 2,
     allowNegative: true,
     addZeroes: true,
+    zeroIsEmpty: false,
   }),
   decimal: withDefaults(decimal, {
     maxWholeDigits: 10,

@@ -1,5 +1,9 @@
 # 1.34
 
+-   Added `zeroIsEmpty` parameter for the `stringDecimal` converter. When this is enabled,
+    0 and equivalent inputs (e.g. 0.00) will be treated as an empty string.
+-   Converters now have an `isEmpty` hook that allows you to customize the behavior of
+    the empty check for your custom converter.
 -   Added new "bulkProcess" option on form states.
     This is used to process all changed paths at once instead of one at a time.
     This is useful when the latter is too strenuous and affects app performance.
