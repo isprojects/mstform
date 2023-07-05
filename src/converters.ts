@@ -184,12 +184,13 @@ function stringDecimal(options: DecimalOptions) {
     if (!options.zeroIsEmpty) {
       return raw === emptyRaw;
     }
-    return true;
+    return parseFloat(raw) === 0;
   }
+
   return new StringConverter<string>({
     emptyRaw,
-    isEmpty: (raw) => stringDecimalIsEmpty(raw, options),
-    emptyImpossible: true,
+    isEmpty: (raw: string) => stringDecimalIsEmpty(raw, options),
+    emptyImpossible: false,
     defaultControlled: controlled.value,
     neverRequired: false,
     preprocessRaw(raw: string): string {
@@ -413,6 +414,7 @@ export const converters = {
     decimalPlaces: 2,
     allowNegative: true,
     addZeroes: true,
+    zeroIsEmpty: false,
   }),
   decimal: withDefaults(decimal, {
     maxWholeDigits: 10,

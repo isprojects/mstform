@@ -56,7 +56,6 @@ export class Converter<R, V> implements IConverter<R, V> {
   emptyImpossible: boolean;
   defaultControlled: Controlled<R, V>;
   neverRequired = false;
-  isEmpty = this.isEmptyFunc;
 
   constructor(public definition: ConverterOptions<R, V>) {
     this.emptyRaw = definition.emptyRaw;
@@ -78,8 +77,11 @@ export class Converter<R, V> implements IConverter<R, V> {
     this.neverRequired = !!definition.neverRequired;
   }
 
-  isEmptyFunc(raw: R) {
-    return raw === this.emptyRaw;
+  isEmpty(raw: R) {
+    if (this.definition.isEmpty == null) {
+      return raw === this.emptyRaw;
+    }
+    return this.definition.isEmpty(raw);
   }
 
   preprocessRaw(raw: R, options?: StateConverterOptionsWithContext): R {

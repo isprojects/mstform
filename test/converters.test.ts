@@ -733,14 +733,12 @@ test("literal string converter", () => {
 
 test("zero decimal empty and required", () => {
   const M = types.model("M", {
-    foo: types.maybeNull(types.string),
+    foo: types.string,
   });
 
   const form = new Form(M, {
     foo: new Field(
-      converters.maybeNull(
-        converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true })
-      ),
+      converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true }),
       { required: true }
     ),
   });
@@ -750,9 +748,17 @@ test("zero decimal empty and required", () => {
   const state = form.state(o);
   const field = state.field("foo");
 
-  expect(field.isEmpty).toBeTruthy();
+  // We expect the field to be empty and required, since zeroIsEmpty is true and the raw is "0".
+  expect(field.isEmptyAndRequired).toBeTruthy();
 
+  // We expect the field to still be empty and required, since zeroIsEmpty is true and the raw is "0.00".
+  // This is equivalent to 0.
   field.setRaw("0.00");
 
-  expect(field.isEmpty).toBeTruthy();
+  expect(field.isEmptyAndRequired).toBeTruthy();
+
+  // We no longer expect the field to be empty and required, since zeroIsEmpty is true but the raw is "0.0012".
+  // This is equivalent to 0.0012, which isn't technically 0.
+  field.setRaw("0.0012");
+  expect(field.isEmptyAndRequired).toBeFalsy();
 });
