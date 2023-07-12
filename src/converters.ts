@@ -229,6 +229,7 @@ function stringArray() {
   return new Converter<string[], IObservableArray<string>>({
     emptyRaw: [],
     emptyValue: observable.array([]),
+    isEmpty: (raw: string[]) => raw.length === 0,
     convert(raw) {
       return observable.array(raw);
     },
