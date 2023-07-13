@@ -7,7 +7,14 @@ import {
   SnapshotIn,
   castToSnapshot,
 } from "mobx-state-tree";
-import { Field, Form, RepeatingForm, converters, Group } from "../src";
+import {
+  Field,
+  Form,
+  RepeatingForm,
+  converters,
+  Group,
+  FieldAccessor,
+} from "../src";
 
 configure({ enforceActions: "always" });
 
@@ -1004,7 +1011,67 @@ test("required with zeroIsEmpty", () => {
   expect(field.value).toEqual("3");
   field.setRaw("0");
   expect(field.error).toEqual("Required");
-  expect(field.value).toEqual("0");
+  expect(field.value).toEqual("");
+});
+
+test("required with zeroIsEmpty maybeNull field", () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string),
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(converters.stringDecimal({ zeroIsEmpty: true })),
+      {
+        required: true,
+      }
+    ),
+  });
+
+  const o = M.create({ foo: "3" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3.00");
+  expect(field.value).toEqual("3");
+  field.setRaw("0");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toBeNull();
+});
+
+test("required with zeroIsEmpty dynamic maybeNull field", () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string),
+  });
+
+  const getOptions = (context: any, accessor: FieldAccessor<any, any>) => {
+    return { zeroIsEmpty: true };
+  };
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.dynamic(converters.stringDecimal, getOptions)
+      ),
+      {
+        required: true,
+      }
+    ),
+  });
+
+  const o = M.create({ foo: "3" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3.00");
+  expect(field.value).toEqual("3");
+  field.setRaw("0");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toBeNull();
 });
 
 test("setting value on model will update form", () => {
@@ -2623,7 +2690,7 @@ test("isEmpty on fields", () => {
   expect(decimalField.isEmpty).toBe(false);
 
   decimalField.setRaw("");
-  expect(decimalField.isEmpty).toBe(false);
+  expect(decimalField.isEmpty).toBe(true);
 
   decimalField.setRaw("123.0");
   expect(decimalField.isEmpty).toBe(false);
@@ -2796,7 +2863,7 @@ test("isEmptyAndRequired on fields", () => {
   expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
 
   requiredDecimalField.setRaw("");
-  expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
+  expect(requiredDecimalField.isEmptyAndRequired).toBe(true);
 
   requiredDecimalField.setRaw("123.0");
   expect(requiredDecimalField.isEmptyAndRequired).toBe(false);

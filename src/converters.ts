@@ -179,8 +179,9 @@ function decimalRender(
 }
 
 function stringDecimal(options: DecimalOptions) {
+  type Options = DecimalOptions & StateConverterOptionsWithContext;
   const emptyRaw = "";
-  function stringDecimalIsEmpty(raw: string, options: DecimalOptions): boolean {
+  function stringDecimalIsEmpty(raw: string, options: Options): boolean {
     if (raw === emptyRaw) {
       return true;
     }
@@ -189,9 +190,12 @@ function stringDecimal(options: DecimalOptions) {
 
   return new StringConverter<string>({
     emptyRaw,
-    isEmpty: (raw: string) => stringDecimalIsEmpty(raw, options),
-    emptyImpossible: !options.zeroIsEmpty,
-    emptyValue: options.zeroIsEmpty ? "0" : undefined,
+    isEmpty: (
+      raw: string,
+      converterOptions: StateConverterOptionsWithContext
+    ) => stringDecimalIsEmpty(raw, { ...options, ...converterOptions }),
+    emptyImpossible: false,
+    emptyValue: "",
     defaultControlled: controlled.value,
     neverRequired: false,
     preprocessRaw(raw: string): string {
@@ -323,6 +327,12 @@ function stringMaybe<R, V>(converter: IConverter<R, V>, emptyValue: V) {
     emptyRaw: "",
     emptyValue: emptyValue,
     defaultControlled: controlled.value,
+    isEmpty(raw: R, options: StateConverterOptionsWithContext) {
+      if (raw == null) {
+        return true;
+      }
+      return converter.isEmpty(raw as R, options);
+    },
     preprocessRaw(raw: R, options: StateConverterOptionsWithContext) {
       if (raw == null) {
         return raw;

@@ -118,10 +118,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     }
     const raw = this.raw;
     const emptyRaw = this.field.converter.emptyRaw;
-    if (Array.isArray(raw) && Array.isArray(emptyRaw)) {
-      return raw.length === emptyRaw.length;
-    }
-    return this.field.converter.isEmpty(raw);
+    const stateConverterOptions =
+      this.state.stateConverterOptionsWithContext(this);
+    return this.field.converter.isEmpty(raw, stateConverterOptions);
   }
 
   @computed
@@ -344,7 +343,9 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
     raw = this.field.converter.preprocessRaw(raw, stateConverterOptions);
 
-    if (this.field.isRequired(raw, this.required, options)) {
+    if (
+      this.field.isRequired(raw, this.required, options, stateConverterOptions)
+    ) {
       if (!this.field.converter.emptyImpossible) {
         this.setValue(this.field.converter.emptyValue);
       }

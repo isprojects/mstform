@@ -22,7 +22,7 @@ export interface ConverterOptions<R, V> {
   defaultControlled?: Controlled<R, V>;
   neverRequired?: boolean;
   preprocessRaw?(raw: R, options?: StateConverterOptionsWithContext): R;
-  isEmpty?(raw: R): boolean;
+  isEmpty?(raw: R, options?: StateConverterOptionsWithContext): boolean;
 }
 
 export interface IConverter<R, V> {
@@ -37,7 +37,7 @@ export interface IConverter<R, V> {
   defaultControlled: Controlled<R, V>;
   neverRequired: boolean;
   preprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
-  isEmpty(raw: R): boolean;
+  isEmpty(raw: R, options: StateConverterOptionsWithContext): boolean;
 }
 
 export class ConversionValue<V> {
@@ -77,11 +77,11 @@ export class Converter<R, V> implements IConverter<R, V> {
     this.neverRequired = !!definition.neverRequired;
   }
 
-  isEmpty(raw: R) {
+  isEmpty(raw: R, options: StateConverterOptionsWithContext) {
     if (this.definition.isEmpty == null) {
       return raw === this.emptyRaw;
     }
-    return this.definition.isEmpty(raw);
+    return this.definition.isEmpty(raw, options);
   }
 
   preprocessRaw(raw: R, options?: StateConverterOptionsWithContext): R {

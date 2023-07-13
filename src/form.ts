@@ -19,6 +19,7 @@ import { Controlled } from "./controlled";
 import { identity } from "./utils";
 import { Query, Source } from "./source";
 import { FieldAccessor } from "./field-accessor";
+import { stat } from "fs";
 
 export type ArrayEntryType<T> = T extends IMSTArray<infer A>
   ? A extends IAnyModelType
@@ -272,9 +273,10 @@ export class Field<R, V> {
   isRequired(
     raw: R,
     required: boolean,
-    options: ProcessOptions | undefined
+    options: ProcessOptions | undefined,
+    stateConverterOptions: StateConverterOptionsWithContext
   ): boolean {
-    if (!this.converter.isEmpty(raw)) {
+    if (!this.converter.isEmpty(raw, stateConverterOptions)) {
       return false;
     }
     if (!this.converter.neverRequired && this.converter.emptyImpossible) {
