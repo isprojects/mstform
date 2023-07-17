@@ -4,7 +4,7 @@
 -   `emptyImpossible` and `emptyValue` now optionally take a function with state
     converter options. This means they can also be made dynamic.
 
-# 1.34
+# 1.34.0
 
 -   Added `zeroIsEmpty` parameter for the `stringDecimal` converter. When this is enabled,
     0 and equivalent inputs (e.g. 0.00) will be treated as an empty string.
