@@ -1,3 +1,9 @@
+# 1.34.1
+
+-   Fixed a bug where `zeroIsEmpty` did not work with maybe, maybeNull or dynamic converters.
+-   `emptyImpossible` and `emptyValue` now optionally take a function with state
+    converter options. This means they can also be made dynamic.
+
 # 1.34
 
 -   Added `zeroIsEmpty` parameter for the `stringDecimal` converter. When this is enabled,
