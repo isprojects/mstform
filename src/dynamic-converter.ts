@@ -2,6 +2,8 @@ import {
   IConverter,
   StateConverterOptionsWithContext,
   PartialConverterFactory,
+  converterEmptyImpossible,
+  converterEmptyValue,
 } from "./converter";
 import { FieldAccessor } from "./field-accessor";
 
@@ -19,8 +21,6 @@ function delegatingConverter<R, V>(
 ): IConverter<R, V> {
   return {
     emptyRaw: defaultConverter.emptyRaw,
-    emptyValue: defaultConverter.emptyValue,
-    emptyImpossible: defaultConverter.emptyImpossible,
     defaultControlled: defaultConverter.defaultControlled,
     neverRequired: defaultConverter.neverRequired,
     convert(raw: R, options: StateConverterOptionsWithContext) {
@@ -44,6 +44,18 @@ function delegatingConverter<R, V>(
     isEmpty(raw: R, options: StateConverterOptionsWithContext) {
       return getContextConverter(options.context, options.accessor).isEmpty(
         raw,
+        options
+      );
+    },
+    emptyImpossible(options: StateConverterOptionsWithContext): boolean {
+      return converterEmptyImpossible(
+        getContextConverter(options.context, options.accessor),
+        options
+      );
+    },
+    emptyValue(options: StateConverterOptionsWithContext): V {
+      return converterEmptyValue(
+        getContextConverter(options.context, options.accessor),
         options
       );
     },

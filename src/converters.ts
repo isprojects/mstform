@@ -179,9 +179,8 @@ function decimalRender(
 }
 
 function stringDecimal(options: DecimalOptions) {
-  type Options = DecimalOptions & StateConverterOptionsWithContext;
   const emptyRaw = "";
-  function stringDecimalIsEmpty(raw: string, options: Options): boolean {
+  function stringDecimalIsEmpty(raw: string, options: DecimalOptions): boolean {
     if (raw === emptyRaw) {
       return true;
     }
@@ -190,12 +189,10 @@ function stringDecimal(options: DecimalOptions) {
 
   return new StringConverter<string>({
     emptyRaw,
-    isEmpty: (
-      raw: string,
-      converterOptions: StateConverterOptionsWithContext
-    ) => stringDecimalIsEmpty(raw, { ...options, ...converterOptions }),
-    emptyImpossible: false,
-    emptyValue: "",
+    isEmpty: (raw: string) => stringDecimalIsEmpty(raw, options),
+    emptyImpossible: (stateConverterOptions) => !options.zeroIsEmpty,
+    emptyValue: (stateConverterOptions) =>
+      options.zeroIsEmpty ? "0" : undefined,
     defaultControlled: controlled.value,
     neverRequired: false,
     preprocessRaw(raw: string): string {

@@ -12,6 +12,7 @@ import {
   ConverterOrFactory,
   IConverter,
   StateConverterOptionsWithContext,
+  converterEmptyImpossible,
   makeConverter,
 } from "./converter";
 import { FormState, FormStateOptions } from "./state";
@@ -279,7 +280,10 @@ export class Field<R, V> {
     if (!this.converter.isEmpty(raw, stateConverterOptions)) {
       return false;
     }
-    if (!this.converter.neverRequired && this.converter.emptyImpossible) {
+    if (
+      !this.converter.neverRequired &&
+      converterEmptyImpossible(this.converter, stateConverterOptions)
+    ) {
       return true;
     }
     const ignoreRequired: boolean =

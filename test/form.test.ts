@@ -1011,7 +1011,7 @@ test("required with zeroIsEmpty", () => {
   expect(field.value).toEqual("3");
   field.setRaw("0");
   expect(field.error).toEqual("Required");
-  expect(field.value).toEqual("");
+  expect(field.value).toEqual("0");
 });
 
 test("required with zeroIsEmpty maybeNull field", () => {
@@ -2690,7 +2690,7 @@ test("isEmpty on fields", () => {
   expect(decimalField.isEmpty).toBe(false);
 
   decimalField.setRaw("");
-  expect(decimalField.isEmpty).toBe(true);
+  expect(decimalField.isEmpty).toBe(false);
 
   decimalField.setRaw("123.0");
   expect(decimalField.isEmpty).toBe(false);
@@ -2863,7 +2863,7 @@ test("isEmptyAndRequired on fields", () => {
   expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
 
   requiredDecimalField.setRaw("");
-  expect(requiredDecimalField.isEmptyAndRequired).toBe(true);
+  expect(requiredDecimalField.isEmptyAndRequired).toBe(false);
 
   requiredDecimalField.setRaw("123.0");
   expect(requiredDecimalField.isEmptyAndRequired).toBe(false);

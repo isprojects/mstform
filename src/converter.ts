@@ -17,8 +17,12 @@ export interface ConverterOptions<R, V> {
   convert(raw: R, options: StateConverterOptionsWithContext): V;
   render(value: V, options: StateConverterOptionsWithContext): R;
   emptyRaw: R;
-  emptyValue?: V;
-  emptyImpossible?: boolean;
+  emptyValue?:
+    | V
+    | ((options: StateConverterOptionsWithContext) => V | undefined);
+  emptyImpossible?:
+    | boolean
+    | ((options: StateConverterOptionsWithContext) => boolean);
   defaultControlled?: Controlled<R, V>;
   neverRequired?: boolean;
   preprocessRaw?(raw: R, options?: StateConverterOptionsWithContext): R;
@@ -27,8 +31,12 @@ export interface ConverterOptions<R, V> {
 
 export interface IConverter<R, V> {
   emptyRaw: R;
-  emptyValue: V;
-  emptyImpossible: boolean;
+  emptyValue:
+    | V
+    | ((options: StateConverterOptionsWithContext) => V | undefined);
+  emptyImpossible:
+    | boolean
+    | ((options: StateConverterOptionsWithContext) => boolean);
   convert(
     raw: R,
     options: StateConverterOptionsWithContext
@@ -52,24 +60,29 @@ export type ConversionResponse<V> = ConversionError | ConversionValue<V>;
 
 export class Converter<R, V> implements IConverter<R, V> {
   emptyRaw: R;
-  emptyValue: V;
-  emptyImpossible: boolean;
+  emptyValue:
+    | V
+    | ((options: StateConverterOptionsWithContext) => V | undefined);
+  emptyImpossible:
+    | boolean
+    | ((options: StateConverterOptionsWithContext) => boolean);
   defaultControlled: Controlled<R, V>;
   neverRequired = false;
 
   constructor(public definition: ConverterOptions<R, V>) {
     this.emptyRaw = definition.emptyRaw;
-    this.emptyImpossible = !!definition.emptyImpossible;
+
+    this.emptyImpossible = definition.emptyImpossible || false;
     const emptyValue = definition.emptyValue;
-    if (this.emptyImpossible) {
+    if (typeof this.emptyImpossible === "boolean" && this.emptyImpossible) {
       if (emptyValue !== undefined) {
         throw new Error(
           "If you set emptyImpossible for a converter, emptyValue cannot be set"
         );
       }
-      this.emptyValue = undefined as any;
+      this.emptyValue = undefined as V;
     } else {
-      this.emptyValue = emptyValue as any;
+      this.emptyValue = emptyValue as V;
     }
     this.defaultControlled = definition.defaultControlled
       ? definition.defaultControlled
@@ -141,4 +154,26 @@ export function makeConverter<R, V>(
     return converter();
   }
   return converter;
+}
+
+export function converterEmptyImpossible(
+  converter: IConverter<any, any>,
+  options: StateConverterOptionsWithContext
+) {
+  const emptyImpossible = converter.emptyImpossible;
+  if (typeof emptyImpossible === "function") {
+    return emptyImpossible(options);
+  }
+  return emptyImpossible;
+}
+
+export function converterEmptyValue(
+  converter: IConverter<any, any>,
+  options: StateConverterOptionsWithContext
+) {
+  const emptyValue = converter.emptyValue;
+  if (typeof emptyValue === "function") {
+    return emptyValue(options);
+  }
+  return emptyValue;
 }

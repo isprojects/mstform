@@ -34,6 +34,7 @@ import {
   isReferenceType,
   getChildType,
 } from "mobx-state-tree";
+import { converterEmptyImpossible, converterEmptyValue } from "./converter";
 
 export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   @observable
@@ -113,14 +114,13 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
 
   @computed
   get isEmpty(): boolean {
-    if (this.field.converter.emptyImpossible) {
-      return false;
-    }
-    const raw = this.raw;
-    const emptyRaw = this.field.converter.emptyRaw;
+    const converter = this.field.converter;
     const stateConverterOptions =
       this.state.stateConverterOptionsWithContext(this);
-    return this.field.converter.isEmpty(raw, stateConverterOptions);
+    if (converterEmptyImpossible(converter, stateConverterOptions)) {
+      return false;
+    }
+    return converter.isEmpty(this.raw, stateConverterOptions);
   }
 
   @computed
@@ -346,8 +346,12 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (
       this.field.isRequired(raw, this.required, options, stateConverterOptions)
     ) {
-      if (!this.field.converter.emptyImpossible) {
-        this.setValue(this.field.converter.emptyValue);
+      if (
+        !converterEmptyImpossible(this.field.converter, stateConverterOptions)
+      ) {
+        this.setValue(
+          converterEmptyValue(this.field.converter, stateConverterOptions)
+        );
       }
       this.setError(this.requiredError);
       return;
