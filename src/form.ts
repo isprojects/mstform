@@ -4,8 +4,6 @@ import {
   ModelInstanceTypeProps,
   Instance,
   getNodeId,
-  IModelType,
-  types,
 } from "mobx-state-tree";
 import {
   ConversionError,
@@ -20,7 +18,6 @@ import { Controlled } from "./controlled";
 import { identity } from "./utils";
 import { Query, Source } from "./source";
 import { FieldAccessor } from "./field-accessor";
-import { stat } from "fs";
 
 export type ArrayEntryType<T> = T extends IMSTArray<infer A>
   ? A extends IAnyModelType
