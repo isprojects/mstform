@@ -190,8 +190,9 @@ function stringDecimal(options: DecimalOptions) {
   return new StringConverter<string>({
     emptyRaw,
     isEmpty: (raw: string) => stringDecimalIsEmpty(raw, options),
-    emptyImpossible: !options.zeroIsEmpty,
-    emptyValue: options.zeroIsEmpty ? "0" : undefined,
+    emptyImpossible: (stateConverterOptions) => !options.zeroIsEmpty,
+    emptyValue: (stateConverterOptions) =>
+      options.zeroIsEmpty ? "0" : undefined,
     defaultControlled: controlled.value,
     neverRequired: false,
     preprocessRaw(raw: string): string {
@@ -229,6 +230,7 @@ function stringArray() {
   return new Converter<string[], IObservableArray<string>>({
     emptyRaw: [],
     emptyValue: observable.array([]),
+    isEmpty: (raw: string[]) => raw.length === 0,
     convert(raw) {
       return observable.array(raw);
     },
@@ -322,6 +324,12 @@ function stringMaybe<R, V>(converter: IConverter<R, V>, emptyValue: V) {
     emptyRaw: "",
     emptyValue: emptyValue,
     defaultControlled: controlled.value,
+    isEmpty(raw: R, options: StateConverterOptionsWithContext) {
+      if (raw == null) {
+        return true;
+      }
+      return converter.isEmpty(raw as R, options);
+    },
     preprocessRaw(raw: R, options: StateConverterOptionsWithContext) {
       if (raw == null) {
         return raw;

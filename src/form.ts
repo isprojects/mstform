@@ -4,14 +4,13 @@ import {
   ModelInstanceTypeProps,
   Instance,
   getNodeId,
-  IModelType,
-  types,
 } from "mobx-state-tree";
 import {
   ConversionError,
   ConverterOrFactory,
   IConverter,
   StateConverterOptionsWithContext,
+  converterEmptyImpossible,
   makeConverter,
 } from "./converter";
 import { FormState, FormStateOptions } from "./state";
@@ -272,18 +271,16 @@ export class Field<R, V> {
   isRequired(
     raw: R,
     required: boolean,
-    options: ProcessOptions | undefined
+    options: ProcessOptions | undefined,
+    stateConverterOptions: StateConverterOptionsWithContext
   ): boolean {
-    const emptyRaw = this.converter.emptyRaw;
-    const bothArray = Array.isArray(raw) && Array.isArray(emptyRaw);
-    if (bothArray && (raw as any).length !== (emptyRaw as any).length) {
+    if (!this.converter.isEmpty(raw, stateConverterOptions)) {
       return false;
     }
-
-    if (!bothArray && raw !== emptyRaw) {
-      return false;
-    }
-    if (!this.converter.neverRequired && this.converter.emptyImpossible) {
+    if (
+      !this.converter.neverRequired &&
+      converterEmptyImpossible(this.converter, stateConverterOptions)
+    ) {
       return true;
     }
     const ignoreRequired: boolean =

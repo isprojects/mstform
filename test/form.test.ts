@@ -7,7 +7,14 @@ import {
   SnapshotIn,
   castToSnapshot,
 } from "mobx-state-tree";
-import { Field, Form, RepeatingForm, converters, Group } from "../src";
+import {
+  Field,
+  Form,
+  RepeatingForm,
+  converters,
+  Group,
+  FieldAccessor,
+} from "../src";
 
 configure({ enforceActions: "always" });
 
@@ -979,6 +986,90 @@ test("required with maybeNull", () => {
   expect(field.raw).toEqual("3");
   expect(field.value).toEqual(3);
   field.setRaw("");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toBeNull();
+});
+
+test("required with zeroIsEmpty", () => {
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.stringDecimal({ zeroIsEmpty: true }), {
+      required: true,
+    }),
+  });
+
+  const o = M.create({ foo: "3" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3.00");
+  expect(field.value).toEqual("3");
+  field.setRaw("0");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toEqual("0");
+});
+
+test("required with zeroIsEmpty maybeNull field", () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string),
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(converters.stringDecimal({ zeroIsEmpty: true })),
+      {
+        required: true,
+      }
+    ),
+  });
+
+  const o = M.create({ foo: "3" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3.00");
+  expect(field.value).toEqual("3");
+  field.setRaw("0");
+  expect(field.error).toEqual("Required");
+  expect(field.value).toBeNull();
+});
+
+test("required with zeroIsEmpty dynamic maybeNull field", () => {
+  const M = types.model("M", {
+    foo: types.maybeNull(types.string),
+  });
+
+  const getOptions = (context: any, accessor: FieldAccessor<any, any>) => {
+    return { zeroIsEmpty: true };
+  };
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.dynamic(converters.stringDecimal, getOptions)
+      ),
+      {
+        required: true,
+      }
+    ),
+  });
+
+  const o = M.create({ foo: "3" });
+
+  const state = form.state(o);
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("3.00");
+  expect(field.value).toEqual("3");
+  field.setRaw("0");
   expect(field.error).toEqual("Required");
   expect(field.value).toBeNull();
 });
