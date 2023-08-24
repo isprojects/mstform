@@ -396,6 +396,7 @@ function modelReferenceArray<M extends IAnyModelType>(_model: M) {
   return new Converter<Instance<M>[], IMSTArray<IReferenceType<M>>>({
     emptyRaw: [],
     emptyValue: observable.array([]),
+    isEmpty: (raw: IAnyModelType[]) => raw.length === 0,
     defaultControlled: controlled.modelReferenceArray,
     convert(raw) {
       return raw as IMSTArray<IReferenceType<M>>;

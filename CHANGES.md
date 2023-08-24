@@ -1,3 +1,8 @@
+# 1.34.2
+
+-   Fixed a bug with the `modelReferenceArray` converter - it was missing its isEmpty hook,
+    causing the `required` functionality to stop working for these fields.
+
 # 1.34.1
 
 -   Fixed a bug where `zeroIsEmpty` did not work with maybe, maybeNull or dynamic converters.

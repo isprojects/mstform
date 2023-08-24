@@ -1,4 +1,4 @@
-import { types } from "mobx-state-tree";
+import { Instance, castToSnapshot, types } from "mobx-state-tree";
 import { Decimal } from "decimal.js-light";
 import {
   ConversionError,
@@ -888,4 +888,49 @@ test("zero decimal maybe empty and required", () => {
   // This is equivalent to 0.0012, which isn't technically 0.
   field.setRaw("0.0012");
   expect(field.isEmptyAndRequired).toBeFalsy();
+});
+
+test("required with modelSourceArray", () => {
+  const U = types.model("U", {
+    id: types.identifierNumber,
+    name: types.string,
+  });
+
+  const UContainer = types
+    .model("BarContainer", {
+      entryMap: types.map(U),
+    })
+    .actions((self) => ({
+      addValue(value: Instance<typeof U>) {
+        self.entryMap.put(value);
+      },
+    }));
+
+  const M = types.model("M", {
+    uContainer: UContainer,
+    users: types.array(types.reference(U)),
+  });
+
+  const form = new Form(M, {
+    users: new Field(converters.modelReferenceArray(U), { required: true }),
+  });
+
+  const container = UContainer.create({ entryMap: {} });
+  const user = U.create({ id: 1, name: "Foo" });
+  container.addValue(user);
+
+  const o = M.create({
+    uContainer: castToSnapshot(container),
+    users: [user.id],
+  });
+
+  const state = form.state(o);
+  const field = state.field("users");
+
+  // We expect the field to not be empty and required, since the field contains a list of users.
+  expect(field.isEmptyAndRequired).toBeFalsy();
+
+  field.setRaw([]);
+  // We expect the field to be empty and required, since the list is empty.
+  expect(field.isEmptyAndRequired).toBeTruthy();
 });
