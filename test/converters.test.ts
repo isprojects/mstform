@@ -769,6 +769,35 @@ test("zero decimal empty and required", () => {
   expect(field.isEmptyAndRequired).toBeFalsy();
 });
 
+test("decimals should not be marked as empty", () => {
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true }),
+      { required: true }
+    ),
+  });
+
+  const o = M.create({ foo: "0" });
+
+  const state = form.state(o, {
+    converterOptions: {
+      decimalSeparator: ",",
+      thousandSeparator: ".",
+    },
+  });
+  const field = state.field("foo");
+
+  field.setRaw("0,02");
+  expect(field.isEmptyAndRequired).toBeFalsy();
+
+  field.setRaw("0.02");
+  expect(field.isEmptyAndRequired).toBeFalsy();
+});
+
 test("zero decimal maybeNull empty and required", () => {
   const M = types.model("M", {
     foo: types.maybeNull(types.string),

@@ -1,3 +1,7 @@
+# 1.34.3
+
+- Fixed bug where decimals where falsely marked as empty for localizations that use comma as decimal separator
+
 # 1.34.2
 
 -   Fixed a bug with the `modelReferenceArray` converter - it was missing its isEmpty hook,
