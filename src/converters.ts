@@ -180,16 +180,32 @@ function decimalRender(
 
 function stringDecimal(options: DecimalOptions) {
   const emptyRaw = "";
-  function stringDecimalIsEmpty(raw: string, options: DecimalOptions): boolean {
+  function stringDecimalIsEmpty(
+    raw: string,
+    options: DecimalOptions,
+    extraOptions: StateConverterOptionsWithContext
+  ): boolean {
     if (raw === emptyRaw) {
       return true;
+    }
+    if (raw) {
+      if (extraOptions.thousandSeparator) {
+        raw.replaceAll(extraOptions.thousandSeparator, "");
+      }
+      if (
+        extraOptions.decimalSeparator &&
+        extraOptions.decimalSeparator !== "."
+      ) {
+        raw = raw.replaceAll(extraOptions.decimalSeparator, ".");
+      }
     }
     return options.zeroIsEmpty ? parseFloat(raw) === 0 : false;
   }
 
   return new StringConverter<string>({
     emptyRaw,
-    isEmpty: (raw: string) => stringDecimalIsEmpty(raw, options),
+    isEmpty: (raw: string, extraOptions: StateConverterOptionsWithContext) =>
+      stringDecimalIsEmpty(raw, options, extraOptions),
     emptyImpossible: (stateConverterOptions) => !options.zeroIsEmpty,
     emptyValue: (stateConverterOptions) =>
       options.zeroIsEmpty ? "0" : undefined,
