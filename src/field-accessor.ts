@@ -218,6 +218,10 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (comparer.structural(this._value, value)) {
       return;
     }
+    // if the converter does not see any changes, don't do anything as well
+    if (!this.field.converter.hasChange(this._value, value)) {
+      return;
+    }
 
     this._value = value;
 

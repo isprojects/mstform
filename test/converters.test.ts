@@ -515,9 +515,19 @@ test("dynamic decimal converter", () => {
     foo: types.string,
   });
 
+  const touched: boolean[] = [];
+
   const form = new Form(M, {
     foo: new Field(
-      converters.dynamic(converters.stringDecimal, (context) => context.options)
+      converters.dynamic(
+        converters.stringDecimal,
+        (context) => context.options
+      ),
+      {
+        change: (node, value) => {
+          touched.push(true);
+        },
+      }
     ),
   });
 
@@ -530,19 +540,26 @@ test("dynamic decimal converter", () => {
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("4"); // conversion error
   expect(field.error).toEqual("Could not convert");
+  expect(touched.length).toEqual(0); // Not touched
+
   context.options = { decimalPlaces: 3 };
   field.setRaw("3.141");
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141"); // conversion succeeds
   expect(field.error).toBeUndefined();
+  expect(touched.length).toEqual(1); // Touched
+
   context.options = { decimalPlaces: 2 };
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141"); // nothing happens until field is touched
   expect(field.error).toBeUndefined();
+  expect(touched.length).toEqual(1); // Not touched again
+
   field.setRaw("3.141"); // touch field again
   expect(field.raw).toEqual("3.141");
   expect(field.value).toEqual("3.141");
   expect(field.error).toEqual("Could not convert");
+  expect(touched.length).toEqual(1); // onChange not triggered again
 });
 
 test("text string array converter", () => {
@@ -550,8 +567,14 @@ test("text string array converter", () => {
     foo: types.array(types.string),
   });
 
+  const touched: boolean[] = [];
+
   const form = new Form(M, {
-    foo: new Field(converters.textStringArray),
+    foo: new Field(converters.textStringArray, {
+      change: (node, value) => {
+        touched.push(true);
+      },
+    }),
   });
 
   const o = M.create({ foo: ["A", "B", "C"] });
@@ -562,30 +585,37 @@ test("text string array converter", () => {
   field.setRaw("A\nB\nC");
   expect(field.raw).toEqual("A\nB\nC");
   expect(field.value).toEqual(["A", "B", "C"]);
+  expect(touched.length).toEqual(0); // Not touched
 
   field.setRaw("D");
   expect(field.raw).toEqual("D");
   expect(field.value).toEqual(["D"]);
+  expect(touched.length).toEqual(1); // Touched
 
   field.setRaw("1\n2 \n3");
   expect(field.raw).toEqual("1\n2 \n3");
   expect(field.value).toEqual(["1", "2", "3"]);
+  expect(touched.length).toEqual(2); // Touched again
 
   field.setRaw("");
   expect(field.raw).toEqual("");
   expect(field.value).toEqual([]);
+  expect(touched.length).toEqual(3); // Touched again
 
   field.setRaw("\n");
   expect(field.raw).toEqual("\n");
   expect(field.value).toEqual([]);
+  expect(touched.length).toEqual(3); // Not touched because new value is invalid
 
   field.setRaw("   ");
   expect(field.raw).toEqual("   ");
   expect(field.value).toEqual([]);
+  expect(touched.length).toEqual(3); // Not touched because new value is invalid
 
   field.setRaw("1\n2 \n3\n");
   expect(field.raw).toEqual("1\n2 \n3\n");
   expect(field.value).toEqual(["1", "2", "3"]);
+  expect(touched.length).toEqual(4); // Touched again
 });
 
 test("render decimal number without decimals with decimal separator", () => {
@@ -884,12 +914,19 @@ test("zero decimal maybe empty and required", () => {
     foo: types.maybe(types.string),
   });
 
+  const touched: boolean[] = [];
+
   const form = new Form(M, {
     foo: new Field(
       converters.maybe(
         converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true })
       ),
-      { required: true }
+      {
+        change: (node, value) => {
+          touched.push(true);
+        },
+        required: true,
+      }
     ),
   });
 
@@ -904,19 +941,20 @@ test("zero decimal maybe empty and required", () => {
   // We expect the field to still be empty and required, since zeroIsEmpty is true and the raw is "0.00".
   // This is equivalent to 0.
   field.setRaw("0.00");
-
   expect(field.isEmptyAndRequired).toBeTruthy();
+  expect(touched.length).toEqual(1); // Touched
 
   // We expect the field to still be empty and required, since zeroIsEmpty is true and the raw is "".
   // This is equivalent to the empty raw.
   field.setRaw("");
-
   expect(field.isEmptyAndRequired).toBeTruthy();
+  expect(touched.length).toEqual(1); // Not touched again
 
   // We no longer expect the field to be empty and required, since zeroIsEmpty is true but the raw is "0.0012".
   // This is equivalent to 0.0012, which isn't technically 0.
   field.setRaw("0.0012");
   expect(field.isEmptyAndRequired).toBeFalsy();
+  expect(touched.length).toEqual(1); // Not touched again
 });
 
 test("required with modelSourceArray", () => {

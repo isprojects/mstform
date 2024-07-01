@@ -59,6 +59,9 @@ function delegatingConverter<R, V>(
         options
       );
     },
+    hasChange(currentValue: V, newValue: V): boolean {
+      return currentValue !== newValue;
+    },
   };
 }
 

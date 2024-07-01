@@ -2898,8 +2898,14 @@ test("a simple form with literalString converter", () => {
     foo: types.union(types.literal("foo"), types.literal("bar")),
   });
 
+  const touched: boolean[] = [];
+
   const form = new Form(M, {
-    foo: new Field(converters.literalString<"foo" | "bar">()),
+    foo: new Field(converters.literalString<"foo" | "bar">(), {
+      change: (node, value) => {
+        touched.push(true);
+      },
+    }),
   });
 
   const o = M.create({ foo: "foo" });
@@ -2908,11 +2914,13 @@ test("a simple form with literalString converter", () => {
   const field = state.field("foo");
 
   expect(field.raw).toEqual("foo");
+  expect(touched.length).toEqual(0); // Not touched
+
   field.setRaw("bar");
   expect(field.error).toBeUndefined();
   expect(field.value).toEqual("bar");
-
   expect(field.node).toBe(state.node);
+  expect(touched.length).toEqual(1); // Touched
 });
 
 test("isdirty form and field in addmode", async () => {
@@ -3670,8 +3678,14 @@ test("restore state form with reference and addmodedefaults", () => {
     instance: { foo: "1" },
   });
 
+  const touched: boolean[] = [];
+
   const form = new Form(M, {
-    foo: new Field(converters.model(R)),
+    foo: new Field(converters.model(R), {
+      change: (node, value) => {
+        touched.push(true);
+      },
+    }),
   });
 
   const r1 = root.entries[0];
@@ -3685,15 +3699,18 @@ test("restore state form with reference and addmodedefaults", () => {
   expect(field.value).toBe(r1);
   expect(field.isDirty).toBeFalsy();
   expect(state.isDirty).toBeFalsy();
+  expect(touched.length).toEqual(0); // Not touched
 
   field.setRaw(r2);
   expect(field.isDirty).toBeTruthy();
   expect(state.isDirty).toBeTruthy();
+  expect(touched.length).toEqual(1); // Touched
 
   field.restore();
   expect(field.value).toBe(r1);
   expect(field.isDirty).toBeFalsy();
   expect(state.isDirty).toBeFalsy();
+  expect(touched.length).toEqual(2); // Touched again
 });
 
 test("restore state form and field array field", () => {

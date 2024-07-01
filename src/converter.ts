@@ -27,6 +27,7 @@ export interface ConverterOptions<R, V> {
   neverRequired?: boolean;
   preprocessRaw?(raw: R, options?: StateConverterOptionsWithContext): R;
   isEmpty?(raw: R, options?: StateConverterOptionsWithContext): boolean;
+  hasChange(currentValue: V, newValue: V): boolean;
 }
 
 export interface IConverter<R, V> {
@@ -46,6 +47,7 @@ export interface IConverter<R, V> {
   neverRequired: boolean;
   preprocessRaw(raw: R, options: StateConverterOptionsWithContext): R;
   isEmpty(raw: R, options: StateConverterOptionsWithContext): boolean;
+  hasChange(currentValue: V, newValue: V): boolean;
 }
 
 export class ConversionValue<V> {
@@ -121,6 +123,10 @@ export class Converter<R, V> implements IConverter<R, V> {
 
   render(value: V, options: StateConverterOptionsWithContext): R {
     return this.definition.render(value, options);
+  }
+
+  hasChange(currentValue: V, newValue: V): boolean {
+    return this.definition.hasChange(currentValue, newValue);
   }
 }
 

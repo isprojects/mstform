@@ -40,7 +40,7 @@ test("changehook", () => {
   // this immediately affects the underlying value
   expect(b.value).toEqual(4);
 
-  // when we change it to something unvalid, change hook doesn't fire
+  // when we change it to something invalid, change hook doesn't fire
   c.setRaw("invalid");
   expect(b.raw).toEqual("4");
   expect(b.value).toEqual(4);
@@ -144,7 +144,7 @@ test("changehook with null", () => {
   // this immediately affects the underlying value
   expect(b.value).toEqual(4);
 
-  // when we change it to something unvalid, change hook doesn't fire
+  // when we change it to something invalid, change hook doesn't fire
   c.setRaw("invalid");
   expect(b.raw).toEqual("4");
   expect(b.value).toEqual(4);
@@ -191,6 +191,65 @@ test("changehook doesn't fire if nothing changed", () => {
   expect(touched.length).toEqual(0);
 });
 
+test("changehook doesn't fire if nothing functionally changed", () => {
+  const M = types
+    .model("M", {
+      c: types.string,
+      b: types.string,
+    })
+    .actions((self) => ({
+      setB(value: string) {
+        self.b = value;
+      },
+    }));
+
+  const touched: boolean[] = [];
+
+  const form = new Form(M, {
+    c: new Field(converters.stringDecimal, {
+      change: (node, value) => {
+        touched.push(true);
+        node.setB(value);
+      },
+    }),
+    b: new Field(converters.stringDecimal),
+  });
+
+  const o = M.create({ c: "1.00", b: "2.00" });
+
+  const state = form.state(o);
+  const c = state.field("c");
+  const b = state.field("b");
+
+  // we set the raw to 1.000 explicitly, which is a technical change but not a functional change
+  // we do not expect "touched" to be triggered
+  c.setRaw("1.000");
+  expect(c.raw).toEqual("1.000"); // Changed value
+  expect(b.raw).toEqual("2.00"); // Not changed
+  expect(touched.length).toEqual(0); // Not touched
+
+  // we set the value to 1.000 explicitly, which is a technical change but not a functional change
+  // we do not expect "touched" to be triggered
+  c.setValue("1.000");
+  expect(c.raw).toEqual("1.000"); // Did not change value
+  expect(b.raw).toEqual("2.00"); // Not changed
+  expect(touched.length).toEqual(0); // Not touched
+
+  // we set the raw to 2.00 explicitly, which is a change
+  // we do expect "touched" to be triggered
+  c.setRaw("2.00");
+  expect(c.raw).toEqual("2.00"); // Changed value
+  expect(b.raw).toEqual("2.00"); // Changed
+  expect(touched.length).toEqual(1); // Touched
+
+  // we set the raw to 3.00 explicitly, which is a change
+  // we do expect "touched" to be triggered
+  c.setValue("3.00");
+  expect(c.raw).toEqual("2.00"); // We updated the value, but not the raw
+  expect(b.raw).toEqual("3.00"); // Changed
+  expect(touched.length).toEqual(2); // Touched
+});
+
 test("changehook doesn't fire if nothing changed with required", () => {
   const M = types
     .model("M", {
@@ -229,4 +288,9 @@ test("changehook doesn't fire if nothing changed with required", () => {
   // the value should be untouched
   expect(b.raw).toEqual("B");
   expect(touched.length).toEqual(0);
+
+  // When we change the calue to something else
+  c.setRaw("X");
+  expect(b.raw).toEqual("touched");
+  expect(touched.length).toEqual(1); // Touched
 });

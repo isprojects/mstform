@@ -140,6 +140,9 @@ test("context in converter", () => {
     render(value) {
       return value;
     },
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
+    },
   });
 
   const form = new Form(M, {
@@ -173,6 +176,9 @@ test("context in converter in convert", () => {
     render(value) {
       return value;
     },
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
+    },
   });
 
   const form = new Form(M, {
@@ -202,6 +208,9 @@ test("context in converter in render", () => {
     },
     render(value, options) {
       return options.context.prefix + value;
+    },
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
     },
   });
 

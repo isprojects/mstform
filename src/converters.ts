@@ -53,6 +53,9 @@ function string(options: StringOptions) {
     preprocessRaw(raw: string): string {
       return raw.trim();
     },
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -67,6 +70,9 @@ function literalString<T>() {
       return value;
     },
     defaultControlled: controlled.value,
+    hasChange(currentValue: T, newValue: T): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -107,6 +113,9 @@ function number() {
     preprocessRaw(raw: string): string {
       return raw.trim();
     },
+    hasChange(currentValue: number, newValue: number): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -126,6 +135,9 @@ function integer() {
     preprocessRaw(raw: string): string {
       return raw.trim();
     },
+    hasChange(currentValue: number, newValue: number): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -141,6 +153,9 @@ function boolean() {
     },
     defaultControlled: controlled.checked,
     neverRequired: true,
+    hasChange(currentValue: boolean, newValue: boolean): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -220,6 +235,9 @@ function stringDecimal(options: DecimalOptions) {
     render(value, converterOptions) {
       return decimalRender(value, options, converterOptions);
     },
+    hasChange(currentValue: string, newValue: string): boolean {
+      return parseFloat(currentValue) !== parseFloat(newValue);
+    },
   });
 }
 
@@ -238,6 +256,9 @@ function decimal(options: DecimalOptions) {
     render(value, converterOptions) {
       return decimalRender(value.toString(), options, converterOptions);
     },
+    hasChange(currentValue: Decimal, newValue: Decimal): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -252,6 +273,9 @@ function stringArray() {
     },
     render(value) {
       return value.slice();
+    },
+    hasChange(currentValue: string[], newValue: string[]): boolean {
+      return currentValue !== newValue;
     },
   });
 }
@@ -277,6 +301,9 @@ function textStringArray() {
         .split("\n")
         .filter((rawValue) => rawValue)
         .join("\n");
+    },
+    hasChange(currentValue: string[], newValue: string[]): boolean {
+      return currentValue !== newValue;
     },
   });
 }
@@ -373,6 +400,9 @@ function stringMaybe<R, V>(converter: IConverter<R, V>, emptyValue: V) {
       }
       return converter.render(value, options);
     },
+    hasChange(currentValue: V, newValue: V): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -391,6 +421,9 @@ function model<M extends IAnyModelType>(_model: M) {
     render(value) {
       return value;
     },
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -405,6 +438,9 @@ function maybeModel<M, RE, VE>(
     convert: (r: M | RE) => (r !== emptyRaw ? (r as M) : emptyValue),
     render: (v: M | VE) => (v !== emptyValue ? (v as M) : emptyRaw),
     defaultControlled: controlled.object,
+    hasChange(currentValue: VE, newValue: VE): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -420,6 +456,9 @@ function modelReferenceArray<M extends IAnyModelType>(_model: M) {
     render(value) {
       return value;
     },
+    hasChange(currentValue: M[], newValue: M[]): boolean {
+      return currentValue !== newValue;
+    },
   });
 }
 
@@ -428,6 +467,9 @@ const object = new Converter<any, any>({
   emptyValue: undefined,
   convert: identity,
   render: identity,
+  hasChange(currentValue: any, newValue: any): boolean {
+    return currentValue !== newValue;
+  },
 });
 
 export const converters = {

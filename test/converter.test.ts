@@ -18,6 +18,9 @@ test("simple converter", () => {
     emptyValue: "",
     convert: (raw) => raw,
     render: (value) => value,
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
+    },
   });
 
   const result = converter.convert("foo", options);
@@ -39,6 +42,9 @@ test("converter emptyImpossible and emptyValue", () => {
         emptyImpossible: true,
         convert: (raw) => raw,
         render: (value) => value,
+        hasChange(currentValue: string, newValue: string): boolean {
+          return currentValue !== newValue;
+        },
       })
   ).toThrow();
 });
@@ -54,6 +60,9 @@ test("converter to integer", () => {
       return parseInt(raw, 10);
     },
     render: (value) => value.toString(),
+    hasChange(currentValue: number, newValue: number): boolean {
+      return currentValue !== newValue;
+    },
   });
 
   const result = converter.convert("3", options);
@@ -97,6 +106,9 @@ test("convert can throw ConversionError", () => {
       throw new ConversionError();
     },
     render: (value) => value,
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
+    },
   });
 
   const result = converter.convert("foo", options);
@@ -111,6 +123,9 @@ test("non-ConversionError bubbles up", () => {
       throw new Error("Unexpected failure");
     },
     render: (value) => value,
+    hasChange(currentValue: string, newValue: string): boolean {
+      return currentValue !== newValue;
+    },
   });
 
   expect(() => converter.convert("foo", options)).toThrow();
