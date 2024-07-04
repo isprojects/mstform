@@ -1,3 +1,8 @@
+# 1.34.4
+
+- Added a hasChange method to the converters to check if a value has been changed or not.
+  if not, we do no longer trigger the actual change method.
+
 # 1.34.3
 
 - Fixed bug where decimals where falsely marked as empty for localizations that use comma as decimal separator
