@@ -219,7 +219,11 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
       return;
     }
     // if the converter does not see any changes, don't do anything as well
-    if (!this.field.converter.hasChange(this._value, value)) {
+    const stateConverterOptions =
+      this.state.stateConverterOptionsWithContext(this);
+    if (
+      !this.field.converter.hasChange(this._value, value, stateConverterOptions)
+    ) {
       return;
     }
 

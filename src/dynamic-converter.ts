@@ -59,8 +59,16 @@ function delegatingConverter<R, V>(
         options
       );
     },
-    hasChange(currentValue: V, newValue: V): boolean {
-      return currentValue !== newValue;
+    hasChange(
+      currentValue: V,
+      newValue: V,
+      options: StateConverterOptionsWithContext
+    ): boolean {
+      return getContextConverter(options.context, options.accessor).hasChange(
+        currentValue,
+        newValue,
+        options
+      );
     },
   };
 }

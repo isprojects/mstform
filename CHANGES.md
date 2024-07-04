@@ -1,3 +1,7 @@
+# 1.34.5
+
+- hasChange method in dynamic converter should not execute but pass down its check to the child converter
+
 # 1.34.4
 
 - Added a hasChange method to the converters to check if a value has been changed or not.
