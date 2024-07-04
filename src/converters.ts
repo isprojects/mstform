@@ -400,8 +400,12 @@ function stringMaybe<R, V>(converter: IConverter<R, V>, emptyValue: V) {
       }
       return converter.render(value, options);
     },
-    hasChange(currentValue: V, newValue: V): boolean {
-      return currentValue !== newValue;
+    hasChange(
+      currentValue: V,
+      newValue: V,
+      options: StateConverterOptionsWithContext
+    ): boolean {
+      return converter.hasChange(currentValue, newValue, options);
     },
   });
 }

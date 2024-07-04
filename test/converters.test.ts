@@ -1050,3 +1050,54 @@ test("dynamic decimal converter pass down event", () => {
   expect(field.raw).toEqual("3.1500");
   expect(touched.length).toEqual(1); // Not touched because value is functionally the same
 });
+
+test("maybeNull and dynamic decimal converter pass down event", () => {
+  const context = { options: { decimalPlaces: 4 } };
+
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const touched: boolean[] = [];
+
+  const form = new Form(M, {
+    foo: new Field(
+      converters.maybeNull(
+        converters.dynamic(
+          converters.stringDecimal,
+          (context) => context.options
+        )
+      ),
+      {
+        change: (node, value) => {
+          touched.push(true);
+        },
+      }
+    ),
+  });
+
+  const o = M.create({ foo: "3.1400" });
+
+  const state = form.state(o, { context: context });
+  const field = state.field("foo");
+
+  // Set field with the same value
+  field.setValue("3.14");
+  expect(field.raw).toEqual("3.1400");
+  expect(touched.length).toEqual(0); // Not touched
+
+  // Set field with the same value with extra trailing zeros
+  field.setValue("3.1400");
+  expect(field.raw).toEqual("3.1400");
+  expect(touched.length).toEqual(0); // Not touched because value is functionally the same
+
+  // Set field with a different value
+  field.setValue("3.15");
+  expect(field.raw).toEqual("3.1500");
+  expect(touched.length).toEqual(1); // onChange triggered
+
+  // Set field with the same value with extra trailing zeros
+  field.setValue("3.1500");
+  expect(field.raw).toEqual("3.1500");
+  expect(touched.length).toEqual(1); // Not touched because value is functionally the same
+});
