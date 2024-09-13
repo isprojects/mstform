@@ -181,7 +181,7 @@ test("flatAccessors should return correct accessors", () => {
     })
     .actions((self) => ({
       addLines() {
-        // Adding 1000 Line1 elements, each containing 100 Line2 elements, each containing 10 Line3 elements
+        // Adding 100 Line1 elements, each containing 100 Line2 elements, each containing 10 Line3 elements
         for (let i = 0; i < 100; i++) {
           const line1 = Line1.create({
             value: `Line1 #${i}`,
@@ -198,13 +198,13 @@ test("flatAccessors should return correct accessors", () => {
               const line3 = Line3.create({
                 value: `Line3 #${k}`,
               });
-              line2.addLine(line3); // Add 10 Line3 instances to Line2
+              line2.addLine(line3); // Add 1 Line3 instances to Line2
             }
 
-            line1.addLine(line2); // Add 100 Line2 instances to Line1
+            line1.addLine(line2); // Add 10 Line2 instances to Line1
           }
 
-          self.lines.push(line1); // Add 1000 Line1 instances to Bar
+          self.lines.push(line1); // Add 100 Line1 instances to Bar
         }
       },
     }));
@@ -222,7 +222,10 @@ test("flatAccessors should return correct accessors", () => {
   });
   const barObj = Bar.create();
   const state = barForm.state(barObj);
+  // we add lines 100 x 10 x 1
   barObj.addLines();
+
+  // this was how the old flatAccessor method worked
   const flatAccessorOldFunc = () => {
     const result: IAccessor[] = [];
     state.accessors.forEach((accessor) => {
@@ -235,6 +238,7 @@ test("flatAccessors should return correct accessors", () => {
   const accessorsOld = flatAccessorOldFunc();
   const accessorsNew = state.flatAccessors;
 
+  // now we make sure that the length is the same and it contains the same values
   expect(accessorsOld.length === accessorsNew.length).toBeTruthy();
   for (const accessorOld of accessorsOld) {
     expect(accessorsNew.includes(accessorOld)).toBeTruthy();
