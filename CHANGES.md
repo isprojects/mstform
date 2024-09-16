@@ -1,3 +1,8 @@
+# 1.34.6
+
+- The `flatAccessor` getter has been updated to use an iterative approach for retrieving all sub-accessors, 
+  to prevent the risk of exceeding the maximum call stack limit.
+
 # 1.34.5
 
 - hasChange method in dynamic converter should not execute but pass down its check to the child converter
