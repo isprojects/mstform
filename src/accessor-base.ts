@@ -163,10 +163,14 @@ export abstract class AccessorBase implements IAccessor {
   @computed
   get flatAccessors(): IAccessor[] {
     const result: IAccessor[] = [];
-    this.accessors.forEach((accessor) => {
-      result.push(...accessor.flatAccessors);
-      result.push(accessor);
-    });
+    const processStack: IAccessor[] = this.accessors;
+    while (processStack.length > 0) {
+      const accessor: IAccessor = processStack.pop() as IAccessor; // Use pop for O(1) performance
+      if (accessor !== this) {
+        result.push(accessor);
+        processStack.push(...accessor.accessors); // Use push with spread operator for better efficiency
+      }
+    }
     return result;
   }
 
