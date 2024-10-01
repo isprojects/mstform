@@ -243,4 +243,8 @@ test("flatAccessors should return correct accessors", () => {
   for (const accessorOld of accessorsOld) {
     expect(accessorsNew.includes(accessorOld)).toBeTruthy();
   }
+
+  const secondAccessorNew = state.flatAccessors;
+
+  expect(accessorsNew).toEqual(secondAccessorNew);
 });
