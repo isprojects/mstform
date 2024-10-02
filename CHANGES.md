@@ -1,3 +1,8 @@
+# 1.34.7
+
+- The changes in 1.34.6 for `flatAccessor` getter have been reverted because it was breaking validation in repeating 
+  form accessors.
+
 # 1.34.6
 
 - The `flatAccessor` getter has been updated to use an iterative approach for retrieving all sub-accessors, 
