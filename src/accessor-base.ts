@@ -163,15 +163,23 @@ export abstract class AccessorBase implements IAccessor {
   @computed
   get flatAccessors(): IAccessor[] {
     const result: IAccessor[] = [];
-    const processStack: IAccessor[] = this.accessors;
-    while (processStack.length > 0) {
-      const accessor: IAccessor = processStack.pop() as IAccessor; // Use pop for O(1) performance
-      if (accessor !== this) {
-        result.push(accessor);
-        processStack.push(...accessor.accessors); // Use push with spread operator for better efficiency
-      }
-    }
+    this.accessors.forEach((accessor) => {
+      result.push(...accessor.flatAccessors);
+      result.push(accessor);
+    });
     return result;
+    // TODO NEXTPY-2196: The code below breaks the validation on repeating form, fix that first
+    //  before replacing the code above with the code below
+    // const result: IAccessor[] = [];
+    // const processStack: IAccessor[] = this.accessors;
+    // while (processStack.length > 0) {
+    //   const accessor: IAccessor = processStack.pop() as IAccessor; // Use pop for O(1) performance
+    //   if (accessor !== this) {
+    //     result.push(accessor);
+    //     processStack.push(...accessor.accessors); // Use push with spread operator for better efficiency
+    //   }
+    // }
+    // return result;
   }
 
   dispose() {
