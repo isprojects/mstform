@@ -8,3 +8,13 @@ coverage
 .idea
 package-lock.json
 .vscode
+
+# https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+.eslintcache
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

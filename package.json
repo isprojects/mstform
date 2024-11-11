@@ -101,5 +101,6 @@
     ],
     "dependencies": {
         "lodash.debounce": "^4.0.8"
-    }
+    },
+    "packageManager": "yarn@4.5.1"
 }
