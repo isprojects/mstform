@@ -425,19 +425,21 @@ export class FormState<
     if (this.processor == null) {
       throw new Error("Cannot save without backend configuration");
     }
+
+    let isValid = true;
     if (!skipValidations) {
       let extraOptions = {};
       if (this.processor.process == null) {
         extraOptions = { ignoreGetError: true };
       }
-      const isValid = this.validate({ ...extraOptions, ...options });
+      isValid = this.validate({ ...extraOptions, ...options });
+    }
+    if (!options.ignoreSaveStatus) {
+      this.setSaveStatus("rightAfter");
+    }
 
-      if (!options.ignoreSaveStatus) {
-        this.setSaveStatus("rightAfter");
-      }
-      if (!isValid) {
-        return false;
-      }
+    if (!isValid) {
+      return false;
     }
 
     return this.processor.realSave().then((result) => {
