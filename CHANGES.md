@@ -1,11 +1,15 @@
+# 1.35.0
+
+- Added a flag to the formstate.save function to skip all validations
+
 # 1.34.7
 
-- The changes in 1.34.6 for `flatAccessor` getter have been reverted because it was breaking validation in repeating 
+- The changes in 1.34.6 for `flatAccessor` getter have been reverted because it was breaking validation in repeating
   form accessors.
 
 # 1.34.6
 
-- The `flatAccessor` getter has been updated to use an iterative approach for retrieving all sub-accessors, 
+- The `flatAccessor` getter has been updated to use an iterative approach for retrieving all sub-accessors,
   to prevent the risk of exceeding the maximum call stack limit.
 
 # 1.34.5
