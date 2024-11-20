@@ -418,19 +418,26 @@ export class FormState<
   }
 
   @action
-  async save(options: ValidateOptions = {}): Promise<boolean> {
+  async save(
+    options: ValidateOptions = {},
+    skipValidations = false
+  ): Promise<boolean> {
     if (this.processor == null) {
       throw new Error("Cannot save without backend configuration");
     }
-    let extraOptions = {};
-    if (this.processor.process == null) {
-      extraOptions = { ignoreGetError: true };
-    }
-    const isValid = this.validate({ ...extraOptions, ...options });
 
+    let isValid = true;
+    if (!skipValidations) {
+      let extraOptions = {};
+      if (this.processor.process == null) {
+        extraOptions = { ignoreGetError: true };
+      }
+      isValid = this.validate({ ...extraOptions, ...options });
+    }
     if (!options.ignoreSaveStatus) {
       this.setSaveStatus("rightAfter");
     }
+
     if (!isValid) {
       return false;
     }

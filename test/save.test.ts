@@ -127,6 +127,31 @@ test("required with save", async () => {
   expect(field.error).toEqual("Required");
 });
 
+test("validation skipped with save", async () => {
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string, {
+      required: true,
+    }),
+  });
+
+  const o = M.create({ foo: "" });
+
+  const state = form.state(o, { backend: { save: async () => null } });
+
+  const field = state.field("foo");
+
+  expect(field.raw).toEqual("");
+  expect(field.error).toBeUndefined();
+
+  await state.save({}, true);
+
+  expect(field.error).toBeUndefined();
+});
+
 test("dynamic required with save", async () => {
   const M = types.model("M", {
     foo: types.string,
