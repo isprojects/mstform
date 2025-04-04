@@ -1,29 +1,33 @@
+# 1.35.1
+
+-   Upgraded packages to their latest versions where possible
+
 # 1.35.0
 
-- Added a flag to the formstate.save function to skip all validations
+-   Added a flag to the formstate.save function to skip all validations
 
 # 1.34.7
 
-- The changes in 1.34.6 for `flatAccessor` getter have been reverted because it was breaking validation in repeating
-  form accessors.
+-   The changes in 1.34.6 for `flatAccessor` getter have been reverted because it was breaking validation in repeating
+    form accessors.
 
 # 1.34.6
 
-- The `flatAccessor` getter has been updated to use an iterative approach for retrieving all sub-accessors,
-  to prevent the risk of exceeding the maximum call stack limit.
+-   The `flatAccessor` getter has been updated to use an iterative approach for retrieving all sub-accessors,
+    to prevent the risk of exceeding the maximum call stack limit.
 
 # 1.34.5
 
-- hasChange method in dynamic converter should not execute but pass down its check to the child converter
+-   hasChange method in dynamic converter should not execute but pass down its check to the child converter
 
 # 1.34.4
 
-- Added a hasChange method to the converters to check if a value has been changed or not.
-  if not, we do no longer trigger the actual change method.
+-   Added a hasChange method to the converters to check if a value has been changed or not.
+    if not, we do no longer trigger the actual change method.
 
 # 1.34.3
 
-- Fixed bug where decimals where falsely marked as empty for localizations that use comma as decimal separator
+-   Fixed bug where decimals where falsely marked as empty for localizations that use comma as decimal separator
 
 # 1.34.2
 
