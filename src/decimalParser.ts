@@ -56,7 +56,10 @@ type Expect = (tokenType: TokenType) => boolean;
 type NextToken = () => void;
 
 class Token {
-  constructor(public type: TokenType, public value: string) {}
+  constructor(
+    public type: TokenType,
+    public value: string,
+  ) {}
 }
 
 function thousands(wholeDigits: string, thousandSeparator: string): string {
@@ -200,7 +203,10 @@ class Parser {
   tokenIndex = 0;
   currentToken: Token | null | undefined = undefined;
 
-  constructor(public tokens: Token[], public options: Options) {}
+  constructor(
+    public tokens: Token[],
+    public options: Options,
+  ) {}
 
   nextToken: NextToken = () => {
     if (this.tokenIndex >= this.tokens.length) {
@@ -301,7 +307,7 @@ function tokenize(s: string, options: TokenOptions): Token[] | undefined {
       result.push(new Token(TOKEN_DECIMAL_SEPARATOR, TOKEN_DECIMAL_SEPARATOR));
     } else if (c === options.thousandSeparator) {
       result.push(
-        new Token(TOKEN_THOUSAND_SEPARATOR, TOKEN_THOUSAND_SEPARATOR)
+        new Token(TOKEN_THOUSAND_SEPARATOR, TOKEN_THOUSAND_SEPARATOR),
       );
     } else if (isDigit(c)) {
       result.push(new Token(TOKEN_DIGIT, c));
@@ -315,14 +321,14 @@ function tokenize(s: string, options: TokenOptions): Token[] | undefined {
 }
 
 export function checkConverterOptions(
-  converterOptions: StateConverterOptions | StateConverterOptionsWithContext
+  converterOptions: StateConverterOptions | StateConverterOptionsWithContext,
 ): void {
   if (
     converterOptions.thousandSeparator === "." &&
     converterOptions.decimalSeparator == null
   ) {
     throw new Error(
-      "Can't set thousandSeparator to . without setting decimalSeparator."
+      "Can't set thousandSeparator to . without setting decimalSeparator.",
     );
   }
   if (
@@ -330,7 +336,7 @@ export function checkConverterOptions(
     converterOptions.thousandSeparator != null
   ) {
     throw new Error(
-      "Can't set thousandSeparator and decimalSeparator to the same value."
+      "Can't set thousandSeparator and decimalSeparator to the same value.",
     );
   }
 }

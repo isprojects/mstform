@@ -162,7 +162,7 @@ function boolean() {
 function decimalConvert(
   raw: string,
   options: DecimalOptions,
-  converterOptions: StateConverterOptionsWithContext
+  converterOptions: StateConverterOptionsWithContext,
 ): string {
   checkConverterOptions(converterOptions);
   try {
@@ -183,7 +183,7 @@ function decimalConvert(
 function decimalRender(
   value: string,
   options: DecimalOptions,
-  converterOptions: StateConverterOptionsWithContext
+  converterOptions: StateConverterOptionsWithContext,
 ): string {
   return renderDecimal(value, {
     ...options,
@@ -198,7 +198,7 @@ function stringDecimal(options: DecimalOptions) {
   function stringDecimalIsEmpty(
     raw: string,
     options: DecimalOptions,
-    extraOptions: StateConverterOptionsWithContext
+    extraOptions: StateConverterOptionsWithContext,
   ): boolean {
     if (raw === emptyRaw) {
       return true;
@@ -309,23 +309,23 @@ function textStringArray() {
 }
 
 function maybe<_R, V>(
-  converter: StringConverter<V> | (() => StringConverter<V>)
+  converter: StringConverter<V> | (() => StringConverter<V>),
 ): IConverter<string, V | undefined>;
 function maybe<M>(
-  converter: ConverterOrFactory<M | null, M | undefined>
+  converter: ConverterOrFactory<M | null, M | undefined>,
 ): IConverter<M | null, M | undefined>;
 function maybe<R, V>(
-  converter: ConverterOrFactory<R, V>
+  converter: ConverterOrFactory<R, V>,
 ): IConverter<R, V | undefined>;
 function maybe<R, V>(
-  converter: ConverterOrFactory<R, V>
+  converter: ConverterOrFactory<R, V>,
 ): IConverter<R | null, V | undefined> {
   converter = makeConverter(converter);
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
     return stringMaybe(
       converter as unknown as IConverter<string, V | undefined>,
-      undefined
+      undefined,
     );
   }
   // XXX add an 'as any' as we get a typeerror for some reason now
@@ -336,23 +336,23 @@ function maybe<R, V>(
 }
 
 function maybeNull<_R, V>(
-  converter: StringConverter<V> | (() => StringConverter<V>)
+  converter: StringConverter<V> | (() => StringConverter<V>),
 ): IConverter<string, V | null>;
 function maybeNull<M>(
-  converter: ConverterOrFactory<M | null, M | null>
+  converter: ConverterOrFactory<M | null, M | null>,
 ): IConverter<M | null, M | null>;
 function maybeNull<R, V>(
-  converter: ConverterOrFactory<R, V>
+  converter: ConverterOrFactory<R, V>,
 ): IConverter<R, V | null>;
 function maybeNull<R, V>(
-  converter: ConverterOrFactory<R, V>
+  converter: ConverterOrFactory<R, V>,
 ): IConverter<R | null, V | null> {
   converter = makeConverter(converter);
   // we detect that we're converting a string, which needs a special maybe
   if (typeof converter.emptyRaw === "string") {
     return stringMaybe(
       converter as unknown as IConverter<string, V | null>,
-      null
+      null,
     );
   }
   // XXX add an 'as any' as we get a typeerror for some reason now
@@ -403,7 +403,7 @@ function stringMaybe<R, V>(converter: IConverter<R, V>, emptyValue: V) {
     hasChange(
       currentValue: V,
       newValue: V,
-      options: StateConverterOptionsWithContext
+      options: StateConverterOptionsWithContext,
     ): boolean {
       return converter.hasChange(currentValue, newValue, options);
     },
@@ -434,7 +434,7 @@ function model<M extends IAnyModelType>(_model: M) {
 function maybeModel<M, RE, VE>(
   converter: IConverter<M, M>,
   emptyRaw: RE,
-  emptyValue: VE
+  emptyValue: VE,
 ): IConverter<M | RE, M | VE> {
   return new Converter({
     emptyRaw: emptyRaw,
@@ -487,6 +487,13 @@ export const converters = {
     allowNegative: true,
     addZeroes: true,
     zeroIsEmpty: false,
+    // TypeScript hack. withDefaults turns the stringDecimal options into a partial
+    // but we need to pass the full options to the decimal parser to make TypeScript
+    // happy. Using undefined as a default value is not enough, we have to cast it
+    // to the correct type to allow users to actually pass numbers. To make this work we
+    // first cast undefined to unknown and then to the correct type.
+    normalizedDecimalPlaces: undefined as unknown as number,
+    maxZeroesPadding: undefined as unknown as number,
   }),
   decimal: withDefaults(decimal, {
     maxWholeDigits: 10,

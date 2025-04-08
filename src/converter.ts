@@ -30,7 +30,7 @@ export interface ConverterOptions<R, V> {
   hasChange(
     currentValue: V,
     newValue: V,
-    options: StateConverterOptionsWithContext
+    options: StateConverterOptionsWithContext,
   ): boolean;
 }
 
@@ -44,7 +44,7 @@ export interface IConverter<R, V> {
     | ((options: StateConverterOptionsWithContext) => boolean);
   convert(
     raw: R,
-    options: StateConverterOptionsWithContext
+    options: StateConverterOptionsWithContext,
   ): ConversionResponse<V>;
   render(value: V, options: StateConverterOptionsWithContext): R;
   defaultControlled: Controlled<R, V>;
@@ -54,7 +54,7 @@ export interface IConverter<R, V> {
   hasChange(
     currentValue: V,
     newValue: V,
-    options: StateConverterOptionsWithContext
+    options: StateConverterOptionsWithContext,
   ): boolean;
 }
 
@@ -87,7 +87,7 @@ export class Converter<R, V> implements IConverter<R, V> {
     if (typeof this.emptyImpossible === "boolean" && this.emptyImpossible) {
       if (emptyValue !== undefined) {
         throw new Error(
-          "If you set emptyImpossible for a converter, emptyValue cannot be set"
+          "If you set emptyImpossible for a converter, emptyValue cannot be set",
         );
       }
       this.emptyValue = undefined as V;
@@ -116,7 +116,7 @@ export class Converter<R, V> implements IConverter<R, V> {
 
   convert(
     raw: R,
-    options: StateConverterOptionsWithContext
+    options: StateConverterOptionsWithContext,
   ): ConversionResponse<V> {
     try {
       const value = this.definition.convert(raw, options);
@@ -136,7 +136,7 @@ export class Converter<R, V> implements IConverter<R, V> {
   hasChange(
     currentValue: V,
     newValue: V,
-    options: StateConverterOptionsWithContext
+    options: StateConverterOptionsWithContext,
   ): boolean {
     return this.definition.hasChange(currentValue, newValue, options);
   }
@@ -154,7 +154,7 @@ export interface ConverterFactory<O, R, V> {
 // accepts partial options and fill in the rest with defaults
 export function withDefaults<O, R, V>(
   converterFactory: ConverterFactory<O, R, V>,
-  defaults: O
+  defaults: O,
 ): PartialConverterFactory<O, R, V> {
   return (partialOptions?: Partial<O>) => {
     return converterFactory({ ...defaults, ...partialOptions });
@@ -166,7 +166,7 @@ export type ConverterOrFactory<R, V> =
   | (() => IConverter<R, V>);
 
 export function makeConverter<R, V>(
-  converter: ConverterOrFactory<R, V>
+  converter: ConverterOrFactory<R, V>,
 ): IConverter<R, V> {
   if (typeof converter === "function") {
     return converter();
@@ -176,7 +176,7 @@ export function makeConverter<R, V>(
 
 export function converterEmptyImpossible(
   converter: IConverter<any, any>,
-  options: StateConverterOptionsWithContext
+  options: StateConverterOptionsWithContext,
 ) {
   const emptyImpossible = converter.emptyImpossible;
   if (typeof emptyImpossible === "function") {
@@ -187,7 +187,7 @@ export function converterEmptyImpossible(
 
 export function converterEmptyValue(
   converter: IConverter<any, any>,
-  options: StateConverterOptionsWithContext
+  options: StateConverterOptionsWithContext,
 ) {
   const emptyValue = converter.emptyValue;
   if (typeof emptyValue === "function") {

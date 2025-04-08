@@ -21,7 +21,7 @@ const baseOptions = {
 function check(
   converter: ConverterOrFactory<any, any>,
   value: any,
-  expected: any
+  expected: any,
 ) {
   converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, baseOptions);
@@ -33,7 +33,7 @@ function check(
 function checkDecimal(
   converter: ConverterOrFactory<any, any>,
   value: string,
-  expected: Decimal
+  expected: Decimal,
 ) {
   converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, baseOptions);
@@ -46,7 +46,7 @@ function checkWithOptions(
   converter: ConverterOrFactory<any, any>,
   value: any,
   expected: any,
-  options: StateConverterOptionsWithContext
+  options: StateConverterOptionsWithContext,
 ) {
   converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, options);
@@ -59,7 +59,7 @@ function checkDecimalWithOptions(
   converter: ConverterOrFactory<any, any>,
   value: string,
   expected: Decimal,
-  options: StateConverterOptionsWithContext
+  options: StateConverterOptionsWithContext,
 ) {
   converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, options);
@@ -77,7 +77,7 @@ function fails(converter: ConverterOrFactory<any, any>, value: any) {
 function failsWithOptions(
   converter: ConverterOrFactory<any, any>,
   value: any,
-  options: StateConverterOptionsWithContext
+  options: StateConverterOptionsWithContext,
 ) {
   converter = makeConverter(converter);
   const processedValue = converter.preprocessRaw(value, options);
@@ -184,7 +184,7 @@ test("decimal converter", () => {
       decimalSeparator: ",",
       thousandSeparator: ".",
       ...baseOptions,
-    }
+    },
   );
   checkWithOptions(
     converters.stringDecimal({ decimalPlaces: 2 }),
@@ -195,7 +195,7 @@ test("decimal converter", () => {
       thousandSeparator: ".",
       renderThousands: true,
       ...baseOptions,
-    }
+    },
   );
   fails(converters.stringDecimal, "foo");
   fails(converters.stringDecimal, "1foo");
@@ -277,7 +277,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
       decimalSeparator: ",",
       thousandSeparator: ".",
       ...baseOptions,
-    }
+    },
   );
   checkWithOptions(
     converters.stringDecimal({ decimalPlaces: 2, normalizedDecimalPlaces: 4 }),
@@ -288,7 +288,7 @@ test("decimal converter with normalizedDecimalPlaces", () => {
       thousandSeparator: ".",
       renderThousands: true,
       ...baseOptions,
-    }
+    },
   );
 });
 
@@ -313,7 +313,7 @@ test("decimal converter render with renderThousands false", () => {
   const converted = converter.convert(processedValue, options);
   const rendered = converter.render(
     (converted as ConversionValue<any>).value,
-    options
+    options,
   );
   expect(rendered).toEqual("4314314,31");
 });
@@ -331,7 +331,7 @@ test("decimal converter render with six decimals", () => {
   const converted = converter.convert(processedValue, options);
   const rendered = converter.render(
     (converted as ConversionValue<any>).value,
-    options
+    options,
   );
   expect(rendered).toEqual("4.000000");
 });
@@ -349,7 +349,7 @@ test("decimal converter render with six decimals and thousand separators", () =>
   const converted = converter.convert(processedValue, options);
   const rendered = converter.render(
     (converted as ConversionValue<any>).value,
-    options
+    options,
   );
   expect(rendered).toEqual("4,000,000.000000");
 });
@@ -521,13 +521,13 @@ test("dynamic decimal converter", () => {
     foo: new Field(
       converters.dynamic(
         converters.stringDecimal,
-        (context) => context.options
+        (context) => context.options,
       ),
       {
         change: (node, value) => {
           touched.push(true);
         },
-      }
+      },
     ),
   });
 
@@ -632,7 +632,7 @@ test("render decimal number without decimals with decimal separator", () => {
       converters.dynamic(converters.stringDecimal, (context) => ({
         allowNegative: false,
         decimalPlaces: getCurrencyDecimals(context.getCurrency()),
-      }))
+      })),
     ),
   });
 
@@ -687,8 +687,8 @@ test("obey addZeroes false", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.stringDecimal({ decimalPlaces: 6, addZeroes: false })
-      )
+        converters.stringDecimal({ decimalPlaces: 6, addZeroes: false }),
+      ),
     ),
   });
 
@@ -708,8 +708,8 @@ test("obey addZeroes true", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.stringDecimal({ decimalPlaces: 6, addZeroes: true })
-      )
+        converters.stringDecimal({ decimalPlaces: 6, addZeroes: true }),
+      ),
     ),
   });
 
@@ -729,8 +729,8 @@ test("maybe decimal converter/render for empty", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.stringDecimal({ decimalPlaces: 6, addZeroes: false })
-      )
+        converters.stringDecimal({ decimalPlaces: 6, addZeroes: false }),
+      ),
     ),
   });
 
@@ -757,7 +757,7 @@ test("literal string converter", () => {
   check(
     converters.literalString<"aap" | "kwarktaart">(),
     "kwarktaart",
-    "kwarktaart"
+    "kwarktaart",
   );
 });
 
@@ -769,7 +769,7 @@ test("zero decimal empty and required", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true }),
-      { required: true }
+      { required: true },
     ),
   });
 
@@ -807,7 +807,7 @@ test("decimals should not be marked as empty", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true }),
-      { required: true }
+      { required: true },
     ),
   });
 
@@ -836,9 +836,9 @@ test("zero decimal maybeNull empty and required", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true })
+        converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true }),
       ),
-      { required: true }
+      { required: true },
     ),
   });
 
@@ -919,14 +919,14 @@ test("zero decimal maybe empty and required", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybe(
-        converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true })
+        converters.stringDecimal({ decimalPlaces: 2, zeroIsEmpty: true }),
       ),
       {
         change: (node, value) => {
           touched.push(true);
         },
         required: true,
-      }
+      },
     ),
   });
 
@@ -1015,13 +1015,13 @@ test("dynamic decimal converter pass down event", () => {
     foo: new Field(
       converters.dynamic(
         converters.stringDecimal,
-        (context) => context.options
+        (context) => context.options,
       ),
       {
         change: (node, value) => {
           touched.push(true);
         },
-      }
+      },
     ),
   });
 
@@ -1065,14 +1065,14 @@ test("maybeNull and dynamic decimal converter pass down event", () => {
       converters.maybeNull(
         converters.dynamic(
           converters.stringDecimal,
-          (context) => context.options
-        )
+          (context) => context.options,
+        ),
       ),
       {
         change: (node, value) => {
           touched.push(true);
         },
-      }
+      },
     ),
   });
 
