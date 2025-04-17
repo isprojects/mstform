@@ -1,3 +1,7 @@
+# 1.36.1
+
+- Reverted back to React 18
+
 # 1.36.0
 
 - Upgraded packages to their latest versions where possible
