@@ -36,12 +36,4 @@ export class SubFormAccessor<
   get value(): Instance<M> {
     return this.state.getValue(this.path);
   }
-
-  @override
-  get isValid(): boolean {
-    return (
-      this.errorValue == null &&
-      this.accessors.every((accessor) => accessor.isValid)
-    );
-  }
 }
