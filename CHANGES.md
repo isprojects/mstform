@@ -1,3 +1,7 @@
+# 1.36.2
+
+- Fix isValid for formState
+
 # 1.36.1
 
 - Reverted back to React 18
