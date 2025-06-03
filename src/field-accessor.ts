@@ -54,7 +54,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     public state: AnyFormState,
     public field: Field<R, V>,
     parent: IAnyFormAccessor,
-    public name: string
+    public name: string,
   ) {
     super(parent);
     makeObservable(this);
@@ -65,7 +65,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
       const options = field.options.references;
       const dependentQuery = options.dependentQuery || (() => ({}));
       this.references = new References(options.source, () =>
-        dependentQuery(this)
+        dependentQuery(this),
       );
     } else {
       this.references = new NoReferences();
@@ -151,10 +151,10 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
         this.setRaw(
           this.field.render(
             derivedValue,
-            this.state.stateConverterOptionsWithContext(this)
-          )
+            this.state.stateConverterOptionsWithContext(this),
+          ),
         );
-      }
+      },
     );
     this._disposer = disposer;
   }
@@ -167,7 +167,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     // been removed. It's not ideal but we return undefined in such a case.
     try {
       return this.state.getValue(
-        (this.parent as FormAccessorBase<any, any, any>).path
+        (this.parent as FormAccessorBase<any, any, any>).path,
       );
     } catch {
       return undefined;
@@ -208,7 +208,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     }
     return this.field.render(
       this.value,
-      this.state.stateConverterOptionsWithContext(this)
+      this.state.stateConverterOptionsWithContext(this),
     );
   }
 
@@ -254,7 +254,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     this.state.setValueWithoutRawUpdate(this.path, value);
     this._raw = this.field.render(
       value,
-      this.state.stateConverterOptionsWithContext(this)
+      this.state.stateConverterOptionsWithContext(this),
     );
   }
 
@@ -262,7 +262,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   get value(): V {
     if (this.addMode) {
       throw new Error(
-        "Cannot access field in add mode until it has been set once"
+        "Cannot access field in add mode until it has been set once",
       );
     }
     return this._value;
@@ -281,6 +281,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
   validate(options?: ValidateOptions): boolean {
     const ignoreRequired = options != null ? options.ignoreRequired : false;
     const ignoreGetError = options != null ? options.ignoreGetError : false;
+    console.log("VALIDATE!");
     this.setValueFromRaw(this.raw, { ignoreRequired });
     if (ignoreGetError) {
       return this.isInternallyValid;
@@ -358,7 +359,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
         !converterEmptyImpossible(this.field.converter, stateConverterOptions)
       ) {
         this.setValue(
-          converterEmptyValue(this.field.converter, stateConverterOptions)
+          converterEmptyValue(this.field.converter, stateConverterOptions),
         );
       }
       this.setError(this.requiredError);
@@ -384,7 +385,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     }
     const extraResult = this.state.extraValidationFunc(
       this,
-      processResult.value
+      processResult.value,
     );
     // XXX possible flicker?
     if (typeof extraResult === "string" && extraResult) {
@@ -417,7 +418,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     // to be disabled
     this._raw = this.field.render(
       value,
-      this.state.stateConverterOptionsWithContext(this)
+      this.state.stateConverterOptionsWithContext(this),
     );
     // trigger validation
     this.validate();
