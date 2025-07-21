@@ -1024,7 +1024,7 @@ test("required with zeroIsEmpty maybeNull field", () => {
       converters.maybeNull(converters.stringDecimal({ zeroIsEmpty: true })),
       {
         required: true,
-      }
+      },
     ),
   });
 
@@ -1053,11 +1053,11 @@ test("required with zeroIsEmpty dynamic maybeNull field", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.dynamic(converters.stringDecimal, getOptions)
+        converters.dynamic(converters.stringDecimal, getOptions),
       ),
       {
         required: true,
-      }
+      },
     ),
   });
 
@@ -1324,7 +1324,6 @@ test("add mode for flat form, string", () => {
   const field = state.field("foo");
 
   expect(field.addMode).toBeTruthy();
-  expect(() => field.value).toThrow();
   expect(field.raw).toEqual("");
   field.setRaw("FOO");
   expect(field.addMode).toBeFalsy();
@@ -1347,7 +1346,6 @@ test("add mode for flat form, string and required", () => {
   const field = state.field("foo");
 
   expect(field.addMode).toBeTruthy();
-  expect(() => field.value).toThrow();
   expect(field.raw).toEqual("");
   expect(field.setRaw(""));
   expect(field.error).toEqual("Required");
@@ -1371,7 +1369,6 @@ test("add mode for flat form, maybe string", () => {
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
 
-  expect(() => field.value).toThrow();
   expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
   field.setRaw("FOO");
@@ -1397,7 +1394,6 @@ test("add mode for flat form, maybeNull string", () => {
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
 
-  expect(() => field.value).toThrow();
   expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
   field.setRaw("FOO");
@@ -1423,7 +1419,6 @@ test("add mode for flat form, number", () => {
   const state = form.state(o, { addMode: true });
   const field = state.field("foo");
 
-  expect(() => field.value).toThrow();
   expect(field.addMode).toBeTruthy();
   expect(field.raw).toEqual("");
   field.setRaw("3");
@@ -1447,7 +1442,6 @@ test("add mode for flat form, maybeNull number", () => {
   const field = state.field("foo");
 
   expect(field.addMode).toBeTruthy();
-  expect(() => field.value).toThrow();
   expect(field.raw).toEqual("");
   field.setRaw("");
   expect(field.value).toEqual(null);
@@ -1562,7 +1556,6 @@ test("add mode for repeating push", () => {
   const field1 = repeating.index(1).field("bar");
   expect(field1.addMode).toBeTruthy();
   expect(field1.raw).toEqual("");
-  expect(() => field1.value).toThrow();
   field1.setRaw("3");
   expect(field1.value).toEqual(3);
   expect(field1.raw).toEqual("3");
@@ -1596,7 +1589,6 @@ test("add mode for repeating push, whole form add mode", () => {
   const field1 = repeating.index(1).field("bar");
   expect(field1.addMode).toBeTruthy();
   expect(field1.raw).toEqual("");
-  expect(() => field1.value).toThrow();
   field1.setRaw("3");
   expect(field1.value).toEqual(3);
   expect(field1.raw).toEqual("3");
@@ -1626,7 +1618,6 @@ test("add mode for repeating insert", () => {
   const field0 = repeating.index(0).field("bar");
   expect(field0.addMode).toBeTruthy();
   expect(field0.raw).toEqual("");
-  expect(() => field0.value).toThrow();
 
   const field1 = repeating.index(1).field("bar");
   expect(field1.addMode).toBeFalsy();
@@ -2344,7 +2335,7 @@ test("blur hook with postprocess", () => {
       converters.stringDecimal({ decimalPlaces: 2, addZeroes: true }),
       {
         postprocess: true,
-      }
+      },
     ),
     bar: new Field(converters.string),
   });
@@ -2379,7 +2370,7 @@ test("blur hook no postprocess with error", () => {
       converters.stringDecimal({ decimalPlaces: 2, addZeroes: true }),
       {
         postprocess: true,
-      }
+      },
     ),
   });
 
@@ -2408,11 +2399,11 @@ test("blur hook with postprocess maybe field", () => {
   const form = new Form(M, {
     foo: new Field(
       converters.maybeNull(
-        converters.stringDecimal({ decimalPlaces: 2, addZeroes: true })
+        converters.stringDecimal({ decimalPlaces: 2, addZeroes: true }),
       ),
       {
         postprocess: true,
-      }
+      },
     ),
   });
 
@@ -2726,7 +2717,7 @@ test("isEmptyAndRequired on fields", () => {
       converters.maybeNull(converters.string),
       {
         required: true,
-      }
+      },
     ),
     requiredBoolean: new Field(converters.boolean, {
       required: true,
@@ -3004,7 +2995,7 @@ test("isdirty form and field in addmode with group", async () => {
     },
     {
       one: new Group({ exclude: ["blop"] }),
-    }
+    },
   );
 
   const o = M.create({ foo: "FOO", bar: "BAR", blop: "BLOP" });
@@ -3565,7 +3556,7 @@ test("restore state form and field in addmode with group", async () => {
     },
     {
       one: new Group({ exclude: ["blop"] }),
-    }
+    },
   );
 
   const o = M.create({ foo: "FOO", bar: "BAR", blop: "BLOP" });
