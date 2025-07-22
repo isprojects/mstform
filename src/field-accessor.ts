@@ -392,7 +392,6 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (typeof extraResult === "string" && extraResult) {
       this.setError(extraResult);
     }
-    console.log("setValueFromRaw after required frontend process 2");
     return processResult;
   }
 
