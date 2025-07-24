@@ -1,5 +1,9 @@
 # 1.36.2
 
+- No longer an error when accessing the value of a field when in addMode
+
+# 1.36.2
+
 - Fix isValid for formState
 
 # 1.36.1
