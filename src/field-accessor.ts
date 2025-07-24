@@ -1,38 +1,38 @@
 import {
   action,
-  observable,
-  computed,
-  isObservable,
-  toJS,
-  reaction,
   comparer,
+  computed,
   IReactionDisposer,
-  override,
+  isObservable,
   makeObservable,
+  observable,
+  override,
+  reaction,
+  toJS,
 } from "mobx";
 
 import {
+  errorMessage,
   Field,
+  ProcessOptions,
   ProcessValue,
   ValidationMessage,
-  ProcessOptions,
-  errorMessage,
 } from "./form";
 import { AnyFormState } from "./state";
 import { FormAccessorBase } from "./form-accessor-base";
 import { currentValidationProps } from "./validation-props";
 import { ValidateOptions } from "./validate-options";
-import { References, NoReferences, IReferences } from "./references";
+import { IReferences, NoReferences, References } from "./references";
 import { pathToFieldref } from "./utils";
 import { IAccessor, IAnyFormAccessor } from "./interfaces";
 import { AccessorBase } from "./accessor-base";
 import {
-  isModelType,
-  getType,
-  getIdentifier,
-  isStateTreeNode,
-  isReferenceType,
   getChildType,
+  getIdentifier,
+  getType,
+  isModelType,
+  isReferenceType,
+  isStateTreeNode,
 } from "mobx-state-tree";
 import { converterEmptyImpossible, converterEmptyValue } from "./converter";
 
@@ -140,7 +140,7 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     // XXX when we have a node that's undefined, we don't
     // try to do any work. This isn't ideal but can happen
     // if the path a node was pointing to has been removed.
-    const disposer = reaction(
+    this._disposer = reaction(
       () => {
         return this.node != null ? derivedFunc(this.node) : undefined;
       },
@@ -156,7 +156,6 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
         );
       },
     );
-    this._disposer = disposer;
   }
   // XXX I think this should become private (_node), unless I
   // guarantee the type without a lot of complication
@@ -211,18 +210,25 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     );
   }
 
-  @action
-  setValue(value: V) {
+  hasChanges(value: V, oldValue: V): boolean {
     // if there are no changes, don't do anything
-    if (comparer.structural(this._value, value)) {
-      return;
+    if (comparer.structural(oldValue, value)) {
+      return false;
     }
     // if the converter does not see any changes, don't do anything as well
     const stateConverterOptions =
       this.state.stateConverterOptionsWithContext(this);
-    if (
-      !this.field.converter.hasChange(this._value, value, stateConverterOptions)
-    ) {
+    return this.field.converter.hasChange(
+      oldValue,
+      value,
+      stateConverterOptions,
+    );
+  }
+
+  @action
+  setValue(value: V) {
+    // if the converter does not see any changes, don't do anything as well
+    if (!this.hasChanges(value, this._value)) {
       return;
     }
 
@@ -338,8 +344,10 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     return errorMessage(requiredError, this.state.context);
   }
 
-  @action
-  setValueFromRaw(raw: R, options?: ProcessOptions) {
+  getProcessResult(
+    raw: R,
+    options?: ProcessOptions,
+  ): ProcessValue<V> | undefined {
     const stateConverterOptions =
       this.state.stateConverterOptionsWithContext(this);
 
@@ -384,8 +392,15 @@ export class FieldAccessor<R, V> extends AccessorBase implements IAccessor {
     if (typeof extraResult === "string" && extraResult) {
       this.setError(extraResult);
     }
+    return processResult;
+  }
 
-    this.setValue(processResult.value);
+  @action
+  setValueFromRaw(raw: R, options?: ProcessOptions) {
+    const processResult = this.getProcessResult(raw, options);
+    if (processResult) {
+      this.setValue(processResult.value);
+    }
   }
 
   @action

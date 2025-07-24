@@ -4,6 +4,9 @@ import { converters, controlled, Form, Field } from "../src";
 configure({ enforceActions: "always" });
 
 test("object controlled", () => {
+  async function mySave() {
+    return null;
+  }
   const M = types.model("M", {
     foo: types.string,
   });
@@ -14,16 +17,21 @@ test("object controlled", () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.state(o);
+  const state = form.state(o, { backend: { save: mySave } });
+  state.updateFunc = jest.fn();
   const field = state.field("foo");
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
   field.inputProps.onChange("BAR");
+  expect(state.updateFunc).toHaveBeenCalled();
   expect(field.raw).toEqual("BAR");
 });
 
 test("modelReferenceArray controlled", () => {
+  async function mySave() {
+    return null;
+  }
   const Bar = types.model("Bar", {
     id: types.identifierNumber,
     name: types.string,
@@ -56,11 +64,13 @@ test("modelReferenceArray controlled", () => {
     foo: [],
   });
 
-  const state = form.state(o);
+  const state = form.state(o, { backend: { save: mySave } });
+  state.updateFunc = jest.fn();
   const field = state.field("foo");
 
   expect(field.inputProps.value).toEqual([]);
   field.inputProps.onChange([barValue]);
+  expect(state.updateFunc).toHaveBeenCalled();
   expect(field.raw).toEqual([
     {
       id: 1,
@@ -118,6 +128,9 @@ test("modelReferenceArray controlled, on change in add mode", () => {
 });
 
 test("value controlled", () => {
+  async function mySave() {
+    return null;
+  }
   const M = types.model("M", {
     foo: types.string,
   });
@@ -128,16 +141,21 @@ test("value controlled", () => {
 
   const o = M.create({ foo: "FOO" });
 
-  const state = form.state(o);
+  const state = form.state(o, { backend: { save: mySave } });
+  state.updateFunc = jest.fn();
   const field = state.field("foo");
 
   expect(field.inputProps.value).toEqual("FOO");
   expect(field.inputProps.checked).toBeUndefined();
   field.inputProps.onChange({ target: { value: "BAR" } });
+  expect(state.updateFunc).toHaveBeenCalled();
   expect(field.raw).toEqual("BAR");
 });
 
 test("checked controlled", () => {
+  async function mySave() {
+    return null;
+  }
   const M = types.model("M", {
     foo: types.boolean,
   });
@@ -148,12 +166,14 @@ test("checked controlled", () => {
 
   const o = M.create({ foo: true });
 
-  const state = form.state(o);
+  const state = form.state(o, { backend: { save: mySave } });
+  state.updateFunc = jest.fn();
   const field = state.field("foo");
 
   expect(field.inputProps.checked).toEqual(true);
   expect(field.inputProps.value).toBeUndefined();
   field.inputProps.onChange({ target: { checked: false } });
+  expect(state.updateFunc).toHaveBeenCalled();
   expect(field.raw).toEqual(false);
 });
 
@@ -176,6 +196,7 @@ test("custom controlled", () => {
   const o = M.create({ foo: "FOO" });
 
   const state = form.state(o);
+  state.updateFunc = jest.fn();
   const field = state.field("foo");
 
   expect(field.inputProps.weird).toEqual("FOO");

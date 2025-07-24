@@ -3143,6 +3143,30 @@ test("isdirty form and field", () => {
   expect(state.isDirty).toBeFalsy();
 });
 
+test("isdirty form and field, default update func called", () => {
+  async function mySave() {
+    return null;
+  }
+  const M = types.model("M", {
+    foo: types.string,
+  });
+
+  const form = new Form(M, {
+    foo: new Field(converters.string),
+  });
+
+  const o = M.create({ foo: "FOO" });
+
+  const state = form.state(o, { backend: { save: mySave } });
+  state.updateFunc = jest.fn();
+
+  const field = state.field("foo");
+
+  field.setRaw("correct");
+
+  expect(state.updateFunc).toHaveBeenCalled();
+});
+
 test("isdirty form and field array field", () => {
   const M = types
     .model("M", {
